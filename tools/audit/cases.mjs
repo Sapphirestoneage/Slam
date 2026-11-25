@@ -18,7 +18,7 @@ import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
-import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext } from '../../js/math/jobs.js';
+import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext, jobCarry, jobHourValue } from '../../js/math/jobs.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -142,6 +142,13 @@ for (let i = 0; i < N; i++) {
   const day = () => `${2026 + whole(0, 2)}-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`.replace(/-(\d\d)-(3[01]|29)$/, (m, mm, dd) => `-${mm}-${mm === '02' ? '28' : dd === '31' && ['04', '06', '09', '11'].includes(mm) ? '30' : dd}`);
   const ck = { set: day(), last: rnd() < 0.5 ? null : day(), today: day() }; add('jobCheck', ck, jobCheckNext(ck.set, ck.last, ck.today));
   const dt = { md: `${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`, today: day(), lead: pick([14, 21, 30, 45]) }; add('jobDate', dt, jobDateNext(dt.md, dt.today, dt.lead));
+  // feature 6 (run JOE-1): who carries what, for 1 to 5 people, with shared jobs and hand-offs to people and to others
+  const np = whole(1, 5), keys = ['me', 'p1', 'p2', 'p3', 'p4'].slice(0, np);
+  const hands = Object.fromEntries(tasks.filter(t => exits[t.id] === 'hand').map(t => [t.id, pick(keys.concat(['coach', 'tool']))]));
+  const assign = Object.fromEntries(JOB_IDS.filter(() => rnd() < 0.7).map(id => [id, keys.filter(() => rnd() < 0.5).concat(rnd() < 0.1 ? ['gone'] : [])]));
+  const hv = { tp: rnd() < 0.5 ? null : money(10, 120), wage: rnd() < 0.3 ? 0 : money(8, 150) }, rate = jobHourValue(hv.tp, hv.wage).rate;
+  const K = jobCarry(ad, tasks, exits, hands, assign, keys.map(k => ({ key: k, n: k })), rate);
+  add('jobCarry', { mins, tasks, exits, hands, assign, keys, hv }, { rate, total: K.total, value: K.value, min: K.people.map(p => p.min), val: K.people.map(p => p.value) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

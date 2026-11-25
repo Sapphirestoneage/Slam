@@ -275,7 +275,9 @@ function jobsSheet() {
       }),
       dkTile("Given back", jobHoursWords(N.L.living), { sub: N.L.living > 0 ? N.L.better + "% better" : "a month" }),
     ]) +
-    dkCard("Running it and Living it", jobBars(N) + jobMath(N), { right: ib("term:livingit") }) +
+    (typeof jobsSheetRoleMap === "function"
+      ? jobsSheetRoleMap(dkCard("Running it and Living it", jobBars(N) + jobMath(N), { right: ib("term:livingit") }))
+      : dkCard("Running it and Living it", jobBars(N) + jobMath(N), { right: ib("term:livingit") })) /* rolemap.js */ +
     jobsBlock(c, true, "close")
   );
 }

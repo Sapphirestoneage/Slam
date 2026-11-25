@@ -218,6 +218,15 @@ const PATCH_NOTES = [
       "Tap your own dates once. A reminder lands on Today before each one.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Who carries what",
+    l: [
+      "Share your six unpaid jobs with the people in your home. Tap one or more names onto each job.",
+      "See the admin time of your home, who carries which part, and what that time is worth.",
+      "Sharing costs fairly counts these hours in Labor counts. Find it in Your unpaid jobs.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

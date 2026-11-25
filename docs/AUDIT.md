@@ -51,7 +51,8 @@ Running it and Living it (the minutes of the tasks off the plate, at most each j
 better, at least 1 once a minute is back). Features 4 and 5 of the run add three: a wired goal's deposits a year (by the day it moves)
 and each deposit (the monthly amount × 12 ÷ the deposits, rounded up to a dollar); the quarterly check-in (3 months
 after the last one, with the end of a month moved to its last day); and a date the person taps (its next day, the
-days to go, and whether its reminder shows).
+days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
+each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

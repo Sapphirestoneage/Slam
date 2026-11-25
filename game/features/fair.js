@@ -25,10 +25,23 @@ function frState() {
   return {
     ppl: Array.isArray(f.ppl) ? f.ppl : null,
     total: f.total == null ? null : f.total,
-    rate: f.rate || 20,
+    rate: f.rate || frRateDefault(),
     payer: f.payer == null ? 0 : f.payer,
     pick: f.pick || null,
   };
+}
+/* The rate until one is tapped: the value of an hour of Who carries what (rolemap.js), rounded to a dollar,
+   else $20. */
+function frRateDefault() {
+  return frRateFrom().v;
+}
+/* The same value of an hour as Who carries what (rmRate in rolemap.js): the time price of chores, else the pay
+   per hour. from: "tp", "wage" or null (then $20). */
+function frRateFrom() {
+  const c = typeof C === "function" && !G.demo ? C() : null,
+    R = c && typeof rmRate === "function" ? rmRate(c) : { rate: null, from: null },
+    v = R.rate > 0 ? Math.round(R.rate) : 0;
+  return v > 0 ? { v, from: R.from } : { v: 20, from: null };
 }
 function frSeed() {
   const out = [];
@@ -44,11 +57,17 @@ function frPut(patch) {
   save();
 }
 function frPpl() {
-  const S = frState();
+  const S = frState(),
+    /* rolemap.js: the admin hours a month of each person, from Who carries what, by name */
+    adm = typeof rmFairHours === "function" && !G.demo ? rmFairHours(C()) : {};
   return (S.ppl || frSeed()).map(p => {
     const c = p.from != null ? G.chars[p.from] : null,
       linked = !!(c && String(c.name) === p.n);
-    return Object.assign({}, p, { linked, inc: linked ? c.take || 0 : p.inc || 0 });
+    return Object.assign({}, p, {
+      linked,
+      inc: linked ? c.take || 0 : p.inc || 0,
+      adm: adm[String(p.n).trim().toLowerCase()] || 0,
+    });
   });
 }
 function frDefaultTotal() {
@@ -91,7 +110,7 @@ function frCalc(P, T, rate) {
   const n = P.length,
     sumInc = P.reduce((a, p) => a + p.inc, 0),
     sumN = P.reduce((a, p) => a + p.nights, 0),
-    val = P.map(p => ((p.hrs * 52) / 12) * rate),
+    val = P.map(p => ((p.hrs * 52) / 12 + (p.adm || 0)) * rate),
     sumVal = val.reduce((a, v) => a + v, 0),
     eq = P.map(() => T / n);
   return {
@@ -125,7 +144,7 @@ function frSheet() {
     tot = opts.includes(dT) ? opts : opts.concat([dT]).sort((a, b) => a - b);
   const person = (p, i) => {
     const on = ed === i;
-    return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="fred" data-v="${i}" aria-expanded="${on}"><span class="ava2">${esc(p.n.trim().charAt(0).toUpperCase())}</span><span style="flex:1;min-width:0;text-align:left"><b>${esc(p.n)}</b><span class="tiny muted" style="display:block">${money(p.inc)} a month${p.linked ? " (from their profile)" : ""} · ${p.hrs} hrs of home work a week · ${p.nights} nights</span></span><span class="caret">${on ? "⌄" : "›"}</span></button>
+    return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="fred" data-v="${i}" aria-expanded="${on}"><span class="ava2">${esc(p.n.trim().charAt(0).toUpperCase())}</span><span style="flex:1;min-width:0;text-align:left"><b>${esc(p.n)}</b><span class="tiny muted" style="display:block">${money(p.inc)} a month${p.linked ? " (from their profile)" : ""} · ${p.hrs} hrs of home work a week${p.adm > 0 ? " · " + jobHoursWords(p.adm * 60) + " of money admin a month" : ""} · ${p.nights} nights</span></span><span class="caret">${on ? "⌄" : "›"}</span></button>
   ${
     on
       ? `${
@@ -158,11 +177,22 @@ function frSheet() {
     `<div class="small muted">Five ways to split what you share, on your own numbers. Look at them together and pick the one that feels fair to everyone. None of them is the right answer.</div>
  <b class="small">Who is sharing</b><div class="stack" style="gap:6px">${P.map(person).join("")}</div>${P.length < 6 ? `<button class="ghost wide slim" data-a="fradd">Add a person</button>` : ""}
  ${q("What you share each month", `<div class="chips">${tot.map(v => `<button class="chip sm ${T === v ? "on" : ""}" data-a="frtotal" data-v="${v}">${money(v)}${v === dT && C().led ? " (home, food, bills now)" : ""}</button>`).join("")}</div>`)}
- ${q("An hour of home work is worth", `<div class="chips">${[15, 20, 25, 35].map(v => `<button class="chip sm ${S.rate === v ? "on" : ""}" data-a="frrate" data-v="${v}">${money(v)}</button>`).join("")}</div>`, "About what it would cost to pay someone else to do it. Only the Labor counts method uses this.")}
+ ${q(
+   "An hour of home work is worth",
+   `<div class="chips">${[15, 20, 25, 35]
+     .concat([15, 20, 25, 35].includes(frRateDefault()) ? [] : [frRateDefault()])
+     .sort((x, y) => x - y)
+     .map(
+       v =>
+         `<button class="chip sm ${S.rate === v ? "on" : ""}" data-a="frrate" data-v="${v}">${money(v)}${v === frRateDefault() && frRateFrom().from ? (frRateFrom().from === "tp" ? " (your time price)" : " (your pay per hour)") : ""}</button>`
+     )
+     .join("")}</div>`,
+   "About what it would cost to pay someone else to do it. Only the Labor counts method uses this."
+ )}
  <b class="small">Five ways to split ${money(T)}</b><div class="stack" style="gap:6px">${FR_METHODS.map(meth).join("")}</div>
  ${pk ? `<div class="tile stack" style="gap:6px"><b class="small">Who sends what, with ${esc(FR_METHODS.find(m => m[0] === S.pick)[1])}</b>${q("Who pays the shared bills now?", `<div class="chips">${P.map((p, i) => `<button class="chip sm ${payer === i ? "on" : ""}" data-a="frpayer" data-v="${i}">${esc(p.n)}</button>`).join("")}</div>`)}${P.map((p, i) => (i === payer ? "" : `<div class="row between small"><span>${esc(p.n)} sends ${esc(P[payer].n)}</span><b>${money(Math.round(pk[i]))} a month</b></div>`)).join("")}<div class="tiny muted">${esc(P[payer].n)}'s own share is ${money(Math.round(pk[payer]))}.</div><button class="ghost wide slim" data-a="frcopy">${w.copied ? "Copied ✓" : "Copy this to send"}</button></div>` : ""}
  <details class="math"><summary>Other ways people do it</summary><div class="inner stack small" style="gap:6px"><div><b>Mix two.</b> Rent and bills by income, groceries equal.</div><div><b>A ceiling.</b> Nobody pays more than a set share of their pay, say 30%, and the rest is split among the others.</div><div><b>Yours, mine and ours.</b> One shared account everyone feeds by an agreed rule, and everything else stays separate.</div><div><b>Take turns.</b> Rotate who covers what by month. Simple, and only fair when incomes are close.</div><div><b>By room.</b> The bigger room or the private bathroom pays more of the rent.</div></div></details>
- ${mathBox(["Equal: " + money(T) + " divided by " + P.length + ".", "By income: your share of the bills equals your share of the pay coming in.", "Labor counts: home hours times 52 weeks over 12 months times " + money(S.rate) + " an hour. That value is added to the pot, the pot is split equally, and each person's work is taken off what they owe in cash.", "Same left over: add up everyone's pay, take off the shared bills, split what remains equally. Each person pays the difference.", "By use: by nights a week. Nobody is ever asked to pay less than zero: when a method would, the others share that part.", "Counting unpaid work as a real contribution is the idea behind Eve Rodsky's Fair Play and decades of household economics."])}`
+ ${mathBox(["Equal: " + money(T) + " divided by " + P.length + ".", "By income: your share of the bills equals your share of the pay coming in.", "Labor counts: home hours times 52 weeks over 12 months, plus the money admin hours a month of Who carries what, times " + money(S.rate) + " an hour. That value is added to the pot, the pot is split equally, and each person's work is taken off what they owe in cash.", "Same left over: add up everyone's pay, take off the shared bills, split what remains equally. Each person pays the difference.", "By use: by nights a week. Nobody is ever asked to pay less than zero: when a method would, the others share that part.", "Counting unpaid work as a real contribution is the idea behind Eve Rodsky's Fair Play and decades of household economics."])}`
   );
 }
 function frText() {
