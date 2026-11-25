@@ -65,7 +65,12 @@
     supa.indexOf("suRefKeep(location.search)") > 0 &&
       supa.indexOf("suRefKeep(location.search)") < supa.indexOf("function suGate")
   );
-  chk("the sign-up keeps the code with the account", /suRef\(\) \? \{ data: \{ ref: suRef\(\) \} \} : \{\}/.test(supa));
+  /* the sign-up goes through tuAuth() of account/trust.js, which puts the code in the data of the new account */
+  chk(
+    "the sign-up keeps the code with the account",
+    /tuAuth\(SUPA\.sb, mode, e, p, here\(\), suRef\(\) \? \{ ref: suRef\(\) \} : null\)/.test(supa) &&
+      /meta \? \{ data: meta \} : \{\}/.test(fs.readFileSync(GAME_DIR + "account/trust.js", "utf8"))
+  );
 
   /* 3. BEFORE THE DATABASE FILE RUNS: no mark, no card, and the game works */
   real();

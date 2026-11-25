@@ -305,6 +305,12 @@
   );
   const idx = fs.readFileSync(GAME_DIR + "index.html", "utf8");
   chk(
+    "What is this? links the privacy page, with the words of the trust file",
+    L.includes('<a class="door-link" href="' + TRUST_PAGE + '">Privacy: what is stored and who sees it</a>') &&
+      L.includes("<b>" + TRUST_LINE + "</b>") &&
+      idx.indexOf("account/trust.js") < idx.indexOf("account/door.js")
+  );
+  chk(
     "index.html loads firelink.js, then door.js, then supa.js",
     idx.indexOf("features/firelink.js") > 0 &&
       idx.indexOf("features/firelink.js") < idx.indexOf("account/door.js") &&

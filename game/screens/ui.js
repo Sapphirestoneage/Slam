@@ -691,7 +691,7 @@ function homeBase() {
   }
   const isNew = Date.now() - NEWAT < 15000;
   return `<div class="stack">
- ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">About 15 taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">Education and practice, not personal financial advice.</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
+ ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">About 15 taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">${TRUST_LINE}</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
  <div class="row between"><div><h1>${esc(c.name)}</h1><div class="small muted">${esc(chapterOf(c))}</div></div>${real && !gt ? `<span class="row"><span class="pill ${d.realm === "Underground" ? "under" : "surface"}">${realmN(d.realm)}</span>${ib("term:realm")}</span>` : ""}</div>
  <div class="card ${G.demo ? "" : "next pulse"} ${isNew ? "pop" : ""}"><div class="row between"><div class="eyebrow">${G.demo ? esc(c.name) + "'s next step" : V("next", "Your next step")}</div>${isNew ? `<span class="pill new">New</span>` : ""}</div><h2 class="glow" style="margin:6px 0 4px">${ns.best && ns.id ? stepHTML(ns.id, ns.t) : esc(ns.t)}</h2><div class="small">${esc(ns.s)}</div>${
    !real && ns.a === "sharp"
@@ -1281,7 +1281,7 @@ function meTabBase() {
  )
    .map(s => `<div><b>${s[0]}</b><div class="small muted">${s[1]}</div></div>`)
    .join("")}</div></details>
- <div class="tiny muted">SLAM the Game is practice and education, like a fitness app for money. It is not personal financial advice. Rules and limits change. Numbers last checked ${LASTCHECK}.</div>
+ <div class="tiny muted">SLAM the Game is practice, like a fitness app for money. ${EDU}</div>
  <button class="ghost" data-a="reset">Reset to the sample characters</button>
  ${flagBtn()}</div>`;
 }
@@ -2591,7 +2591,8 @@ function renderBase() {
             ? moneyTab()
             : tab === "goals" && typeof UX_ON !== "undefined" && UX_ON
               ? goalsTab()
-              : meTab());
+              : meTab()) +
+    (typeof tuFoot === "function" ? tuFoot() : ""); /* trust.js: the line and the link to the privacy page */
   if (qa && !SH) {
     const key = tab + "|" + G.active + "|" + c.name,
       same = key === SEENKEY,
@@ -5155,7 +5156,8 @@ Object.assign(ACT, {
 
 /* ===== v13: time is the currency. Goals with countdowns, the time ledger, "is it safe to spend this?", and the panel fixes ===== */
 const EDU =
-  "Education and practice, not personal financial advice. Rules and limits change. Numbers last checked " +
+  TRUST_LINE /* account/trust.js: the one line, the same on the sign-up screen and the privacy page */ +
+  " Rules and limits change. Numbers last checked " +
   LASTCHECK +
   ".";
 const cents = n => (n > 0 && n < 0.005 ? "under 1¢" : (n < 0 ? "-" : "") + "$" + Math.abs(n).toFixed(2));

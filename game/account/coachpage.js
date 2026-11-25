@@ -9,7 +9,7 @@
                the table coach_notes and the function audit_write
                (supabase/migrations/20261124170000_roles_audit_coach.sql).
    OUTPUT      Functions that only work out values: cpGame, cpNums, cpFlags, cpSnap, cpDiff, cpAssign,
-               cpPack, cpCsv, cpInvite. Functions of the page: cpLoad, cpDraw, cpClick.
+               cpPack, cpCsv, cpInvite, cpInviteUrl. Functions of the page: cpLoad, cpDraw, cpClick.
    DEPENDS ON  core/report.js, account/supa.js (the two public settings), account/roles.js. With
                core/engine.js on the page, the era comes from derive(). Only coach.html loads this file.
    RULES       The database decides what a coach can read: only games with "Share with my coach" on.
@@ -233,13 +233,18 @@ function cpCsv(list, now) {
   );
   return rows.map(r => r.map(q).join(",")).join("\n");
 }
+/* The link of the invite: the game, with the mark ?coach=1. A new account that arrives through it starts with
+   "Share with my coach" on (suInvited in supa.js). An account from any other link starts with it off. */
+function cpInviteUrl(page) {
+  return String(page).replace(/coach\.html$/, "") + "?coach=1";
+}
 /* The invite: an email that the coach sends from their own mail app. */
 function cpInvite(email, url) {
   const subject = "Your invite to SLAM the Game",
     body =
       "Hi,\n\nI use SLAM the Game with the people I coach. It is a money game: all taps, a few minutes at a time.\n\n1. Open " +
       url +
-      "\n2. Tap Create an account and use this email address.\n3. Coach mode is on by default, so I can see your game and help you with it. You can turn it off under Menu, then My account.\n\nSee you there.";
+      "\n2. Tap Create an account and use this email address.\n3. This link turns on Share with my coach for your new account, so I can see your game and help you with it. You can turn it off under Menu, then My account.\n\nSee you there.";
   return (
     "mailto:" +
     encodeURIComponent(String(email || "").trim()) +
@@ -486,7 +491,7 @@ async function cpClick(t) {
     }
     await cpNote("invite", null, em);
     roAudit(CP.sb, "invite", null, em);
-    location.href = cpInvite(em, location.origin + location.pathname.replace(/coach\.html$/, ""));
+    location.href = cpInvite(em, cpInviteUrl(location.origin + location.pathname));
     return;
   }
   if (a === "csv") {

@@ -11,8 +11,9 @@
    OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, doorFireBtn, doorShow, doorHide,
                doorGate, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
                doorEarly. The constant DOOR_LINK (the link for the slide and the QR code).
-   DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton; index.html loads it before this
-               file).
+   DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton), account/trust.js (TRUST_LINE,
+               TRUST_PAGE: the advice line and the privacy page). index.html loads both before this
+               file.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/supa.js (suGate), screens/ui.js (ACT, G, KEY, W, fresh, openSetup,
                drawSheet, render).
@@ -25,8 +26,6 @@
    STATE       DOOR (done, want, el, guest, shown).
    ========================================================================= */
 const DOOR_LINK = "https://sapphirestoneage.github.io/Slam/game/";
-/* The privacy page, when the game has one. Empty: the landing shows no link. */
-const DOOR_PRIVACY = "";
 const DOOR = { done: null, want: "", el: null, guest: false, shown: false };
 
 function doorGet(k) {
@@ -88,8 +87,8 @@ function doorHtml(wait) {
  <p>A money game by a money coach. You tap your answers and it shows where you stand and one next step.</p>
  <p>It is free.</p>
  <p>Nothing is typed. Nothing is saved to an account until you choose to make one.</p>
- <p><b>Education and tools, not financial advice.</b></p>
- ${DOOR_PRIVACY ? `<p><a class="door-link" href="${DOOR_PRIVACY}">Privacy: what is stored and who sees it</a></p>` : ""}
+ <p><b>${typeof TRUST_LINE === "string" ? TRUST_LINE : "Education and tools, not financial advice."}</b></p>
+ ${typeof TRUST_PAGE === "string" ? `<p><a class="door-link" href="${TRUST_PAGE}">Privacy: what is stored and who sees it</a></p>` : ""}
  ${doorFireBtn()}
  </div></details>
  <div class="door-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div></div>`;

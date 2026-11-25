@@ -1013,6 +1013,14 @@ const WB = [
   ["feel", "Hidden costs your life charges you", "n", null, "Not built.", null],
   ["feel", "How this plan fails, and the three moves that stop it", "n", null, "Not built.", null],
   ["feel", "Capacity: how much you can take on right now", "n", null, "Not built.", null],
+  [
+    "who",
+    "Privacy page, delete my account, and calm words when an email cannot be sent",
+    "b",
+    () => WB_HAS("tuprivacy") && WB_FN("tuDelete") && WB_FN("tuAuth") && WB_FN("suInvited"),
+    "Menu, Privacy: what is stored, where, who can see it. Share with my coach starts off, or on through a coach's invite. Delete my account removes the saved game and the copy on this device; the sign-in too after one database step that waits for Eli.",
+    "tuprivacy",
+  ],
   ["who", "Each person signs in to their own account", "n", null, "Not built. It is the next thing planned.", null],
   [
     "who",

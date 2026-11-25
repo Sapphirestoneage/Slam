@@ -2,6 +2,7 @@
 // The self-serve journey's screen (start.html). It only shows what js/journey.js returns: no math here. The household
 // lives in the same browser storage as the coach app (js/storage.js), so both read one file and nothing is asked twice.
 import { h, clear } from '../ui/dom.js';
+import { TRUST_LINE, PRIVACY_URL } from '../trust.js';
 import { Store, exportFile, importFile } from '../records.js';
 import { localAdapter, memoryAdapter, loadClient, saveClient, createClient, autosave } from '../storage.js';
 import { SITUATIONS, situationOf, situationSet, setSituation, questionsFor, benefitOnFile, answerBenefit, startJob, STAGES, QUESTIONS, PAY_WAYS, PAY_FREQUENCIES, SPEND_PARTS, sumParts, answerPay, payOnFile, progressOf, onFile, answer, quickPicks, planOf, movedWords, numbersOf, statementsOf, blurOf, tweaksOf, setTweak, resetTweaks, previewTweak, whatIf, spanWords, monthWords } from '../journey.js';
@@ -1026,7 +1027,7 @@ function foot() {
   };
   const over = () => { open(createClient(adapter, 'My plan', new Date().toISOString())); Object.assign(ui, { q: null, note: null, decade: null, lever: { spendLess: 0, earnMore: 0 } }); go('you'); };
   clear($('foot'),
-    h('span.grow', {}, 'Your numbers stay in this browser. Nothing is sent anywhere. This is education, not personal financial advice.'),
+    h('span.grow', {}, `Your numbers stay in this browser. Nothing is sent anywhere. ${TRUST_LINE} `, h('a', { href: PRIVACY_URL }, 'Privacy')),
     btn('Download a backup', download, 'slim'),
     btn('One thing at a time', async () => { location.href = `one.html#/d/${await pack(store.doc)}`; }),
     btn('My card plan', async () => { location.href = `cards.html#/d/${await pack(store.doc)}`; }),
@@ -1109,7 +1110,7 @@ function summary(p, pl) {
       W ? [h('h2', {}, W.label), h('ul', {}, W.steps.map((t, i) => h('li', {}, `${(mine().done || {})[`worry:${W.id}:${i}`] ? '✓ ' : ''}${t}`)))] : null,
       h('h2', {}, 'What comes next'), h('ul', {}, pl.milestones.filter(x => !x.done).slice(0, 5).map(x => h('li', {}, `${x.name}: ${x.date}`))),
       snap ? [h('h2', {}, 'One year at a glance'), h('div.st-rows', {}, snap.map(r => h(`div.st-srow.${r.kind}`, {}, h('span', {}, r.label), h('span.v', {}, `${r.sign ? `${r.sign} ` : ''}${r.value}`))))] : null,
-      h('p.st-small.st-soft', { style: { marginTop: '16px' } }, 'This is education, not personal financial advice. Numbers marked typical are stand-ins until you answer them.')),
+      h('p.st-small.st-soft', { style: { marginTop: '16px' } }, `${TRUST_LINE} Numbers marked typical are stand-ins until you answer them.`)),
     h('div.st-row.st-noprint', {}, h('a.st-btn', { href: 'https://stresslessaboutmoney.com', target: '_blank', rel: 'noopener' }, 'Talk it through with Eli')),
   ];
 }

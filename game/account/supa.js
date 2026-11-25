@@ -9,7 +9,7 @@
    OUTPUT      15 functions. Parts of functions in other files: saveCoachMark, homeCoachNote. Actions
                (ACT): sugot, suacct, sushare, suout, supwgo, sucoach, suall, subring. Menu: "My
                account", "Shared with me".
-   DEPENDS ON  core/report.js.
+   DEPENDS ON  core/report.js, account/trust.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: screens/ui.js, account/cloud.js, features/reveal.js. With no typeof test,
                thus safe only after the page has loaded all files: core/engine.js (newChar),
@@ -17,11 +17,59 @@
    RULES       The two keys in this file are public keys. They are meant to be in the page. The rules of
                the database tables keep each saved game private. If the page already has window.claude
                (the retired copy inside Claude), this file does nothing.
-   STATE       SUPA (on, sb, uid, email, ready, ids, share, as, coach, t0).
+   STATE       SUPA (on, sb, uid, email, ready, ids, share, shareKnown, invited, as, coach, t0). The switch
+               EMAIL_READY. The browser storage: su_coach (the invite mark), su_uid, su_as.
    ========================================================================= */
 const SUPA_URL = "https://twuxggigsfsdczsyvupk.supabase.co";
 const SUPA_KEY = "sb_publishable_tSWobVdlrb-I5pTiGORWHA_z9JD5K-Z";
-const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, share: true };
+/* EMAIL_READY: false until the game can send email to each person (docs/EMAIL-SETUP.md, the last step).
+   While it is false, the sign-in screen shows "Forgot your password? Contact Eli." with an email draft, in
+   place of a reset email that would reach nobody. Set it to true when the test emails of that document arrive:
+   then the sign-in screen shows "Forgot my password" and sends the reset email. */
+const EMAIL_READY = false;
+/* share: "Share with my coach". A new account from a public link starts with it off. A new account from the
+   invite of a coach (the link has ?coach=1) starts with it on. An account that has a saved game keeps the value
+   of that game (rowGet below). The player changes it under Menu, My account. */
+const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, share: false, invited: false };
+/* True when this person came through the invite of a coach. The link has ?coach=1. The mark stays on this
+   device until the first save, because the link in the confirmation email has no ?coach=1. */
+function suInvited(search, store) {
+  let yes = false;
+  try {
+    if (new URLSearchParams(search || "").get("coach") === "1") {
+      yes = true;
+      if (store) store.setItem("su_coach", "1");
+    } else if (store) yes = store.getItem("su_coach") === "1";
+  } catch (e) {
+    report(e, "supa.js: suInvited");
+  }
+  return yes;
+}
+/* The invite mark has done its work when the account has its first saved row. */
+function suInviteDone(store) {
+  try {
+    if (store) store.removeItem("su_coach");
+  } catch (e) {
+    report(e, "supa.js: suInviteDone");
+  }
+}
+/* Part of the sign-up screen: one plain line that says how "Share with my coach" starts for this person. */
+function suShareLine(invited) {
+  return invited
+    ? "You came through your coach's invite, so Share with my coach starts on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account."
+    : "Share with my coach starts off: no coach sees your game. You can turn it on anytime in Menu, then My account.";
+}
+/* Part of the sign-in screen: the way back in for a person with no password. With email ready: the button
+   "Forgot my password". Before that: one line and an email draft to Eli. */
+function suForgotHTML(ready) {
+  return ready
+    ? `<button type="button" class="su-link" data-forgot>Forgot my password</button>`
+    : `<p class="su-forgot" style="margin:12px 0 0;font-size:13px">Forgot your password? Contact Eli. <a href="mailto:stresslessaboutmoney@gmail.com?subject=${encodeURIComponent("SLAM the Game: I forgot my password")}&body=${encodeURIComponent("Hi Eli, I forgot my password for SLAM the Game. The email of my account is: ")}" style="color:var(--a3,#8fb0ff);text-decoration:underline">Write to Eli</a></p>`;
+}
+if (typeof location !== "undefined" && typeof localStorage !== "undefined") {
+  SUPA.invited = suInvited(location.search, localStorage);
+  SUPA.share = SUPA.invited;
+}
 
 /* A share link has ?ref=code (features/founding.js makes it). The code a person arrives with is kept on this
    device from the first page load, through the sign-up, until setup is finished. The first code stays.
@@ -121,6 +169,10 @@ if (typeof location !== "undefined") suRefKeep(location.search);
         );
         SUPA.me = SUPA.uid;
         SUPA.as = asq;
+        /* A game that the admin or a coach starts for a client is a coaching game: sharing starts on.
+           If the client has a saved game, its own value replaces this one (rowGet). */
+        SUPA.share = true;
+        SUPA.shareKnown = false;
         SUPA.uid = asq;
         suLocal(asq);
         suAsBar();
@@ -156,7 +208,12 @@ if (typeof location !== "undefined") suRefKeep(location.search);
     const r = q.data && q.data[0];
     if (r) {
       SUPA.ids[k] = r.id;
-      if (k === "slam_meta") SUPA.share = !!r.share_with_coach;
+      /* an account with a saved game keeps its own value. The first row found gives it, and slam_meta decides. */
+      if (k === "slam_meta" || !SUPA.shareKnown) {
+        SUPA.share = !!r.share_with_coach;
+        SUPA.shareKnown = true;
+        if (!SUPA.as) suInviteDone(localStorage);
+      }
     }
     return r || null;
   }
@@ -304,16 +361,26 @@ function suGate(done, mode0) {
  #su-gate .su-msg{margin-top:12px;font-size:14px;min-height:18px}#su-gate .su-link{background:none;border:0;color:var(--a3,#8fb0ff);text-decoration:underline;font-size:13px;margin-top:10px;cursor:pointer;padding:0}`;
   const el = document.createElement("div");
   el.id = "su-gate";
-  let mode = mode0 === "in" ? "in" : "new";
-  const draw = (msg = "") => {
+  let mode = mode0 === "in" ? "in" : "new",
+    em = "";
+  const here = () => location.origin + location.pathname;
+  const draw = (msg = "", again = false) => {
     el.innerHTML = `<style>${css}</style><form class="su-card" novalidate>
-  <h1>${mode === "new" ? "Create your account" : "Sign in"}</h1><p>SLAM the Game. ${mode === "new" ? "Your game saves to your own account, so it follows you to any phone or laptop. Only you and the person who runs SLAM can see it." : "Welcome back. Your game is waiting where you left it."}</p>
-  <label for="su-e">Email</label><input id="su-e" type="email" autocomplete="email" inputmode="email" required>
+  <h1>${mode === "new" ? "Create your account" : "Sign in"}</h1><p>SLAM the Game. ${mode === "new" ? "Your game saves to your own account, so it follows you to any phone or laptop. You and the person who runs SLAM can see it. A coach sees it only while Share with my coach is on." : "Welcome back. Your game is waiting where you left it."}</p>
+  <label for="su-e">Email</label><input id="su-e" type="email" autocomplete="email" inputmode="email" value="${esc2(em)}" required>
   <label for="su-p">Password ${mode === "new" ? "(at least 6 letters or numbers)" : ""}</label><input id="su-p" type="password" autocomplete="${mode === "new" ? "new-password" : "current-password"}" required>
   <button class="su-go" type="submit">${mode === "new" ? "Create my account" : "Sign in"}</button>
   <button type="button" class="su-other" data-m="${mode === "new" ? "in" : "new"}">${mode === "new" ? "I already have an account. Sign in" : "I'm new. Create an account"}</button>
-  ${mode === "in" ? `<button type="button" class="su-link" data-forgot>Forgot my password</button>` : ""}
-  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div><div class="su-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+  ${mode === "in" ? suForgotHTML(EMAIL_READY) : ""}
+  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">${suShareLine(SUPA.invited)}</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg" role="status">${msg}</div>${again ? `<button type="button" class="su-other" data-again>Send the email again</button>` : ""}${typeof tuGateFoot === "function" ? tuGateFoot() : ""}<div class="su-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+    const ag = el.querySelector("[data-again]");
+    if (ag)
+      ag.onclick = async () => {
+        ag.disabled = true;
+        ag.textContent = "One moment…";
+        const r = await tuResend(SUPA.sb, em, here());
+        draw(r.msg, true);
+      };
     const bk = el.querySelector("[data-door-back]");
     if (bk)
       bk.onclick = () => {
@@ -324,6 +391,7 @@ function suGate(done, mode0) {
       b =>
         (b.onclick = () => {
           mode = b.dataset.m;
+          em = el.querySelector("#su-e").value.trim();
           draw();
         })
     );
@@ -331,17 +399,19 @@ function suGate(done, mode0) {
     if (fg)
       fg.onclick = async () => {
         const e = el.querySelector("#su-e").value.trim();
+        em = e;
         if (!e) {
           draw("Type your email first, then tap Forgot my password.");
           return;
         }
-        const r = await SUPA.sb.auth.resetPasswordForEmail(e, { redirectTo: location.origin + location.pathname });
-        draw(r.error ? esc2(r.error.message) : "Check your email for a link to set a new password.");
+        const r = await tuReset(SUPA.sb, e, here());
+        draw(r.msg);
       };
     el.querySelector("form").onsubmit = async ev => {
       ev.preventDefault();
       const e = el.querySelector("#su-e").value.trim(),
         p = el.querySelector("#su-p").value;
+      em = e;
       if (!e || !p) {
         draw("Fill in both boxes.");
         return;
@@ -349,37 +419,17 @@ function suGate(done, mode0) {
       const btn = el.querySelector(".su-go");
       btn.disabled = true;
       btn.textContent = "One moment…";
-      const r =
-        mode === "new"
-          ? await SUPA.sb.auth.signUp({
-              email: e,
-              password: p,
-              /* data.ref: the code of the share link, kept with the account, thus it is not lost when
-                 the person confirms the email on a different device */
-              options: Object.assign(
-                { emailRedirectTo: location.origin + location.pathname },
-                suRef() ? { data: { ref: suRef() } } : {}
-              ),
-            })
-          : await SUPA.sb.auth.signInWithPassword({ email: e, password: p });
-      if (r.error) {
-        const m = r.error.message || "";
-        draw(
-          /already registered/i.test(m)
-            ? 'That email already has an account. Tap "I already have an account" below.'
-            : /invalid login/i.test(m)
-              ? "That email and password don't match. Try again, or tap Forgot my password."
-              : esc2(m)
-        );
-        return;
-      }
-      if (r.data && r.data.session) {
-        suSet(r.data.session);
+      /* trust.js: the answer of the sign-in service in calm words, never a raw error.
+         data.ref: the code of the share link, kept with the account, thus it is not lost when the person
+         confirms the email on a different device */
+      const r = await tuAuth(SUPA.sb, mode, e, p, here(), suRef() ? { ref: suRef() } : null);
+      if (r.state === "in") {
+        suSet(r.session);
         done();
         return;
       }
-      mode = "in";
-      draw("Almost there: check your email and tap the link to confirm, then sign in here.");
+      if (r.state === "confirm" || r.kind === "unconfirmed" || (r.kind === "exists" && r.again)) mode = "in";
+      draw(r.msg, r.again);
     };
   };
   draw();
@@ -484,7 +534,7 @@ if (SUPA.on) {
             return;
           }
           const r = await SUPA.sb.auth.updateUser({ password: p });
-          W.msg = r.error ? esc2(r.error.message) : "Saved. You're signed in.";
+          W.msg = r.error ? tuAuthMsg(r.error, "pw") : "Saved. You're signed in.";
           drawSheet();
           if (!r.error) setTimeout(closeSheet, 900);
         },
@@ -570,6 +620,7 @@ function suAcctSheet() {
  <button class="${SUPA.share ? "primary" : "ghost"}" data-a="sushare" aria-pressed="${SUPA.share}">${SUPA.share ? "Sharing" : "Share"}</button></div>
  ${W && W.msg ? `<div class="small" style="color:var(--good)">${W.msg}</div>` : ""}
  <button class="ghost wide" data-a="suout">Sign out</button>
+ ${typeof tuAcctRow === "function" ? tuAcctRow() : ""}
  <div class="tiny muted">Moving from the old version inside Claude? Open it there, tap Menu, then Backup copy, then Copy my game. Come back here, tap Menu, then Backup copy, paste it in, and tap Load this game.</div>`
   );
 }
