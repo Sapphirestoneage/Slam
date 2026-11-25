@@ -207,8 +207,8 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | The invite link is the sign-up | Not started | |
-| 2 | The session room | Not started | |
+| 1 | The invite link is the sign-up | Done in the code, switched off; the database file waits for Eli | The whole run is behind `LIVE_SESSION_READY = false` in `game/account/liveflag.js`: the coach page shows "Coming soon", `game/session.html` shows "Coming soon". With it on: `session.html?invite=token` is the sign-up (name, email, password), the coach page makes and lists the links. **Eli: run `supabase/migrations/20261125210000_live_sessions.sql` one time (NOT APPLIED).** QUESTIONS 592. |
+| 2 | The session room | Done in the code, switched off; not tried with real microphones | Rules as values (`game/account/live.js`), adapters with stand-ins, plain screens for the coach and the client; Parts 6 and 7 replace the body by the named parts `livePartCoach`, `livePartClient`, `livePartEnded`. Text only: nothing records audio. Two real devices, real speech recognition and the real realtime channel were not tried; the list for a dry run is in `docs/LIVE-SESSION-BUILD.md`. |
 | 3 | Live fill (rules only, no AI) | Not started | |
 | 4 | Spoken confirmation | Not started | |
 | 5 | What-ifs log | Not started | |
