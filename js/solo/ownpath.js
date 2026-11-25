@@ -8,9 +8,10 @@
 import { h, money } from './shell.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opOwnWayOf, opSearchFundOf, opPlanCheckOf, opFamilyOf, opAgeCareOf, OP_CHECKS } from '../math/ownpath.js';
 import { HAVE } from '../benefits.js';
+import { money as moneyOf } from '../format.js';
 import { OP_CHECKED_WORDS, OP_CARE_HELP, OP_PAPERS_RULES, OP_PLAN_RULES, OP_FAMILY_RULES, OP_OWN_RULES, OP_TALK, OP_AGE_RULES, OP_KIN_RULES } from '../ownpath-sources.js';
 
-const big = v => money(Math.round(v)), pct = v => `${Math.round(v * 100)}%`;
+const fee = v => moneyOf(v, { cents: v % 1 !== 0 }), big = v => money(Math.round(v)), pct = v => `${Math.round(v * 100)}%`;
 const months = m => (m === 0 ? 'already there' : `${m} ${m === 1 ? 'month' : 'months'}`);
 const SAVE = [{ key: 'saved', label: 'Saved toward it so far', picks: [0, 500, 1000, 2500, 5000], start: 0, optional: true }, { key: 'monthly', label: 'What you could put toward it a month', picks: [50, 100, 250, 500, 1000], optional: true, help: 'Leave it empty to see the amount only.' }];
 const QUOTE = 'From a quote, a letter or a bill. No typical amounts here: costs differ too much to guess.';
@@ -77,8 +78,8 @@ export const OWN_SPECS = {
       { key: 'orderCopies', label: 'Certified copies of the court order', picks: [], optional: true, help: 'Each office wants one. The county clerk sets the fee.' },
       { key: 'other', label: 'Anything else', picks: [], optional: true, help: 'Bank, school, work, a lawyer, travel to the court.' }],
     run: (v, ref) => opPapersOf({ court: v.court, born: v.born, id: v.idDoc, passport: v.passport, copies: v.copies, own: { court: v.courtFee, orderCopies: v.orderCopies, birth: v.birthFee, other: v.other } }, ref.idChangeNY),
-    answer: (R, V) => ({ lead: 'The fees you can count so far', big: money(R.total), line: `${money(R.dated)} is from the offices' own pages${R.yours ? ` and ${money(R.yours)} is your numbers` : ''}.${R.toAdd.length ? ` ${R.toAdd.length === 1 ? 'One step needs' : `${R.toAdd.length} steps need`} your number before the total is whole.` : ''}`,
-      rows: R.steps.map(s => [STEP_WORDS[s.key], s.key === 'court' ? STEP_SMALL.court[V.court] : s.from === 'dated' ? 'from the office\'s own page' : STEP_SMALL[s.key] ?? 'your number', s.fee == null ? 'add your number' : s.fee === 0 ? 'no fee' : money(s.fee)]),
+    answer: (R, V) => ({ lead: 'The fees you can count so far', big: fee(R.total), line: `${fee(R.dated)} is from the offices' own pages${R.yours ? ` and ${fee(R.yours)} is your numbers` : ''}.${R.toAdd.length ? ` ${R.toAdd.length === 1 ? 'One step needs' : `${R.toAdd.length} steps need`} your number before the total is whole.` : ''}`,
+      rows: R.steps.map(s => [STEP_WORDS[s.key], s.key === 'court' ? STEP_SMALL.court[V.court] : s.from === 'dated' ? 'from the office\'s own page' : STEP_SMALL[s.key] ?? 'your number', s.fee == null ? 'add your number' : s.fee === 0 ? 'no fee' : fee(s.fee)]),
       small: 'Fee waivers: you can ask the court to waive its fee. Trans Lifeline\'s Microgrants help pay for US documents (below).',
       fold: [['The passport, today', OP_PAPERS_RULES.find(r => r.key === 'passport').said], ['Social Security', OP_PAPERS_RULES.find(r => r.key === 'ssa').said], PRIVATE_FOLD] }),
     more: () => [sourcesCard('Who sets each step, in their own words', OP_PAPERS_RULES, 'papersrules'), sourcesCard('Help paying for it', OP_CARE_HELP.filter(o => /Microgrants/.test(o.name)))],

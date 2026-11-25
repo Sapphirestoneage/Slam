@@ -9,7 +9,7 @@ import { OP_KIN_RULES } from '../ownpath-sources.js';
 
 const $ = id => document.getElementById(id);
 function draw(api) {
-  foot();
+  foot(); const step = $('step'); if (step) step.style.display = 'none';
   const k = (s, b) => `kin_${s}.${b}`, mine = () => api.mine();
   const answers = () => Object.fromEntries(KIN_SECTIONS.flatMap(s => s.boxes.map(b => [`${s.key}.${b.key}`, mine()[k(s.key, b.key)] ?? b.start ?? ''])));
   const out = h('span.st-small', { role: 'status', style: { marginLeft: '8px' } }, '');

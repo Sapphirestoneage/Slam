@@ -12,7 +12,7 @@ const $ = id => document.getElementById(id);
 const PLAN = { takeHome: ['income', 'takeHome'], spending: ['spending', 'gut'], invested: ['invested', 'invested'] };
 export function calcPage(id, spec) {
   function draw(api) {
-    foot(); const step = $('step'); if (step) step.textContent = api.private ? '' : 'On its own';
+    foot(); const step = $('step'); if (step) { step.textContent = api.private ? '' : 'On its own'; step.style.display = api.private ? 'none' : ''; }
     const key = k => `${id}_${k}`, mem = () => api.mine();
     const get = f => (f.plan ? onFile(api.store.doc, PLAN[f.plan][0], { ref: api.ref })[PLAN[f.plan][1]] ?? null : mem()[key(f.key)] ?? f.start ?? null);
     const put = (f, v) => { if (f.plan) answer(api.store, PLAN[f.plan][0], { [PLAN[f.plan][1]]: v }); else api.remember({ [key(f.key)]: v }); };
