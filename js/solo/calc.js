@@ -4,7 +4,7 @@
 // spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
 // A field with `unit` is a count, not money; one with `when` shows only for some answers.
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
-import { boot, h, btn, chip, money, numBox, copyLink, foot } from './shell.js';
+import { boot, h, btn, chip, money, numBox, copyLink, foot, keepCard } from './shell.js';
 import { answer, onFile } from '../journey.js';
 import { pack } from '../start/link.js';
 
@@ -12,7 +12,7 @@ const $ = id => document.getElementById(id);
 const PLAN = { takeHome: ['income', 'takeHome'], spending: ['spending', 'gut'], invested: ['invested', 'invested'] };
 export function calcPage(id, spec) {
   function draw(api) {
-    foot(); const step = $('step'); if (step) step.textContent = 'On its own';
+    foot(); const step = $('step'); if (step) step.textContent = api.private ? '' : 'On its own';
     const key = k => `${id}_${k}`, mem = () => api.mine();
     const get = f => (f.plan ? onFile(api.store.doc, PLAN[f.plan][0], { ref: api.ref })[PLAN[f.plan][1]] ?? null : mem()[key(f.key)] ?? f.start ?? null);
     const put = (f, v) => { if (f.plan) answer(api.store, PLAN[f.plan][0], { [PLAN[f.plan][1]]: v }); else api.remember({ [key(f.key)]: v }); };
@@ -35,11 +35,11 @@ export function calcPage(id, spec) {
       : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values()) : f.picks, set(f), { id: `f_${f.key}`, help: f.help, unit: f.unit }));
     const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
       h('h2', { style: { marginTop: 0 } }, spec.fields.length === 1 ? 'One number' : 'A few numbers'), shown().map(field));
-    const carry = h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
+    const carry = spec.private ? keepCard(api) : h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
       h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim')));
     $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), inputs, card, ...(spec.more ? spec.more(api) : []), carry); // more: a page's own cards after the answer (home.html: buying and renting)
     const empty = shown().find(f => !f.options && !f.optional && get(f) == null);
     if (empty) inputs.querySelector(`#f_${empty.key}`)?.closest('.in')?.classList.add('st-pulse');
   }
-  return boot(id, draw);
+  return boot(id, draw, { private: !!spec.private });
 }
