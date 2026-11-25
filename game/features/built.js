@@ -67,6 +67,14 @@ const WB = [
     null,
   ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
+  [
+    "in",
+    "The front door: a landing screen, Start with no account, and the answer to Am I okay?",
+    "b",
+    () => WB_FN("doorGate") && WB_FN("doorHtml") && WB_FN("okCalc") && WB_HAS("okay") && WB_HAS("doorsave"),
+    "A person from the QR code or a link sees one line, Start, What is this? and Sign in. Start needs no account and no typing. The taps end on a first answer, said as a Guess, and an offer to save it by making an account.",
+    "okay",
+  ],
   ["in", "Make a guess real: Guess, Close, Exact", "b", () => WB_HAS("sharp"), "", "sharp"],
   [
     "feel",

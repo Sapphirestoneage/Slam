@@ -1,0 +1,160 @@
+// The front door of SLAM the Game, walked in a real browser (Chromium through Playwright).
+// Serve the repository (python3 -m http.server 8431), then: node tools/e2e/door_walk.cjs
+// Env: SLAM_URL (default http://localhost:8431), DOOR_OUT (a folder for the screenshots; default: none).
+// The Supabase script comes from a CDN that the build machine cannot reach, and a walk must not touch the real
+// database, so a stand-in answers in its place: nobody signed in (a new visitor), or one signed-in person.
+// The walk: (1) a new visitor from the link with ?ref= at 390 x 640: the landing, all of it on the first screen,
+// one primary button; (2) Start, the taps of a person, to the answer of "Am I okay?", with the count of taps and
+// the time; (3) the address still has ?ref=; (4) the offer to save opens "Create your account", and Back returns to
+// the game; (5) the same visitor again: straight to the game; (6) a signed-in person: no landing; (7) 1280 wide.
+// Exit code 1 when a check fails.
+const fs = require('fs');
+const path = require('path');
+let chromium;
+try { ({ chromium } = require('/opt/npm-tools/node_modules/playwright')); } catch { ({ chromium } = require('playwright')); }
+const BASE = process.env.SLAM_URL || 'http://localhost:8431';
+const OUT = process.env.DOOR_OUT || '';
+const stub = signedIn => `
+  (function () {
+    const chain = () => { const p = Promise.resolve({ data: [], error: null }); const o = new Proxy(function () {}, {
+      get: (t, k) => (k === 'then' ? p.then.bind(p) : k === 'catch' ? p.catch.bind(p) : () => o), apply: () => o }); return o; };
+    const session = ${signedIn ? `{ user: { id: 'user-1', email: 'demo@example.com' } }` : 'null'};
+    window.supabase = { createClient: () => ({
+      auth: { getSession: async () => ({ data: { session } }), onAuthStateChange: () => {},
+        signUp: async () => ({ data: {}, error: null }), signInWithPassword: async () => ({ data: {}, error: { message: 'stand-in' } }),
+        signOut: async () => ({}) },
+      from: () => chain(), rpc: () => chain() }) };
+  })();`;
+let bad = 0;
+const chk = (name, ok, info) => { if (!ok) bad++; console.log((ok ? 'ok   ' : 'FAIL ') + name + (info === undefined || ok ? '' : ' ' + JSON.stringify(info))); };
+
+async function open(browser, signedIn, w, h, storage) {
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, storageState: storage, serviceWorkers: 'block' });
+  await ctx.route(/cdn\.jsdelivr\.net/, r => r.fulfill({ contentType: 'application/javascript', body: stub(signedIn) }));
+  await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on('pageerror', e => errs.push(String(e)));
+  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_/.test(m.text())) errs.push(m.text()); });
+  await page.goto(BASE + '/game/?ref=abc123', { waitUntil: 'load' });
+  await page.waitForTimeout(600);
+  return { ctx, page, errs };
+}
+const shot = async (page, name) => { if (OUT) { fs.mkdirSync(OUT, { recursive: true }); await page.screenshot({ path: path.join(OUT, name + '.png') }); } };
+const sideways = page => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySelector('#door') || document.querySelector('#ov') || document.body).innerText));
+
+(async () => {
+  const browser = await chromium.launch();
+  // 1. a new visitor at 390 x 640
+  let { ctx, page, errs } = await open(browser, false, 390, 640);
+  chk('a new visitor sees the landing screen', await page.locator('#door').isVisible());
+  const box = async sel => page.locator(sel).first().boundingBox();
+  for (const [name, sel] of [['the one line', '#door h1'], ['Start', '#door [data-door=start]'], ['Sign in', '#door [data-door=in]'], ['What is this?', '#door summary']]) {
+    const b = await box(sel);
+    chk(name + ' is on the first screen at 390 x 640, with no scroll', b && b.y >= 0 && b.y + b.height <= 640 && b.x >= 0 && b.x + b.width <= 390, b);
+  }
+  const st = await box('#door [data-door=start]');
+  chk('Start is a big button (at least 300 x 60)', st.width >= 300 && st.height >= 60, st);
+  chk('each tap target is at least 44 high', (await box('#door [data-door=in]')).height >= 44 && (await box('#door summary')).height >= 44);
+  chk('What is this? is closed', !(await page.locator('#door details').evaluate(d => d.open)));
+  chk('no sideways scroll on the landing', !(await sideways(page)));
+  await shot(page, '1-landing-390');
+  await page.locator('#door summary').click();
+  chk('What is this? opens in place', await page.locator('#door .door-what').isVisible());
+  chk('it shows the advice line and the blank FIRE sheet button', /Education and tools, not financial advice\./.test(await page.locator('#door').innerText()) && (await page.locator('#door a.door-sheet').getAttribute('href')).endsWith('/copy'));
+  chk('open: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
+  await shot(page, '2-landing-open-390');
+  await page.locator('#door summary').click();
+  // 2. Start, and the taps of a person
+  const t0 = Date.now();
+  let taps = 0;
+  const tap = async sel => { await page.locator(sel).first().click(); taps++; await page.waitForTimeout(120); };
+  // The setup asks one question at a time and fills in what your earlier taps already say, so a question that is
+  // not on the screen needs no tap.
+  const chip = async (k, v) => {
+    const sel = `#ov [data-k="${k}"][data-v="${v}"]`;
+    if (await page.locator(sel).first().isVisible()) await tap(sel);
+    else console.log(`     (no tap needed for ${k})`);
+  };
+  await tap('#door [data-door=start]');
+  chk('Start: no sign-in screen, no landing', !(await page.locator('#su-gate').count()) && !(await page.locator('#door').count()));
+  chk('the first question is "Am I okay?"', /Am I okay\?/.test(await page.locator('#ov h2').first().innerText()));
+  chk('page 1 asks for no typing (the name box is closed)', !(await page.locator('#ov input:visible').count()));
+  await shot(page, '3-first-question-390');
+  // The setup asks one question at a time and fills in what the earlier taps already say. So the robot looks at the
+  // screen as a person does: it taps its answer to the open question, or "That's all", or Next.
+  const WANT = { ageDec: '30s', age: '34', work: 'Established', incKinds: 'A main job', payFreq: 'Every 2 weeks', steady: 'Steady', homeQ: '', live: 'On my own', rel: 'Single by choice', deps: 'None', share: 'No one', debtKinds: 'Credit card balance', accts: 'Checking', can1k: 'No', cover: 'Less than a month', invest: 'No' };
+  const path2 = [];
+  for (let i = 0; i < 60; i++) {
+    const pick = await page.evaluate(want => {
+      if (!W || W.kind !== 'setup') return null;
+      const vis = [...document.querySelectorAll('#ov .sheet button')].filter(b => b.offsetParent && !b.disabled);
+      const on = b => /(^| )(on|sel)( |$)/.test(b.className);
+      const mark = (b, why) => { b.setAttribute('data-robot', '1'); return why; };
+      for (const b of vis) {
+        const k = b.dataset.k, a = b.dataset.a;
+        if (!k || !(k in want) || !['set', 'setn', 'tog', 'agedec'].includes(a)) continue;
+        const answered = vis.some(x => x.dataset.k === k && on(x)) || (W.o[k] != null && !Array.isArray(W.o[k]) && k !== 'ageDec' && k !== 'age') || (W.robot || {})[k];
+        if (answered) continue;
+        if (want[k] === '' || b.dataset.v === want[k]) { W.robot = Object.assign(W.robot || {}, { [k]: 1 }); return mark(b, k + ' = ' + b.dataset.v); }
+      }
+      const all = vis.find(b => /^That's all$/.test(b.innerText.trim()));
+      if (all) return mark(all, "That's all");
+      const nx = vis.find(b => b.dataset.a === 'wnext');
+      return nx ? mark(nx, 'Next (page ' + (W.step + 1) + ')') : 'STUCK';
+    }, WANT);
+    if (pick === null) break;
+    if (pick === 'STUCK') { chk('the robot always finds a next tap', false, path2); break; }
+    await tap('#ov [data-robot="1"]');
+    path2.push(pick);
+    await page.evaluate(() => document.querySelectorAll('[data-robot]').forEach(b => b.removeAttribute('data-robot')));
+    if (/^Next/.test(pick)) await page.waitForTimeout(650); // the game ignores a second Next that comes at once
+    if (path2.length === 6) await shot(page, '3b-setup-390');
+  }
+  console.log('     the taps: Start, ' + path2.join(', '));
+  await page.waitForTimeout(400);
+  const secs = Math.round((Date.now() - t0) / 1000);
+  const txt = await page.locator('#ov').innerText();
+  chk('the path ends on the answer to "Am I okay?"', /Am I okay\?/.test(txt) && /From your taps/.test(txt), txt.slice(0, 200));
+  chk('the answer is a Guess, with no grade', /This is a Guess/.test(txt) && /No grade/.test(txt));
+  chk('the answer offers to save by making an account', await page.locator('#ov [data-a=doorsave]').isVisible());
+  chk('the answer: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
+  console.log(`     taps from Start to the answer: ${taps} (the robot waits 0.12 s after each tap: ${secs} s in all)`);
+  await shot(page, '4-answer-390');
+  // 3. the mark in the link is still there
+  chk('the address still has ?ref=abc123', /\?ref=abc123/.test(page.url()), page.url());
+  // 4. the offer
+  await tap('#ov [data-a=doorsave]');
+  chk('Save opens "Create your account"', /Create your account/.test(await page.locator('#su-gate h1').innerText()));
+  chk('the account screen fits 390 wide', !(await sideways(page)));
+  await shot(page, '5-create-account-390');
+  await page.locator('#su-gate [data-door-back]').click();
+  chk('Back returns to the game on this device', !(await page.locator('#su-gate').count()) && !(await page.locator('#door').count()));
+  await page.evaluate(() => closeSheet());
+  await page.waitForTimeout(200);
+  chk('Home has the row "Keep this game"', await page.locator('#app [data-a=doorsave]').isVisible());
+  chk('Home: no sideways scroll', !(await sideways(page)));
+  await shot(page, '6-home-guest-390');
+  chk('no error in the console (new visitor)', errs.length === 0, errs.slice(0, 3));
+  // 5. the same visitor again
+  const state = await ctx.storageState();
+  await ctx.close();
+  ({ ctx, page, errs } = await open(browser, false, 390, 640, state));
+  chk('the same visitor again: straight to the game, no landing, no sign-in screen', !(await page.locator('#door').count()) && !(await page.locator('#su-gate').count()) && (await page.evaluate(() => !G.demo)));
+  chk('no error in the console (visitor again)', errs.length === 0, errs.slice(0, 3));
+  await ctx.close();
+  // 6. a signed-in person
+  ({ ctx, page, errs } = await open(browser, true, 390, 640));
+  chk('a signed-in person does not see the landing', !(await page.locator('#door').count()) && !(await page.locator('#su-gate').count()));
+  chk('no error in the console (signed in)', errs.length === 0, errs.slice(0, 3));
+  await ctx.close();
+  // 7. 1280 wide
+  ({ ctx, page, errs } = await open(browser, false, 1280, 800));
+  chk('1280 wide: the landing shows, with no sideways scroll', (await page.locator('#door').isVisible()) && !(await sideways(page)));
+  await shot(page, '7-landing-1280');
+  await ctx.close();
+  await browser.close();
+  console.log(bad ? `${bad} FAILED` : 'all ok');
+  process.exit(bad ? 1 : 0);
+})();

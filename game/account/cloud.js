@@ -42,6 +42,8 @@ function clAgo(ms) {
 function clStatus() {
   /* the sample game is never saved, so the status must not say "Saved" while it is open */
   if (G && G.demo && CLOUD.db) return "Sample game · not saved. Make your own character to save it to your account";
+  /* door.js: a visitor with no account */
+  if (typeof doorGuest === "function" && doorGuest()) return "Saved on this device only";
   return CLOUD.st === "on"
     ? "Saved to your account" + (CLOUD.at ? " · " + clAgo(CLOUD.at) : "")
     : CLOUD.st === "connecting"
@@ -354,7 +356,8 @@ async function clStart() {
   const deadline = setTimeout(() => {
     if (CLOUD.st === "connecting") {
       CLOUD.st = "off";
-      CLOUD.err = "couldn't reach your account";
+      /* door.js: a visitor with no account has no account to reach */
+      CLOUD.err = typeof doorGuest === "function" && doorGuest() ? "" : "couldn't reach your account";
       clPaint();
     }
   }, 10000);

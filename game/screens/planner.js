@@ -925,7 +925,8 @@ function setupSheetPlan(h, w) {
     const k = h.lastIndexOf('<div class="row between">', h.lastIndexOf('data-a="wnext"'));
     if (k >= 0) h = h.slice(0, k) + strip + h.slice(k);
   }
-  if (w.mode !== "edit" && st === 4)
+  /* From the front door there is no fast finish: the answer to "Am I okay?" comes from the last screen. */
+  if (w.mode !== "edit" && st === 4 && !w.door)
     h = h.replace(
       /<div class="row between">(<button class="ghost" data-a="wback">[^<]*<\/button>)<button class="[^"]*" data-a="wnext">[^<]*<\/button><\/div>$/,
       `<div class="stack plspeed"><button class="primary wide go" data-a="speedfin">See my first plan</button><div class="row between">$1<button class="ghost" data-a="wnext">Keep going: 2 quick screens</button></div><div class="tiny muted">Skip ahead and the last two screens go on your plan for tomorrow. About 30 seconds either way.</div></div>`

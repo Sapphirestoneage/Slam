@@ -45,7 +45,9 @@ const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, 
   SUPA.sb.auth.getSession().then(async ({ data }) => {
     const s = data && data.session;
     if (!s) {
-      suGate(done);
+      /* door.js: a new visitor sees the landing screen first. The sign-in screen opens from there. */
+      if (typeof doorGate === "function") doorGate(done);
+      else suGate(done);
       return;
     }
     suSet(s);
@@ -254,12 +256,14 @@ function suSet(s) {
   SUPA.email = s.user.email || "";
   const g = document.getElementById("su-gate");
   if (g) g.remove();
+  if (typeof doorSigned === "function") doorSigned(); /* door.js: the landing screen goes away */
 }
 
 /* the sign-in screen: two boxes and one button. Create account and Sign in are the same screen. */
-function suGate(done) {
-  const css = `#su-gate{position:fixed;inset:0;z-index:99999;background:var(--bg,#0b1630);display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit}
- #su-gate .su-card{width:100%;max-width:380px;background:var(--panel,#13224a);border:1px solid var(--line,#2a3f7a);border-radius:16px;padding:22px;color:var(--text,#e8eeff)}
+/* mode0: "in" opens it on Sign in (door.js). With door.js, the screen has a button Back. */
+function suGate(done, mode0) {
+  const css = `#su-gate{position:fixed;inset:0;z-index:99999;background:var(--bg,#0b1630);display:flex;overflow:auto;padding:20px;font-family:inherit}
+ #su-gate .su-card{width:100%;max-width:380px;margin:auto;background:var(--panel,#13224a);border:1px solid var(--line,#2a3f7a);border-radius:16px;padding:22px;color:var(--text,#e8eeff)}
  #su-gate h1{font-size:22px;margin:0 0 4px}#su-gate p{margin:0 0 14px;color:var(--muted,#9fb0dd);font-size:14px;line-height:1.4}
  #su-gate label{display:block;font-size:13px;margin:10px 0 4px;color:var(--muted,#9fb0dd)}
  #su-gate input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:2px solid var(--line,#3a55a0);background:var(--panel2,#0e1a3a);color:inherit;font-size:16px}
@@ -269,7 +273,7 @@ function suGate(done) {
  #su-gate .su-msg{margin-top:12px;font-size:14px;min-height:18px}#su-gate .su-link{background:none;border:0;color:var(--a3,#8fb0ff);text-decoration:underline;font-size:13px;margin-top:10px;cursor:pointer;padding:0}`;
   const el = document.createElement("div");
   el.id = "su-gate";
-  let mode = "new";
+  let mode = mode0 === "in" ? "in" : "new";
   const draw = (msg = "") => {
     el.innerHTML = `<style>${css}</style><form class="su-card" novalidate>
   <h1>${mode === "new" ? "Create your account" : "Sign in"}</h1><p>SLAM the Game. ${mode === "new" ? "Your game saves to your own account, so it follows you to any phone or laptop. Only you and the person who runs SLAM can see it." : "Welcome back. Your game is waiting where you left it."}</p>
@@ -278,7 +282,13 @@ function suGate(done) {
   <button class="su-go" type="submit">${mode === "new" ? "Create my account" : "Sign in"}</button>
   <button type="button" class="su-other" data-m="${mode === "new" ? "in" : "new"}">${mode === "new" ? "I already have an account. Sign in" : "I'm new. Create an account"}</button>
   ${mode === "in" ? `<button type="button" class="su-link" data-forgot>Forgot my password</button>` : ""}
-  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div></form>`;
+  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+    const bk = el.querySelector("[data-door-back]");
+    if (bk)
+      bk.onclick = () => {
+        el.remove();
+        doorBack(); /* door.js: back to the landing screen, or to the game on this device */
+      };
     el.querySelectorAll("[data-m]").forEach(
       b =>
         (b.onclick = () => {
@@ -514,6 +524,8 @@ function homeCoachNote(h) {
   return h;
 }
 function suAcctSheet() {
+  /* okay.js: a visitor with no account sees how to make one */
+  if (typeof doorGuest === "function" && doorGuest() && typeof doorAcctSheet === "function") return doorAcctSheet();
   return (
     head("Your account", "My account") +
     `

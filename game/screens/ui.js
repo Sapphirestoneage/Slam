@@ -639,6 +639,7 @@ function home() {
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
   if (typeof homeRcRow === "function") h = homeRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
+  if (typeof homeDoorRow === "function") h = homeDoorRow(h); /* okay.js: a game with no account, and how to keep it */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -1595,6 +1596,7 @@ function setupSheet() {
   /* planner.js: questions left, what the game knows, the fast finish */
   if (typeof setupSheetPlan === "function") h = setupSheetPlan(h, w);
   if (typeof setupSheetRead === "function") h = setupSheetRead(h, w); /* ux.js: the line "Your first read" */
+  if (typeof setupSheetDoor === "function") h = setupSheetDoor(h, w); /* okay.js: the question "Am I okay?" */
   return h;
 }
 function setupSheetBase() {
@@ -1612,9 +1614,11 @@ function setupSheetBase() {
 function finishSetup() {
   /* planner.js, step 1 of 2: clear a question that waited, and make the note for the celebration. */
   const pl = typeof finishSetupPlanStart === "function" ? finishSetupPlanStart() : null;
+  const door = !!(W && W.door); /* okay.js: the setup came from the front door */
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
   const r = finishSetupBase();
   if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
+  if (door && typeof finishSetupOkay === "function") finishSetupOkay(); /* okay.js: the answer to "Am I okay?" */
   return r;
 }
 function finishSetupBase() {
