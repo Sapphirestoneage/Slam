@@ -18,6 +18,7 @@ import { ladderOf } from './math/ladder.js';
 import { foo } from './math/foo.js';
 import { simpleMath } from './math/simple.js';
 import { baristaFiNumber } from './math/fi.js';
+import { baristaHealthOf } from './plan.js';
 import { fastTrackAnswers, applyFastTrack } from './fasttrack.js';
 import { fmt } from './math/result.js';
 import { RULES } from './registry/assumptions.js';
@@ -362,7 +363,7 @@ export function numbersOf(plan, doc, ref, { now = new Date() } = {}) {
   ];
   const hourly = first.find(n => n.id === 'hourly'); if (m.hourly?.guess && open.has('time')) hourly.sharper = 'time'; // a guess until Your time is answered
   const baristaRow = first.find(n => n.id === 'barista');
-  if (doc.assumptions?.partTimeIncome != null) { const b = baristaFiNumber({ annualSpending: (x.retirementSpending ?? 0) * 12, partTimeIncome: doc.assumptions.partTimeIncome * 12, withdrawalRate: x.withdrawalRate }); Object.assign(baristaRow, { label: `Barista FI number (with ${fmt.money(doc.assumptions.partTimeIncome)} a month of part-time pay)`, value: b.value == null ? null : fmt.money(Math.max(0, b.value)), text: b.text }); }
+  if (doc.assumptions?.partTimeIncome != null) { const b = baristaFiNumber({ annualSpending: (x.retirementSpending ?? 0) * 12, partTimeIncome: doc.assumptions.partTimeIncome * 12, healthAnnual: baristaHealthOf(doc) == null ? null : baristaHealthOf(doc) * 12, withdrawalRate: x.withdrawalRate }); Object.assign(baristaRow, { label: `Barista FI number (with ${fmt.money(doc.assumptions.partTimeIncome)} a month of part-time pay)`, value: b.value == null ? null : fmt.money(Math.max(0, b.value)), text: b.text }); }
   const order = ['Each month', 'Safety', 'What you have', 'Independence'];
   return [...first, ...more].sort((a, b) => order.indexOf(a.group) - order.indexOf(b.group));
 }

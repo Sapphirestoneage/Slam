@@ -764,7 +764,11 @@ tr.row-note .part-line { margin-right: 12px; }
 .dest-assumes { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 4px; }
 .dest-fat { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .dest-fat-row { display: grid; grid-template-columns: 150px 1fr; gap: var(--s3); align-items: center; }
-.dest-fat-name { font-weight: 600; }
+.dest-fat-name { font-weight: 600; display: flex; flex-direction: column; }
+.dest-fat-note { font-weight: 400; }
+.dest-apart { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.dest-apart-body { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 8px; }
+.coast-card.coast-below { border: 1px solid var(--border-row); }
 .dest-card .picks, .dest-fat .picks { flex-wrap: wrap; }
 table.rows.mini.dest-stress td.dest-cur { font-weight: 700; outline: 2px solid var(--goals); outline-offset: -2px; border-radius: 4px; }
 .dest-foo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

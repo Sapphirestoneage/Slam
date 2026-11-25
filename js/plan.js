@@ -15,12 +15,18 @@ import { RULES } from './registry/assumptions.js';
 import { materialityOf } from './math/time.js';
 
 export const MILESTONES = ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI', 'Debt free', 'Custom'];
-export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending (QUESTIONS: confirm)
+export const FAT_FACTOR = RULES.fatFactor; // Fat FI: 1.5 times regular spending, the stand-in until the Fat list is tapped (Eli's yes, Nov 25 2026, QUESTIONS 580)
 
 // The Fat list (Plan › Goals): the extras a month tapped on it, added up; null while none is tapped.
 export function fatExtrasOf(doc) {
   const picks = Object.values(doc.program?.destinations?.fat || {}).filter(v => typeof v === 'number' && v > 0);
   return picks.length ? picks.reduce((a, b) => a + b, 0) : null;
+}
+// What health insurance adds to the Barista number, a month (Eli, Nov 25 2026): the cost tapped on the Barista view;
+// 0 when a tap says the part-time job covers health insurance; null while no cost is tapped (nothing is added).
+export function baristaHealthOf(doc) {
+  if (doc.program?.destinations?.jobHealth === true) return 0;
+  return doc.assumptions?.lifeHealth ?? null;
 }
 // The taps of the destination views, saved on the plan (one undo step each): the view that is open, the Fat list,
 // the destination the FOO is ordered for, the day the Coast card was closed.
@@ -38,7 +44,7 @@ export function fiTargets(m, doc) {
     'Lean FI': fat ? leanFiNumber({ annualFat: fat * 12, withdrawalRate: w }) : { id: 'M51', value: null, needs: ['food, housing or transportation lines'] },
     'Coast FI': m.coastFi,
     // After launch, will you keep a job? No: Barista FI is not on this path (asked once, on Plan › FOO).
-    'Barista FI': doc.profile?.keepJobAfterLaunch === 'No' ? { id: 'M52', value: null, needs: [], never: true, text: 'No job after launch, so Barista FI is not on this path.' } : baristaFiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, partTimeIncome: partTime === null ? null : partTime * 12, withdrawalRate: w }),
+    'Barista FI': doc.profile?.keepJobAfterLaunch === 'No' ? { id: 'M52', value: null, needs: [], never: true, text: 'No job after launch, so Barista FI is not on this path.' } : baristaFiNumber({ annualSpending: x.retirementSpending === null ? null : x.retirementSpending * 12, partTimeIncome: partTime === null ? null : partTime * 12, healthAnnual: baristaHealthOf(doc) === null ? null : baristaHealthOf(doc) * 12, withdrawalRate: w }),
     'Regular FI': m.fiNumber,
     'Chubby FI': chubbyFiNumber({ regular: m.fiNumber.value, fat: fat$.value }),
     'Fat FI': fat$,
