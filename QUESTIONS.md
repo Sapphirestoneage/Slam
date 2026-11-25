@@ -130,3 +130,5 @@ Everything before batch 59 (questions 1 to about 470, Oct 28 to Nov 6 2026) is i
 
 578. **SLAM the Game, 2026-11-25: two answers from Eli on the coach page.** (1) Keep the flag "under one month of cushion" as it is. (2) Leads, referrals, the next offer and reminders stay in a separate tool (for example GoHighLevel), not in the game. Nothing to build for either. Still to do, by Eli: run supabase/migrations/20261124170000_roles_audit_coach.sql one time in the Supabase SQL editor.
 
+579. **SLAM the Game, 2026-11-25: the database file of 2026-11-24 is applied.** Eli ran supabase/migrations/20261124170000_roles_audit_coach.sql in the Supabase SQL Editor. Checked after, read only: the tables admin_audit, coach_notes and save_failures exist with their row rules; the 7 new functions exist; a visitor with no sign-in cannot call is_admin; the rights of games and card_library are as before; "share with my coach" is the default. Still to see with a real sign-in: the hats, the audit log, Health, the backup, and a note saved to the account.
+

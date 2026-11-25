@@ -1,5 +1,6 @@
 -- SLAM the Game: roles, the audit log, the coach page, the admin page.
--- NOT APPLIED. Run this file one time in the Supabase SQL Editor (the same project as the game's sign-in).
+-- APPLIED to the live database on 2026-11-25 (by the owner, in the Supabase SQL Editor) and checked after.
+-- For a new database: run this file one time in the Supabase SQL Editor (the same project as the game's sign-in).
 -- It is safe to run two times. Until it runs, the game works as before: the coach page and the admin page
 -- say which part waits for this file.
 -- Checked against the live database on 2026-11-24 (read only): each admin_* function already checks is_admin()
