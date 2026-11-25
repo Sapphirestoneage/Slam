@@ -650,6 +650,21 @@ const WB = [
   ],
   [
     "feel",
+    "Your money read: the result card, the share card, the two of you and the retake",
+    "b",
+    () =>
+      WB_FN("snCard") &&
+      WB_FN("snFrame") &&
+      WB_FN("snCouple") &&
+      WB_FN("sngCardPart") &&
+      WB_HAS("snshare") &&
+      WB_HAS("sndate") &&
+      snArchetypes(qzSkin("sins")).length === 84,
+    "A name for your read (84 of them, from your main pull and your way of dodging change), the light side and the virtue of each, and one Recalculating move for the month. A share card with no numbers, made only when you tap. Home, the month check and the crash drill add one line for your type once the read has a label. Two people in a household who both turn on sharing see how their reads collide and get a money date to tap through. A gentle retake each quarter, and the sin weakening over the retakes on the character sheet. The graduation story is not built yet.",
+    "sins",
+  ],
+  [
+    "feel",
     "A rival to race",
     "p",
     () => WB_HAS("rival"),

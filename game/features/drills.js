@@ -262,6 +262,7 @@ function fdDone(c) {
 function fdSheet() {
   let h = fdSheetBase();
   if (typeof fdSheetIdeas === "function") h = fdSheetIdeas(h); /* ideasz.js: two more drill forms */
+  if (typeof fdSheetSins === "function") h = fdSheetSins(h); /* sins.js: the line for the type on the crash drill */
   return h;
 }
 function fdSheetBase() {

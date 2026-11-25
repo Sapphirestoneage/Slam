@@ -11,6 +11,21 @@ import { openCalmLetter } from './exercise-letter-ui.js';
 import { rcMonthName } from '../math/recalc.js';
 import { money } from '../format.js';
 import { soonPart } from './soon.js';
+import { SINS } from '../quiz/skins/sins.js';
+import { sinsReadNow, sinsKeyOf } from '../quiz/store.js';
+import { snFrame } from '../math/sins.js';
+
+// The money sins, Part 2: the app talks to the type. One short line for the moment (snFrame), added under the card's
+// own words; it never changes or hides a number. ctx.store.doc is the folded view, so a read that is private to its
+// person is not there in the coach's screens (and then there is no line). With no read or an Early read: no line.
+export function frameLine(ctx, moment) {
+  try {
+    const start = ctx.store.doc.settings?.start, who = ctx.audience?.().person === 'Partner' ? 'Partner' : 'Me', key = sinsKeyOf(who);
+    if (!start?.lenses?.[key]?.at) return null;
+    const F = snFrame(SINS, sinsReadNow(SINS, start, ctx.store.doc, ctx.now().toISOString().slice(0, 10), key), moment);
+    return F.line ? h('p.small.rc-frame', { 'data-frame': `${moment}:${F.trait}`, style: { margin: '6px 0 0' } }, F.line) : null;
+  } catch (e) { console.error(e); return null; }
+}
 
 const save = (ctx, patch) => ctx.store.setDoc('settings', { recalc: { ...notesOf(ctx.store.doc), ...patch } });
 const whenOf = iso => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -34,6 +49,7 @@ function routeCard(app, ctx, R, where) {
     h('div.row-line.rc-turn', { style: { gap: '10px' } }, h('span.label', {}, 'Your next turn'), h('strong', {}, (cards.find(c => !c.words.win) ?? lead).words.next),
       lead.id === 'debt' && lead.hold != null ? S.button(`Make ${money(lead.hold)} more a month the plan`, { size: 'small', onClick: () => { ctx.store.setDoc('settings', { debtExtra: (ctx.metrics().inputs.debtExtra ?? 0) + lead.hold }); S.toast(`${money(lead.hold)} more a month to debt is the plan now.`, { undo: () => ctx.store.undo() }); } }) : null,
       where !== 'debt' && lead.id === 'debt' && !lead.words.win ? S.button('Open Debt payoff', { size: 'small', iconName: 'right', onClick: () => app.go('#/plan/debt-payoff') }) : null),
+    wins ? null : frameLine(ctx, 'hard'),
     S.moreBlock(`rc:math:${where}`, () => h('div.stack.small', { style: { gap: '4px' } },
       h('span', {}, 'The old date is the one the plan gave on the day it was last kept (End session, Month end or Save snapshot).'),
       h('span', {}, 'The new date starts from today\'s balances, payments and spending. It never assumes you are where the old plan said you would be.'),
@@ -49,6 +65,7 @@ function triageCard(ctx, R) {
     h('p.muted.small', { style: { margin: '4px 0 8px' } }, 'Pay in this order. A roof, the lights, food, health cover and medicine, and childcare if it lets you keep working come first. Then the way to work, then lenders.'),
     h('ol.rc-order', {}, T.groups.map(g => h('li', {}, h('span.rc-name', {}, g.label), h('span.muted.small', {}, `${money(g.amount)} due`),
       h('span.rc-paid', {}, g.unpaid > 0.5 ? (g.paid > 0.5 ? `${money(g.paid)} now, ${money(g.unpaid)} to arrange` : `${money(g.unpaid)} to arrange`) : 'paid in full')))),
+    R.cards.some(c => !c.words.win) ? null : frameLine(ctx, 'hard'), // the route card has the line when it shows
     T.scripts ? S.moreBlock('rc:scripts', () => h('div.stack', { style: { gap: '12px' } }, T.scripts.map(g => h('div.rc-script', {},
       h('strong', {}, `${g.label}: ${g.script.who}`), h('ul', {}, g.script.say.map(line => h('li', {}, `"${line}"`))), h('span.muted.small', {}, g.script.note)))), { label: `What to say on the phone (${T.scripts.length})` })
       : soonPart({ id: 'rc-scripts', title: 'What to say on the phone', line: 'Word-for-word scripts for each call are on the way. Until then: call before the due date, say what you can pay, and ask for a payment plan.' }),
@@ -88,7 +105,8 @@ function doneCard(ctx, R) {
     h('div.row-line', { style: { gap: '10px', alignItems: 'baseline' } }, h('strong.rc-done-head', {}, 'Done for this month.'), h('span.muted', {}, 'Nothing needs you. Close the app and enjoy it.')),
     h('div.row-line', { style: { gap: '10px', marginTop: '8px' } },
       R.letter?.text ? h('span.muted.small', {}, 'Your letter for a harder month is kept.') : h('span.muted.small', {}, 'While it is calm: a few lines to yourself for a harder month.'),
-      S.button(R.letter?.text ? 'Read or change the letter' : 'Write the letter', { size: 'small', onClick: e => openCalmLetter(ctx, e.currentTarget) })));
+      S.button(R.letter?.text ? 'Read or change the letter' : 'Write the letter', { size: 'small', onClick: e => openCalmLetter(ctx, e.currentTarget) })),
+    frameLine(ctx, 'home'));
 }
 
 // The safe-to-fail line on Budget: one fun or experiment line that can run out.
