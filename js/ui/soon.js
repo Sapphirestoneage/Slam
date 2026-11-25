@@ -15,7 +15,7 @@ export function soonCard({ home = '#/home/session' } = {}) {
   return h('div.card', { role: 'status', 'data-soon': '1' }, h('div.empty.center', {},
     h('span.title', {}, 'Coming soon'),
     h('span.muted', {}, 'This screen is not ready yet. Nothing of yours changed, and the rest of the app works as before.'),
-    h('a.btn.primary', { href: home }, 'Go to Home')));
+    h('a.btn.primary', { href: home, style: { textDecoration: 'none' } }, 'Go to Home')));
 }
 
 const later = e => setTimeout(() => { throw e; }, 0); // on purpose: the error stays visible

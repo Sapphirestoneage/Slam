@@ -175,7 +175,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | A stable public site | Not started | |
+| 1 | A stable public site | Done | The branch `release` and `bash tools/promote.sh` (both suites on the exact `main` commit, fast-forward only). "Coming soon" card in the game and the web app. Eli: switch GitHub Pages to `release` (`docs/RELEASE.md`). **Promote at the end of every run and say so in the summary.** |
 | 2 | Report a bug or idea | Not started | |
 | 3 | Founding Testers and sharing | Not started | |
 | 4 | Trust | Not started | |

@@ -39,6 +39,20 @@ Node 20 or newer. With LibreOffice installed, the spreadsheet checks also recalc
 every formula with the app (docs/WORKBOOK.md; `node tools/workbook-check.mjs` lists any row that differs). Without
 ExcelJS or LibreOffice those few tests skip and say which is missing.
 
+## The public site: promote at the end of every run
+
+The public site is served from the branch `release`, not from `main`. `release` only moves when this passes:
+
+```
+bash tools/promote.sh
+```
+
+It tests the exact commit of `main` on GitHub in a temporary folder (`node --test` and `npm run test:game`) and,
+only when both pass, fast-forwards `release` to it. It never forces or merges. Run it at the end of every run,
+after the last push to `main`, and put its last line in the run's summary ("release is now ...", or "not promoted:
+..." with the reason). A part that is not finished must show the card "Coming soon", never a broken screen. The
+details, and the steps for GitHub Pages, are in `docs/RELEASE.md`.
+
 ## House rules
 
 Math in `js/math` with tests; views never calculate; no red and no verdict words; no em dashes; copy from the

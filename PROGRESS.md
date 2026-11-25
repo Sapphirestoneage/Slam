@@ -171,6 +171,7 @@ It starts when each of the two other runs has finished the part it is on. The tw
 A line is added here for each part.
 
 - Logged. Waiting for Part 1 of each of the two other runs to land.
+- **Part 1, a stable public site: done.** The branch `release` exists (made at `41441f3`, the last `main` commit where both suites pass, tested on that exact commit). `tools/promote.sh` (one command: `bash tools/promote.sh`) tests the exact `main` commit of GitHub in a temporary folder and fast-forwards `release` only when `node --test` and `npm run test:game` both pass; it never forces or merges (`test/promote.test.js`, 8 tests with a local remote). `docs/RELEASE.md` has the clicks for GitHub Pages and the rule "promote at the end of every run"; `CONTRIBUTING.md` has the short form. "Coming soon": one shared piece in each app (`game/core/soon.js`, `js/ui/soon.js`). A tap with no action, an action or a screen that throws, a Menu row with no action and a route with no screen all show one calm card; the error is still recorded and still reaches the console (`game/tests/coming-soon.js`, 40 checks; `test/soon.test.js`, 6 tests). Found and repaired on the way: in a browser, each Menu row of the game closed again at once, and a Menu row that goes to a tab went back (`uxPop` in `game/screens/ux.js`). Not done here: the switch of GitHub Pages (Eli), the stand-alone calculator pages, `admin.html` and `coach.html`.
 
 ## Nov 25 2026: RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
 
