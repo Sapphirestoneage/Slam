@@ -66,10 +66,13 @@ function rgBossPart(c) {
       "Your ruler (the boss of your main pull)",
       `<h2 style="margin:4px 0" data-fid="rg:boss">${esc(B.name)}</h2><div class="tiny muted">Ruler of ${esc(B.ring)}. Main pull: ${esc(B.sinName)}.</div>` +
         `<div class="small">${esc(B.roast)}</div><div class="small muted">It says: "${esc(B.taunt)}"</div>` +
-        (B.hold != null ? dkProgress(B.hold, { text: B.holdLine }) : "") +
+        (B.hold != null
+          ? bar(B.hold, "hp") +
+            `<div class="tiny muted">${esc(B.holdLine)} The bar is its hit points, like a debt's balance.</div>`
+          : "") +
         `<div class="small">${esc(B.line)} ${K ? esc(K.climbed + " of " + K.of + " rings climbed.") : ""}</div>` +
         (B.ward
-          ? `<div class="tile small"><b>${esc(rgT("ward", "Your defense"))}: ${esc(B.ward)}.</b> ${esc(B.beat)}</div>`
+          ? `<div class="tile small"><b>${esc(rgT("ward", "Test the fix"))}: ${esc(B.ward)}.</b> ${esc(B.beat)}</div>`
           : "") +
         `<button class="ghost wide slim" data-a="sins">See the climb on your money read</button>`,
       { right: dkPill(B.level + " · " + B.word) }

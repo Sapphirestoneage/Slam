@@ -297,6 +297,14 @@ function themeCard() {
  <details style="margin-top:10px" ${lk !== vc ? "open" : ""}><summary>Blend two themes</summary><div class="inner stack">${q("Looks like", `<div class="chips">${ids.map(t => `<button class="chip ${lk === t ? "on" : ""}" data-a="look" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`)}${q("Talks like", `<div class="chips">${ids.map(t => `<button class="chip ${vc === t ? "on" : ""}" data-a="voice" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`, "Example: Night Coven colors with Tabletop Quest words.")}</div></details>
  <div class="row between" style="margin-top:10px"><span class="small">Show my freedom date<div class="tiny muted">Retirement math, for the FIRE crowd. Off by default.</div></span><div class="seg"><button class="${G.fire ? "on" : ""}" data-a="fire" data-v="1">On</button><button class="${G.fire ? "" : "on"}" data-a="fire" data-v="0">Off</button></div></div></div>`;
 }
+/* The theme picker as a sheet (the Theme button in the top bar, and the row of the money read). */
+function themeSheet() {
+  return head("Me", "Theme") + themeCard() + `<button class="ghost wide slim" data-a="close">Done</button>`;
+}
+/* After a theme tap: draw the theme sheet again when it is open, so the pick shows at once. */
+function thRedraw() {
+  if (W && W.kind === "themes" && SH === themeSheet) sheet(themeSheet);
+}
 function applyLook() {
   if (typeof document !== "undefined" && document.body && document.body.dataset) document.body.dataset.look = LK();
 }
@@ -3440,7 +3448,9 @@ const progLine = (a, b) =>
   a.e === b.e && b.total ? "On the way to " + b.n + ": " + a.pct + "% → " + b.pct + "%" : null;
 Object.assign(ACT, {
   themes: () => {
-    go("me");
+    /* A sheet of its own: on Me the theme card can sit under "Show more", so the button opened a hidden card. */
+    W = { kind: "themes" };
+    sheet(themeSheet);
   },
   thshow: t => {
     const c = C();
@@ -3448,12 +3458,14 @@ Object.assign(ACT, {
     c.x.thShow = Object.assign({}, c.x.thShow, { [t.dataset.v]: true });
     save();
     render();
+    thRedraw();
   },
   theme: t => {
     G.look = t.dataset.v;
     G.voice = t.dataset.v;
     save();
     render();
+    thRedraw();
   },
   look: t => {
     const v = VC();
@@ -3461,6 +3473,7 @@ Object.assign(ACT, {
     G.voice = v;
     save();
     render();
+    thRedraw();
   },
   voice: t => {
     const l = LK();
@@ -3468,6 +3481,7 @@ Object.assign(ACT, {
     G.look = l;
     save();
     render();
+    thRedraw();
   },
   detail: t => openDetail(t.dataset.v || null),
   dans: t => {

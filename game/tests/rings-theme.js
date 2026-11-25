@@ -91,6 +91,14 @@
     "the picker lists the Rings, and nothing themed shows until it is picked",
     themeCard().includes('data-a="theme" data-v="rings"') && rgT("escape", "Recalculating") === "Recalculating"
   );
+  X("themes");
+  chk(
+    "the Theme button opens the picker as its own sheet (on Me it could sit under Show more)",
+    W.kind === "themes" && ov().includes('data-a="theme" data-v="rings"')
+  );
+  X("theme", "fae");
+  chk("a pick shows at once on the open sheet", ov().includes('class="rowbtn sel" data-a="theme" data-v="fae"'));
+  X("theme", "sapphire");
   X("sins");
   chk(
     "with the Rings off, the read has one slim row to the theme and no ruler",
@@ -131,7 +139,7 @@
       ov().includes(esc(B.name)) &&
       ov().includes('data-fid="rg:boss"') &&
       ov().includes(esc(B.holdLine)) &&
-      ov().includes("Your ward (Your defense): " + esc(B.ward)) &&
+      ov().includes("Your ward (Test the fix): " + esc(B.ward)) &&
       ov().includes(esc("Card")),
     junk(ov())
   );
