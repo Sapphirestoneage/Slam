@@ -201,3 +201,18 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 1 | The read | Not started | Waits for the quiz engine (Not built, groups 1 to 5, Part 11) |
 | 2 | Results and growth | Not started | |
 | 3 | The Rings theme | Not started | |
+
+## RUN: Live Session Mode (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The invite link is the sign-up | Not started | |
+| 2 | The session room | Not started | |
+| 3 | Live fill (rules only, no AI) | Not started | |
+| 4 | Spoken confirmation | Not started | |
+| 5 | What-ifs log | Not started | |
+| 6 | Screens | Not started | |
+| 7 | End of call review | Not started | |
+| 8 | After the call (AI pass, behind the switch) | Not started | |
+| 9 | Privacy | Not started | |
+| 10 | Tests, checks and report | Not started | |

@@ -208,3 +208,11 @@ launch run. A line is added here for each part.
 
 - Logged. It starts when the launch run is done and the quiz engine is on main.
 
+
+## Nov 25 2026: RUN: Live Session Mode (Nov 25 2026)
+
+Run name: **Live Session Mode (Nov 25 2026)**. 9 parts plus tests and a report: Eli runs a coaching call, presses
+Start one time, and the client's game profile fills in while they talk (text only, no audio is saved). The whole
+feature stays behind one switch that is off until the last part's tests pass. A line is added here for each part.
+
+- Logged. Parts 1 and 2 (the invite link is the sign-up, the session room) are being built.
