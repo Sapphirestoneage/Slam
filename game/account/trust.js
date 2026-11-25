@@ -128,12 +128,17 @@ function tuCheckEmail(email) {
    state "in"      signed in (session)
    state "confirm" the account waits for the link in the email (msg, again: true = offer "Send the email again")
    state "msg"     something to tell the player (msg), and perhaps the same offer (again) */
-async function tuAuth(sb, mode, email, pw, redirect) {
+async function tuAuth(sb, mode, email, pw, redirect, meta) {
   let r;
   try {
     r =
       mode === "new"
-        ? await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } })
+        ? await sb.auth.signUp({
+            email,
+            password: pw,
+            /* meta: what the account keeps from the arrival (the code of a share link) */
+            options: Object.assign({ emailRedirectTo: redirect }, meta ? { data: meta } : {}),
+          })
         : await sb.auth.signInWithPassword({ email, password: pw });
   } catch (e) {
     report(e, "trust.js: tuAuth");

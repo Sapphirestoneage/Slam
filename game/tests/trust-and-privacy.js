@@ -90,6 +90,21 @@
     ""
   );
   chk("confirmation off: sign-up signs the person straight in, with no email message", r.state === "in" && !r.msg);
+  let sent = null;
+  await tuAuth(
+    svc({
+      signUp: async a => ((sent = a), { data: { user: { id: "u1", identities: [{}] }, session: null }, error: null }),
+    }),
+    "new",
+    "a@example.com",
+    "secret1",
+    "https://x/",
+    { ref: "abcd1234" }
+  );
+  chk(
+    "the code of a share link goes with the new account",
+    sent.options.data.ref === "abcd1234" && sent.options.emailRedirectTo === "https://x/"
+  );
   r = await tuAuth(svc({ signUp: err(raw, 500, "unexpected_failure") }), "new", "a@example.com", "secret1", "");
   chk(
     "the email could not be sent: what happened, whose side, and what to do. Not the raw error",
@@ -467,6 +482,29 @@
       /owner uuid default auth\.uid\(\) references auth\.users/.test(
         fs.readFileSync(GAME_DIR + "../supabase/migrations/20261125190000_reports.sql", "utf8")
       )
+  );
+  chk(
+    "the row of the finished setup goes too, when that table exists, and the privacy page names it",
+    /if to_regclass\('public\.account_setup'\) is not null then execute 'delete from public\.account_setup where user_id = \$1' using me;/.test(
+      body
+    ) &&
+      /When you finish setup:/.test(page) &&
+      TU_GAME_KEYS.test(SU_REF)
+  );
+  chk(
+    "each table that a database file makes is named in the function, or holds no row of a player",
+    fs
+      .readdirSync(GAME_DIR + "../supabase/migrations")
+      .concat(["../../docs/game-addons.sql"])
+      .flatMap(
+        f =>
+          fs
+            .readFileSync(GAME_DIR + "../supabase/migrations/" + f, "utf8")
+            .match(/create table if not exists (?:public\.)?(\w+)/g) || []
+      )
+      .map(x => x.split(/[ .]/).pop())
+      .filter(t => !["content_packs", "app_admins", "card_library", "admin_audit"].includes(t))
+      .every(t => new RegExp("delete from (public\\.)?" + t + " where").test(body))
   );
   chk("the privacy page says what a report holds", /If you tap Report:/.test(page) && /No money number/.test(page));
   chk("a report that waits on the device goes with the copy on the device", TU_GAME_KEYS.test(RP_STORE));

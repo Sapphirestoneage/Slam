@@ -71,6 +71,36 @@ if (typeof location !== "undefined" && typeof localStorage !== "undefined") {
   SUPA.share = SUPA.invited;
 }
 
+/* A share link has ?ref=code (features/founding.js makes it). The code a person arrives with is kept on this
+   device from the first page load, through the sign-up, until setup is finished. The first code stays.
+   suRefClean() takes only letters and digits, thus the link cannot carry anything else. */
+const SU_REF = "slam_ref";
+function suRefClean(s) {
+  const c = String(s == null ? "" : s)
+    .trim()
+    .toLowerCase();
+  return /^[a-z0-9]{4,32}$/.test(c) ? c : "";
+}
+function suRef() {
+  try {
+    return typeof localStorage === "undefined" ? "" : suRefClean(localStorage.getItem(SU_REF));
+  } catch (e) {
+    report(e, "supa.js: suRef");
+    return "";
+  }
+}
+function suRefKeep(search) {
+  try {
+    const q = suRefClean(new URLSearchParams(search || "").get("ref"));
+    if (q && !suRef()) localStorage.setItem(SU_REF, q);
+    return q;
+  } catch (e) {
+    report(e, "supa.js: suRefKeep");
+    return "";
+  }
+}
+if (typeof location !== "undefined") suRefKeep(location.search);
+
 (function () {
   if (typeof window === "undefined" || window.claude) return; /* inside Claude: use Claude's own saving */
   if (!window.supabase || !window.supabase.createClient) {
@@ -379,8 +409,10 @@ function suGate(done) {
       const btn = el.querySelector(".su-go");
       btn.disabled = true;
       btn.textContent = "One moment…";
-      /* trust.js: the answer of the sign-in service in calm words, never a raw error */
-      const r = await tuAuth(SUPA.sb, mode, e, p, here());
+      /* trust.js: the answer of the sign-in service in calm words, never a raw error.
+         data.ref: the code of the share link, kept with the account, thus it is not lost when the person
+         confirms the email on a different device */
+      const r = await tuAuth(SUPA.sb, mode, e, p, here(), suRef() ? { ref: suRef() } : null);
       if (r.state === "in") {
         suSet(r.session);
         done();

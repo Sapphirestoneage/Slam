@@ -10,7 +10,8 @@
 --      the notes a coach kept about this person and the notes this person kept as a coach (coach_notes),
 --      and the lines of failed saves (save_failures);
 --   2. removes the reports this person sent with the button "Report", if that table exists
---      (20261125190000_reports.sql), and the rows of the web app, if its tables exist (docs/cloud-schema.sql:
+--      (20261125190000_reports.sql), the row of the finished setup with the share code, if that table exists
+--      (20261125190000_founding_and_referrals.sql), and the rows of the web app, if its tables exist (docs/cloud-schema.sql:
 --      accounts, space_members);
 --   3. keeps the lines of the audit log, with the email of this person removed from them, and adds one line
 --      "account_self_delete" with no email;
@@ -34,6 +35,7 @@ begin
   delete from coach_notes where coach = me or client = me;
   delete from save_failures where user_id = me;
   if to_regclass('public.reports') is not null then execute 'delete from public.reports where owner = $1' using me; end if;
+  if to_regclass('public.account_setup') is not null then execute 'delete from public.account_setup where user_id = $1' using me; end if;
   if to_regclass('public.space_members') is not null then execute 'delete from public.space_members where member = $1' using me; end if;
   if to_regclass('public.accounts') is not null then execute 'delete from public.accounts where owner = $1' using me; end if;
   update admin_audit set actor_email = null where actor = me;

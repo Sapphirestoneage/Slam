@@ -34,6 +34,7 @@ Each file has the name of its feature.
 |-----------|---------|-------------------------|
 | `addon-sealed-files.js` | The sealed add-on files (needs private files) | `account/addon.js`, `x1.json`, `x2.json` |
 | `coming-soon.js` | The card "Coming soon": a tap with no action, an action or a screen that throws, a Menu row with no action, a failed probe in What's built; and a Menu row stays open | `core/soon.js`, `screens/ui.js`, `screens/planner.js`, `screens/ux.js` (uxPop), `features/built.js` |
+| `founding-share-whats-new.js` | Founding Testers (the mark and the one-time card come only from the answer of the database), the personal share link (`?ref=code`), the patch notes "What's new", the admin section, and the database file read as text (the grants, the row rules, the limit of 50) | `features/founding.js`, `data/patchnotes.js`, `account/supa.js` (suRef, suRefKeep), `account/foundadmin.js`, `admin.html` |
 | `ask-front-door.js` | The Ask front door on Home | `features/ask3.js` |
 | `insurance-needs.js` | Insurance needs | `features/cover.js` |
 | `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
