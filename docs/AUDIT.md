@@ -79,6 +79,14 @@ withdrawal, spending, the savings rate, % to FI) for each way to take money out 
 the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a
 working year month by month; SLAM and the sheet use one factor for the year.
 
+Added Nov 25 2026 (student loans, run "Finish everything partly built", Part 5): a private refinance at the person's
+own rate (`refiOf`: the payment by the annuity formula, the total as payment × months, and the difference from the
+federal plan that pays least with its tax), and the stepladder (`stepladderOf`): each school year's loan at its own
+rate (the table, the graduate and PLUS add-ons, or the person's own rate), the interest before payments start, the
+payment on each rung and what it pays in all. For the total the second engine steps only until the waiting interest is
+paid, then uses the annuity formula for the rest. The federal plans themselves (M9S, IBR and RAP) are not worked out a
+second time yet.
+
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the
 history replay. Each is a row to add (ROADMAP.md, Run 2).
