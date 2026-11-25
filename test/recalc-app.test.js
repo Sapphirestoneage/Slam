@@ -49,7 +49,7 @@ test('triage: the same total The gap shows, the order, and scripts for what is s
   assert.equal(Math.round(R.triage.total), Math.round(m.inputs.takeHome - m.surplus.value), 'one total: what goes out');
   assert.equal(Math.round(R.triage.short), Math.round(-m.surplus.value));
   assert.equal(R.triage.groups[0].cls, 'housing');
-  assert.ok(R.triage.scripts.length >= 1 && R.triage.scripts.every(g => g.script.say.length));
+  assert.equal(R.triage.scripts, null, 'the phone scripts wait for Eli\'s review: nothing for the screen to show');
   assert.equal(R.state.hard, true);
   assert.equal(R.hold, null, 'no extra payment is asked for in a month that is short');
 });
@@ -109,4 +109,47 @@ test('the audit is off until it is turned on, and its list stays out of shared c
   assert.ok(Math.abs(A.rows[2].yearsAgo - 1) < 1e-9);
   assert.ok(Math.abs(A.rows[0].fiDays - 40 / (m.surplus.value * 12 / 365)) < 1e-9);
   assert.equal(shareDoc(s.doc, ref).settings.recalc.audit, null);
+});
+
+test('a date that moves sooner is a win: win words, and Keep it as a win adds a Win row once', () => {
+  const s = fresh(); keep(s);
+  const card = s.find(r => r.kind === 'debt' && r.type === 'Credit card')[0];
+  s.update(card.id, { balance: Math.max(100, (card.values.balance ?? 0) - 3000) });
+  const R = recalcOf(s.doc, ref, M(s), { now: NOW });
+  const win = R.cards.find(c => c.words.win);
+  assert.ok(win, 'a date moved sooner');
+  assert.match(win.words.head, /^New route: .+ sooner$/); assert.equal(win.words.title, 'New route');
+  assert.equal(win.winKept, false); assert.match(win.winName, /sooner \(now [A-Z][a-z]{2} \d{4}\)$/);
+  assert.equal(R.state.hard, false, 'a sooner date is not a hard month');
+  s.add('win', { name: win.winName, values: { date: '2026-11-25' } }, { type: 'Win' }); // what the button does
+  assert.equal(recalcOf(s.doc, ref, M(s), { now: NOW }).cards.find(c => c.words.win).winKept, true);
+});
+
+test('no phone script text can reach a screen while the switch is off', async () => {
+  const { RC_SCRIPTS, RC_SCRIPTS_REVIEWED } = await import('../js/math/recalc.js');
+  assert.equal(RC_SCRIPTS_REVIEWED, false);
+  // the screens get their scripts only from rcScriptsFor (null while off): no screen file reads the words itself
+  const { readFileSync: read, readdirSync } = await import('node:fs');
+  for (const f of [...readdirSync(new URL('../js/ui/', import.meta.url)).map(n => `js/ui/${n}`), 'js/recalc.js', 'game/features/recalc.js', 'game/features/audit.js', 'game/features/exletter.js']) {
+    const src = read(new URL(`../${f}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(src, /\bRC_SCRIPTS\b(?!_REVIEWED)|\brcScript\(/, `${f} must take the scripts from rcScriptsFor only`);
+    for (const sc of Object.values(RC_SCRIPTS)) for (const line of sc.say) assert.ok(!src.includes(line.split('{')[0].slice(0, 30)), `${f} holds script text`);
+  }
+  // and what the web app's Home gets for a short month has none
+  const s = fresh();
+  for (const r of s.find(r => r.kind === 'income')) s.update(r.id, { amount: 900 });
+  const R = recalcOf(s.doc, ref, M(s), { now: NOW });
+  const all = JSON.stringify(R.triage);
+  for (const sc of Object.values(RC_SCRIPTS)) for (const line of [...sc.say, sc.note]) assert.ok(!all.includes(line.split('{')[0].slice(0, 30)), line);
+});
+
+test('the audit guard in the app: nothing left over to save, so hours of work stand in for FI days', () => {
+  const s = fresh();
+  s.setDoc('settings', { recalc: { audit: { on: true, events: [{ id: 'a', kind: 'Late fee', what: 'Late fee', amount: 40, ym: '2026-09', tag: 'mistake' }] } } });
+  for (const r of s.find(r => r.kind === 'income')) s.update(r.id, { amount: 900 });
+  const m = M(s), A = auditOf(s.doc, m, { now: NOW });
+  assert.ok(m.surplus.value <= 0);
+  assert.equal(A.rows[0].fiDays, null); assert.equal(A.mistake.fiDays, null);
+  assert.ok(['hours', null].includes(A.measure));
+  if (m.hourly?.value > 0) { assert.equal(A.measure, 'hours'); assert.ok(A.rows[0].hours > 0); }
 });

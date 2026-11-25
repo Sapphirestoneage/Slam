@@ -142,6 +142,41 @@
     "keeping the new date ends the card",
     rcgCalc(c, derive(c)).cards.length === 0 && c.x.rc.base.df === rcgNow(c, derive(c)).df
   );
+  /* ---------- a date moves sooner: a win ---------- */
+  c.debts[0].amt = 5000;
+  c.debt = 5000;
+  D = derive(c);
+  let Xw = rcgCalc(c, D);
+  const wc = Xw.cards.find(k => k.id === "debt");
+  chk(
+    "a lower balance moves the date sooner, with win words",
+    !!wc && wc.words.win === true && /^New route: .+ sooner$/.test(wc.words.head) && wc.words.title === "New route",
+    wc && wc.words.head
+  );
+  go("home");
+  chk(
+    "Home shows the row with the win words",
+    app().includes("rcrow") && app().includes("New route:") && !app().includes("<b>Recalculating</b>")
+  );
+  X("rc");
+  chk(
+    "the sheet: New route, and the button to celebrate",
+    ov().includes("rcwin") &&
+      ov().includes("New route") &&
+      ov().includes('data-a="rcwin"') &&
+      !ov().includes(">Recalculating</div>")
+  );
+  X("rcwin");
+  chk(
+    "the game celebrates it as a win, and the new date is the plan",
+    !!LASTWIN && /^New route: /.test(LASTWIN.title) && rcgCalc(c, derive(c)).cards.length === 0,
+    JSON.stringify(LASTWIN)
+  );
+  X("close");
+  c.debts[0].amt = 9000;
+  c.debt = 9000;
+  X("rckeep");
+  X("rc");
   /* ---------- a short month ---------- */
   c.take = 2600;
   D = derive(c);
@@ -165,15 +200,40 @@
   chk("no extra payment is asked for in a short month", X2.hold === null);
   drawSheet();
   chk(
-    "the sheet: the order, what to arrange, and what to say on the phone",
-    ov().includes("When it won't all get paid") &&
-      ov().includes("to arrange") &&
-      ov().includes("What to say on the phone") &&
-      ov().includes("hardship") &&
-      clean(ov()) &&
-      !BLAME.test(ov()),
+    "the sheet: the order and what to arrange",
+    ov().includes("When it won't all get paid") && ov().includes("to arrange") && clean(ov()) && !BLAME.test(ov()),
     junk(ov())
   );
+  const scriptText = Object.keys(RC_SCRIPTS).reduce((a, k) => a.concat(RC_SCRIPTS[k].say, [RC_SCRIPTS[k].note]), []);
+  chk(
+    "the phone scripts wait for the review of the owner: the switch is off",
+    RC_SCRIPTS_REVIEWED === false && rcScriptsFor(X2.triage) === null
+  );
+  chk(
+    "the player sees a calm Coming soon card, and no script text is on the page",
+    ov().includes("soonpart") &&
+      ov().includes("Coming soon") &&
+      ov().includes("What to say on the phone") &&
+      !scriptText.some(t => ov().includes(t.split("{")[0].slice(0, 28))) &&
+      !/hardship/i.test(ov())
+  );
+  chk(
+    "with the switch on, the scripts come back (for the day the owner approves them)",
+    (rcScriptsFor(X2.triage, true) || []).length >= 1
+  );
+  /* health cover, medicine and childcare are in the must-pay tier */
+  X("kitset", "100", "rct|health", { t: "n" });
+  X("kitset", "200", "rct|care", { t: "n" });
+  let X2b = rcgCalc(c, derive(c));
+  chk(
+    "health and childcare move up: right after home, bills and food, and the total is the same",
+    !!X2b.triage &&
+      X2b.triage.groups.map(g => g.cls).join() === "housing,utilities,food,health,childcare,transport,minimums,rest" &&
+      X2b.triage.total === c.spend,
+    X2b.triage && X2b.triage.groups.map(g => g.cls + ":" + g.amount).join()
+  );
+  chk("the label of childcare says when it counts", ov().includes("Childcare, if it lets you keep working"));
+  delete c.x.rct;
   c.take = 4000;
   /* ---------- the cushion refill ---------- */
   X("rckeep");
@@ -281,6 +341,28 @@
       clean(ov()),
     junk(ov())
   );
+  chk(
+    "with saving above zero the measure is FI days, with its own Show the math, and one for the mistake tax",
+    A.measure === "fiDays" && ov().includes("Show the math: FI days") && ov().includes("Show the math: mistake tax")
+  );
+  const takeWas = c.take;
+  c.take = c.spend;
+  D = derive(c);
+  const A0 = mauCalc(c);
+  drawSheet();
+  chk(
+    "the guard: a day of saving is zero, so no FI days, and hours of work show in their place",
+    A0.rows[0].fiDays === null &&
+      A0.mistake.fiDays === null &&
+      (A0.measure === "hours" || A0.measure === null) &&
+      !/\d FI days/.test(ov()) &&
+      (A0.measure !== "hours" || (ov().includes("hours of work") && ov().includes("Show the math: hours of work"))) &&
+      clean(ov()),
+    A0.measure + " " + junk(ov())
+  );
+  c.take = takeWas;
+  D = derive(c);
+  drawSheet();
   chk("the spreadsheet part of the audit", mauBook(c).rows.find(r => r.id === "au_all").v === 1075);
   X("maudel", "", ev[2].id);
   chk("an event can go", c.x.rc.audit.events.length === 2);
