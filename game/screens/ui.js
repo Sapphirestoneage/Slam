@@ -26,8 +26,14 @@
    ========================================================================= */
 const KEY = "slamgame4";
 const $ = s => document.querySelector(s);
-const money = n => (n < 0 ? "-" : "") + "$" + Math.round(Math.abs(n)).toLocaleString();
-const signed = n => (n >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(n)).toLocaleString();
+/* Rough numbers (features/enough.js, the one switch G.rough): a range in place of every exact amount. Display only. */
+const roughOn = () => !!(G && G.rough && typeof enRough === "function");
+const money = n =>
+  roughOn() ? enRough(n) || "$0" : (n < 0 ? "-" : "") + "$" + Math.round(Math.abs(n)).toLocaleString();
+const signed = n =>
+  roughOn()
+    ? (n >= 0 ? "+" : "") + (enRough(n) || "$0")
+    : (n >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(n)).toLocaleString();
 const esc = s =>
   String(s == null ? "" : s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
 const nice = s => parseISO(s).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -1335,6 +1341,7 @@ function meTabBase() {
  <button class="node" data-a="find"><b>Find your era in 60 seconds</b><div class="tiny muted">Five taps. Good for showing a friend.</div></button>
  <button class="node" data-a="share"><b>Share the game</b><div class="tiny muted">A code to scan.</div></button>
  <button class="node" data-a="backup"><b>Save or move my game</b><div class="tiny muted">Copy your game as text, or paste one in.</div></button>
+ ${typeof roughRow === "function" ? roughRow() : "" /* enough.js: the Rough numbers switch */}
  <div class="card"><div class="row between"><div><b>Game words</b><div class="tiny muted">Show the game term next to the plain word, like Runway (HP).</div></div><div class="seg"><button class="${G.gamer ? "" : "on"}" data-a="gamer" data-v="0">Off</button><button class="${G.gamer ? "on" : ""}" data-a="gamer" data-v="1">On</button></div></div></div>
  ${typeof meReports === "function" ? meReports() /* fbreport.js: the reports, and the screens flagged before */ : `<details><summary>Screens you flagged (${G.flags.length})</summary><div class="inner stack">${G.flags.length ? G.flags.map(f => `<div class="small">${nice(f.d)} · ${esc(f.where)} · <b>${esc(f.kind)}</b></div>`).join("") + `<div class="tiny muted">These are included when you copy your game.</div>` : `<div class="small muted">Tap "Flag this screen" at the bottom of any screen.</div>`}</div></details>`}
  <details><summary>Coming soon (${SOON.filter(s => s[0] !== "Rivals" && s[0] !== "The Enneagram-style test").length})</summary><div class="inner stack">${SOON.filter(

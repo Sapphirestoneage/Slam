@@ -113,6 +113,7 @@ function lkNwRange(c, d) {
 }
 /* Short money: $10k, $1.2M. */
 function lkK(v) {
+  if (typeof roughOn === "function" && roughOn()) return money(v); /* Rough numbers: the range of money() */
   const a = Math.abs(v),
     sg = v < 0 ? "-" : "";
   if (a >= 1e6) return sg + "$" + Math.round(a / 1e5) / 10 + "M";

@@ -14,6 +14,8 @@ import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
+import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf } from '../../js/math/gig.js';
+import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -23,6 +25,7 @@ import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
 import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext, jobCarry, jobHourValue } from '../../js/math/jobs.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -137,6 +140,19 @@ for (let i = 0; i < N; i++) {
     add('tripSplit', { people, how, items, total }, { parts: S.parts.map(p => p.amount), total: S.total }); }
   { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(money(0, 30000)), debt: kn(pick([0, 0, money(100, 40000)])), invested: kn(money(0, 1500000)), coast: kn(money(10000, 600000)), fi: kn(money(200000, 2500000)), monthly: pick([null, 0, money(50, 6000)]), trip: pick([null, money(100, 15000)]) }, J = tpJourney(x);
     add('tripJourney', x, { done: J.stages.map(s => s.done), months: J.stages.map(s => s.months), after: J.stages.map(s => (s.after ? [s.after.done, s.after.months] : null)), here: J.here, fromCash: J.fromCash, shift: J.monthsOfSaving }); }
+  // Gig and self-employed (js/math/gig.js and gigplan.js, M8G)
+  { const x = { takeHome: money(1500, 15000), health: pick([0, 0, 300, 800]), retire: pick([0, 3000, 7500, 20000]), costs: pick([0, 100, 600]), hoursWeek: pick([20, 30, 40, 50]), billable: pick([0.5, 0.6, 0.7, 0.8, 0.9, 1]), weeksOff: pick([0, 2, 4, 6, 12]), unitHours: pick([null, 1, 2, 8]), filingStatus: pick(STATUS), place: pick([null, 'ny', 'nyc']) }, r = gigRate(x, ref);
+    add('gigRate', x, { profit: r.profit, hourly: r.hourly, unit: r.unit, need: r.need.year }); }
+  { const x = { profit: money(2000, 400000), wages: pick([0, 0, money(10000, 250000)]), pretax: pick([0, 0, 5000]), filingStatus: pick(STATUS), place: pick([null, 'ny', 'nyc']), earned: pick([null, money(100, 100000)]), set: pick([0, 0, 1500]) }, r = gigSetAside({ ...x, year: 2026 }, ref);
+    add('gigSetAside', x, { yearly: r.yearly, rate: r.rate, se: r.parts.selfEmployment, toMove: r.soFar.ready ? r.soFar.toMove : null }); }
+  { const x = { profit: money(500, 600000), age: whole(22, 72), deferredAtJob: pick([0, 0, 5000, 24500]), want: pick([null, 3000, 9000, 30000, 70000]) }, r = gigRetire(x, ref);
+    add('gigRetire', { ...x, limits: gigLimitsOf(ref.limits) }, { seHalf: r.seHalf, solo: r.solo.total, sep: r.sep, ira: r.ira, first: r.first }); }
+  { const day = d => new Date(Date.UTC(2026, 0, 1) + d * 864e5).toISOString().slice(0, 10), today = day(whole(200, 330));
+    const list = Array.from({ length: whole(1, 8) }, (_, k) => { const sent = whole(0, 320); const inv = { id: k, client: pick(['A', 'B', 'C']), amount: money(50, 20000), sent: day(sent), terms: pick([0, 15, 30, 45, 60]) }; if (rnd() < 0.2) inv.due = day(sent + whole(0, 90)); if (rnd() < 0.4) inv.paid = day(sent + whole(0, 120)); return inv; });
+    const r = gigInvoicesOf(list, today); add('gigInvoices', { list, today }, { waiting: r.waiting, past: r.past, got: r.got, ages: r.ages.map(a => a.total), days: Object.fromEntries(r.rows.map(q => [q.id, q.daysPast])), avg: r.avgDaysToPay }); }
+  { const apps = Array.from({ length: whole(1, 3) }, () => ({ earned: money(20, 5000), tips: pick([0, 50, 300]), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]) })), x = { apps, cash: pick([0, 60, 400]) }, r = gigAppsOf(x);
+    const pcts = { profit: pick([0.01, 0.05, 0.1]), owner: pick([0.3, 0.5]), tax: pick([0.15, 0.25]), opex: pick([0.1, 0.2, 0.3]) }, income = money(100, 20000), pf = gigProfitFirstOf({ income, pcts });
+    add('gigApps', { ...x, pcts, income }, { all: r.all, tips: r.tips, gap: r.gap, owner: pf.ready ? pf.of.owner : null, left: pf.ready ? pf.left : null }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);
@@ -187,6 +203,30 @@ for (let i = 0; i < N; i++) {
   const hv = { tp: rnd() < 0.5 ? null : money(10, 120), wage: rnd() < 0.3 ? 0 : money(8, 150) }, rate = jobHourValue(hv.tp, hv.wage).rate;
   const K = jobCarry(ad, tasks, exits, hands, assign, keys.map(k => ({ key: k, n: k })), rate);
   add('jobCarry', { mins, tasks, exits, hands, assign, keys, hv }, { rate, total: K.total, value: K.value, min: K.people.map(p => p.min), val: K.people.map(p => p.value) });
+}
+// Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): a made-up ledger of 1 to 4 years, some months
+// missing, refunds, income in some years only; the Pareto of 0 to 12 lines; the enough number; the Rough ranges.
+for (let i = 0; i < N; i++) {
+  const cats = ['Food', 'Accommodation', 'Transportation', 'Bills and subscriptions', 'Other', 'Health and self-care'], y0 = whole(2021, 2024), ny = whole(1, 4), rows = [];
+  for (let y = y0; y < y0 + ny; y++) {
+    const paid = rnd() < 0.7;
+    for (let mo = 1; mo <= 12; mo++) {
+      if (rnd() < 0.25) continue;
+      const ym = `${y}-${String(mo).padStart(2, '0')}`;
+      for (const c of cats) if (rnd() < 0.7) rows.push({ d: ym, amt: rnd() < 0.05 ? -money(5, 80) : money(5, 3000), cat: c, kind: 'out' });
+      if (paid && rnd() < 0.9) rows.push({ d: `${ym}-${String(whole(1, 28)).padStart(2, '0')}`, amt: money(1500, 12000), kind: 'in' });
+    }
+  }
+  const x = { rows, inflation: pick([null, 0.02, 0.027, 0.03, 0.05]), incomeGrowth: pick([null, 0, 0.03, 0.1]) }, r = enCreep(rows, { inflation: x.inflation, incomeGrowth: x.incomeGrowth });
+  add('enCreep', x, r.ready ? { ready: true, prev: r.prev.year, now: r.now.year, spendGrowth: r.spendGrowth, income: r.income.growth, alert: r.alert, gap: r.gap,
+    cats: r.cats.map(c => ({ cat: c.cat, was: c.was, is: c.is, mutant: c.mutant, over: c.overInflation })), turn: r.turn } : { ready: false });
+  const lines = Array.from({ length: whole(0, 12) }, (_, k) => ({ name: `L${k}`, amt: rnd() < 0.1 ? 0 : money(5, 4000) }));
+  const P = enPareto(lines); add('enPareto', { lines }, P.ready ? { ready: true, count: P.count, total: P.total, topTotal: P.topTotal } : { ready: false });
+  const e = { fi: rnd() < 0.05 ? null : money(50000, 5000000), share: pick([0.8, 0.9, 1, 1.1, 1.2]), room: pick([null, 0.1, 0.2, 0.3]), have: rnd() < 0.2 ? null : money(0, 6000000) };
+  const E = enEnough(e); add('enEnough', e, { value: E.value, withRoom: E.withRoom ?? null, left: E.left ?? null, past: E.past ?? null });
+  const v = (rnd() < 0.2 ? -1 : 1) * (rnd() < 0.1 ? whole(0, 99) : money(100, 9000000)); add('enRough', { v }, { text: enRough(v) });
+  const a = { spend: money(500, 9000), take: rnd() < 0.1 ? 0 : money(500, 12000) }, b = { spend: a.spend * between(0.9, 1.3), take: a.take * between(0.9, 1.3) };
+  add('enStepCreep', { a, b }, { up: enStepCreep(a, b) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

@@ -268,6 +268,28 @@ const PATCH_NOTES = [
       "In the game, Quick math has six of them as cards.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Working for yourself",
+    l: [
+      "The least you can charge: your floor an hour, a day and a job, with taxes, health cover, retirement, costs, downtime and weeks off in.",
+      "The tax in each payment: the share to set aside, stacked on any job's pay, and what is spoken for so far.",
+      "Solo 401(k), SEP or IRA: what each one holds on your profit, and which to open first.",
+      "Do my apps add up: each app's earnings, tips and fee next to what reached the bank, with cash tips on top.",
+      "Who still owes me: invoices with a calm next step. Profit First, with the book's sample or your own shares. In the game: Working for yourself > More, and the floor counts weeks off.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Lifestyle creep, the few lines, and your enough number",
+    l: [
+      "See each kind of spending this year next to last year, and next to your income. Lines that grow faster than prices get a small tag. Tap the rate of prices: the official CPI figure, or your own.",
+      "When spending grows faster than income, one quiet card says Recalculating and shows the one line to hold.",
+      "The few lines that make 80% of your spending, biggest first.",
+      "Your enough number, with room for error on top, and about when you get there.",
+      "Rough numbers: one switch shows a range in place of each exact amount, for a screen someone else can see. Your numbers stay as they are.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

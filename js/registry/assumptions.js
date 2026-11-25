@@ -14,6 +14,7 @@ import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
 import { HB_RULES, HB_SOURCE } from '../math/homebuy.js';
 import { CR_VEST, CR_VEST_SOURCE, CR_RULES } from '../math/career.js';
 import { TP_RULES, TP_RULES_SOURCE } from '../math/trip.js';
+import { GIG_OWNER_RATE, GIG_PF_SAMPLE } from '../math/gig.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
 
@@ -138,6 +139,8 @@ export const ASSUMPTIONS = [
   { id: 'presets.realReturn.default', name: 'RealReturn', label: 'Return a year, after inflation', unit: 'pct', get: r => r.presets.realReturn.default, client: 'realReturn', source: 'Your Oct 28 answers (presets 6%, 7%, 8%, 12%)', date: '2026-10-28' },
   { id: 'presets.withdrawalRate.default', name: 'WithdrawalRate', label: 'Withdrawal rate', unit: 'pct', get: r => r.presets.withdrawalRate.default, client: 'withdrawalRate', source: 'Your Oct 28 defaults (3%, 4%, 4.7%, 5.2%)', date: '2026-10-28' },
   { id: 'presets.inflation.default', name: 'Inflation', label: 'Inflation (for the nominal view only)', unit: 'pct', get: r => r.presets.inflation.default, client: 'inflation', source: 'Your Oct 28 defaults (2%, 3%)', date: '2026-10-28' },
+  // Run Not built, groups 1 to 5, Part 3 (Nov 25 2026): the line a mutant expense crosses on Lifestyle creep (js/math/enough.js). A dated official figure, one tap among the person's own rates.
+  { id: 'cpi.value', name: 'CpiLastYear', label: 'Prices: CPI-U, December 2024 to December 2025', unit: 'pct', get: r => r.cpi.value, source: 'U.S. Bureau of Labor Statistics, CPI news release for December 2025 (Jan 13 2026), read through a web search Nov 25 2026', date: '2026-01-13' },
   { id: 'defaults.retireAge', name: 'RetireAge', label: 'Retire by (age)', unit: 'number', get: r => r.defaults.retireAge, client: 'retireAge', source: SPEC, date: '2026-11-03' },
   { id: 'client.investSurplus', name: 'InvestSurplus', label: 'Invest my surplus: 1 or blank yes, 0 no (the surplus sits in checking)', unit: 'number', get: () => 1, client: 'investSurplus', source: 'Plan › Goals (Nov 5 answer to 123; it was off by default on Nov 3)', date: '2026-11-05' },
   { id: 'client.debtFirst', name: 'DebtFirst', label: 'Heavy debt first: 1 or blank yes, 0 no (the surplus is invested or stays, as Invest my surplus says)', unit: 'number', get: () => 1, client: 'debtFirst', source: 'Plan › Goals (Batch 11 item 1)', date: '2026-11-05' },
@@ -161,6 +164,14 @@ export const ASSUMPTIONS = [
   { id: 'limits.ira.base', name: 'Limit_IRA', label: 'IRA limit (Roth or traditional)', unit: 'money', get: r => r.limits.ira.base, source: IRS, date: '2026-10-28' },
   { id: 'limits.ira.catchUp50', name: 'Limit_IRA_catchUp50', label: 'IRA catch-up, 50 and over', unit: 'money', get: r => r.limits.ira.catchUp50, source: IRS, date: '2026-10-28' },
   { id: 'limits.total415c', name: 'Limit_415c', label: 'Total defined contribution (415c)', unit: 'money', get: r => r.limits.total415c, source: IRS, date: '2026-10-28' },
+  // Run Not built, groups 1 to 5, Part 5 (M8G): retirement for the self-employed. Found by web search on irs.gov Nov 25 2026.
+  { id: 'limits.compCap401a17', name: 'Limit_comp401a17', label: 'Pay a plan can count, a year (401(a)(17))', unit: 'money', get: r => r.limits.compCap401a17, source: 'IRS IR-2025-111 (Nov 13 2025) and Notice 2025-67; IRS Publication 560 (2025): "increases to $360,000 for 2026"', date: '2026-11-25' },
+  { id: 'limits.oneParticipant5500', name: 'Limit_5500EZ', label: 'A one-participant 401(k) files Form 5500-EZ once it holds more than', unit: 'money', get: r => r.limits.oneParticipant5500, source: 'IRS, One-Participant 401(k) Plans (irs.gov/retirement-plans/one-participant-401k-plans), found by web search Nov 25 2026; page text not opened from the build', date: '2026-11-25' },
+  { id: 'rules.gigOwnerRate', name: 'GigOwnerRate', label: 'A SEP or Solo 401(k): the business\'s part for the owner, as a share of net earnings (a 25% plan rate over 1.25)', unit: 'pct', get: () => GIG_OWNER_RATE, source: 'IRS Publication 560 (2025), Retirement Plans for Small Business, the rate for self-employed people (20% of net earnings less half the self-employment tax); IRS SEP contribution limits page (the lesser of 25% of pay or $72,000 for 2026). Found by web search Nov 25 2026; js/math/gig.js', date: '2026-11-25' },
+  { id: 'rules.gigPfProfit', name: 'GigPfProfit', label: 'Profit First, the book\'s sample under $250,000 of real revenue: profit', unit: 'pct', get: () => GIG_PF_SAMPLE.profit, source: 'Profit First (Mike Michalowicz), target allocation for $0 to $250k real revenue, as summarized by Relay and Mercury (relayfi.com/blog/profit-first-percentages, mercury.com/blog/how-to-use-profit-first-method), read Nov 25 2026; the book itself not opened. A sample, not a rule; js/math/gig.js', date: '2026-11-25' },
+  { id: 'rules.gigPfOwner', name: 'GigPfOwner', label: 'Profit First, the book\'s sample: pay to the owner', unit: 'pct', get: () => GIG_PF_SAMPLE.owner, source: 'As rules.gigPfProfit', date: '2026-11-25' },
+  { id: 'rules.gigPfTax', name: 'GigPfTax', label: 'Profit First, the book\'s sample: tax', unit: 'pct', get: () => GIG_PF_SAMPLE.tax, source: 'As rules.gigPfProfit', date: '2026-11-25' },
+  { id: 'rules.gigPfOpex', name: 'GigPfOpex', label: 'Profit First, the book\'s sample: running costs', unit: 'pct', get: () => GIG_PF_SAMPLE.opex, source: 'As rules.gigPfProfit', date: '2026-11-25' },
   { id: 'limits.hsa.self', name: 'Limit_HSA_self', label: 'HSA limit, self-only', unit: 'money', get: r => r.limits.hsa.self, source: 'IRS, via HR Morning', date: '2026-10-28' },
   { id: 'limits.hsa.family', name: 'Limit_HSA_family', label: 'HSA limit, family', unit: 'money', get: r => r.limits.hsa.family, source: 'IRS, via HR Morning', date: '2026-10-28' },
   { id: 'limits.hsa.catchUp55', name: 'Limit_HSA_catchUp55', label: 'HSA catch-up, 55 and over', unit: 'money', get: r => r.limits.hsa.catchUp55, source: 'IRS, via HR Morning', date: '2026-10-28' },
@@ -541,6 +552,7 @@ export const REFERENCE_LISTS = {
   'presets.realReturn': 'the preset choices; the default is RealReturn',
   'presets.withdrawalRate': 'the preset choices; the default is WithdrawalRate',
   'presets.inflation': 'the preset choices; the default is Inflation',
+  cpi: 'the dated CPI figure of Lifestyle creep (its value is CpiLastYear): the period, the series, the source and the date of the release',
   'limits.401k.appliesTo': 'which account types the 401(k) limit covers',
   'limits.ira.appliesTo': 'which account types the IRA limit covers',
   'limits.commuterNote': 'a note on the commuter limit',

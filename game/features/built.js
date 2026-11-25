@@ -224,6 +224,38 @@ const WB = [
     "gig",
   ],
   ["plan", "What one gig really pays, and your floor", "b", () => WB_FN("gxPays") && WB_FN("gxFloor"), "", "gig"],
+  [
+    "plan",
+    "Your floor with weeks off, on one formula with the web app's price floor",
+    "b",
+    () => WB_FN("gigFloorFrom") && WB_FN("gigHoursOf") && WB_FN("gxFloor"),
+    "One engine with the web app's page freelance.html (js/math/gig.js). The web app's floor also counts health cover, retirement and the tax engine's own tax.",
+    "gig",
+  ],
+  [
+    "in",
+    "Invoices: who still owes you, what is past its date, a calm next step",
+    "b",
+    () => WB_FN("gigInvoicesOf") && WB_FN("gxInvBody") && WB_HAS("gxinvadd") && WB_HAS("gxinvundo"),
+    "Working for yourself > More. Kept on the profile (c.x.invoices). The web app's page is invoices.html.",
+    "gig",
+  ],
+  [
+    "plan",
+    "Profit First on your side income",
+    "b",
+    () => WB_FN("gigProfitFirstOf") && WB_FN("gxPfBody") && WB_HAS("gxpf"),
+    "The book's sample or your own shares; the tax share can be your set-aside.",
+    "gig",
+  ],
+  [
+    "plan",
+    "Solo 401(k), SEP or IRA, the tax in each payment, do my apps add up",
+    "b",
+    () => WB_FN("gigRetireOf") && WB_FN("gigAppsOf") && WB_FN("gigSoFarFrom"),
+    "The math is in the game (core/gigcore.js). The screens are the web app's small pages (gigretire, setaside, gigapps .html): they need the tax engine, which the game does not have.",
+    null,
+  ],
   ["plan", "Safe to spend: always a trade-off, never a flat no", "b", () => WB_HAS("safe"), "", "safe"],
   ["plan", "Goals with dates", "b", () => WB_HAS("goal") && WB_FN("goalSim"), "", null],
   ["plan", "Next Steps: your week, planned", "b", () => WB_FN("planTab"), "", null],
@@ -1153,6 +1185,23 @@ const WB = [
   ],
   ["biz", "A community cost-of-living planner", "n", null, "Built once as its own tool. Not in the game.", null],
   ["biz", "A city edition, and a stand-alone lever link with a result to share", "n", null, "Not built.", null],
+  [
+    "see",
+    "Lifestyle creep and enough: spending next to income over the years, the few lines, your enough number, Rough numbers",
+    "b",
+    () =>
+      WB_HAS("enough") &&
+      WB_HAS("enpick") &&
+      WB_HAS("roughset") &&
+      WB_FN("enCreep") &&
+      WB_FN("enPareto") &&
+      WB_FN("enEnough") &&
+      WB_FN("enRough") &&
+      WB_FN("roughRow") &&
+      typeof EN_CPI === "object",
+    "Each category of your money log, this year next to last year and next to your income, with the lines that grow faster than prices (the CPI figure or your own rate) and one quiet Recalculating card. The few lines that make 80% of your spending. Your enough number with room for error. Rough numbers shows ranges in place of exact amounts, one switch on Me.",
+    "enough",
+  ],
   [
     "see",
     "Your unpaid jobs: the six jobs of running your money, admin hours, and the four ways out",
