@@ -694,6 +694,53 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def hard_check(fn, x, o, ck):
+    """Hard moments (M8H), worked out again from the definitions: the shares by hand (room size, income or equal),
+    the person leaving paying the months agreed and the people staying taking the whole rent after; untangling item by item."""
+    if fn == 'hmRoommateExit':
+        def shares(ps, way):
+            if way == 'size':
+                t = sum(p['size'] for p in ps); return [p['size'] / t for p in ps]
+            if way == 'income':
+                t = sum(p['income'] for p in ps); return [p['income'] / t for p in ps] if t > 0 else [1 / len(ps)] * len(ps)
+            return [1 / len(ps)] * len(ps)
+        ps, bway = x['people'], (x['how'] if x['billsHow'] == 'same' else 'equal')
+        stay = [p for p in ps if p['id'] != x['leaver']]
+        r0, b0 = shares(ps, x['how']), shares(ps, bway)
+        r1, b1 = shares(stay, x['how']), shares(stay, bway)
+        M = x['monthsLeft']; cov = min(M, max(0, x['cover'])); rest = M - cov
+        back = max(0.0, x['deposit'] - x['damage'])
+        total = 0.0
+        for i, p in enumerate(ps):
+            now = x['rent'] * r0[i] + x['bills'] * b0[i]
+            j = next((k for k, q in enumerate(stay) if q['id'] == p['id']), None)
+            later = 0.0 if j is None else x['rent'] * r1[j] + x['bills'] * b1[j]
+            to_end = now * cov if j is None else now * cov + later * rest
+            total += to_end
+            ck(f'person {i + 1} now', o['now'][i], now, 1e-6); ck(f'person {i + 1} later', o['later'][i], later, 1e-6)
+            ck(f'person {i + 1} to the end', o['toEnd'][i], to_end, 1e-6); ck(f'person {i + 1} deposit back', o['deposit'][i], back * r0[i], 1e-6)
+            if j is None: ck('left uncovered', o['uncovered'], now * rest, 1e-6)
+        ck('the whole lease', o['total'], (x['rent'] + x['bills']) * M, 1e-6); ck('the sum of the people', o['total'], total, 1e-6)
+    elif fn == 'hmUntangle':
+        s = x['share']; mine = {'have': 0.0, 'owe': 0.0}; theirs = {'have': 0.0, 'owe': 0.0}; op = []; op_amt = 0.0; both = []; both_amt = 0.0
+        for it in x['items']:
+            plan = None if it['plan'] in (None, 'none') else it['plan']; a = it['amount']
+            part = {'me': 1.0, 'them': 0.0, 'split': s, 'sell': s}.get(plan)
+            if a is not None and part is not None:
+                mine[it['kind']] += a * part; theirs[it['kind']] += a * (1 - part)
+            if plan is None:
+                op.append(it['id'])
+                if a is not None: op_amt += -a if it['kind'] == 'owe' else a
+            if it['kind'] == 'owe' and it['names'] == 'both' and plan != 'sell':
+                both.append(it['id'])
+                if a is not None: both_amt += a
+        for k, v in (('mine', mine), ('theirs', theirs)):
+            ck(f'{k} kept', o[k][0], v['have'], 1e-6); ck(f'{k} owed', o[k][1], v['owe'], 1e-6); ck(f'{k} net', o[k][2], v['have'] - v['owe'], 1e-6)
+        ck('still to decide', o['open'] == op, True); ck('still to decide, the amount', o['openAmount'], op_amt, 1e-6)
+        ck('still in both names', o['stillBoth'] == both, True); ck('still in both names, the amount', o['stillBothAmount'], both_amt, 1e-6)
+        a, sp = x['park']; ck('months it waits', o['park'], a / sp, 1e-9)
+
+
 def gig_check(fn, x, o, ck, law):
     """Gig and self-employed (M8G), worked out again: the floor's profit as a check that it leaves the need, the stacked
     set-aside by hand, the retirement limits from their definitions, invoice dates with the date library, apps and the split."""
@@ -1229,6 +1276,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('hmRoommateExit', 'hmUntangle'):
+            hard_check(fn, x, o, ck)
         elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):
             gig_check(fn, x, o, ck, law)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):

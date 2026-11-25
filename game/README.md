@@ -99,6 +99,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | Trips and the journey: a trip line by line, points or cash, a group split by share or by item, the FIRE journey map | `features/trip.js`, `core/trip.js` (the one engine with `trip.html` of the web app) |
 | Your unpaid jobs (the six jobs of running your money), admin hours (Running it and Living it), the four ways out of each task (run JOE-1) | `features/jobs.js`, `data/roles.js`, `core/jobs.js` (a copy of `js/math/jobs.js` of the main app, made by `tools/game_jobs_build.mjs`; do not edit it), `docs/JOB-OF-EXISTING.md` |
 | Lifestyle creep (each category year over year next to income, the lines faster than prices, the quiet card), the few lines (Pareto), Enough and room for error, Rough numbers (run Not built, groups 1 to 5, Part 3) | `features/enough.js`, `core/enough.js` (the one engine with the Budget and Goals of the web app) |
+| Hard moments (untangling, a roommate leaving, a death, a partner who died, medical bills, saying no, a fire, a flood or an eviction, a private money plan; Leave this page; nothing kept unless the player turns it on; run Not built, groups 1 to 5, Part 7) | `features/hard.js`, `core/hardcore.js` (a copy of `js/math/hard.js` and `data/sources/hard-2026.json`, made by `tools/game_hard_build.mjs`; do not edit it) |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

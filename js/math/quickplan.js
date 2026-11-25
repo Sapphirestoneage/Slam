@@ -9,6 +9,7 @@ import { loanPayment } from './truecost.js';
 import { federalTax, takeHomeFromGross, grossFromTakeHome, childTaxCredit } from './income.js';
 import { rowShare } from './household.js';
 import { monthlySurplus, savingsRate } from './spending.js';
+import { HM_SPLIT, splitSharesOf } from './hard.js';
 
 // Debt consolidation: the debts as they are (one balance at its average rate and what is paid now) next to one loan
 // that pays them off. feePct: the origination fee, taken out of what the loan pays out, so the loan is larger.
@@ -39,16 +40,12 @@ export function qcLeave({ cash = null, spending = null, health = 0, profit = 0, 
 
 // Roommates: rent split by room size, by income or equally, through the household split engine (rowShare). people:
 // [{ id, name, size, income }], the first one is you. bills: shared bills a month, split equally or the same way.
-export const QC_SPLIT = { size: 'By room size', income: 'By income', equal: 'Equally' };
+export const QC_SPLIT = HM_SPLIT;
 export function qcRoommates({ rent = null, bills = 0, how = 'size', billsHow = 'equal', people = [] } = {}) {
   if (!(rent > 0) || people.length < 2) return { ready: false };
-  if (how === 'size' && people.some(p => !(p.size > 0))) return { ready: false, needs: 'size' };
-  if (how === 'income' && people.some(p => !(p.income >= 0) || p.income == null)) return { ready: false, needs: 'income' };
-  const ids = people.map(p => p.id), H = { ids, many: true, method: 'Equal', weights: Object.fromEntries(people.map(p => [p.id, p.income ?? 0])) };
-  const totalSize = people.reduce((s, p) => s + (p.size ?? 0), 0);
-  const rowFor = way => (way === 'size' ? { values: { splitHow: 'Percent', splitPcts: Object.fromEntries(people.map(p => [p.id, p.size / totalSize])) } } : way === 'income' ? { values: { splitHow: 'By income' } } : { values: { splitHow: 'Equal' } });
-  const rentRow = rowFor(how), billRow = rowFor(billsHow === 'same' ? how : 'equal');
-  const rows = people.map(p => { const rs = rowShare(rentRow, p.id, H), bs = rowShare(billRow, p.id, H); return { ...p, rentShare: rs, rent: rent * rs, billShare: bs, bills: (bills ?? 0) * bs, total: rent * rs + (bills ?? 0) * bs }; });
+  const S = splitSharesOf({ how, billsHow, people }, rowShare); // one split for this and the roommate leaving (js/math/hard.js)
+  if (!S.ready) return S;
+  const rows = S.rows.map(p => ({ ...p, rent: rent * p.rentShare, bills: (bills ?? 0) * p.billShare, total: rent * p.rentShare + (bills ?? 0) * p.billShare }));
   return { ready: true, rent, bills: bills ?? 0, how, billsHow, rows, me: rows[0], equal: (rent + (bills ?? 0)) / people.length };
 }
 

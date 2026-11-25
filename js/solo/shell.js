@@ -10,6 +10,7 @@ import { soloOf, carryUrl, SOLO } from '../solo.js';
 import { deviceAdapter, activeSpace } from '../accounts.js';
 import { cloudConfig, cloudOf } from '../cloud.js';
 import { pusher } from '../sync.js';
+import { keptOnly, hardOf, HARD_PART } from '../hard.js';
 export const device = deviceAdapter();
 // signed in: every save on the device follows to the server a beat later
 let up = null; cloudConfig().then(cfg => { const cloud = cloudOf(cfg); if (cloud?.signedIn()) up = pusher(device, cloud); }).catch(() => {});
@@ -20,7 +21,10 @@ export const btn = (label, onClick, kind = '') => h(`button.st-btn${kind ? '.' +
 export const chip = (label, on, onClick) => h('button.st-chip', { type: 'button', 'aria-pressed': on ? 'true' : 'false', onClick }, label);
 const HERE = '#/d/';
 
-export async function boot(id, draw) {
+// opts.private (the hard-moment pages, js/solo/hard.js): the page's answers live in settings.hard[id], and nothing is
+// written (not the address, not this device) until the person turns on Keep this; every save and every link carries
+// only the tools that are kept (keptOnly, js/hard.js), so turning it off takes the kept copy away again.
+export async function boot(id, draw, opts = {}) {
   // a page off the path (cards.html) boots the same way: the plan in the address, no next step
   const me = soloOf(id) ?? { id, title: document.title.split(':')[0].trim(), next: null }, ref = await fetch('data/reference-2026.json').then(r => r.json());
   let doc = null;
@@ -29,13 +33,16 @@ export async function boot(id, draw) {
   const acct = device.loadAccount(), space = activeSpace(acct);
   if (!doc && space) { const kept = device.loadSpace(space.id); if (kept) { try { doc = await unpack(kept); } catch { doc = null; } } }
   const store = new Store(doc ?? newHousehold({ name: 'My plan' }));
-  const mine = () => store.doc.settings?.start || {}, remember = patch => store.setDoc('settings', { start: { ...mine(), ...patch } });
-  let timer = null, packed = null;
+  const priv = !!opts.private;
+  const mine = priv ? () => hardOf(store.doc, id) : () => store.doc.settings?.start || {};
+  const remember = priv ? patch => store.setDoc('settings', { [HARD_PART]: { ...(store.doc.settings?.[HARD_PART] || {}), [id]: { ...mine(), ...patch } } }) : patch => store.setDoc('settings', { start: { ...mine(), ...patch } });
+  let timer = null, packed = null, wrote = priv && mine().keep === true; // a private page writes nothing until something is kept
+  const out = () => pack(keptOnly(store.doc));
   // the address follows the answers, a beat behind the typing
-  const save = () => { clearTimeout(timer); timer = setTimeout(async () => { packed = await pack(store.doc); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } }, 250); };
-  const link = async () => { packed = await pack(store.doc); return `${location.origin}${location.pathname}${HERE}${packed}`; };
-  const nextUrl = async () => carryUrl(me.next, await pack(store.doc));
-  const api = { store, ref, me, mine, remember, save, link, nextUrl, render: () => { draw(api); save(); } };
+  const save = () => { if (priv && !wrote && mine().keep !== true) return; wrote = true; clearTimeout(timer); timer = setTimeout(async () => { packed = await out(); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } }, 250); };
+  const link = async () => { packed = await out(); return `${location.origin}${location.pathname}${HERE}${packed}`; };
+  const nextUrl = async () => carryUrl(me.next, await out());
+  const api = { store, ref, me, mine, remember, save, link, nextUrl, packed: out, private: priv, render: () => { draw(api); save(); } };
   store.subscribe?.(() => save());
   document.title = `${me.title}: Stress Less About Money`;
   api.render();
@@ -62,7 +69,7 @@ export function carryCard(api, { ready = true, pulse = true } = {}) {
   const next = btn(`Next: ${api.me.nextLabel} ›`, async () => { location.href = await api.nextUrl(); }, 'primary big');
   next.disabled = !ready; if (ready && pulse) next.classList.add('st-pulse');
   const card = h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'The next step opens with these answers already in it. Nothing to type twice.'),
-    h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), btn('All the steps', async () => { location.href = `one.html${HERE}${await pack(api.store.doc)}`; }, 'slim')));
+    h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), btn('All the steps', async () => { location.href = `one.html${HERE}${await api.packed()}`; }, 'slim')));
   card.setReady = on => { next.disabled = !on; next.classList.toggle('st-pulse', on && pulse); };
   return card;
 }

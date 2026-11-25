@@ -1,0 +1,199 @@
+{
+  "about": "Hard moments (run Not built, groups 1 to 5, Part 7): the words, steps, scripts and dated resource lists of the eight hard-moment tools. Every phone number and every rule here comes from the organization's or agency's own page, named in source and url, and was checked on the date in checked. A number that could not be sourced is not here: the person types their own. Read by js/solo/hard.js (web) and copied into game/core/hardcore.js (game) by tools/game_hard_build.mjs.",
+  "checked": "2026-11-25",
+  "how": "Checked on 2026-11-25 by a web search limited to each organization's own site (the pages could not be opened directly from the build machine). Each entry names the page. Check a number again before relying on it for a new year.",
+  "lines": {
+    "l911": { "name": "Emergency services", "call": "911", "what": "If you or anyone is in danger right now.", "source": "The National Domestic Violence Hotline and FEMA both say to call 911 in immediate danger", "url": "https://www.thehotline.org/get-help/", "checked": "2026-11-25" },
+    "ndvh": { "name": "National Domestic Violence Hotline", "call": "1-800-799-7233", "text": "Text START to 88788", "chat": "Chat at thehotline.org", "what": "Free, confidential, all day and night. Advocates help make a safety plan, money included.", "source": "The National Domestic Violence Hotline, thehotline.org (Get Help)", "url": "https://www.thehotline.org/get-help/", "checked": "2026-11-25" },
+    "nyDv": { "name": "New York State Domestic and Sexual Violence Hotline", "call": "1-800-942-6906", "text": "Text 844-997-2121", "chat": "Chat at opdv.ny.gov", "what": "Free and confidential, all day and night, in most languages. In New York State.", "source": "NYS Office for the Prevention of Domestic Violence, opdv.ny.gov (Survivors and Victims)", "url": "https://opdv.ny.gov/survivors-victims", "checked": "2026-11-25" },
+    "l988": { "name": "988 Suicide and Crisis Lifeline", "call": "988", "text": "Text 988", "chat": "Chat at 988lifeline.org", "what": "Free and confidential, all day and night, for anyone in emotional distress, grief included.", "source": "988 Suicide and Crisis Lifeline, 988lifeline.org, and SAMHSA", "url": "https://988lifeline.org/", "checked": "2026-11-25" },
+    "fema": { "name": "FEMA disaster assistance", "call": "1-800-621-3362", "chat": "Apply at DisasterAssistance.gov", "what": "After a declared disaster (a flood, a storm, a wildfire). File with your insurer first.", "source": "FEMA, How to Apply for Assistance, and DisasterAssistance.gov", "url": "https://www.disasterassistance.gov/", "checked": "2026-11-25" },
+    "redcross": { "name": "American Red Cross", "call": "1-800-733-2767", "what": "After a home fire or a disaster: a safe place to stay, emergency supplies, replacing medicine. Help is a gift, not a loan.", "source": "American Red Cross, Get Help (1-800-RED CROSS)", "url": "https://www.redcross.org/get-help.html", "checked": "2026-11-25" },
+    "l211": { "name": "211", "call": "211", "what": "Free and confidential, all day and night, in about 180 languages: local help with rent, utilities, food and bills.", "source": "211.org (United Way), I need help paying my bills", "url": "https://211.org/get-help/housing-expenses", "checked": "2026-11-25" },
+    "hud": { "name": "HUD housing counselor", "call": "1-800-569-4287", "chat": "Search at hud.gov/findacounselor", "what": "A HUD-approved housing counselor: free help with rent, a mortgage or a move. Press 5 for disaster help.", "source": "U.S. Department of Housing and Urban Development, Housing Counseling", "url": "https://www.hud.gov/findacounselor", "checked": "2026-11-25" },
+    "nycTenant": { "name": "NYC Tenant Helpline", "call": "311", "what": "In New York City: ask for the Tenant Helpline. Many tenants facing eviction can get a free lawyer in Housing Court (Right to Counsel).", "source": "NYC Office of Civil Justice, Right to Counsel, nyc.gov", "url": "https://www.nyc.gov/site/hra/help/legal-services-for-tenants.page", "checked": "2026-11-25" },
+    "nsa": { "name": "No Surprises Help Desk", "call": "1-800-985-3059", "what": "Questions about a medical bill, a surprise bill or a good faith estimate. Weekdays 8 a.m. to 8 p.m. Eastern, weekends 10 a.m. to 6 p.m.", "source": "Centers for Medicare and Medicaid Services, Get help with your medical bill", "url": "https://www.cms.gov/medical-bill-rights/help/plan/call-help-desk", "checked": "2026-11-25" },
+    "cfpb": { "name": "Consumer Financial Protection Bureau", "call": "1-855-411-2372", "chat": "Send a complaint at consumerfinance.gov/complaint", "what": "When a lender, a collector or a credit bureau does not fix a problem.", "source": "Consumer Financial Protection Bureau, consumerfinance.gov", "url": "https://www.consumerfinance.gov/complaint/", "checked": "2026-11-25" },
+    "ssa": { "name": "Social Security", "call": "1-800-772-1213", "what": "To report a death and ask about survivor benefits. Survivor benefits are applied for by phone, not online.", "source": "Social Security Administration, survivors benefits", "url": "https://www.ssa.gov/faqs/en/questions/KA-02083.html", "checked": "2026-11-25" },
+    "legal": { "name": "Free legal aid", "chat": "Find yours at lsc.gov or LawHelp.org", "what": "Free civil legal help (divorce, custody, housing, debt) for people with lower incomes, near you.", "source": "Legal Services Corporation, I Need Legal Help", "url": "https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help", "checked": "2026-11-25" },
+    "credit": { "name": "Your free credit reports", "chat": "AnnualCreditReport.com", "what": "Free from each of the three bureaus every week. The only official site for them.", "source": "Federal Trade Commission, Free Credit Reports", "url": "https://consumer.ftc.gov/articles/free-credit-reports", "checked": "2026-11-25" }
+  },
+  "facts": {
+    "creditWeekly": { "text": "Your credit reports are free from each bureau every week at AnnualCreditReport.com.", "source": "Federal Trade Commission, You now have permanent access to free weekly credit reports (2023)", "url": "https://consumer.ftc.gov/consumer-alerts/2023/10/you-now-have-permanent-access-free-weekly-credit-reports", "checked": "2026-11-25" },
+    "cosign": { "text": "A co-signer can be asked to pay the whole debt, with late fees, and the lender can come to the co-signer without asking the borrower first. Both the lender and the borrower have to agree to take a co-signer off.", "source": "Federal Trade Commission, Cosigning a Loan FAQs", "url": "https://consumer.ftc.gov/articles/cosigning-loan-faqs", "checked": "2026-11-25" },
+    "deathCredit": { "text": "Tell one of the three credit bureaus about a death and it tells the other two. Bring the death certificate and a paper that shows you can act for them.", "source": "Federal Trade Commission, Dealing with a deceased relative's debt", "url": "https://consumer.ftc.gov/consumer-alerts/2020/06/dealing-deceased-relatives-debt", "checked": "2026-11-25" },
+    "deathDebt": { "text": "Family usually do not pay a relative's debts from their own money. The estate pays what it can. The exceptions: you co-signed, you are a spouse in a community property state, or your state has its own rule.", "source": "Federal Trade Commission, Debts and Deceased Relatives", "url": "https://consumer.ftc.gov/articles/debts-and-deceased-relatives", "checked": "2026-11-25" },
+    "inheritIncome": { "text": "An inheritance is not income for federal income tax. What it earns later (interest, dividends, rent) is, and so is part of what comes out of an inherited IRA.", "source": "IRS, Publication 559 and Gifts and inheritances FAQ", "url": "https://www.irs.gov/faqs/interest-dividends-other-types-of-income/gifts-inheritances", "checked": "2026-11-25" },
+    "inheritBasis": { "text": "For something inherited, the starting point for tax is usually its value on the date of death. Tax is due only on a gain above that.", "source": "IRS, Gifts and inheritances FAQ", "url": "https://www.irs.gov/faqs/interest-dividends-other-types-of-income/gifts-inheritances", "checked": "2026-11-25" },
+    "ssaLump": { "text": "A one-time payment of $255 can go to a surviving spouse who lived with them. Apply within two years of the death.", "source": "Social Security Administration, Survivors Benefits (EN-05-10084)", "url": "https://www.ssa.gov/pubs/EN-05-10084.pdf", "checked": "2026-11-25" },
+    "ssaWidow": { "text": "Survivor benefits for a widow or widower can start at 60, or at 50 with a disability. Started before full retirement age they are 71.5% to 99% of the worker's amount; at full retirement age, generally 100%.", "source": "Social Security Administration, Survivors Benefits (EN-05-10084)", "url": "https://www.ssa.gov/pubs/EN-05-10084.pdf", "checked": "2026-11-25" },
+    "ssaFuneral": { "text": "In most cases the funeral home reports the death to Social Security.", "source": "Social Security Administration, survivors benefits FAQ", "url": "https://www.ssa.gov/faqs/en/questions/KA-02083.html", "checked": "2026-11-25" },
+    "itemized": { "text": "You can ask for an itemized bill that lists each charge. If something looks wrong, dispute it in writing with copies, never the originals.", "source": "Consumer Financial Protection Bureau, What should I do if I can't pay a medical bill?", "url": "https://www.consumerfinance.gov/ask-cfpb/what-should-i-do-if-i-cant-pay-a-medical-bill-en-2125/", "checked": "2026-11-25" },
+    "appeal": { "text": "When insurance says no, you have a right to an internal appeal and then an external review.", "source": "Consumer Financial Protection Bureau, Know your rights and protections when it comes to medical bills and collections", "url": "https://www.consumerfinance.gov/archive/blog/know-your-rights-and-protections-when-it-comes-to-medical-bills-and-collections/", "checked": "2026-11-25" },
+    "fap": { "text": "A nonprofit hospital must have a written financial assistance policy, with a plain language summary, and offer it to patients. Someone who qualifies cannot be charged more than the amounts generally billed for emergency or needed care.", "source": "IRS, Financial assistance policy, Section 501(r)(4)", "url": "https://www.irs.gov/charities-non-profits/financial-assistance-policy-and-emergency-medical-care-policy-section-501r4", "checked": "2026-11-25" },
+    "ecas": { "text": "A nonprofit hospital has to tell you about its financial assistance and wait at least 120 days after the first bill before extraordinary collection steps.", "source": "IRS, Billing and collections, Section 501(r)(6)", "url": "https://www.irs.gov/charities-non-profits/billing-and-collections-section-501r6", "checked": "2026-11-25" },
+    "gfe": { "text": "Uninsured or paying for care yourself: if a bill is at least $400 over the good faith estimate from that provider, you can dispute it.", "source": "Centers for Medicare and Medicaid Services, What is a good faith estimate?", "url": "https://www.cms.gov/initiatives/your-patient-rights/medical-bill-rights/get-help/guides-resources/what-good-faith-estimate", "checked": "2026-11-25" },
+    "validation": { "text": "A debt collector has to send a written notice that says how to dispute the debt.", "source": "Consumer Financial Protection Bureau, Fair Debt Collection Practices Act annual report 2024", "url": "https://files.consumerfinance.gov/f/documents/cfpb_fdcpa-2024-annual-report_2024-09.pdf", "checked": "2026-11-25" },
+    "femaFirst": { "text": "If you have insurance, file a claim with your insurer before you apply to FEMA. Have your Social Security number, a list of the damage, your household income and bank details ready.", "source": "FEMA, How to Apply for FEMA Individual Assistance", "url": "https://www.fema.gov/fact-sheet/how-apply-assistance", "checked": "2026-11-25" },
+    "landlordFirst": { "text": "Ask your landlord about a payment plan first; then 211 can point to local help with rent.", "source": "211.org, Housing Expenses", "url": "https://211.org/get-help/housing-expenses", "checked": "2026-11-25" },
+    "nycCounsel": { "text": "In New York City, many tenants can get a free lawyer for a Housing Court case, whatever their immigration status. You can ask for one at your first court date.", "source": "NYC Office of Civil Justice, Right to Counsel", "url": "https://www.nyc.gov/site/mayorspeu/resources/right-to-counsel.page", "checked": "2026-11-25" },
+    "history": { "text": "Browsing history can never be completely erased from a device, even in a private or incognito window. A device the other person cannot reach (a library, a friend's phone, work) is safer.", "source": "The National Domestic Violence Hotline, Internet Safety and How to Clear Search History", "url": "https://www.thehotline.org/plan-for-safety/internet-safety/", "checked": "2026-11-25" },
+    "hotlineMoney": { "text": "The Hotline's own money steps: an account of your own with statements sent somewhere safe, some cash or a trusted person holding it, copies of papers, photos of what you own together, two-step sign-in, and reading every paper before you sign.", "source": "The National Domestic Violence Hotline, What is Financial Abuse? and How to Recognize Coerced Debt", "url": "https://www.thehotline.org/resources/financialabuse/", "checked": "2026-11-25" }
+  },
+  "when": { "now": "Today or this week", "month": "In the first month", "quarter": "In the first 90 days", "later": "This can wait" },
+  "tools": {
+    "untangle": {
+      "title": "Untangling what you shared",
+      "why": "After a breakup or a divorce, list every account, debt and thing the two of you shared, and who keeps each one. You see what each of you ends up with, what is still open, and what stays in both names until it is paid or closed.",
+      "steps": [
+        { "id": "own", "when": "now", "text": "Open a checking account in your name alone, if you do not have one, and move your pay to it." },
+        { "id": "reports", "when": "now", "text": "Pull your free credit reports to see every account in your name.", "fact": "creditWeekly" },
+        { "id": "list", "when": "now", "text": "List every shared account, card, loan and bill below. A rough amount is fine." },
+        { "id": "passwords", "when": "now", "text": "Change passwords and PINs on the accounts only you use." },
+        { "id": "decide", "when": "month", "text": "Agree who keeps each thing, and write it down with the date." },
+        { "id": "bills", "when": "month", "text": "Move the bills that stay with you to your own account." },
+        { "id": "jointdebt", "when": "month", "text": "For a joint card or loan, ask the lender to close it to new charges, to move it into one name, or how to pay it off. Until then you both owe it, whatever the two of you agree." },
+        { "id": "lawyer", "when": "quarter", "text": "For dividing a home, support, or a retirement account, a lawyer or mediator in your state is the right help. Free legal aid may be open to you." },
+        { "id": "beneficiaries", "when": "quarter", "text": "Update the beneficiaries on your accounts and policies when your agreement or the court allows it." },
+        { "id": "plan", "when": "later", "text": "Run your plan on your own income and your own costs." }
+      ],
+      "lines": ["legal", "credit", "cfpb"],
+      "safety": "If you do not feel safe, the money safety plan has hotline numbers and a quick way to leave the page."
+    },
+    "roomexit": {
+      "title": "A roommate is moving out",
+      "why": "When someone leaves before the lease ends, the rent still has to be paid. See what each of you pays until the end of the lease, how the deposit comes back, and what is left if no one new moves in.",
+      "steps": [
+        { "id": "lease", "when": "now", "text": "Read the lease. The people who signed it are the people the landlord can ask to pay." },
+        { "id": "writeit", "when": "now", "text": "Agree in writing: the last month the person leaving pays, and how the deposit is shared when it comes back." },
+        { "id": "landlord", "when": "month", "text": "Tell the landlord in writing, and ask how a new roommate is added to the lease." },
+        { "id": "bills", "when": "month", "text": "Move the shared bills (power, internet) into the names of the people staying." }
+      ],
+      "lines": ["l211", "nycTenant", "legal"]
+    },
+    "grief": {
+      "title": "After a death: the first 90 days",
+      "why": "Grief and paperwork arrive together. This is what needs doing soon, and what can wait. Nothing here has to be done today except what keeps the home running.",
+      "pause": "panic",
+      "steps": [
+        { "id": "wait", "when": "now", "text": "There is no rush on big choices. Most of them can wait months." },
+        { "id": "certs", "when": "now", "text": "Ask for several certified copies of the death certificate. Banks, insurers and agencies each ask for one." },
+        { "id": "ssa", "when": "now", "text": "Call Social Security about benefits for the family. The funeral home usually reports the death.", "fact": "ssaFuneral" },
+        { "id": "keep", "when": "now", "text": "Keep paying the bills that keep the home running: housing, utilities, insurance." },
+        { "id": "will", "when": "month", "text": "Find the will, if there is one, and who is named to handle the estate." },
+        { "id": "list", "when": "month", "text": "List the accounts, policies, debts and bills in their name." },
+        { "id": "bureau", "when": "month", "text": "Tell one credit bureau about the death. It tells the other two.", "fact": "deathCredit" },
+        { "id": "debts", "when": "month", "text": "If collectors call: family usually do not pay a relative's debts from their own money.", "fact": "deathDebt" },
+        { "id": "claims", "when": "month", "text": "Claim any life insurance, and ask each employer about a final paycheck and benefits." },
+        { "id": "park", "when": "quarter", "text": "Money that arrives can wait in savings while you decide.", "fact": "inheritIncome" },
+        { "id": "basis", "when": "quarter", "text": "Before selling a home or investments, ask what each was worth on the date of death.", "fact": "inheritBasis" },
+        { "id": "help", "when": "quarter", "text": "An estate lawyer, or a fee-only planner, can carry the paperwork with you." },
+        { "id": "decide", "when": "later", "text": "What to do with an inheritance (debt, the cushion, investing, giving) can wait until you are ready. The plan's order helps then." },
+        { "id": "own", "when": "later", "text": "Update your own will and beneficiaries." }
+      ],
+      "lines": ["l988", "ssa", "legal"]
+    },
+    "widow": {
+      "title": "When your partner has died",
+      "why": "A short list for the months after a spouse or partner dies: the money that keeps coming, the accounts to move into your name, and the choices that can wait.",
+      "pause": "panic",
+      "steps": [
+        { "id": "ssa", "when": "now", "text": "Call Social Security about the one-time payment and survivor benefits.", "fact": "ssaLump" },
+        { "id": "survivor", "when": "now", "text": "Ask when survivor benefits could start for you.", "fact": "ssaWidow" },
+        { "id": "pay", "when": "now", "text": "Make sure you can pay the household bills from an account in your name." },
+        { "id": "retitle", "when": "month", "text": "Move joint accounts into your name. Each bank asks for a death certificate." },
+        { "id": "health", "when": "month", "text": "If your health cover came through their job, ask the employer how you keep it." },
+        { "id": "claims", "when": "month", "text": "Claim life insurance, and ask about a pension or an annuity for a survivor." },
+        { "id": "insurance", "when": "month", "text": "Put the car, home and renter's insurance in your name." },
+        { "id": "tax", "when": "quarter", "text": "Ask a tax preparer how to file for the year of the death." },
+        { "id": "beneficiaries", "when": "quarter", "text": "Update the beneficiaries on your own accounts and policies." },
+        { "id": "big", "when": "later", "text": "A home sale, a new advisor, or a loan to family can wait a year." },
+        { "id": "plan", "when": "later", "text": "When you are ready, run your plan on one household's money." }
+      ],
+      "lines": ["ssa", "l988", "legal"]
+    },
+    "medical": {
+      "title": "Medical bills: words to use",
+      "why": "A medical bill is often a first offer. These are the words to ask for the details, for help, and for a plan you can pay, with your own numbers in them.",
+      "steps": [
+        { "id": "itemized", "when": "now", "text": "Ask for an itemized bill and check each line.", "fact": "itemized" },
+        { "id": "assist", "when": "now", "text": "Ask if the hospital has financial assistance.", "fact": "fap" },
+        { "id": "appeal", "when": "month", "text": "If insurance said no, ask for an appeal.", "fact": "appeal" },
+        { "id": "estimate", "when": "month", "text": "Paying yourself, with a good faith estimate: compare the bill to it.", "fact": "gfe" },
+        { "id": "wait", "when": "quarter", "text": "A nonprofit hospital has to wait before collection steps.", "fact": "ecas" },
+        { "id": "collector", "when": "quarter", "text": "If a collector calls, ask for the notice in writing.", "fact": "validation" }
+      ],
+      "scripts": [
+        { "id": "itemized", "title": "Ask for the details", "who": "The billing office (the number on the bill)", "say": ["Hello, I am calling about a bill of {balance|this amount}. Before I pay, could you send me an itemized bill with each charge and its code?", "Could the account stay on hold, out of collections, while I look it over?"], "note": "Write down the date, the name of the person and what they said." },
+        { "id": "assist", "title": "Ask about financial assistance", "who": "The hospital's billing or financial assistance office", "say": ["Does the hospital have a financial assistance policy? Could you send me the application and the plain language summary?", "While it is reviewed, can the account stay out of collections?"], "note": "Ask even if you think your income is too high. The lines are often higher than people expect." },
+        { "id": "plan", "title": "Ask for a payment plan", "who": "The billing office", "say": ["I want to pay this. I can pay {monthly|an amount} a month.", "Can we set that up as a payment plan with no interest?", "Could you send me the plan in writing?"], "note": "Offer a number you can keep paying in a lean month." },
+        { "id": "lump", "title": "Offer one payment", "who": "The billing office, or the collector", "say": ["I can pay {offer|an amount} in one payment toward the balance of {balance|this bill}.", "Would you accept that as payment in full?", "If yes, please send that in writing before I pay."], "note": "Pay only once the agreement is in writing." },
+        { "id": "collector", "title": "When a collector calls", "who": "The debt collector", "say": ["Please send me the written notice for this debt, with how to dispute it.", "Please contact me in writing from now on."], "note": "You do not have to agree to anything on the phone." }
+      ],
+      "lines": ["nsa", "cfpb", "legal"]
+    },
+    "sayno": {
+      "title": "Saying no to lending money",
+      "why": "Someone you care about asks for money. Here are words for a kind no, a smaller yes, or another way to help, so the answer is yours and not the moment's.",
+      "pause": "pleasing",
+      "steps": [
+        { "id": "pause", "when": "now", "text": "Use the pause line first, then decide away from the moment." },
+        { "id": "gift", "when": "now", "text": "If you help with money, give an amount you can do without and never need back. A gift is easier on a friendship than a loan you need repaid." },
+        { "id": "write", "when": "now", "text": "If you do lend, write down the amount, the dates and the payments, and both sign it." },
+        { "id": "cosign", "when": "now", "text": "Co-signing means the loan can become yours.", "fact": "cosign" }
+      ],
+      "scripts": [
+        { "id": "no", "title": "A kind no", "who": "For the person asking", "say": ["I care about you, and I am not able to lend money right now.", "It is not about you. My money has a plan for this month, and this is not in it."], "note": "A short answer is enough. You do not owe a list of reasons." },
+        { "id": "smaller", "title": "A smaller yes", "who": "For the person asking", "say": ["I cannot lend {asked|that much}, and I can give {gift|a smaller amount} that you do not need to pay back."], "note": "Give only what you can do without." },
+        { "id": "other", "title": "Help another way", "who": "For the person asking", "say": ["I cannot help with money, and I can help another way: a ride, a meal, or sitting down together with the bills.", "Dialing 211 finds local help with rent, food and bills."], "note": "Time and a plan often help longer than cash." },
+        { "id": "cosign", "title": "Not co-signing", "who": "For the person asking", "say": ["I am not able to co-sign. If I co-sign, the whole loan can become mine too."], "note": "This is a line many people hold for everyone, family included." }
+      ],
+      "lines": ["l211"]
+    },
+    "crisis": {
+      "title": "After a fire, a flood or an eviction notice",
+      "why": "In the first days, a short list beats a long one. Tap what happened. Each step is one call or one photo.",
+      "kinds": { "fire": "A fire", "flood": "A flood or a storm", "eviction": "An eviction notice" },
+      "steps": [
+        { "id": "danger", "when": "now", "kind": "all", "text": "If anyone is in danger, call 911 first." },
+        { "id": "redcross", "when": "now", "kind": "fire", "text": "Call the Red Cross for a safe place to stay, supplies and medicine." },
+        { "id": "insurer", "when": "now", "kind": "fire", "text": "Call your insurer to start a claim. Ask what it pays toward a place to stay." },
+        { "id": "photos", "when": "now", "kind": "fire", "text": "Take photos of the damage before anything is cleaned up." },
+        { "id": "receipts", "when": "month", "kind": "fire", "text": "Keep every receipt while you are out of your home." },
+        { "id": "inventory", "when": "month", "kind": "fire", "text": "List what was lost, room by room. Photos on your phone help." },
+        { "id": "insurerFirst", "when": "now", "kind": "flood", "text": "File with your insurer first.", "fact": "femaFirst" },
+        { "id": "fema", "when": "now", "kind": "flood", "text": "If the disaster was declared, apply to FEMA at DisasterAssistance.gov or by phone." },
+        { "id": "floodPhotos", "when": "now", "kind": "flood", "text": "Take photos of the water and the damage before anything is thrown out." },
+        { "id": "floodReceipts", "when": "month", "kind": "flood", "text": "Keep every receipt for repairs, a place to stay and what you replace." },
+        { "id": "dates", "when": "now", "kind": "eviction", "text": "Read the notice and write down every date on it." },
+        { "id": "landlord", "when": "now", "kind": "eviction", "text": "Ask the landlord about a payment plan.", "fact": "landlordFirst" },
+        { "id": "court", "when": "now", "kind": "eviction", "text": "Go to every court date on the papers, and ask for a lawyer there.", "fact": "nycCounsel" },
+        { "id": "counselor", "when": "month", "kind": "eviction", "text": "A HUD-approved housing counselor is free and can help plan the next home." },
+        { "id": "cushion", "when": "later", "kind": "all", "text": "When the dust settles, the plan shows the new date for your cushion. Recalculating, not starting over." }
+      ],
+      "lines": { "fire": ["l911", "redcross", "l211"], "flood": ["l911", "fema", "redcross", "hud"], "eviction": ["l211", "nycTenant", "hud", "legal"] }
+    },
+    "safety": {
+      "title": "A money plan, kept private",
+      "why": "When someone controls the money, keeps you from it, or runs up debt in your name, a quiet plan helps. Nothing here is saved unless you turn it on, and Leave this page goes to a weather site at once.",
+      "steps": [
+        { "id": "account", "when": "now", "text": "Open an account in your name alone, with statements and alerts going somewhere only you can reach." },
+        { "id": "cash", "when": "now", "text": "Keep a little cash where only you can reach it, or ask someone you trust to hold some." },
+        { "id": "papers", "when": "now", "text": "Copy key papers (ID, birth certificates, account and loan papers) and keep the copies with someone you trust." },
+        { "id": "photos", "when": "month", "text": "Take photos of the things you own together." },
+        { "id": "signin", "when": "month", "text": "Turn on two-step sign-in and alerts for password changes on your bank and card accounts." },
+        { "id": "reports", "when": "month", "text": "Check your credit reports for accounts you did not open.", "fact": "creditWeekly" },
+        { "id": "sign", "when": "month", "text": "Read every money paper before you sign it, and keep a copy." },
+        { "id": "cost", "when": "quarter", "text": "Work out roughly what leaving would take, even if it is only a bus fare. An advocate can help with the rest." }
+      ],
+      "cannot": [
+        "This page saves nothing unless you turn on Keep this. Without it, closing the page clears it.",
+        "Your browser still records that this page was visited, unless you use a private window.",
+        "Leave this page goes to a weather site and takes this page off the Back button, but the visit stays in your history.",
+        "SLAM cannot see or clear the history, the downloads or the apps on your device."
+      ],
+      "lines": ["l911", "ndvh", "nyDv", "l988", "credit", "legal"]
+    }
+  },
+  "exit": { "to": "https://www.weather.gov/", "label": "Leave this page", "keys": "Press Shift three times to leave at once.", "source": "The pattern follows the GOV.UK Design System's Exit this page component (a button that replaces the page with a neutral one, and Shift pressed three times)", "url": "https://design-system.service.gov.uk/components/exit-this-page/", "checked": "2026-11-25" }
+}

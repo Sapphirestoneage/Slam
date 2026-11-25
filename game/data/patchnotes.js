@@ -290,6 +290,16 @@ const PATCH_NOTES = [
       "Rough numbers: one switch shows a range in place of each exact amount, for a screen someone else can see. Your numbers stay as they are.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Hard moments",
+    l: [
+      "Eight calm tools: untangling after a breakup, a roommate moving out, the first 90 days after a death, when a partner has died, medical bills, saying no to lending, and a fire, flood or eviction.",
+      "Each has steps by when they are due, words to copy with your own numbers, and who can help, checked on Nov 25, 2026 on each organization's own page.",
+      "A money plan kept private, for when someone controls the money: hotlines, quiet steps, and Leave this page, which goes to a weather site at once (or press Shift three times).",
+      "Nothing is kept unless you turn on Keep this. Kept, it stays yours: a coach sees it only if you let them.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
