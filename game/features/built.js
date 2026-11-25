@@ -601,6 +601,19 @@ const WB = [
   ["feel", "Money Chart quiz", "b", () => WB_HAS("mcstart"), "", null],
   [
     "feel",
+    "Quizzes: one engine, eight skins (a money code, the FI Address, houses, an avatar, a character sheet, the pyramid, the FI Pathway, a playful money sign)",
+    "b",
+    () =>
+      WB_HAS("qz") &&
+      WB_FN("qzResult") &&
+      WB_FN("qzCardPart") &&
+      typeof QZ_SKINS !== "undefined" &&
+      QZ_SKINS.length >= 9,
+    "Each ends on one card with its light side and one next step. A result is private until you show it, and never changes your element without a tap. The money sins quiz is a placeholder: Coming soon.",
+    "qz",
+  ],
+  [
+    "feel",
     "A rival to race",
     "p",
     () => WB_HAS("rival"),

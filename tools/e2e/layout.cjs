@@ -730,6 +730,13 @@ async function runStart(browser) {
       await solo.locator('#carry .st-btn.primary.big').click(); await solo.waitForSelector('.st-quizq'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start' }, STILL);
       for (let i = 0; i < 10; i++) { await solo.locator('.st-quizscale .st-chip').nth(i % 5).click(); await settle(solo, 60); }
       await settle(solo, 200); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'result' }, STILL);
+      // the quiz skins on the same page (docs/QUIZ-ENGINE.md): the list, one question, one result card
+      await solo.locator('#lenses summary').click(); await settle(solo, 120); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'more quizzes' }, STILL);
+      await solo.locator('#lenses button.st-hubcard', { hasText: 'Four Money Houses' }).click(); await solo.locator('#ask .st-btn.primary').click(); await settle(solo, 120);
+      await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'skin question' }, STILL);
+      for (let i = 0; i < 9; i++) { await solo.locator('#ask .st-quizrows .st-btn').first().click(); await settle(solo, 60); }
+      await solo.waitForSelector('#answer'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'skin card' }, STILL);
+      await solo.locator('#answer .st-btn', { hasText: 'All quizzes' }).click(); await settle(solo, 100);
       await solo.goto(`${BASE}/skills.html`, { waitUntil: 'load' }); await settle(solo, 500);
       await scanHere(solo, { route: 'skills.html', width, theme, client: 'Start' }, STILL);
       for (const yes of [true, true, false, false, true, false]) { await solo.locator('.st-btn', { hasText: yes ? 'Yes, done' : 'Not yet' }).first().click(); await settle(solo, 80); }

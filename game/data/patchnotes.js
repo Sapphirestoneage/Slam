@@ -136,6 +136,17 @@ const PATCH_NOTES = [
       "The sign-up screen and the foot of each main screen say it: Education and tools, not financial advice.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Quizzes: eight new ways to see yourself with money",
+    l: [
+      "Quizzes, on Me and in the Menu, has eight short tap quizzes: a four-letter money code, your FI Address, the Four Money Houses and a money avatar.",
+      "Also a character sheet with six stats, the Money Pyramid, the FI Pathway as a ski mountain, and a playful money sign.",
+      "Each one ends on one card: what it found, its light side, and one next step in the skill tree.",
+      "Each is a game lens, not a test. Your results stay with you unless you choose to show them on your character sheet.",
+      "A result never changes your money element by itself: the card asks, keep or switch?",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

@@ -5,10 +5,18 @@
 // each person passes on carries everyone before them, so a third and a fourth person join the same picture.
 import { boot, h, btn, chip, stepLine, carryCard, foot } from './shell.js';
 import { pack } from '../start/link.js';
-import { SCALE, DEPTHS, itemsFor, quizOf, groupOf, perceptionOf } from '../quiz.js';
+import { DEPTHS, MONEY_CHART, itemsFor, quizOf, groupOf, perceptionOf } from '../quiz.js';
+import { carryUrl } from '../solo.js';
+import { qzFlow, qzLast } from '../math/quizcore.js';
+import { SKINS, skinOf } from '../quiz/skins/index.js';
+import { lensOf, lensPatch, lensNow, elementNow, SHOWN } from '../quiz/store.js';
+import { ME_ONLY } from '../exercises/calm-letter.js';
+import { askCard, introCard, resultCard, listCard } from '../quiz/page.js';
 import { MIRRORS } from '../mirror.js';
 
 const $ = id => document.getElementById(id);
+// the names of the skills, skill trees and readings the result cards route to (made by tools/game_quiz_build.mjs)
+const routes = await fetch('data/quiz/routes.json').then(r => r.json()).catch(() => null);
 // others: a list of score sets, one per other person; each shows as a numbered mark on the bar
 const bars = (scores, others = []) => h('div.st-quizbars', {}, scores.map(s => h('div.st-quizbar', {}, h('span.st-quizname', {}, h('strong', {}, s.name), h('small', {}, s.word)),
   h('span.st-quiztrack', { role: 'img', 'aria-label': `${s.name}: ${s.score} of 100${others.length ? `; the others: ${others.map(o => o.find(x => x.id === s.id).score).join(', ')}` : ''}` }, h('b', { style: { width: `${Math.max(3, s.score)}%` } }), others.map((o, k) => h('i', { style: { left: `${o.find(x => x.id === s.id).score}%` } }, others.length > 1 ? h('em', {}, String(k + 2)) : null))), h('span.st-quiznum', {}, String(s.score)))));
@@ -22,11 +30,12 @@ function draw(api) {
     api.remember({ [key]: a, quizAt: null, ...(guessing && last ? { quizGuessing: false } : {}), ...(!guessing && q.ready && q.complete && !m.mirrorPicked ? { mirror: q.mirror } : {}) }); api.render(); };
   const at = m.quizAt && items.some(i => i.id === m.quizAt) ? m.quizAt : G.next, item = items.find(i => i.id === at), n = items.findIndex(i => i.id === at);
   const asking = !!item && (G.done < items.length || !!m.quizAt);
-  const ask = () => h('div.st-card', {}, h('div.st-eyebrow', {}, guessing ? `As they would answer: ${n + 1} of ${items.length}` : `${n + 1} of ${items.length}`),
-    items.length <= 25 ? h('div.st-pips', { 'aria-hidden': 'true' }, items.map(i => h(`i${answers[i.id] ? '.on' : ''}${i.id === at ? '.now' : ''}`))) : h('div.st-collapse', { 'aria-hidden': 'true' }, h('b', { style: { width: `${G.done / items.length * 100}%` } })),
-    h('h2.st-quizq', {}, item.text), h('div.st-quizscale.st-pulse', { role: 'group', 'aria-label': 'How much do you agree?' }, SCALE.map(([v, l]) => chip(l, answers[item.id] === v, () => set(item.id, v)))),
-    h('div.st-row', { style: { marginTop: '12px' } }, n > 0 ? btn('‹ Back one', () => { api.remember({ quizAt: items[n - 1].id }); api.render(); }, 'slim') : null,
-      guessing ? btn('Stop guessing', () => { api.remember({ quizGuessing: false, quizAt: null }); api.render(); }, 'slim') : Q.ready && Q.done >= 10 ? btn('See my chart now', () => { api.remember({ quizAt: null, quizDepth: Q.done >= 25 ? 'std' : 'ten' }); api.render(); }, 'slim') : null));
+  // the question is drawn by the one renderer (js/quiz/page.js askCard), from the Money Chart's definition
+  const ask = () => askCard({ def: MONEY_CHART, q: MONEY_CHART.questions.find(x => x.id === item.id), n, of: items.length, answer: answers[item.id], onPick: v => set(item.id, v),
+    eyebrow: guessing ? `As they would answer: ${n + 1} of ${items.length}` : `${n + 1} of ${items.length}`,
+    progress: items.length <= 25 ? h('div.st-pips', { 'aria-hidden': 'true' }, items.map(i => h(`i${answers[i.id] ? '.on' : ''}${i.id === at ? '.now' : ''}`))) : h('div.st-collapse', { 'aria-hidden': 'true' }, h('b', { style: { width: `${G.done / items.length * 100}%` } })),
+    onBack: () => { api.remember({ quizAt: items[n - 1].id }); api.render(); },
+    extra: guessing ? btn('Stop guessing', () => { api.remember({ quizGuessing: false, quizAt: null }); api.render(); }, 'slim') : Q.ready && Q.done >= 10 ? btn('See my chart now', () => { api.remember({ quizAt: null, quizDepth: Q.done >= 25 ? 'std' : 'ten' }); api.render(); }, 'slim') : null });
   const P = other && Q.ready ? groupOf([m.quiz, ...others]) : null, theirRead = m.quizOtherGuess && Q.ready ? perceptionOf(m.quizOtherGuess, m.quiz) : null;
   const kindWords = { cover: 'one of you has it covered', doubled: 'all of you lean hard here, a shared habit to watch', open: 'none of you leans here, the one to build together', alike: 'you sit close together' };
   const result = () => h('div.st-card.hero', { id: 'answer' }, h('div.st-eyebrow', {}, 'Your money chart'), h('h2', { style: { margin: '0 0 6px' } }, Q.words),
@@ -54,9 +63,27 @@ function draw(api) {
         const url = `${location.origin}${location.pathname}#/d/${await pack(theirs)}`; try { await navigator.clipboard.writeText(url); $('sent').textContent = others.length ? 'Link copied. It carries everyone so far, so the next person sees all of you side by side.' : 'Link copied. Send it to one person or several: each sees themselves beside you. To get everyone on one picture, each person passes on their own link.'; } catch { $('sent').replaceChildren(h('input', { readonly: '', value: url, 'aria-label': 'Link for your person', style: { width: '100%' }, onFocus: ev => ev.target.select() })); } }, 'slim')),
       h('p.st-small', { id: 'sent', role: 'status', style: { margin: '6px 0 0' } }, m.quizGuess && Object.keys(m.quizGuess).length >= 10 ? 'Your guess rides along in the link, so whoever opens it sees how well you read them.' : '')),
     h('div.st-row', { style: { marginTop: '10px' } }, btn('Change my answers', () => { api.remember({ quizAt: items[0].id }); api.render(); }, 'slim')));
+  // ---------- the other quizzes: skins of the one engine, drawn by the one renderer ----------
+  const chartTop = Q.ready ? Q.top.name : null, element = elementNow(m, chartTop), skin = m.lens ? skinOf(m.lens) : null, open = skin && !skin.soon ? skin : null;
+  const keep = (id, patch) => { api.remember(lensPatch(api.mine(), id, patch)); api.render(); };
+  const toList = () => { api.remember({ lens: null, lensList: true }); api.render(); };
+  const lens = () => {
+    const st = lensOf(m, open.id), N = lensNow(open, st, element);
+    if (N.card) return resultCard({ N, routes, on: {
+      keep: () => keep(open.id, { kept: N.feed.to }), switch: () => { api.remember({ element: N.feed.to, ...lensPatch(api.mine(), open.id, { kept: null }) }); api.render(); },
+      show: on => keep(open.id, { seen: on ? SHOWN : ME_ONLY }), confirm: () => keep(open.id, { ok: true }), again: () => keep(open.id, { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
+      skills: async () => { location.href = carryUrl('skills', await pack(api.store.doc)); } } });
+    if (!st.go && !N.R.answered) return introCard({ def: open, taps: N.taps, onStart: () => keep(open.id, { go: true }), onList: toList });
+    const q = N.R.next;
+    return askCard({ def: open, q, n: N.R.answered, of: N.R.of, answer: st.ans[q.id], onPick: v => { const ans = { ...st.ans, [q.id]: v }; keep(open.id, { ans, at: qzFlow(open, ans).done ? new Date().toISOString() : null }); },
+      onBack: () => { const ans = { ...st.ans }; delete ans[qzLast(open, ans)]; keep(open.id, { ans }); }, extra: btn('All quizzes', toList, 'slim') });
+  };
+  const list = () => listCard({ rows: SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, def.id), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
+    onOpen: id => { api.remember({ lens: id }); api.render(); document.getElementById('ask')?.scrollIntoView?.({ block: 'center' }); }, onChart: open ? () => { api.remember({ lens: null }); api.render(); } : null });
   $('main').replaceChildren(...[
-    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, guessing ? 'Now the same ten, answered the way you think one of your people would. It is a guess: that is the point.' : other && !Q.ready ? 'Someone sent you this to compare. Ten taps, answered as yourself. Go with your gut.' : 'One statement at a time. Go with your gut: there are no right answers, and nobody sees this but you.')),
-    asking ? ask() : null, Q.ready && !asking ? result() : null,
-    carryCard(api, { ready: true, pulse: Q.ready && !asking })].filter(Boolean));
+    h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, open ? 'A short tap quiz. Go with your gut: there are no right answers, and nobody sees this but you.' : guessing ? 'Now the same ten, answered the way you think one of your people would. It is a guess: that is the point.' : other && !Q.ready ? 'Someone sent you this to compare. Ten taps, answered as yourself. Go with your gut.' : 'One statement at a time. Go with your gut: there are no right answers, and nobody sees this but you.')),
+    open ? lens() : null, !open && asking ? ask() : null, !open && Q.ready && !asking ? result() : null,
+    guessing ? null : list(),
+    carryCard(api, { ready: true, pulse: Q.ready && !asking && !open })].filter(Boolean));
 }
 boot('quiz', draw);

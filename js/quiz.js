@@ -4,6 +4,8 @@
 // types: the result is where you sit on each scale. Often the muscle that carried you here is the one in the way next.
 // Items and scoring are Eli's (the "Money Chart quiz item banks", Aug 2026): about half are reverse-keyed (dir -1), each
 // trait is the average of its statements, each element the average of its traits. Pure, no DOM.
+import { qzScore } from './math/quizcore.js';
+
 export const ELEMENTS = [
   { id: 'water', name: 'Water', word: 'Feeling', high: 'Money lands in your body first. You feel a number before you think about it.', low: 'Money rarely stirs you. That keeps you steady, and can hide how a choice will feel to live with.', mirror: 'guide', tool: ['drills', null, 'Practice a hard month'] },
   { id: 'earth', name: 'Earth', word: 'Security', high: 'You hold on, save first and keep a cushion.', low: 'You spend easily and trust the next paycheck to arrive.', mirror: 'safe', tool: ['runway', null, 'How long would my money last?'] },
@@ -115,6 +117,15 @@ export const BANK = [
 ];
 export const SCALE = [[1, 'Strongly disagree'], [2, 'Disagree'], [3, 'Neutral'], [4, 'Agree'], [5, 'Strongly agree']];
 export const DEPTHS = [['ten', 'The quick 10', 10], ['std', 'The 25', 25], ['full', 'The full 100', 100]];
+// The Money Chart as a definition of the one quiz engine (js/math/quizcore.js; docs/QUIZ-ENGINE.md). A trait's id is
+// "element|trait", and its group is its element.
+export const MONEY_CHART = {
+  id: 'money-chart', name: 'The Money Chart', blurb: 'Ten taps. See your five money muscles.', note: 'A game lens, not a test. These are muscles, not types.',
+  scoring: 'average', scale: SCALE, groups: ELEMENTS.map(e => ({ id: e.id, name: e.name })),
+  traits: [...new Map(BANK.map(i => [`${i.el}|${i.trait}`, { id: `${i.el}|${i.trait}`, name: i.trait, group: i.el }])).values()],
+  questions: BANK.map(i => ({ id: i.id, text: i.text, trait: `${i.el}|${i.trait}`, dir: i.dir })),
+  core: { elements: Object.fromEntries(BANK.map(i => [`${i.el}|${i.trait}`, { [ELEMENTS.find(e => e.id === i.el).name]: 1 }])), sheet: 'Money Chart', how: 'Each trait belongs to one of the five elements. The element with the highest average is the one the game shows.' },
+};
 // What others see: the traits that show up in outward behavior (the Rising).
 const OUTWARD = ['Holding on', 'Frugality', 'Status', 'Ambition', 'Grind', 'Giving'];
 // The statements for a depth, in the order they are shown. The 10 and the 25 keep Eli's delivery order (a gentle open);
@@ -128,10 +139,11 @@ export function itemsFor(depth = 'ten') {
 const ok = v => v >= 1 && v <= 5;
 // answers: { itemId: 1..5 }. Works on whatever is answered, so a 10 can grow into a 25 and a 100 with no re-asking.
 export function quizOf(answers = {}, depth = 'ten') {
-  const items = itemsFor(depth), got = BANK.filter(i => ok(answers[i.id]));
-  const traitMap = new Map(); for (const i of got) { const k = `${i.el}|${i.trait}`, v = i.dir > 0 ? answers[i.id] : 6 - answers[i.id]; traitMap.set(k, [...(traitMap.get(k) || []), v]); }
-  const traits = [...traitMap].map(([k, vs]) => { const [el, name] = k.split('|'); return { el, name, n: vs.length, score: Math.round((vs.reduce((s, v) => s + v, 0) / vs.length - 1) / 4 * 100) }; });
-  const scores = ELEMENTS.map(e => { const ts = traits.filter(t => t.el === e.id); return { ...e, traits: ts, answered: ts.length, score: ts.length ? Math.round(ts.reduce((s, t) => s + t.score, 0) / ts.length) : null }; });
+  const items = itemsFor(depth);
+  // the scoring is the one quiz engine's (js/math/quizcore.js): each trait the average of its statements, each element the average of its traits
+  const S = qzScore(MONEY_CHART, answers);
+  const traits = S.traits.map(t => ({ el: t.group, name: t.name, n: t.n, score: t.score }));
+  const scores = ELEMENTS.map(e => { const ts = traits.filter(t => t.el === e.id); return { ...e, traits: ts, answered: ts.length, score: S.groups.find(g => g.id === e.id).score }; });
   const done = items.filter(i => ok(answers[i.id])).length, next = items.find(i => !ok(answers[i.id]))?.id ?? null, ready = scores.every(s => s.answered > 0);
   if (!ready) return { ready: false, depth, done, of: items.length, next, scores };
   const ranked = [...scores].sort((a, b) => b.score - a.score), top = ranked[0], low = ranked.at(-1), even = top.score - low.score < 15;

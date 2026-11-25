@@ -120,9 +120,13 @@ function elSides(c, d) {
     .sort((a, b) => b.score - a.score);
   return { strong: S.slice(0, 2), weak: S.slice(-2).reverse(), all: S };
 }
-/* The element of the player: the Money Chart when it is ready, then the pick of the player, then a
-   Guess from the setup taps. */
+/* The element of the player: a switch that the player tapped on a quiz card, then the Money Chart when it is
+   ready, then the pick of the player, then a Guess from the setup taps. */
 function elOf(c) {
+  /* quizzes.js: the player tapped "Switch" on a quiz card. That tap is the newest word of the player, thus it
+     comes first. c.x.el.over is the id of the quiz. */
+  const ov = c.x && c.x.el && c.x.el.over && c.x.el.pick;
+  if (ov && EL_SIDES[ov]) return { el: ov, st: "Close", from: "Your pick" };
   try {
     const ans = c.x && c.x.mc && c.x.mc.ans;
     if (ans && typeof mcOf === "function") {

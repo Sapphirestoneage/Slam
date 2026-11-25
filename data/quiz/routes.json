@@ -1,0 +1,390 @@
+{
+ "id": "quiz.routes",
+ "note": "Made by tools/game_quiz_build.mjs from the quiz skins (js/quiz/skins) and data/library. Do not edit: change the skin or the library, then run the tool.",
+ "skills": {
+  "cash-safety-net-build-the-1k-shield": {
+   "name": "Build the $1K shield",
+   "what": "The starter buffer, fast",
+   "tree": "cash-safety-net",
+   "treeName": "Cash and Safety Net",
+   "level": 1
+  },
+  "cash-safety-net-fund-the-true-emergency-fund": {
+   "name": "Fund the true emergency fund",
+   "what": "3-6 months of expenses",
+   "tree": "cash-safety-net",
+   "treeName": "Cash and Safety Net",
+   "level": 4
+  },
+  "cash-safety-net-get-one-month-ahead": {
+   "name": "Get one month ahead",
+   "what": "This month's bills from last month's income",
+   "tree": "cash-safety-net",
+   "treeName": "Cash and Safety Net",
+   "level": 3
+  },
+  "deals-smart-buying-renegotiate-the-bills-yearly": {
+   "name": "Renegotiate the bills yearly",
+   "what": "Insurance, internet, phone re-shopped",
+   "tree": "deals-smart-buying",
+   "treeName": "Deals and Smart Buying",
+   "level": 5
+  },
+  "debt-leverage-autopay-all-minimums": {
+   "name": "Autopay all minimums",
+   "what": "Late fees and credit damage end today",
+   "tree": "debt-leverage",
+   "treeName": "Debt and Leverage",
+   "level": 2
+  },
+  "debt-leverage-inventory-every-debt": {
+   "name": "Inventory every debt",
+   "what": "Balance, rate, minimum, one page",
+   "tree": "debt-leverage",
+   "treeName": "Debt and Leverage",
+   "level": 1
+  },
+  "debt-leverage-pick-a-payoff-engine": {
+   "name": "Pick a payoff engine",
+   "what": "Avalanche (math) or snowball (momentum)",
+   "tree": "debt-leverage",
+   "treeName": "Debt and Leverage",
+   "level": 4
+  },
+  "entrepreneurship-validate-before-building": {
+   "name": "Validate before building",
+   "what": "10 customer conversations before any logo",
+   "tree": "entrepreneurship",
+   "treeName": "Entrepreneurship",
+   "level": 1
+  },
+  "family-generational-wealth-design-yours-mine-ours": {
+   "name": "Design yours/mine/ours",
+   "what": "Account architecture chosen deliberately",
+   "tree": "family-generational-wealth",
+   "treeName": "Family and Generational Wealth",
+   "level": 2
+  },
+  "family-generational-wealth-hold-the-money-date": {
+   "name": "Hold the money date",
+   "what": "Recurring, agenda'd, low-stakes partner review",
+   "tree": "family-generational-wealth",
+   "treeName": "Family and Generational Wealth",
+   "level": 1
+  },
+  "financial-ops-tooling-write-down-net-worth": {
+   "name": "Write down net worth",
+   "what": "Every account, one page, one number",
+   "tree": "financial-ops-tooling",
+   "treeName": "Financial Ops and Tooling",
+   "level": 1
+  },
+  "income-career-know-your-market-rate": {
+   "name": "Know your market rate",
+   "what": "Levels.fyi, BLS, recruiters, peers",
+   "tree": "income-career",
+   "treeName": "Income and Career",
+   "level": 1
+  },
+  "income-career-negotiate-one-offer": {
+   "name": "Negotiate one offer",
+   "what": "Counter once, professionally, with data",
+   "tree": "income-career",
+   "treeName": "Income and Career",
+   "level": 2
+  },
+  "insurance-protection-audit-every-beneficiary": {
+   "name": "Audit every beneficiary",
+   "what": "Accounts and policies, deliberately designated",
+   "tree": "insurance-protection",
+   "treeName": "Insurance and Protection",
+   "level": 5
+  },
+  "insurance-protection-cover-the-roof": {
+   "name": "Cover the roof",
+   "what": "Renters/homeowners with contents documented",
+   "tree": "insurance-protection",
+   "treeName": "Insurance and Protection",
+   "level": 1
+  },
+  "main-path-automate-payday-contributions": {
+   "name": "Automate payday contributions",
+   "what": "Money invests itself before you see it",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 4
+  },
+  "main-path-buy-your-first-share": {
+   "name": "Buy your first share",
+   "what": "Open a brokerage; own one investment",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 1
+  },
+  "main-path-capture-the-full-401-k-match": {
+   "name": "Capture the full 401(k) match",
+   "what": "Contribute to the match threshold",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 3
+  },
+  "main-path-open-invest-a-roth-ira": {
+   "name": "Open & invest a Roth IRA",
+   "what": "Tax-free-forever growth account",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 5
+  },
+  "money-psychology-catch-the-feeling-first": {
+   "name": "Catch the feeling first",
+   "what": "Emotion noticed BEFORE the transaction",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 3
+  },
+  "money-psychology-fast-from-optimizing-for-30-days": {
+   "name": "Fast from optimizing for 30 days",
+   "what": "A deliberate month of no tweaks, no new strategies",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 13
+  },
+  "money-psychology-reconcile-two-money-stories": {
+   "name": "Reconcile two money stories",
+   "what": "Partners can state each other's script and fear",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 9
+  },
+  "money-psychology-route-raises-past-identity": {
+   "name": "Route raises past identity",
+   "what": "Increases auto-split before they touch lifestyle",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 7
+  },
+  "money-psychology-unlock-the-spending-muscle": {
+   "name": "Unlock the spending muscle",
+   "what": "Money converted to life without the flinch",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 15
+  },
+  "money-psychology-write-down-enough": {
+   "name": "Write down enough",
+   "what": "A number AND a described ordinary week",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 6
+  },
+  "portfolio-design-build-the-three-fund-portfolio": {
+   "name": "Build the three-fund portfolio",
+   "what": "US + international + bonds",
+   "tree": "portfolio-design",
+   "treeName": "Portfolio Design",
+   "level": 4
+  },
+  "portfolio-design-know-what-you-own": {
+   "name": "Know what you own",
+   "what": "Stocks vs bonds vs funds, plainly",
+   "tree": "portfolio-design",
+   "treeName": "Portfolio Design",
+   "level": 1
+  },
+  "portfolio-design-run-a-one-fund-portfolio": {
+   "name": "Run a one-fund portfolio",
+   "what": "Target-date fund as a complete strategy",
+   "tree": "portfolio-design",
+   "treeName": "Portfolio Design",
+   "level": 3
+  },
+  "portfolio-design-write-your-allocation": {
+   "name": "Write your allocation",
+   "what": "Stock/bond split from timeline + stomach",
+   "tree": "portfolio-design",
+   "treeName": "Portfolio Design",
+   "level": 5
+  },
+  "pre-retirement-design-design-the-actual-tuesday": {
+   "name": "Design the actual Tuesday",
+   "what": "The post-FI ordinary week, hour by hour (relocated home)",
+   "tree": "pre-retirement-design",
+   "treeName": "Pre-Retirement Design",
+   "level": 2
+  },
+  "pre-retirement-design-write-the-retire-to-vision": {
+   "name": "Write the retire-TO vision",
+   "what": "What you're moving toward, not from",
+   "tree": "pre-retirement-design",
+   "treeName": "Pre-Retirement Design",
+   "level": 1
+  },
+  "side-hustles-earn-a-first-outside-dollar": {
+   "name": "Earn a first outside dollar",
+   "what": "Sell anything: an hour, an item, a skill",
+   "tree": "side-hustles",
+   "treeName": "Side Hustles",
+   "level": 1
+  },
+  "side-hustles-separate-the-money": {
+   "name": "Separate the money",
+   "what": "Dedicated account; income/expenses tracked",
+   "tree": "side-hustles",
+   "treeName": "Side Hustles",
+   "level": 4
+  },
+  "social-capital-give-first-systematically": {
+   "name": "Give first, systematically",
+   "what": "Lead with help: intros, answers, hands",
+   "tree": "social-capital",
+   "treeName": "Social Capital",
+   "level": 3
+  },
+  "storms-windfalls-write-playbooks-before-weather": {
+   "name": "Write playbooks before weather",
+   "what": "The principle: decide in calm what you'll do in chaos",
+   "tree": "storms-windfalls",
+   "treeName": "Storms and Windfalls",
+   "level": 1
+  },
+  "the-long-game-celebrate-on-purpose": {
+   "name": "Celebrate on purpose",
+   "what": "A pre-planned ritual per milestone, small, real, yours",
+   "tree": "the-long-game",
+   "treeName": "The Long Game",
+   "level": 2
+  },
+  "the-long-game-define-your-milestone-ladder": {
+   "name": "Define your milestone ladder",
+   "what": "First $10K, debt-free, $100K, Coast, Half-FI, Lean, FI, dated",
+   "tree": "the-long-game",
+   "treeName": "The Long Game",
+   "level": 1
+  },
+  "time-capital-audit-your-168-hours": {
+   "name": "Audit your 168 hours",
+   "what": "One honest week logged: where time actually goes",
+   "tree": "time-capital",
+   "treeName": "Time Capital",
+   "level": 1
+  },
+  "time-capital-budget-the-calendar-like-money": {
+   "name": "Budget the calendar like money",
+   "what": "Time blocks assigned before the week spends itself",
+   "tree": "time-capital",
+   "treeName": "Time Capital",
+   "level": 4
+  },
+  "time-capital-compute-your-real-hourly-wage": {
+   "name": "Compute your real hourly wage",
+   "what": "Pay minus work costs, divided by ALL work hours",
+   "tree": "time-capital",
+   "treeName": "Time Capital",
+   "level": 2
+  }
+ },
+ "trees": {
+  "cash-safety-net": {
+   "name": "Cash and Safety Net"
+  },
+  "deals-smart-buying": {
+   "name": "Deals and Smart Buying"
+  },
+  "entrepreneurship": {
+   "name": "Entrepreneurship"
+  },
+  "financial-ops-tooling": {
+   "name": "Financial Ops and Tooling"
+  },
+  "geo-arbitrage-location": {
+   "name": "Geo-Arbitrage and Location"
+  },
+  "income-career": {
+   "name": "Income and Career"
+  },
+  "insurance-protection": {
+   "name": "Insurance and Protection"
+  },
+  "knowledge": {
+   "name": "Knowledge"
+  },
+  "main-path": {
+   "name": "Main Path"
+  },
+  "money-psychology": {
+   "name": "Money Psychology"
+  },
+  "portfolio-design": {
+   "name": "Portfolio Design"
+  },
+  "real-estate": {
+   "name": "Real Estate"
+  },
+  "side-hustles": {
+   "name": "Side Hustles"
+  },
+  "social-capital": {
+   "name": "Social Capital"
+  },
+  "tax-strategy": {
+   "name": "Tax Strategy"
+  },
+  "time-capital": {
+   "name": "Time Capital"
+  }
+ },
+ "readings": {
+  "cut-every-treat": {
+   "advice": "Cut every treat until you are out of debt",
+   "line": "Cutting every treat works for a few weeks when the month runs short. As the whole plan it makes people quit. Pick the few things you love, fund them on purpose, and cut the rest."
+  },
+  "die-with-zero": {
+   "advice": "You can't take it with you: spend it and die with zero",
+   "line": "Die With Zero is a great book for people with more saved than they will ever spend. With a card at 25%, every dollar spent now costs a quarter more next year. Save it for Full Freedom."
+  },
+  "every-dollar-to-retirement": {
+   "advice": "Every extra dollar goes into retirement accounts",
+   "line": "Retirement is on track. A home, kids or travel come before 59 and a half, so this money needs to sit where you can reach it: sinking funds and a regular brokerage account."
+  },
+  "frugal-is-freedom": {
+   "advice": "Squeeze every dollar: frugal is freedom",
+   "line": "Living lean got you here. With the number banked, more cutting buys nothing. The new skill is spending on purpose, on the people and things you love."
+  },
+  "give-when-rich": {
+   "advice": "Wait until you are rich to give",
+   "line": "Holding off made sense while the cards were growing. They are gone now. Giving a percent you pick, from money you have, does not put you at risk."
+  },
+  "invest-every-spare-dollar": {
+   "advice": "Invest every spare dollar now: time in the market beats everything",
+   "line": "Time in the market matters, once surprises stop landing on a card. While the month is going backwards, the next surprise eats the investment. Stop the bleeding first, then let compounding work."
+  },
+  "max-the-401k-first": {
+   "advice": "Max out the 401(k) first",
+   "line": "After the match, a Roth IRA and an HSA usually beat more 401(k): tax-free growth and more choice of funds. Maxing the 401(k) is the lever one step later, for Coast FI."
+  },
+  "no-investing-until-debt-free": {
+   "advice": "Pay off every debt before you invest a dime",
+   "line": "The match is a 50 to 100% return the day it lands. No card charges that much. Put in enough to get the whole match, even while you pay down the cards."
+  },
+  "one-thousand-is-enough": {
+   "advice": "$1,000 is all the emergency fund you need",
+   "line": "$1,000 was the starter, and it did its job. With the high-interest debt gone, a job loss needs months, not a grand: your age divided by 5 months of spending."
+  },
+  "pay-off-the-mortgage-first": {
+   "advice": "Pay off the mortgage early before you invest more",
+   "line": "A low-rate mortgage is the last debt in the order. An extra dollar to it now is a dollar not compounding toward Coast FI. Pay it off at step 9, if at all."
+  },
+  "renting-is-throwing-money-away": {
+   "advice": "Renting is throwing money away: buy as soon as you can",
+   "line": "Buying makes sense once the cards are gone, the job-loss fund is full and the down payment is saved. Before that, a house turns every repair into new debt."
+  },
+  "six-months-first": {
+   "advice": "Keep six months of expenses in cash before anything else",
+   "line": "The big fund is step 4. For now, $1,000 (or your deductible, if it is smaller) keeps a flat tire off the card. The months of spending come after the match and the high-interest debt."
+  },
+  "stay-until-the-number": {
+   "advice": "Never leave a steady job until everything is paid off and you hit your number",
+   "line": "That holds while the basics are open. At Coast FI, retirement takes care of itself, so the window for your own thing is open now. Waiting until you feel ready can mean missing it."
+  }
+ }
+}

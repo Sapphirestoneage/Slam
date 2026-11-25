@@ -2,12 +2,15 @@
 // Quantum collapse (Eli's intake idea): the fewest questions, each one path-changing. Every answer either branches the
 // flow, gates a later question, or ends it early with the one move that matters. Nothing is asked for context alone.
 // The meter is honest arithmetic: the plans still possible are the product of the choices not yet made.
+import { qzFlow, qzRule } from './math/quizcore.js';
+
+// Each `when` is a condition of the one quiz engine (js/math/quizcore.js): data, not a function.
 export const COLLAPSE = [
   { id: 'work', ask: 'How does money come in right now?', options: [['job', 'A paycheck job'], ['self', 'I work for myself'], ['both', 'Both'], ['between', 'Between jobs'], ['student', 'In school'], ['retired', 'Retired']] },
   { id: 'press', ask: 'Which one is pressing on you most?', options: [['behind', 'Bills past due'], ['cards', 'Card or payday debt'], ['forgive', 'Student loans I hope to have forgiven'], ['thin', 'No cushion if something breaks'], ['none', 'None of these']] },
-  { id: 'cushion', ask: 'If the money stopped, how long could you cover your bills?', when: a => a.press !== 'behind', options: [['0', 'Under a month'], ['1', '1 to 3 months'], ['3', '3 to 6 months'], ['6', 'More than 6']] },
-  { id: 'match', ask: 'Does your job add money to a retirement plan when you do?', when: a => (a.work === 'job' || a.work === 'both') && a.press !== 'behind', options: [['all', 'Yes, and I get all of it'], ['some', 'Yes, but not all of it'], ['no', 'No'], ['unsure', 'Not sure']] },
-  { id: 'want', ask: 'What do you want most from your money?', when: a => a.press === 'none' || a.press === 'forgive', options: [['date', 'To stop having to work'], ['safe', 'To feel safe'], ['enjoy', 'To enjoy more of it now'], ['guide', 'Just tell me what to do']] },
+  { id: 'cushion', ask: 'If the money stopped, how long could you cover your bills?', when: { press: { not: 'behind' } }, options: [['0', 'Under a month'], ['1', '1 to 3 months'], ['3', '3 to 6 months'], ['6', 'More than 6']] },
+  { id: 'match', ask: 'Does your job add money to a retirement plan when you do?', when: { work: ['job', 'both'], press: { not: 'behind' } }, options: [['all', 'Yes, and I get all of it'], ['some', 'Yes, but not all of it'], ['no', 'No'], ['unsure', 'Not sure']] },
+  { id: 'want', ask: 'What do you want most from your money?', when: { press: ['none', 'forgive'] }, options: [['date', 'To stop having to work'], ['safe', 'To feel safe'], ['enjoy', 'To enjoy more of it now'], ['guide', 'Just tell me what to do']] },
 ];
 const MOVES = {
   stabilize: { title: 'Steady the month first', why: 'Past-due bills come before everything else. Seeing how long the money lasts, and what to call about first, is the move.', page: 'runway', label: 'How long would my money last?' },
@@ -17,21 +20,29 @@ const MOVES = {
   match: { title: 'Take the free money at work', why: 'A match is an instant return nothing else offers. Raising what you put in until you get all of it is the move.', page: 'plan', label: 'Your whole plan' },
   finish: { title: 'Aim at the finish line', why: 'The basics are in place. Now the question is how much, by when, and whether today gets you there.', page: 'end', label: 'Start at the finish line' },
 };
+// The same flow as a definition of the one quiz engine: the questions, and the rules that name the first move. The two
+// early rules end the flow before every question is asked; the rest are read in the plan's own order of steps: stop
+// going backwards (a first cushion), then the full match, then expensive debt, then the rest.
+export const COLLAPSE_QUIZ = {
+  id: 'collapse', name: 'Quantum collapse', note: 'The fewest questions, each one path-changing.',
+  traits: [], questions: COLLAPSE.map(q => ({ id: q.id, ask: q.ask, when: q.when, options: q.options.map(([id, label]) => ({ id, label, add: {} })) })),
+  result: { by: 'rules', rules: [
+    { when: { press: 'behind' }, result: 'stabilize', early: true },
+    { when: { work: 'between', cushion: ['0', '1', '3'] }, result: 'bridge', early: true },
+    { when: { cushion: '0' }, result: 'cushion' }, { when: { match: 'some' }, result: 'match' }, { when: { press: 'cards' }, result: 'debt' }, { when: { press: 'thin' }, result: 'cushion' },
+    { when: null, result: 'finish' },
+  ] },
+};
 // answers: { work, press, cushion, match, want }. Returns the next question, the plans still possible, and (when the
 // answers already settle it) the first move, with the page to open. Early exits skip the questions that no longer matter.
 export function collapseOf(answers = {}) {
   const total = COLLAPSE.reduce((n, q) => n * q.options.length, 1);
-  const asked = COLLAPSE.filter(q => !q.when || q.when(answers)), open = asked.filter(q => answers[q.id] == null);
-  // settled early: being behind, or being without a paycheck with a thin cushion, decides the plan on its own
-  const a = answers, early = a.press === 'behind' ? 'stabilize' : a.work === 'between' && a.cushion != null && a.cushion !== '6' ? 'bridge' : null;
-  const done = !!early || open.length === 0, next = done ? null : open[0];
+  // the flow and the rules are the engine's: what is asked, what is open, and which rule the answers meet first
+  const a = answers, F = qzFlow(COLLAPSE_QUIZ, answers), asked = F.asked, open = F.open, early = F.early;
+  const done = F.done, next = done ? null : COLLAPSE.find(q => q.id === F.next.id);
   const left = done ? 1 : open.reduce((n, q) => n * q.options.length, 1);
   let move = null;
-  if (done) {
-    // the plan's own order of steps: stop going backwards (a first cushion), then the full match, then expensive debt, then the rest
-    const key = early ?? (a.cushion === '0' ? 'cushion' : a.match === 'some' ? 'match' : a.press === 'cards' ? 'debt' : a.press === 'thin' ? 'cushion' : 'finish');
-    move = { id: key, ...MOVES[key] };
-  }
+  if (done) { const key = qzRule(COLLAPSE_QUIZ, answers, true).result; move = { id: key, ...MOVES[key] }; }
   const notes = [];
   if (done && a.press === 'forgive') notes.push('Loans on a forgiveness track are the exception to "pay debt fast": extra payments can throw away money that would have been forgiven. Pay what the plan requires and no more.');
   if (done && a.press === 'cards' && move.id !== 'debt') notes.push(move.id === 'match' ? 'Then the card debt: once the full match is coming in, every spare dollar goes there.' : 'Then the card debt: once one month of bills is set aside, every spare dollar goes there.');

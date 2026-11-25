@@ -169,7 +169,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 8 | Family | Not started | |
 | 9 | Ratios on Key numbers | Not started | |
 | 10 | The game | Not started | |
-| 11 | Quiz frameworks: one engine, many skins | Not started | |
+| 11 | Quiz frameworks: one engine, many skins | Done | Built out of order, before Parts 2 to 10, because the sins run and the quiz styles of quiz.html wait for it. One engine (`js/math/quizcore.js`, copied to `game/core/quizcore.js`), eight skins as data files (`js/quiz/skins/`) and the sins placeholder ("Coming soon"). Web app: `quiz.html`, "More quizzes". Game: Me › Quizzes, and the Menu. The Money Chart (both apps), Quantum Collapse and the Money Letters are scored by the engine with the same results as before. How to add a skin: `docs/QUIZ-ENGINE.md`. Questions: QUESTIONS.md 592. |
 
 ## RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
 

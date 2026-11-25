@@ -17,6 +17,7 @@ import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_
 import { platformOf } from './math/earnings.js';
 import { CONTROL_KEYS } from './math/control.js';
 import { sharedExercises } from './exercises/calm-letter.js';
+import { sharedLenses } from './quiz/store.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -133,6 +134,7 @@ export function foldDoc(doc, aud, ref = null) {
   const spending = { ...(doc.spending || {}) }; delete spending.transactions;
   const settings = { ...(doc.settings || {}) }; delete settings.csvRules; delete settings.merchantRules;
   if (settings.recalc?.audit) settings.recalc = { ...settings.recalc, audit: null }; // the opt-in audit that looks back is the person's own
+  if (settings.start?.lenses) settings.start = { ...settings.start, lenses: sharedLenses(settings.start.lenses) }; // a quiz result marked Me only (the default) stays home
   if (settings.exercises) settings.exercises = sharedExercises(settings.exercises); // an exercise answer marked Me only (the letter from your calm self) stays home
   // Batch 55: a snapshot keeps a copy of every row, so a shared copy folds those too (a private row by its neutral name).
   const snapshots = (doc.snapshots || []).map(sn => (sn.records ? { ...sn, records: sn.records.filter(r => !rowLeftOut(r, aud, mode)).map(r => (rowHidden(r, aud, mode) ? foldRecord(r, ref, { share: true }) : { ...r, notes: notesHidden(r, aud, mode) ? null : r.notes, privateNote: null })) } : sn));

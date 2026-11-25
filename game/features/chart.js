@@ -5,7 +5,7 @@
    INPUT       The game: G.ready, G.scores. The profile: c.x.mc. The open sheet (W.kind): chart, mcq.
                The taps of the player (the actions in OUTPUT).
    OUTPUT      13 functions. Actions (ACT): chart, mcstart, mcans, mcback, mcpass, mcgentle.
-   DEPENDS ON  screens/ui.js.
+   DEPENDS ON  core/quizcore.js (qzScore), screens/ui.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: features/together.js.
    SOURCE      The statements, the traits and the scores are from the owner (js/quiz.js in the main
@@ -913,6 +913,22 @@ const MC_DEPTHS = [
   ["std", "The 25", 25],
   ["full", "The full 100", 100],
 ];
+/* The Money Chart as a definition of the one quiz engine (core/quizcore.js). The id of a trait is "element|trait",
+   and its group is its element. */
+const MC_QUIZ = {
+  id: "money-chart",
+  name: "The Money Chart",
+  note: "A game lens, not a test. These are muscles, not types.",
+  scoring: "average",
+  scale: MC_SCALE,
+  groups: MC_EL.map(e => ({ id: e.id, name: e.name })),
+  traits: [
+    ...new Map(
+      MC_BANK.map(i => [`${i.el}|${i.trait}`, { id: `${i.el}|${i.trait}`, name: i.trait, group: i.el }])
+    ).values(),
+  ],
+  questions: MC_BANK.map(i => ({ id: i.id, text: i.text, trait: `${i.el}|${i.trait}`, dir: i.dir })),
+};
 // What others see: the traits that show up in outward behavior (the Rising).
 const MC_OUT = ["Holding on", "Frugality", "Status", "Ambition", "Grind", "Giving"];
 // The statements for a depth, in the order they are shown. The 10 and the 25 keep Eli's delivery order (a gentle open);
@@ -930,26 +946,14 @@ function mcItems(depth = "ten") {
 const mcOk = v => v >= 1 && v <= 5;
 // answers: { itemId: 1..5 }. Works on whatever is answered, so a 10 can grow into a 25 and a 100 with no re-asking.
 function mcOf(answers = {}, depth = "ten") {
-  const items = mcItems(depth),
-    got = MC_BANK.filter(i => mcOk(answers[i.id]));
-  const traitMap = new Map();
-  for (const i of got) {
-    const k = `${i.el}|${i.trait}`,
-      v = i.dir > 0 ? answers[i.id] : 6 - answers[i.id];
-    traitMap.set(k, [...(traitMap.get(k) || []), v]);
-  }
-  const traits = [...traitMap].map(([k, vs]) => {
-    const [el, name] = k.split("|");
-    return { el, name, n: vs.length, score: Math.round(((vs.reduce((s, v) => s + v, 0) / vs.length - 1) / 4) * 100) };
-  });
+  const items = mcItems(depth);
+  /* The scoring is the one quiz engine's (core/quizcore.js): each trait is the average of its statements, each
+     element the average of its traits. */
+  const S = qzScore(MC_QUIZ, answers);
+  const traits = S.traits.map(t => ({ el: t.group, name: t.name, n: t.n, score: t.score }));
   const scores = MC_EL.map(e => {
     const ts = traits.filter(t => t.el === e.id);
-    return {
-      ...e,
-      traits: ts,
-      answered: ts.length,
-      score: ts.length ? Math.round(ts.reduce((s, t) => s + t.score, 0) / ts.length) : null,
-    };
+    return { ...e, traits: ts, answered: ts.length, score: S.groups.find(g => g.id === e.id).score };
   });
   const done = items.filter(i => mcOk(answers[i.id])).length,
     next = items.find(i => !mcOk(answers[i.id]))?.id ?? null,

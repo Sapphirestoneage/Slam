@@ -4,13 +4,14 @@
 import { boot, h, btn, chip, stepLine, copyLink, foot } from './shell.js';
 import { pack } from '../start/link.js';
 import { COLLAPSE, collapseOf } from '../collapse.js';
+import { qzHolds } from '../math/quizcore.js';
 import { carryUrl } from '../solo.js';
 
 const $ = id => document.getElementById(id);
 function draw(api) {
   stepLine(api); foot();
   const m = api.mine(), a = m.collapse || {}, C = collapseOf(a);
-  const set = (id, v) => { const next = { ...a, [id]: v }; for (const q of COLLAPSE) if (q.when && !q.when(next)) delete next[q.id]; const c = collapseOf(next); api.remember({ collapse: next, ...(c.done && c.mirror && !m.mirrorPicked ? { mirror: c.mirror } : {}) }); api.render(); };
+  const set = (id, v) => { const next = { ...a, [id]: v }; for (const q of COLLAPSE) if (!qzHolds(q.when, next)) delete next[q.id]; const c = collapseOf(next); api.remember({ collapse: next, ...(c.done && c.mirror && !m.mirrorPicked ? { mirror: c.mirror } : {}) }); api.render(); };
   const meter = h('div.st-card', {}, h('div.st-collapse', { role: 'img', 'aria-label': `${C.left.toLocaleString('en-US')} of ${C.total.toLocaleString('en-US')} plans still possible` }, h('b', { style: { width: `${Math.max(2, (1 - C.share) * 100)}%` } })),
     h('div.st-row', { style: { justifyContent: 'space-between', marginTop: '6px' } }, h('strong', {}, C.done ? '1 plan left: yours' : `${C.left.toLocaleString('en-US')} plans still possible`), h('span.st-small.st-soft', {}, C.shortened ? 'Shortened: your answers already settled it' : `of ${C.total.toLocaleString('en-US')}`)));
   const ask = q => h('div.st-card', {}, h('div.st-eyebrow', {}, `Question ${C.answered + 1} of ${C.asked}`), h('h2.st-quizq', {}, q.ask),

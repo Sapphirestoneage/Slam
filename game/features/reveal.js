@@ -63,7 +63,8 @@ function rvTextBase(c, d) {
   if (R.want.id !== R.now.id) L.push("Becoming: " + R.want.n);
   if (R.strong) L.push("Strongest number: " + R.strong.n);
   L.push("Current quest: " + R.quest);
-  return L.join("\n");
+  /* quizzes.js: the quiz results that the player chose to show */
+  return typeof rvTextQuiz === "function" ? rvTextQuiz(L.join("\n"), c) : L.join("\n");
 }
 function rvCard(eyebrow, big, line, extra) {
   return `<div class="levelup pop" style="padding:8px 0"><div class="eyebrow">${eyebrow}</div><h2 style="margin:8px 0" data-fid="rv:big">${big}</h2><div class="small" style="margin:6px 0">${line}</div>${extra || ""}</div>`;
@@ -187,8 +188,10 @@ function rvSheet() {
   <button class="primary wide" data-a="rvcopy">${w.copied ? "Copied ✓" : "Copy my character sheet"}</button><button class="ghost wide slim" data-a="rvagain">Play the reveal again</button><button class="ghost wide slim" data-a="close">Done</button>`;
   /* element.js: the row "Strengths and your element" */
   const withEl = typeof rvSheetElement === "function" ? rvSheetElement(sheetH) : sheetH;
+  /* quizzes.js: the quiz results that the player chose to show, and the row "Quizzes" */
+  const withQz = typeof rvSheetQuiz === "function" ? rvSheetQuiz(withEl) : withEl;
   /* founding.js: the mark "Founding Tester" */
-  return typeof rvSheetFounding === "function" ? rvSheetFounding(withEl) : withEl;
+  return typeof rvSheetFounding === "function" ? rvSheetFounding(withQz) : withQz;
 }
 Object.assign(ACT, {
   reveal: () => {

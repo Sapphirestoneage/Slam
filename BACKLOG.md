@@ -118,7 +118,7 @@ Made by `python3 tools/backlog.py` from the spec; do not edit by hand.
 | Next level | Regret minimization check | Big decisions scored by future regret | Jeff Bezos (framework); Bill Perkins | Talked about |  |
 | Next level | Shareable milestones with no balances | Celebrate debt-free or Coast FI without showing numbers | Eli | Rarely built |  |
 | Next level | Peer comparison by age | Where you stand vs people your age and income, privately | Thomas Stanley; BiggerPockets Money | Talked about |  |
-| Beta | BL.13 Duolingo mode (1 to 2 questions a day) | Duolingo mode (1 to 2 questions a day); money personality quiz routing to skills and reading |  | Brandon beta (Nov 2) |  |
+| Beta | BL.13 Duolingo mode (1 to 2 questions a day) | Duolingo mode (1 to 2 questions a day); money personality quiz routing to skills and reading |  | Brandon beta (Nov 2) | The quiz routing is built (Nov 25 2026: `docs/QUIZ-ENGINE.md`); Duolingo mode is not |
 | Beta | BL.21 Defined beta stages and version notes for testers | Defined beta stages and version notes for testers |  | Brandon beta (Nov 2) |  |
 | Beta | ML.4 Credit card rewards optimizer | Credit card rewards optimizer |  | Missed ideas (Nov 2) |  |
 | Beta | ML.5 Think-aloud test mode: a tester-drives view with "Report this" pinned open | Think-aloud test mode: a tester-drives view with "Report this" pinned open |  | Missed ideas (Nov 2) |  |

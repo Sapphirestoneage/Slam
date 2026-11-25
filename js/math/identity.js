@@ -19,6 +19,8 @@ import {
   FAMILIARITY, ROUTE, STATE, CEILING, MOTION, MODIFIERS, ADDRESS_QUESTIONS, ROUTE_LINES, AXES, STATEMENTS, TYPES, POLE_TREES, TREES, LEADS, ASKS,
   WEATHER_QUESTIONS, WEATHER_LEVELS, WEATHER_MIN,
 } from '../registry/identity.js';
+import { qzResult } from './quizcore.js';
+import { LETTERS } from '../quiz/skins/letters.js';
 
 export const identityOn = doc => doc?.settings?.phase4 === true;
 const ident = doc => doc?.profile?.identity || {};
@@ -128,13 +130,10 @@ export function addressOf(doc, m, { confidence = null } = {}) {
 
 // ---------- The letters ----------
 // answers: 12 values (1, 0, -1, or null for not answered), in STATEMENTS order.
+// The scoring is the one quiz engine's (js/math/quizcore.js), on the Money Letters skin (js/quiz/skins/letters.js).
+const letterAnswers = (answers = []) => Object.fromEntries(STATEMENTS.map((s, i) => [s.id, answers[i]]).filter(([, v]) => v === 1 || v === 0 || v === -1));
 export function axisScores(answers = []) {
-  return AXES.map(ax => {
-    const items = STATEMENTS.map((s, i) => ({ s, v: answers[i] })).filter(o => o.s.axis === ax.id);
-    const answered = items.filter(o => o.v === 1 || o.v === 0 || o.v === -1);
-    const score = answered.reduce((t, o) => t + o.v * (o.s.toward === ax.poles[0].id ? 1 : -1), 0);
-    return { id: ax.id, score, answered: answered.length, of: items.length };
-  });
+  return qzResult(LETTERS, letterAnswers(answers)).axes.map(a => ({ id: a.id, score: a.score, answered: a.answered, of: a.of }));
 }
 // Tie rules: a 0 leans on what SLAM already knows. Earner or Keeper by the ceiling taps (only earn more: Earner);
 // Paper or Operator: an own business is Operator; Guardian or Venturer: below zero or an Overcast or Storm weather is
@@ -152,13 +151,12 @@ export function tieBreaks({ address = null, weather = null } = {}) {
 }
 // The four letters once every axis has at least 2 of its 3 answers (a blank counts as Neutral).
 export function lettersOf(answers = [], ties = tieBreaks()) {
-  const scores = axisScores(answers);
+  const R = qzResult(LETTERS, letterAnswers(answers), null, { ties });
   const count = answers.filter(v => v === 1 || v === 0 || v === -1).length;
-  const ready = scores.every(s => s.answered >= 2);
-  const axes = scores.map((s, i) => {
-    const ax = AXES[i];
-    const pole = s.score > 0 ? ax.poles[0].id : s.score < 0 ? ax.poles[1].id : ties[ax.id];
-    return { ...s, pole, word: ax.poles.find(p => p.id === pole).word, light: Math.abs(s.score) <= 1, tie: s.score === 0 };
+  const ready = R.ready;
+  const axes = R.axes.map((a, i) => {
+    const pole = a.tie ? ties[a.id] : a.pole;
+    return { id: a.id, score: a.score, answered: a.answered, of: a.of, pole, word: AXES[i].poles.find(p => p.id === pole).word, light: Math.abs(a.score) <= 1, tie: a.tie };
   });
   const type = ready ? axes.map(a => a.pole).join('') : null;
   return { type, ready, count, of: STATEMENTS.length, axes, info: type ? TYPES[type] : null };

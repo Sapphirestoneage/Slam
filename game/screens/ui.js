@@ -1212,6 +1212,7 @@ function meTab() {
   let h = meTabBase();
   if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
   if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
+  if (typeof meTabQuiz === "function") h = meTabQuiz(h); /* quizzes.js: the row "Quizzes" */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
   if (typeof meTabFounding === "function") h = meTabFounding(h); /* founding.js: the mark "Founding Tester" */
   return h;
