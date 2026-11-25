@@ -48,6 +48,11 @@ point and cash next to redeem, a group split in whole cents checked against each
 line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
 cash first, then investments).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 6) it also covers Your own path (`js/math/ownpath.js`, M8P): the
+plan's share of a care bill worked slice by slice through the deductible, the coinsurance and the out-of-pocket max; the
+New York ID papers fees step by step; the two sides and the two jobs added up; the Rule of 5 plus the months the person
+adds; the adoption credit's straight-line phase-out and its refundable part; and care later in life by the year.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
 own tax, and the floor an hour and a job from their definitions; the set-aside with the profit stacked on a job's pay

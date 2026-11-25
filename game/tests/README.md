@@ -103,7 +103,7 @@ Each file has the name of its feature.
 | `what-depends-on-what.js` | What depends on what | `features/dep.js` |
 | `what-each-debt-costs.js` | What each debt costs you | `features/owed.js` |
 | `what-you-already-know.js` | What you already know (D.A.I.T.E.) | `features/know.js` |
-| `whats-built.js` | The list "What's built" | `features/built.js` |
+| `whats-built.js` | The list "What's built" (and the run Not built, Part 6: the row for the LGBTQ+ money tools says not ported, by choice; their tests are in the web app, `test/ownpath.test.js`) | `features/built.js` |
 | `which-lever-matters-most.js` | Which lever matters most | `features/lever.js` |
 | `working-for-yourself.js` | Working for yourself, and the run Not built, Part 5: the floor with weeks off on the web app's formula, More (the invoice tracker with Undo, Profit First with the book's sample or your own shares), the copy of `core/gigcore.js` is current (`tools/game_gig_build.mjs --check`) | `features/gig.js`, `core/gigcore.js` |
 | `your-people.js` | Your people | `features/people.js` |

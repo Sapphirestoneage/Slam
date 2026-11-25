@@ -290,6 +290,17 @@ const PATCH_NOTES = [
       "Rough numbers: one switch shows a range in place of each exact amount, for a screen someone else can see. Your numbers stay as they are.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "LGBTQ+ money tools, private by default",
+    l: [
+      "What care would cost you after your plan pays, and a check of what a health plan covers.",
+      "A name and gender marker change step by step, New York first, each fee from the office's own page.",
+      "Two jobs side by side with benefits in dollars, an emergency fund for a longer job search, and a runway without family help.",
+      "What each side costs you, in your own numbers. Growing your family, care later in life, and a chosen-family summary for a lawyer.",
+      "Nothing on these pages is kept unless you tap Keep. The tab shows a plain title, and Leave page opens a weather page.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

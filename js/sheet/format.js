@@ -101,6 +101,7 @@ export const FORMATS = [
   { version: 58, shape: '4c29eb7b' }, // Nov 25 2026 (run Finish everything partly built, Part 4): M8T travel, app-only, and its two rules on the assumptions list
   { version: 59, shape: '61df938d' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 2): M8Q the quick calculators, app-only, and the NY unemployment rule on the assumptions list
   { version: 60, shape: '44be8865' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 5): M8G gig and self-employed, app-only, two limits and five rules on the assumptions list
+  { version: 61, shape: '2dffcf3e' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 6): M8P your own path, app-only, ten NY ID papers fees and four adoption credit values on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)
