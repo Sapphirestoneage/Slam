@@ -217,3 +217,23 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 8 | After the call (AI pass, behind the switch) | Not started | |
 | 9 | Privacy | Not started | |
 | 10 | Tests, checks and report | Not started | |
+
+## Where the runs stopped (Nov 25 2026, end of the session)
+
+A usage limit stopped three workers in the middle of their parts. Their unfinished work is kept on the branch
+`claude/upbeat-hopper-u0amw2` (commit 5569e20), NOT on main: main and release hold only finished, tested parts.
+
+| Run | Done on main | Stopped in the middle (on the work branch) | Not started |
+|-----|--------------|---------------------------------------------|-------------|
+| Finish everything partly built (21 parts) | Part 1; Eli's answers to question 580 | Part 2, home buying and renting | Parts 3 to 21 |
+| Not built, groups 1 to 5 (11 parts) | Part 1; Part 11 (the quiz engine, built early) | none | Parts 2 to 10 |
+| Launch ready for the Nov 30 soft launch (6 parts) | All 6 parts and the END | none | none |
+| Compare the ways | Done | none | none |
+| Export for the FIRE spreadsheet crowd | Done | none | none |
+| Money sins system and the Rings theme (3 parts) | none | none (Part 1 had started; nothing was written) | Parts 1 to 3 |
+| Live Session Mode (9 parts) | Parts 1 to 5, behind the switch LIVE_SESSION_READY = false | Parts 6 and 7 (the screens, the end-of-call review) | Parts 8, 9, tests and report |
+
+To continue: start from the work branch for the two unfinished parts (merge it with main first), then follow the
+order: Live Session Mode Parts 6 to 9; the sins run (it builds on the quiz engine, docs/QUIZ-ENGINE.md); the two long
+runs from where they stopped. Promote with `bash tools/promote.sh` at the end of each run.
+
