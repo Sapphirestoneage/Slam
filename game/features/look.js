@@ -283,7 +283,7 @@ function goalCardLook(c, d, g, sim, all) {
   const L = lkGoal(c, d, g, sim, all),
     gi = L.gi;
   const date = gi.fit ? (gi.at <= 0 ? "Ready now" : dkMonth(gi.at)) : "Roadblock: " + BLOCKS[gi.blk][0];
-  return `<button class="card dkcard dkgoal" data-a="goal" data-v="${g.id}"><div class="row between"><span class="dkgicon" aria-hidden="true">${esc((g.n || "?").trim().charAt(0).toUpperCase())}</span><span class="dklabel">${gi.fit && gi.at > 0 ? "Target" : ""}</span></div><b class="dkgname">${esc(g.n)}</b><div class="small ${gi.real ? "" : "guess"}">${esc(date)}</div>${dkProgress(L.pct, { text: money(g.fund || 0) + " of " + money(g.cost) })}${L.pace > 0 ? `<div class="tiny muted">Strategy: ${money(Math.ceil(L.pace))} a month</div>` : ""}</button>`;
+  return `<button class="card dkcard dkgoal" data-a="goal" data-v="${g.id}"><div class="row between"><span class="dkgicon" aria-hidden="true">${esc((g.n || "?").trim().charAt(0).toUpperCase())}</span><span class="dklabel">${gi.fit && gi.at > 0 ? "Target" : ""}</span></div><b class="dkgname">${esc(g.n)}</b><div class="small ${gi.real ? "" : "guess"}">${esc(date)}</div>${dkProgress(L.pct, { text: money(g.fund || 0) + " of " + money(g.cost) })}${L.pace > 0 && !(g.wire && g.wire.v === 1) ? `<div class="tiny muted">Strategy: ${money(Math.ceil(L.pace))} a month</div>` : ""}${typeof goalCardWire === "function" ? goalCardWire(c, g) : ""}</button>`; /* goalwire.js: the wire line */
 }
 /* Part of goalView() in ui.js: the Time-Money dial of one goal. */
 function goalViewLook(h) {

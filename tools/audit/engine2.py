@@ -1098,6 +1098,23 @@ def run(cases, ref, il=None):
             better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
             ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
             for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
+        elif fn == 'jobWire':
+            t = 12 if x['day'] in ('d1', 'd15') else 24 if x['day'] == '1and15' else (x['pay'] if x['pay'] > 0 else 12)
+            ck('deposits a year', o['times'], t, 0)
+            per = None if not (x['monthly'] > 0) else int(math.ceil(x['monthly'] * 12 / t - 1e-9))
+            ck('each deposit', o['per'], per, 0)
+        elif fn == 'jobCheck':
+            import datetime, calendar
+            base = datetime.date.fromisoformat(x['last'] or x['set'])
+            mo = base.month - 1 + 3; Y = base.year + mo // 12; M = mo % 12 + 1
+            nx = datetime.date(Y, M, min(base.day, calendar.monthrange(Y, M)[1])).isoformat()
+            ck('next check-in', o['next'] == nx, True); ck('due', o['due'] == (x['today'] >= nx), True)
+        elif fn == 'jobDate':
+            import datetime, calendar
+            mm, dd = int(x['md'][:2]), int(x['md'][3:]); td = datetime.date.fromisoformat(x['today'])
+            at = lambda Y: datetime.date(Y, mm, min(dd, calendar.monthrange(Y, mm)[1]))
+            d = at(td.year) if at(td.year) >= td else at(td.year + 1)
+            ck('the next date', o['date'] == d.isoformat(), True); ck('days to go', o['days'], (d - td).days, 0); ck('reminder open', o['open'] == ((d - td).days <= x['lead']), True)
         elif fn == 'rcSafeLine':
             sp = x['spent'] or 0
             ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])

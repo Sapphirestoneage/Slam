@@ -209,6 +209,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Wire up a goal, and the health and insurance quests",
+    l: [
+      "Open a goal and tap Wire it up: where the money lives, how much a month, and the day it moves (payday first). Three taps.",
+      "No account for it yet? Tap I need one to see some kinds side by side. Nothing is picked for you.",
+      "Then the goal says Set once. Check in: quarterly. You set the transfer at your bank, and SLAM reminds you to check in.",
+      "New quests for the Health Care Admin and the Insurance Coordinator: open enrollment, HSA receipts, the FSA deadline, the EOB after a visit, renewal dates, and a yearly cover check.",
+      "Tap your own dates once. A reminder lands on Today before each one.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Your money read gets a name",
     l: [
       "After the money sins quiz your read gets a name, like The Someday Koala, with the light side and the virtue of each part.",

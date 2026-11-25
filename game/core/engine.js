@@ -999,6 +999,32 @@ const SEASONS = [
       ],
       ["file", "File your tax return", "Free filing exists if your income is modest. The deadline is April 15."],
       ["refund", "Decide where your refund goes", "Pick before it lands: cushion, debt or investing."],
+      [
+        "hsa",
+        "Save your HSA receipts",
+        "Keep each health receipt with your tax papers. Your HSA can pay you back for it later.",
+        "health",
+      ],
+    ],
+  },
+  {
+    k: "oe",
+    from: "11-01",
+    to: "11-30",
+    t: "Open enrollment month",
+    items: [
+      [
+        "enroll",
+        "Open enrollment check",
+        "Many health plans let you pick next year's plan in the fall. Your window is on your benefits page.",
+        "health",
+      ],
+      [
+        "cover",
+        "Is my coverage still right?",
+        "Once a year, check that your cover still fits your life, your home and your people.",
+        "insurance",
+      ],
     ],
   },
   {
