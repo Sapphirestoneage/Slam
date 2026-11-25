@@ -109,8 +109,18 @@ function cstBook(c) {
       { id: "fr_rate", label: "Withdrawal rate of the game", v: SWR, note: "The same rate as the freedom number" },
       { id: "fr_income", label: "Investment income a month", v: F.income, f: "={fr_inv}*{fr_rate}/12" },
       { id: "fr_spend", label: "Spending a month", v: F.spend, note: "Your number" },
-      { id: "fr_ratio", label: "FI ratio", v: F.ratio == null ? "" : F.ratio, f: F.ratio == null ? "" : "={fr_income}/{fr_spend}" },
-      { id: "fr_coast", label: "Coast number", v: d.coastNum, note: "From the game: the freedom number at your stop age, brought back to today" },
+      {
+        id: "fr_ratio",
+        label: "FI ratio",
+        v: F.ratio == null ? "" : F.ratio,
+        f: F.ratio == null ? "" : "={fr_income}/{fr_spend}",
+      },
+      {
+        id: "fr_coast",
+        label: "Coast number",
+        v: d.coastNum,
+        note: "From the game: the freedom number at your stop age, brought back to today",
+      },
       { id: "fr_over", label: "Invested less the Coast number", v: F.inv - d.coastNum, f: "={fr_inv}-{fr_coast}" },
     ],
   };

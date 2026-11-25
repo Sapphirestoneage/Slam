@@ -100,7 +100,7 @@ export function coastCard(ctx, m, gate) {
     h('div.row-line', {}, h('h2', {}, 'You can stop sprinting'), levelTag(gate)),
     h('p', {}, `What you have invested can grow to your FI number by ${c.retireAge ?? 'the age you set'} with nothing more added. From here, saving is a choice about how soon, not a race.`),
     h('p.muted.small', {}, S.mathButton({ id: 'M54', value: c.coast, needs: [], text: c.text }, 'Show the math'), ' This holds while the balance stays at or over your Coast number.'),
-    h('div.row-line', {}, S.button('Got it', { kind: 'primary', onClick: () => setDestinations(ctx.store, { coastSeen: today }) }), h('a', { href: '#/plan/goals' }, 'See your destinations')));
+    h('div.row-line', {}, S.button('Got it', { onClick: () => setDestinations(ctx.store, { coastSeen: today }) }), h('a', { href: '#/plan/goals' }, 'See your destinations')));
 }
 
 // Plan › FOO: the same steps in the order for a destination.
