@@ -80,6 +80,40 @@ test('hours as words', () => {
   assert.deepEqual([0, 14.6, 60, 90, 300].map(jobHoursWords), ['0 min', '15 min', '1 hr', '1.5 hrs', '5 hrs']);
 });
 
+// ---------- feature 4: a goal wired to an account ----------
+test('a wired goal: deposits a year, each deposit rounded up, empty is not zero', () => {
+  const { jobWireTimes, jobWirePer, JOB_WIRE_DAYS } = JB;
+  assert.equal(JOB_WIRE_DAYS[0][0], 'pay', 'payday is the first choice (the default)');
+  assert.deepEqual(['pay', 'd1', 'd15', '1and15'].map(d => jobWireTimes(d, 26)), [26, 12, 12, 24]);
+  assert.equal(jobWireTimes('pay', 0), 12, 'a payday that varies counts as once a month');
+  assert.equal(jobWirePer(300, 26), 139, '300 × 12 ÷ 26 = 138.46, up to 139');
+  assert.equal(jobWirePer(250, 24), 125, 'exact: no rounding up past it');
+  assert.equal(jobWirePer(100, 52), 24, '100 × 12 ÷ 52 = 23.08, up to 24');
+  assert.equal(jobWirePer(null, 26), null);
+  assert.equal(jobWirePer(0, 26), null);
+});
+test('the quarterly check-in and the months of a date', () => {
+  const { jobAddMonths, jobCheckNext } = JB;
+  assert.equal(jobAddMonths('2026-11-30', 3), '2027-02-28');
+  assert.equal(jobAddMonths('2028-11-30', 3), '2029-02-28');
+  assert.equal(jobAddMonths('2027-11-30', 3), '2028-02-29', 'a leap year');
+  assert.equal(jobAddMonths('2026-01-15', 12), '2027-01-15');
+  assert.deepEqual(jobCheckNext('2026-11-25', null, '2027-02-24'), { next: '2027-02-25', due: false });
+  assert.deepEqual(jobCheckNext('2026-11-25', null, '2027-02-25'), { next: '2027-02-25', due: true });
+  assert.equal(jobCheckNext('2026-11-25', '2027-03-10', '2027-04-01').next, '2027-06-10', 'from the last check-in');
+});
+// ---------- feature 5: the dates the person taps ----------
+test('a tapped date: the next one, the days to go, and the reminder window', () => {
+  const { jobDateNext } = JB;
+  assert.deepEqual(jobDateNext('12-15', '2026-11-25', 30), { date: '2026-12-15', days: 20, open: true });
+  assert.deepEqual(jobDateNext('12-15', '2026-11-25', 14), { date: '2026-12-15', days: 20, open: false });
+  assert.equal(jobDateNext('11-25', '2026-11-25').days, 0, 'today is still this year');
+  assert.equal(jobDateNext('01-10', '2026-11-25').date, '2027-01-10');
+  assert.equal(jobDateNext('02-31', '2026-11-25').date, '2027-02-28', 'the last day of the month');
+  assert.equal(jobDateNext('', '2026-11-25'), null);
+  assert.equal(jobDateNext(null, '2026-11-25'), null);
+});
+
 // ---------- one function for the web app and the game ----------
 const src = readFileSync(new URL('../js/math/jobs.js', import.meta.url), 'utf8');
 const copy = readFileSync(new URL('../game/core/jobs.js', import.meta.url), 'utf8');
@@ -96,4 +130,6 @@ test('the game\'s copy gives the same answers', () => {
   assert.deepEqual(j(box.out.jobRoles(a)), j(jobRoles(a)));
   const ad = { cfo: { v: 180, cf: 3 } }, T = [{ id: 'a', role: 'cfo', per: 10, times: 26 }];
   assert.deepEqual(j(box.out.jobLiving(box.out.jobAdmin(ad), T, { a: 'auto' })), j(jobLiving(jobAdmin(ad), T, { a: 'auto' })));
+  assert.equal(box.out.jobWirePer(300, 26), JB.jobWirePer(300, 26));
+  assert.deepEqual(j(box.out.jobDateNext('12-15', '2026-11-25')), j(JB.jobDateNext('12-15', '2026-11-25')));
 });

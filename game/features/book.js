@@ -34,6 +34,8 @@ const BOOK_PARTS = [
   mixBook,
   sleptBook,
   jobBook,
+  wireBook,
+  careBook,
   rcBook,
   mauBook,
   cstBook,

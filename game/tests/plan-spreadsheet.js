@@ -27,7 +27,28 @@
       cashes: [R0({ k: "Checking", amt: 12000 })],
       invs: [R0({ k: "Retirement plan at work", amt: 80000 }), R0({ k: "Other investments", amt: 40000 })],
       debts: [R0({ k: "Credit card balance", amt: 3000, high: true, apr: "15% to 25%", rate: 20, pay: 150 })],
-      goals: [{ id: "g1", k: "Trip", n: "Trip", cost: 5000, era: 4, fund: 0 }],
+      goals: [
+        {
+          id: "g1",
+          k: "Trip",
+          n: "Trip",
+          cost: 5000,
+          era: 4,
+          fund: 0,
+          /* a wired goal (goalwire.js): its rows use ROUNDUP */
+          wire: {
+            v: 1,
+            acct: { n: "Checking", key: "cash:0", need: null },
+            amt: 300,
+            from: "m",
+            m: 12,
+            by: jobAddMonths(todayISO(), 12),
+            day: "pay",
+            d: todayISO(),
+            chk: null,
+          },
+        },
+      ],
     });
   G.demo = false;
   G.tourSeen = true;
@@ -74,13 +95,20 @@
       .replace(/\bMIN\(/g, "Math.min(")
       .replace(/\bMAX\(/g, "Math.max(")
       .replace(/\bROUND\(/g, "RND(")
+      .replace(/\bROUNDUP\(/g, "RUP(")
       .replace(/\bFV\(/g, "FV(");
     return Function(
       "FV",
       "PMT",
       "RND",
+      "RUP",
       "return " + js
-    )(FV, PMT, (v, d) => Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0));
+    )(
+      FV,
+      PMT,
+      (v, d) => Math.round(v * Math.pow(10, d || 0)) / Math.pow(10, d || 0),
+      (v, d) => Math.ceil(v * Math.pow(10, d || 0) - 1e-9) / Math.pow(10, d || 0)
+    );
   };
   const evalCell = k => {
     const v = cellVal[k];
@@ -97,6 +125,10 @@
     if (!(Math.abs(got - want) <= Math.max(0.02, Math.abs(want) * 1e-6))) bad.push(row[1] + ": " + got + " vs " + want);
   });
   chk("every formula gives the same number as the game (" + n + " formulas)", n >= 25 && !bad.length, bad.slice(0, 5));
+  chk(
+    "the wired goal's rows are worked out too (ROUNDUP, the reverse of the dial)",
+    B.T.some(r => typeof r[2] === "string" && /^=ROUNDUP\(C\d+\*12\/C\d+,0\)$/.test(r[2]))
+  );
   chk(
     "a formula points at cells of column C, not at numbers typed in",
     B.T.filter(r => typeof r[2] === "string" && r[2][0] === "=").every(r => /C\d+/.test(r[2]))
