@@ -109,7 +109,7 @@
   const nav0 = global.navigator;
   let copied = "";
   Object.defineProperty(global, "navigator", {
-    value: { clipboard: { writeText: t => ((copied = t), Promise.resolve()) } },
+    value: { clipboard: { writeText: t => ((copied = t), { then: ok => ok() }) } },
     configurable: true,
     writable: true,
   });
@@ -130,9 +130,8 @@
     sent && sent.url.endsWith("?ref=" + fdCode(UID)) && !/\$|\d{3}/.test(sent.title + sent.text),
     JSON.stringify(sent)
   );
-  navigator.clipboard.writeText = () => {
-    throw new Error("no clipboard here");
-  };
+  /* the browser can refuse (no permission): the answer comes later, as a refusal */
+  navigator.clipboard.writeText = () => ({ then: (ok, no) => no(new Error("no permission here")) });
   X("fdshare");
   X("fdcopy");
   chk(

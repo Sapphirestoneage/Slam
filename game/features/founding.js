@@ -302,15 +302,25 @@ Object.assign(ACT, {
     sheet(fdShareSheet);
   },
   fdcopy: () => {
+    const w = W,
+      done = ok => {
+        if (W !== w) return;
+        w.copied = ok;
+        w.msg = ok ? "" : "This device did not let the game copy. Press and hold the link above to copy it.";
+        drawSheet();
+      };
     try {
-      navigator.clipboard.writeText(fdLink(fdMyCode()));
-      W.copied = true;
-      W.msg = "";
+      navigator.clipboard.writeText(fdLink(fdMyCode())).then(
+        () => done(true),
+        e => {
+          report(e, "founding.js: fdcopy (1)");
+          done(false);
+        }
+      );
     } catch (e) {
-      report(e, "founding.js: fdcopy");
-      W.msg = "This device did not let the game copy. Press and hold the link above to copy it.";
+      report(e, "founding.js: fdcopy (2)");
+      done(false);
     }
-    drawSheet();
   },
   fdnative: () => {
     try {

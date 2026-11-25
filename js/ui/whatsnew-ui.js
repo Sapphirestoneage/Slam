@@ -37,6 +37,10 @@ export function notesPanel(list, { all = false, onToggle = null } = {}) {
 export async function whatsNew(anchor) {
   let list = [];
   try { list = await loadNotes(); } catch (e) { record(e, 'whatsnew-ui.js: loadNotes'); }
-  const open = all => popover(anchor, notesPanel(list, { all, onToggle: () => open(!all) }), { width: 360 });
+  const open = all => {
+    const panel = notesPanel(list, { all, onToggle: () => open(!all) });
+    popover(anchor, panel, { width: 360 });
+    setTimeout(() => { panel.scrollTop = 0; }); // the popover puts the focus on its button, at the end of the list: show the top
+  };
   open(false);
 }

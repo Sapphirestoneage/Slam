@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 123. Lines: 74,081. Top-level functions: 1627. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 1.
+Date: 2026-11-25. Files: 123. Lines: 74,084. Top-level functions: 1627. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -131,7 +131,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 117 | `features/recalc.js` | 334 | 12 | 6 | 0 | Recalculating. When the real numbers move a date of the plan, one calm card shows the old date, the new date and the one next turn |
 | 118 | `features/audit.js` | 221 | 5 | 3 | 0 | The Mistake audit. It is optional |
 | 119 | `data/patchnotes.js` | 103 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
-| 120 | `features/founding.js` | 367 | 20 | 1 | 1 | Three small things for the soft launch |
+| 120 | `features/founding.js` | 370 | 20 | 1 | 0 | Three small things for the soft launch |
 | 121 | `features/book.js` | 383 | 14 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 122 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 123 | `features/built.js` | 1,107 | 4 | 0 | 0 | What's built. One list of all features of this game: built, partly built, or not built |

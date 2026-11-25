@@ -44,17 +44,17 @@ function faHTML() {
   const d = FA.data,
     when = t => (t ? new Date(t).toLocaleDateString() : "");
   if (!d)
-    return `<details class="card" style="padding:0 14px"><summary>Founding Testers</summary><div class="tools"><p class="muted">This part waits for the database file of 2026-11-25 (supabase/migrations/20261125190000_founding_and_referrals.sql). Run it one time in the Supabase SQL Editor. Until then the game shows no mark and no card, and it keeps the code each person arrived with on their device.</p></div></details>`;
+    return `<details class="card" style="padding:0 14px"><summary>Founding Testers</summary><div class="tools"><p class="muted" style="overflow-wrap:anywhere">This part waits for the database file of 2026-11-25 (supabase/migrations/20261125190000_founding_and_referrals.sql). Run it one time in the Supabase SQL Editor. Until then the game shows no mark and no card, and it keeps the code each person arrived with on their device.</p></div></details>`;
   const F = faFounderRows(d),
     J = faJoinRows(d),
     lim = d.limit || 50;
   return `<details class="card" style="padding:0 14px"><summary>Founding Testers: ${esc(d.count)} of ${esc(lim)}</summary><div class="tools"><p class="muted">The first ${esc(lim)} accounts that finish setup get the mark. ${esc(d.finished)} ${d.finished === 1 ? "account has" : "accounts have"} finished setup so far. The admin account takes no number.</p>${
     F.length
-      ? `<ul>${F.map(r => `<li><b>${esc(r.no)}</b> ${esc(r.who)} <span class="muted">${esc(when(r.at))}</span></li>`).join("")}</ul>`
+      ? `<ul style="overflow-wrap:anywhere">${F.map(r => `<li><b>${esc(r.no)}</b> ${esc(r.who)} <span class="muted">${esc(when(r.at))}</span></li>`).join("")}</ul>`
       : `<p class="muted">No Founding Tester yet.</p>`
   }<p><b>Who joined through whom, the newest first</b></p>${
     J.length
-      ? `<ul>${J.map(r => `<li><span class="muted">${esc(when(r.at))}</span> ${esc(r.who)} joined through ${esc(r.through)}</li>`).join("")}</ul>`
+      ? `<ul style="overflow-wrap:anywhere">${J.map(r => `<li><span class="muted">${esc(when(r.at))}</span> ${esc(r.who)} joined through ${esc(r.through)}</li>`).join("")}</ul>`
       : `<p class="muted">Nobody has joined through a share link yet.</p>`
   }<p class="muted">There are no rewards for sharing yet. This list is only for you.</p></div></details>`;
 }
