@@ -432,6 +432,22 @@ const WB = [
   ],
   [
     "plan",
+    "Eli's frameworks and the canon",
+    "b",
+    () =>
+      WB_HAS("ymoyl") &&
+      WB_HAS("fwwins") &&
+      WB_FN("fwSwan") &&
+      WB_FN("fwPeak") &&
+      WB_FN("homeNextDollar") &&
+      ["swan", "mouse", "trust", "advice", "baby", "stages", "dwz", "peak"].every(
+        id => typeof IG !== "undefined" && !!IG[id]
+      ),
+    "The SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator, the Baby Steps next to the game's order, the wealth stages, Die With Zero time buckets and the designed week, the net worth peak, Your Money or Your Life as nine steps in order, the quick wins to tick, and the next dollar on Home. One math file with the web app.",
+    "ymoyl",
+  ],
+  [
+    "plan",
     "Retirement engine by Zack (MIT license), through one adapter",
     "b",
     () => typeof RetireEngine === "object" && WB_FN("retireScenario") && WB_FN("retireSummary"),

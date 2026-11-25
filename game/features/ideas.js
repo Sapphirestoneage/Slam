@@ -911,7 +911,7 @@ igAdd({
     const two = x.v("who", x.two ? "two" : "one") === "two",
       sd = two ? IG_TAX.sd.two : IG_TAX.sd.one,
       cap = two ? IG_TAX.gain.two : IG_TAX.gain.one,
-      tot = sd + cap,
+      tot = fwZeroTax({ std: sd, gainTop: cap }).incomeAtZero /* core/frameworks.js: one formula with zerotax.html */,
       S = x.S;
     return {
       big: igM(tot) + " a year at 0%",

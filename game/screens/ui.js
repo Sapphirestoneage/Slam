@@ -677,6 +677,8 @@ function home() {
   if (typeof homeAddonAsk === "function") homeAddonAsk(); /* addon.js: ask about an add-on that waits */
   if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
   if (typeof homeAccountLine === "function") h = homeAccountLine(h); /* eras.js: the account recommendation */
+  if (typeof homeNextDollar === "function")
+    h = homeNextDollar(h); /* canon.js: the one line of the next dollar, at the top */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeReportFixed === "function") h = homeReportFixed(h); /* fbreport.js: "You reported this. It's fixed." */
   if (typeof homeSleptRow === "function")

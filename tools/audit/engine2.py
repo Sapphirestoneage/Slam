@@ -1116,6 +1116,43 @@ def run(cases, ref, il=None):
             unknown = any(st(i, now)[0] is None for i in range(6))
             ck('where you are', o['here'], first if first is not None else (None if unknown else 6), 0)
             ck('from cash', o['fromCash'], fc); ck('months of saving', o['shift'], shift, 1e-9)
+        elif fn == 'fwSwan':
+            # months of spending plus the worry; the gap and the months of cash past the worry
+            n = round(x['monthly'] * x['months'] + x['worry']); ck('number', o['number'], n, 0)
+            if x['cash'] is not None:
+                ck('gap', o['gap'], max(0, n - x['cash'])); ck('months', o['monthsHave'], max(0, x['cash'] - x['worry']) / x['monthly'], 1e-6)
+        elif fn == 'fwPeak':
+            # year by year: the first age the level payment to the last age (at the start of each year) covers the spending
+            b, found = x['worth'], None
+            for a in range(x['age'], x['endAge']):
+                if b > 0 and spend_down(max(0, b), x['leave'], x['endAge'] - a, x['growth']) >= x['spendYear']:
+                    found = (a, b); break
+                b = b * (1 + x['growth']) + x['saveYear']
+            ck('peak age', o['peakAge'], None if found is None else found[0], 0); ck('peak', o['peak'], None if found is None else found[1])
+        elif fn == 'fwZeroTax':
+            # taxable income = ordinary + gains - deduction stays inside the 0% band; a sale's cash = gains / its gain share
+            ordi = x['ordinary']; room = x['gainTop'] + x['std'] - ordi if ordi <= x['std'] else max(0, x['gainTop'] - (ordi - x['std']))
+            ck('gain room', o['gainRoom'], room); ck('sale cash', o['saleCash'], room / x['gainShare']); reach = min(ordi, x['std']) + room / x['gainShare']
+            ck('reach', o['reach'], reach); ck('fits', o['fits'], x['spend'] <= reach + 0.5)
+        elif fn == 'fwBaby':
+            g = lambda k: x[k]
+            d = [None if g('cash') is None else g('cash') >= 1000, None if g('debt') is None else g('debt') <= 0,
+                 None if g('cash') is None or g('monthly') is None else g('cash') >= g('monthly') * 3, None if g('retireShare') is None else g('retireShare') >= 0.1495,
+                 True if not x['kids'] else x['college'], None if g('mortgage') is None else g('mortgage') <= 0]
+            for i in range(6): ck(f'step {i + 1}', o['done'][i], d[i])
+            first = next((i for i in range(6) if d[i] is not True), None)
+            ck('here', o['here'], 6 if first is None else (None if d[first] is None else first))
+        elif fn == 'fwStage':
+            w = x['worth']; i = 0 if w < 25000 else 1 if w < 100000 else 2; to = [25000, 100000, None][i]
+            left = None if to is None else max(0, to - w); ck('stage', o['i'], i, 0); ck('left', o['left'], left)
+            ck('months', o['months'], math.ceil(left / x['monthly']) if left is not None and x['monthly'] else None, 0)
+        elif fn == 'fwLifetime':
+            sp = x['spans']; ck('total', o['total'], sum(q['years'] * q['pay'] for q in sp))
+            ck('hours', o['hours'], sum(q['years'] * q['hours'] * 52 for q in sp) if all(q['hours'] for q in sp) else None)
+        elif fn == 'fwStep9':
+            cu = x['monthly'] * 6; ck('income', o['income'], x['invested'] * x['rate'] / 12); ck('cushion left', o['cushionLeft'], max(0, cu - x['cash'])); ck('cache', o['cache'], max(0, x['cash'] - cu))
+        elif fn == 'fwWins':
+            m = sum(w['save'] for w in x['wins'].values() if w['save'] is not None); ck('month', o['month'], m); ck('fi days', o['fiDays'], m * 12 / (x['yearSpend'] / 365), 1e-6)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]

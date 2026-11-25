@@ -38,6 +38,7 @@ import { agePlanCard } from './agestart-ui.js';
 import { affordHomeLine } from './afford-ui.js';
 import { learnNextLine, learnNextName } from './library-ui.js';
 import { askNextCard, meterWord, certaintyPoints } from './ask-ui.js';
+import { nextDollarLine } from './canon-ui.js';
 
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
 const isoDay = d => d.toISOString().slice(0, 10);
@@ -61,7 +62,8 @@ export function homeScreen(app, ctx) {
   const ladder = ladderCard(app, ctx);
   const payday = paydayCard(app, ctx);
   const items = openItems(app, ctx);
-  return [sessionStrip(app, ctx, P),
+  return [nextDollarLine(app, ctx), // run Not built, groups 1 to 5, Part 4: the one line of the next dollar, the match included
+    sessionStrip(app, ctx, P),
     recalcParts(app, ctx, 'home', { inSession: P.inSession }), // Nov 25 2026: Recalculating (the old date, the new date, the next turn), the triage, the refill, the letter, Done for this month
     coastCard(ctx, P.m, fiGate(ctx)), // run of Nov 25 2026: the day the Coast number is reached, one calm card, one time
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads

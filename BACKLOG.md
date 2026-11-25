@@ -135,3 +135,4 @@ Kept by `tools/backlog.py` when it rebuilds this file. Add each to the spec's Fe
 ## Built since this list was made
 
 - Mistake cost tracker (Phase 4, above): built Nov 25 2026 as the opt-in Mistake audit. Web app: Report, History, the closed section under Year in review. Game: the menu and the end of the Yearly Review. The spec's Feature list row still says Backlog.
+- YMOYL steps 1a, 4, 5, 6, 7 and 9, the Baby Steps tracker, Wealth stages ($25k, $100k), Time buckets, Net worth peak, 0% tax early retirement and the Advice translator (above): built Nov 25 2026 (run Not built, groups 1 to 5, Part 4). Game: Menu, Your Money or Your Life (the nine steps as one path; step 3 waits for run 1 Part 21) and Famous money ideas. Web app: earned.html (1a), peak.html, zerotax.html, the Baby Steps and the Advice translator on Plan, FOO, the wealth stages on trip.html. The spec's Feature list rows still say Backlog.

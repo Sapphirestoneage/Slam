@@ -58,6 +58,14 @@ after the last one, with the end of a month moved to its last day); and a date t
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
+(`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
+plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own
+spend-down payment), 0% tax in early retirement (the gains that keep taxable income inside the 0% band, the cash a sale
+gives, whether the spending fits), the six Baby Steps that can be read from numbers and where the person is, the wealth
+stage with the dollars and months to the next line, lifetime earnings and their hours (step 1a of Your Money or Your
+Life), capital, cushion and cash (step 9), and the quick wins (the tapped amounts and the days of freedom).
+
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
 through a made-up market that swings (stocks, bonds, inflation, a CAPE, the two yields). Four kinds of case: the VPW

@@ -99,6 +99,7 @@ export const FORMATS = [
   { version: 56, shape: '63e6d98e' }, // Nov 25 2026 (run Finish everything partly built, Part 2): M9O home buying and renting, app-only, and its six rules on the assumptions list
   { version: 57, shape: 'dc0d08dc' }, // Nov 25 2026 (run Finish everything partly built, Part 3): M9Z career and education, app-only, and its three rules on the assumptions list
   { version: 58, shape: '4c29eb7b' }, // Nov 25 2026 (run Finish everything partly built, Part 4): M8T travel, app-only, and its two rules on the assumptions list
+  { version: 59, shape: '680a3de1' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 4): M8W Eli's frameworks and the canon, app-only
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)
