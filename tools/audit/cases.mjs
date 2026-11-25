@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from '../../js/math/income.js';
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
-import { fiNumber, fiDate, coastFi, solveMonthlySaving } from '../../js/math/fi.js';
+import { fiNumber, fiDate, coastFi, solveMonthlySaving, fatFiNumber, chubbyFiNumber, baristaGap, fiStress } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
@@ -40,6 +40,13 @@ for (let i = 0; i < N; i++) {
   { const x = { annualSpending: money(12000, 300000), withdrawalRate: pick([0.03, 0.035, 0.04, 0.047, 0.052]) }; add('fiNumber', x, { fi: v(fiNumber(x)) }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 1500000), monthlyInvesting: rnd() < 0.1 ? 0 : money(50, 9000), realReturn: pick([0.03, 0.05, 0.06, 0.07, 0.08, 0.12]), target: money(200000, 6000000) }; const r = fiDate(x, { from: NOW }); add('fiDate', x, { months: r.value, never: !!r.never }); }
   { const x = { fiNumber: money(300000, 5000000), realReturn: pick([0.05, 0.06, 0.07, 0.08]), age: whole(18, 62), retireAge: pick([55, 60, 65, 67]) }; add('coastFi', x, { coast: v(coastFi(x)) }); }
+  // the FI destinations (run of Nov 25 2026): Fat with or without a list of extras, Chubby, what part-time pay closes, the stress table
+  { const x = { annualSpending: money(12000, 300000), extrasAnnual: rnd() < 0.4 ? null : pick([0, 3000, 6000, 12000, 24000, 60000]), factor: RULES.fatFactor, withdrawalRate: pick([0.03, 0.035, 0.04, 0.047]) };
+    const fat = fatFiNumber(x), regular = v(fiNumber(x)); add('fatFi', x, { fat: v(fat), chubby: v(chubbyFiNumber({ regular, fat: v(fat) })), fromList: !!fat.fromTemplate }); }
+  { const x = { annualSpending: money(12000, 200000), partTimeIncome: money(3000, 90000), healthAnnual: rnd() < 0.3 ? null : pick([0, 3600, 6000, 9600, 14400, 21600]), withdrawalRate: pick([0.03, 0.035, 0.04, 0.047]) };
+    const r = baristaGap(x); add('baristaGap', x, { closes: v(r), covers: r.covers, afterHealth: r.afterHealth, left: r.left }); }
+  { const x = { invested: rnd() < 0.2 ? 0 : money(500, 1500000), monthlyInvesting: rnd() < 0.1 ? 0 : money(50, 9000), annualSpending: money(12000, 240000), rates: ref.fiStress.withdrawalRates, returns: ref.fiStress.returns };
+    const r = fiStress(x, x, { from: NOW }); add('fiStress', x, { rows: r.rows.map(row => ({ target: row.target, months: row.cells.map(c => c.months) })), soonest: r.soonest, latest: r.latest }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 800000), realReturn: pick([0.05, 0.06, 0.07, 0.08]), target: money(300000, 4000000), months: whole(24, 480) }; add('solveSaving', x, { monthly: v(solveMonthlySaving(x)) }); }
   { const x = { s: whole(1, 99) / 100, realReturn: pick([0.03, 0.05, 0.07]), withdrawalRate: pick([0.03, 0.04, 0.05]) }; add('yearsAtRate', x, { years: yearsAtRate(x.s, x) }); }
   { const x = { cash: rnd() < 0.05 ? 0 : money(100, 200000), spending: money(900, 15000), stillIn: pick([0, 0, 500, 1000, 1500, 2000]), cut: pick([0, 0.1, 0.2, 0.3]) }; const r = runwayOf({ ...x, now: NOW }); add('runway', x, { covered: !!r.covered, months: r.months ?? null, whole: r.whole ?? null, extraMonths: r.extraMonths ?? null }); }

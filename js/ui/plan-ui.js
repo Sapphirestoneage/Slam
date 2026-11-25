@@ -32,6 +32,7 @@ import { changeWords } from '../math/changes.js';
 import { outsourceCheck } from '../math/time.js';
 import { affordSection } from './afford-ui.js';
 import { trueCostSections } from './truecost-ui.js';
+import { destinationSections } from './destinations-ui.js';
 
 export const PUI = { extra: 0, pace: null, bands: true, chart: 'FI timeline', extraDebt: 0, reveal: false };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -177,9 +178,10 @@ function goalsTop(app, ctx, { reveal = false } = {}) {
   // outsource lens are caret sections, closed, each with its one line.
   const fiSec = S.sec('goals:fi', { title: 'FI date and assumptions', open: true, area: 'goals', summary: fiWhen != null && gate.unlocked ? `FI ${fiWordsOf(m, null, { now: ctx.now() }).text}` : null }, fiCard);
   const deals = S.secCard(bigDealsCard(ctx, m, gate), 'goals:big-deals', { summary: m.bigDeals?.value ? `${m.bigDeals.value} moves the FI date the most` : null });
-  const fiLadder = S.secCard(ladderCard(ctx, m, gate), 'goals:fi-ladder', { summary: 'Lean, Coast, Barista, Regular and Fat FI' });
+  const fiLadder = S.secCard(ladderCard(ctx, m, gate), 'goals:fi-ladder', { summary: 'Lean, Coast, Barista, Regular, Chubby and Fat FI' });
   const lens = outsourceLens(ctx, m);
-  return reveal ? [revealCard(app, ctx, m), deals, fiSec, fiLadder, lens] : [fiSec, deals, fiLadder, lens];
+  const dests = destinationSections(ctx, m, gate); // run of Nov 25 2026: the destination views, the stress table, the pod
+  return reveal ? [revealCard(app, ctx, m), deals, fiSec, fiLadder, ...dests, lens] : [fiSec, deals, fiLadder, ...dests, lens];
 }
 
 // Batch 15, items 6 and 13: the known changes ahead, one line each ("Benefits end Jan 2027: your month changes by
@@ -240,7 +242,7 @@ function ladderCard(ctx, m, gate = { unlocked: true }) {
   const l = ladder(m, doc);
   return h('div.card', { style: { marginBottom: '16px' } }, h('div.section-title.area-goals', {}, h('h2', {}, 'The FI ladder')),
     l.value === null ? h('p.muted', {}, 'Needs ', S.needLinks(ctx, ['invested'])) :
-      h('div.ladder', {}, ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Fat FI'].map(k => {
+      h('div.ladder', {}, ['Lean FI', 'Coast FI', 'Barista FI', 'Regular FI', 'Chubby FI', 'Fat FI'].map(k => {
         const v = l.value[k];
         const when = t[k]?.value != null && gate.unlocked ? monthsTo(m, t[k].value, { now: ctx.now() }) : null; // dates wait for the FI date to unlock
         const future = (doc.settings.dollars || 'real') === 'nominal' && t[k]?.value != null && when?.value != null ? futureDollars(t[k].value, when.value, m.inputs.inflation) : null;

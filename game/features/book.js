@@ -24,6 +24,7 @@ const BOOK_PARTS = [
   coverBook,
   mixBook,
   sleptBook,
+  cstBook,
   pathsBook,
   simBook,
   tkoBook,

@@ -39,6 +39,20 @@
       "Pessimistic": 0.06
     }
   },
+  "fiStress": {
+    "withdrawalRates": [
+      0.0325,
+      0.035,
+      0.04,
+      0.045
+    ],
+    "returns": [
+      0.03,
+      0.05,
+      0.07
+    ],
+    "source": "Eli's prompt for the run Finish everything partly built (Nov 25 2026): the FI date at withdrawal rates 3.25 to 4.5% and returns of 3, 5 and 7% after inflation. Choices for a what-if table, not a forecast."
+  },
   "defaults": {
     "lifeExpectancy": 90,
     "sessionMinutes": 60,

@@ -33,6 +33,10 @@ runway, Start at the finish line, the taxed part of Social Security, tax on gain
 Marketplace premium credit, a free year's tax, the Medicare extra premium, the whole lifetime run (every strategy,
 every conversion line, one or two people), and the earliest age work can stop.
 
+Added Nov 25 2026 (the FI destinations): Fat FI with and without a list of extras, Chubby FI (the midpoint), what
+part-time pay closes and whether it covers health insurance, and every box of the FI date stress test (the second
+engine uses the closed formula for each box, SLAM steps month by month).
+
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the
 history replay. Each is a row to add (ROADMAP.md, Run 2).

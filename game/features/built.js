@@ -452,6 +452,22 @@ const WB = [
   ],
   [
     "see",
+    "FI ratio on Key numbers",
+    "b",
+    () => WB_FN("knMetricsFir") && WB_FN("firCalc"),
+    "What your investments can pay each month, next to what you spend. In the group Freedom.",
+    "keynums",
+  ],
+  [
+    "feel",
+    "You can stop sprinting: the day you reach your Coast number",
+    "b",
+    () => WB_HAS("coastok") && WB_FN("homeCoastCard"),
+    "A calm card on Home, one time. It waits until your numbers are real.",
+    null,
+  ],
+  [
+    "see",
     "While you slept: what your money earned",
     "b",
     () => WB_HAS("slept") && WB_FN("homeSleptRow"),

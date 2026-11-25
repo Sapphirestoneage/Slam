@@ -22,6 +22,9 @@ export function fatExtrasOf(doc) {
   const picks = Object.values(doc.program?.destinations?.fat || {}).filter(v => typeof v === 'number' && v > 0);
   return picks.length ? picks.reduce((a, b) => a + b, 0) : null;
 }
+// The taps of the destination views, saved on the plan (one undo step each): the view that is open, the Fat list,
+// the destination the FOO is ordered for, the day the Coast card was closed.
+export function setDestinations(store, patch) { store.setIn('program', ['destinations'], { ...(store.doc.program?.destinations || {}), ...patch }, 'FI destinations'); }
 // Every FI number the plan talks about.
 export function fiTargets(m, doc) {
   const x = m.inputs;
