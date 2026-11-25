@@ -237,7 +237,7 @@
       },
       near = (a, b) => Math.abs(a - b) < 0.51,
       S = derive(c).fiSpend;
-    chk("62 ideas are built outside the add-ons", IG_ORDER.filter(id => !IG[id].pk).length === 62, IG_ORDER.length);
+    chk("70 ideas are built outside the add-ons", IG_ORDER.filter(id => !IG[id].pk).length === 70, IG_ORDER.length);
     chk("loan payment: $100,000 at 6% for 30 years is $599.55", Math.abs(igPmt(100000, 0.06, 30) - 599.55) < 0.01);
     {
       const g = 0.6 * 0.05 + 0.4 * 0.019,

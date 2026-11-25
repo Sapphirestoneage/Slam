@@ -11,6 +11,7 @@ import { answer, onFile } from '../journey.js';
 import { tripCostOf, TRIP_COSTS, TRIP_AGE_PICKS } from '../solo.js';
 import { journeyInputs } from '../math/ladder.js';
 import { pack } from '../start/link.js';
+import { fwWealthStage, FW_WEALTH, FW_K25_SOURCE } from '../math/frameworks.js'; // run Not built, groups 1 to 5, Part 4: the wealth stages, on the journey's own net worth
 import { TP_LINES, TP_FX_CAN, TP_FX_START, TP_OPTS, TP_TAPS_NOTE, TP_CURRENCIES, TP_SOURCES, tpMoney, tpCost, tpCostWords, tpCostMath, tpLevel, tpPoints, tpPointsWords, tpPointsMath,
   tpSplit, tpSplitWords, tpSplitMath, tpJourney, tpJourneyWords, tpJourneyMath, tpDayWords } from '../math/trip.js';
 
@@ -156,7 +157,7 @@ function draw(api) {
     J.here != null || J.unknown.length < J.stages.length ? h('ul.st-list', {}, J.stages.map(stageRow)) : null,
     h('p', { style: { fontWeight: 700 } }, tpJourneyWords(J, cur) || 'Tap your numbers below to see where you are.'),
     J.fiDays != null ? rows([['The day work becomes optional', 'your plan, run again with the trip in', tpDayWords(J.fiDays)]]) : null,
-    math('tp-m-journey', tpJourneyMath(J, cur)));
+    math('tp-m-journey', tpJourneyMath(J, cur)), wealthFold(fwWealthStage({ worth: J.worth, monthly: J.monthly })));
   const basics = h('div.st-card', { id: 'tp-plan', ...redrawOnLeave }, h('h2', { style: { marginTop: 0 } }, 'Your numbers, for the journey'),
     h('p.st-small.st-soft', {}, 'Five numbers place you on the journey. The day work becomes optional runs from the first three.'),
     Object.keys(BOX).map(key => numBox(BOX[key][0], onFile(api.store.doc, PLAN[key][0], { ref: api.ref })[PLAN[key][1]] ?? null, BOX[key][1], (v, typing) => { answer(api.store, PLAN[key][0], { [PLAN[key][1]]: v }); if (!typing) return api.render(); api.save(); }, { id: `f_${key}`, help: BOX[key][2] })),
@@ -169,5 +170,13 @@ function draw(api) {
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, 'What does this trip really cost?'), h('p', { style: { marginBottom: 0 } }, 'A retreat, a conference, a week away. The price is what you pay today. The cost is what that money would have become.')),
     inputs, card, pointsCard, groupCard, journey, basics, carry].filter(Boolean));
   if (!T.ready && cost == null) inputs.querySelector('.st-box .in')?.classList.add('st-pulse'); else if (age == null) $('ages')?.classList.add('st-pulse');
+}
+// The wealth stages of Set for Life on the journey's own net worth: the stage, the line ahead, the three moves of
+// each stage. One list of lines: the $100k line is the journey's own (TP_RULES.k100).
+function wealthFold(W) {
+  if (!W.ready) return null;
+  return fold('tp-wealth', `Wealth stages: ${W.stage.name}`, h('p.st-small', {}, W.to == null ? 'You are past $100,000. The moves that matter most now:' : `${money(Math.round(W.left))} to ${money(W.to)}${W.months != null ? `, about ${W.months} ${W.months === 1 ? 'month' : 'months'} at what you save, before growth` : ''}. The moves that matter most at this stage:`),
+    h('ul.st-list', {}, W.stage.moves.map(m => h('li', {}, h('span.dot', {}, ''), h('span', {}, m)))),
+    h('p.st-small.st-soft', {}, `The three stages: ${FW_WEALTH.map(s => s.name).join(', ')}. From ${FW_K25_SOURCE}, in SLAM's words.`));
 }
 boot('trip', draw);

@@ -24,6 +24,7 @@ import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
 import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext, jobCarry, jobHourValue } from '../../js/math/jobs.js';
+import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
 
@@ -153,6 +154,15 @@ for (let i = 0; i < N; i++) {
   { const apps = Array.from({ length: whole(1, 3) }, () => ({ earned: money(20, 5000), tips: pick([0, 50, 300]), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]) })), x = { apps, cash: pick([0, 60, 400]) }, r = gigAppsOf(x);
     const pcts = { profit: pick([0.01, 0.05, 0.1]), owner: pick([0.3, 0.5]), tax: pick([0.15, 0.25]), opex: pick([0.1, 0.2, 0.3]) }, income = money(100, 20000), pf = gigProfitFirstOf({ income, pcts });
     add('gigApps', { ...x, pcts, income }, { all: r.all, tips: r.tips, gap: r.gap, owner: pf.ready ? pf.of.owner : null, left: pf.ready ? pf.left : null }); }
+  // Eli's frameworks and the canon (js/math/frameworks.js, M8W): SWAN, the peak, 0% tax, the Baby Steps, the stages, 1a, step 9, the wins
+  { const x = { monthly: money(800, 15000), months: pick([1, 2, 3, 6, 9, 12]), worry: pick([0, 0, 500, 2500]), cash: rnd() < 0.2 ? null : pick([0, money(1, 90000)]) }, S = fwSwan(x); add('fwSwan', x, { number: S.number, gap: S.gap, monthsHave: S.monthsHave }); }
+  { const age = whole(22, 75), x = { age, worth: pick([0, money(1000, 3000000)]), saveYear: pick([0, money(1000, 90000)]), growth: pick([0, 0.02, 0.04, 0.07]), spendYear: money(12000, 200000), endAge: pick([85, 90, 95, 100]), leave: pick([0, 0, 100000]) }, P = fwPeak(x); add('fwPeak', x, { peakAge: P.peakAge, peak: P.peak, canSpend: P.canSpend }); }
+  { const x = { std: pick([16100, 32200, 24150]), gainTop: pick([49450, 98900, 66200]), ordinary: pick([0, money(100, 80000)]), gainShare: pick([0.1, 0.25, 0.5, 1]), spend: money(10000, 250000) }, Z = fwZeroTax(x); add('fwZeroTax', x, { gainRoom: Z.gainRoom, saleCash: Z.saleCash, reach: Z.reach, fits: Z.fits }); }
+  { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(pick([0, money(1, 60000)])), debt: kn(pick([0, money(100, 50000)])), monthly: kn(money(800, 12000)), retireShare: kn(pick([0, 0.05, 0.15, 0.2])), kids: pick([true, false]), college: pick([true, false, null]), mortgage: kn(pick([0, money(10000, 600000)])) }, B = fwBabySteps(x); add('fwBaby', x, { done: B.steps.map(st => st.done), here: B.here }); }
+  { const x = { worth: money(1, 400000) * (rnd() < 0.1 ? -1 : 1), monthly: pick([0, money(50, 6000)]) }, W = fwWealthStage(x); add('fwStage', x, { i: W.i, left: W.left, months: W.months }); }
+  { const spans = Array.from({ length: whole(1, 3) }, () => ({ years: whole(1, 20), pay: money(5000, 300000), hours: pick([null, 20, 40, 50]) })), L = fwLifetime(spans); add('fwLifetime', { spans }, { total: L.total, hours: L.hours }); }
+  { const x = { invested: pick([0, money(1, 3000000)]), cash: pick([0, money(1, 90000)]), monthly: money(800, 15000), rate: pick([0.03, 0.035, 0.04]) }, S = fwStep9(x); add('fwStep9', x, { income: S.income, cushionLeft: S.cushionLeft, cache: S.cache }); }
+  { const wins = Object.fromEntries(FW_WINS.filter(() => rnd() < 0.5).map(([id]) => [id, { done: 1, save: pick([null, 0, 5, 10, 25, 50, 100]) }])), y = money(12000, 200000), T = fwWins(wins, y); add('fwWins', { wins, yearSpend: y }, { month: T.month, fiDays: T.fiDays }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);

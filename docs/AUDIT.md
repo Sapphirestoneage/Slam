@@ -80,6 +80,13 @@ spending growth, the income growth from the ledger or the tapped guess, the aler
 year and this year, what it grew past inflation and whether it counts as faster than prices); the Pareto (the fewest
 biggest lines that reach 80%, by a running total); the enough number and the room for error; the Rough numbers range of
 any amount, built as text a second way from the digits; and the game's creep check between two looks.
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
+(`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
+plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own
+spend-down payment), 0% tax in early retirement (the gains that keep taxable income inside the 0% band, the cash a sale
+gives, whether the spending fits), the six Baby Steps that can be read from numbers and where the person is, the wealth
+stage with the dollars and months to the next line, lifetime earnings and their hours (step 1a of Your Money or Your
+Life), capital, cushion and cash (step 9), and the quick wins (the tapped amounts and the days of freedom).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
