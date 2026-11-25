@@ -59,6 +59,22 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <p><b>Email:</b> the email to confirm your address or to set a new password goes through an email service, which gets your email address for that.</p>
 </div>
 
+<div class="card" id="live">
+<h2>Live sessions with a coach (Live Session Mode)</h2>
+<p class="muted">This part is built but not switched on yet. This is how it works when it is on.</p>
+<p>In a live session your coach talks with you on a video call, and the session page of SLAM turns what each of you says into text, so your profile fills in while you talk. Both of you tap OK on the screen before anything starts.</p>
+<ul>
+<li><b>Text only. SLAM records no audio and saves no audio.</b> SLAM gets words, never sound.</li>
+<li><b>Your browser turns the sound into words.</b> In Chrome, this speech recognition sends the sound of your microphone to Google while you talk, and Google sends back the words. That is how the browser's speech recognition works; SLAM cannot turn it off. SLAM does not choose or see what Google keeps.</li>
+<li><b>The words are saved</b> in the database (Supabase), one line at a time, with which side said it and when. While the call runs they also travel between the two devices over Supabase's live link, which keeps nothing. The numbers heard, with the short quote each came from, are saved in your game.</li>
+<li><b>After the call, AI may read the words.</b> Only when your coach taps "Run the AI pass" (and only when Eli has switched that step on), the saved words of that call are sent to Anthropic, the company that makes the AI Claude, through a small program on Supabase. If your coach adds the text file of a recording of the call, that text goes too. The AI proposes numbers, and your coach checks each one before it goes in your profile. Anthropic's own terms cover what it receives.</li>
+<li><b>Who can see the words of a session:</b> you, the coach of that session, and the admin (Eli). Not other coaches. The short quotes kept with your numbers are in your game, so whoever can see your game (see "Who can see your game" above) can see those quotes.</li>
+<li><b>Your coach's notes</b> from a session, also the ones the AI pass drafts, are the coach's notes (see above). You cannot read them in the app.</li>
+<li><b>How long the words are kept:</b> until someone deletes them. After the call, you or your coach can tap "Delete this transcript": it removes the lines of that session from the database and the quotes from your game. The numbers stay, with who approved them and when, and the line "Transcript deleted on" the date. Delete my account removes them too, with the database step that also removes the sign-in (see Delete my account below).</li>
+<li>If your coach recorded the call on a phone, that recording is on your coach's phone, not in SLAM. The app reminds your coach to delete it after the AI pass.</li>
+</ul>
+</div>
+
 <div class="card">
 <h2>The SLAM web app (the planner and the short tools)</h2>
 <ul>
@@ -73,7 +89,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <ul>
 <li>No ads, and no tracking or analytics scripts.</li>
 <li>No connection to your bank. SLAM never asks for a bank password.</li>
-<li>Nothing in the code sends your information to any company other than the ones named on this page.</li>
+<li>Nothing in the code sends your information to any company other than the ones named on this page. In a live session that includes Google (the speech recognition of Chrome) and, only after the call when your coach runs the AI pass, Anthropic.</li>
 </ul>
 <p class="muted">Like every website, the companies that deliver the pages see your internet address when the page loads: GitHub (the site), Supabase (the accounts), Google Fonts (the letter shapes), and jsDelivr and cdnjs (two code libraries).</p>
 </div>

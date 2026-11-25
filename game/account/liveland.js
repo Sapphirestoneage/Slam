@@ -578,7 +578,7 @@ function lfCounts(c, sid) {
   const H = lfHeard(c, sid),
     n = st => H.filter(x => x.st === st).length,
     out = {
-      heard: H.filter(x => x.st !== "corrected" && !x.echo).length,
+      heard: H.filter(x => x.st !== "corrected" && !x.echo && !x.src).length /* not the proposals of the AI pass */,
       filled: n("filled"),
       confirmed: H.filter(x => x.st === "confirmed" && x.skip).length,
       kept: n("kept"),
