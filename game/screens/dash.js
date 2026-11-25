@@ -83,14 +83,15 @@ function dkArea(vals, o) {
   const W = 320,
     H = 110,
     all = vals.concat(o.faint || []),
-    max = Math.max(1, ...all),
+    hi = Math.max(...all),
+    lo = Math.min(0, ...all),
+    span = hi - lo || 1,
     n = Math.max(vals.length, (o.faint || []).length) - 1 || 1,
-    path = s =>
-      s
-        .map((v, i) => (i ? "L" : "M") + ((i / n) * W).toFixed(1) + "," + (H - 4 - (v / max) * (H - 10)).toFixed(1))
-        .join(" ");
-  const fill = path(vals) + ` L${(((vals.length - 1) / n) * W).toFixed(1)},${H} L0,${H} Z`;
-  return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Over time")}">${o.faint && o.faint.length > 1 ? `<path d="${path(o.faint)}" style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4"/>` : ""}<path d="${fill}" style="fill:var(--sap);opacity:.22"/><path d="${path(vals)}" style="fill:none;stroke:var(--sap);stroke-width:2.5"/></svg>${o.labels ? `<div class="row between tiny muted"><span>${esc(o.labels[0])}</span><span>${esc(o.labels[1])}</span></div>` : ""}`;
+    y = v => (H - 4 - ((v - lo) / span) * (H - 10)).toFixed(1),
+    path = s => s.map((v, i) => (i ? "L" : "M") + ((i / n) * W).toFixed(1) + "," + y(v)).join(" ");
+  const base = y(Math.max(lo, Math.min(hi, 0))),
+    fill = path(vals) + ` L${(((vals.length - 1) / n) * W).toFixed(1)},${base} L0,${base} Z`;
+  return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Over time")}">${lo < 0 ? `<line x1="0" x2="${W}" y1="${base}" y2="${base}" style="stroke:var(--line);stroke-width:1"/>` : ""}${o.faint && o.faint.length > 1 ? `<path d="${path(o.faint)}" style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4"/>` : ""}<path d="${fill}" style="fill:var(--sap);opacity:.22"/><path d="${path(vals)}" style="fill:none;stroke:var(--sap);stroke-width:2.5"/></svg>${o.labels ? `<div class="row between tiny muted"><span>${esc(o.labels[0])}</span><span>${esc(o.labels[1])}</span></div>` : ""}`;
 }
 /* A donut with a legend list. parts: [{ l, v }]. o: { center, sub } */
 function dkDonut(parts, o) {
@@ -212,17 +213,29 @@ function tmdMarks(s) {
   });
   return { T: tmdFit(T), X: tmdFit(X) };
 }
-/* Keep the marks whose labels do not overlap on a 300px track, the most important first. */
+/* Keep the marks whose labels fit on a 300px track, the most important first, on two rows: a mark goes on
+   the first row where it overlaps nothing, else it is left out. A mark near an end is drawn from that end
+   (class l or r), so its label takes room on one side only. */
+function tmdSpan(m) {
+  const w = ((m.l.length * 7.5 + 22) / 300) * 1000;
+  return m.pos < 60 ? [m.pos, m.pos + w] : m.pos > 940 ? [m.pos - w, m.pos] : [m.pos - w / 2, m.pos + w / 2];
+}
 function tmdFit(list) {
-  const kept = [];
+  const rows = [[], []];
   list
     .slice()
     .sort((a, b) => a.pri - b.pri)
     .forEach(m => {
-      const wid = x => ((x.l.length * 7 + 18) / 300) * 1000;
-      if (kept.every(k => Math.abs(k.pos - m.pos) >= (wid(k) + wid(m)) / 2)) kept.push(m);
+      const a = tmdSpan(m);
+      const r = rows.findIndex(row =>
+        row.every(k => {
+          const b = tmdSpan(k);
+          return a[1] + 8 <= b[0] || b[1] + 8 <= a[0];
+        })
+      );
+      if (r >= 0) rows[r].push(Object.assign(m, { row: r }));
     });
-  return kept.sort((a, b) => a.pos - b.pos);
+  return rows[0].concat(rows[1]).sort((a, b) => a.pos - b.pos);
 }
 /* Set the dial: by time (months) or by money (extra a month). The other side follows. */
 function tmdSet(id, side, v) {
@@ -287,7 +300,10 @@ function tmdMarkWhy(s, mk) {
 function timeMoneyDial(spec) {
   const old = TMD[spec.id];
   TMD[spec.id] = spec;
-  if (old && old.st && old.free === spec.free) {
+  if (spec.start) {
+    if (spec.start.t) tmdSet(spec.id, "t", spec.start.t);
+    else tmdSet(spec.id, "m", spec.start.m || 0);
+  } else if (old && old.st && old.free === spec.free) {
     spec.st = null;
     if (old.st.reach) tmdSet(spec.id, "m", old.st.extra || 0);
     else tmdSet(spec.id, "t", old.st.want);
@@ -300,11 +316,11 @@ function tmdInner(s) {
     pT = st.months != null ? tmdPosT(s, st.months) : 1000,
     pX = st.extra != null ? tmdPosX(s, st.extra) : 1000,
     marks = (list, cur) =>
-      `<div class="tmdmarks">${list
+      `<div class="tmdmarks ${list.some(mk => mk.row) ? "two" : ""}">${list
         .map(mk => {
           const why = tmdMarkWhy(s, mk),
             at = mk.pos < 60 ? "l" : mk.pos > 940 ? "r" : "";
-          return `<button class="tmdmk ${at} ${why ? "far" : ""} ${Math.abs(cur - mk.pos) < 4 ? "on" : ""}" style="left:${(mk.pos / 10).toFixed(1)}%" data-a="tmdmark" data-k="${s.id}" data-v="${mk.k}:${mk.v}"${why ? ` title="${esc(why)}"` : ""}>${esc(mk.l)}</button>`;
+          return `<button class="tmdmk ${at} ${why ? "far" : ""} ${Math.abs(cur - mk.pos) < 4 ? "on" : ""}" style="left:${(mk.pos / 10).toFixed(1)}%;top:${mk.row ? 36 : 0}px" data-a="tmdmark" data-k="${s.id}" data-v="${mk.k}:${mk.v}"${why ? ` title="${esc(why)}"` : ""}>${esc(mk.l)}</button>`;
         })
         .join("")}</div>`;
   const far = M.T.concat(M.X).filter(mk => tmdMarkWhy(s, mk) && Math.abs((mk.k === "t" ? pT : pX) - mk.pos) < 4);
@@ -347,7 +363,11 @@ Object.assign(ACT, {
   tmdmark: t => {
     const id = t.dataset.k,
       p = String(t.dataset.v).split(":");
-    tmdSet(id, p[0], +p[1]);
+    const st = tmdSet(id, p[0], +p[1]);
+    if (id === "debt" && W && st) {
+      W.extra = st.reach ? st.extra : W.extra;
+      W.tmdWant = st.reach ? null : st.want;
+    }
     if (typeof drawSheet === "function" && typeof SH !== "undefined" && SH) drawSheet();
     else if (typeof render === "function") render();
   },

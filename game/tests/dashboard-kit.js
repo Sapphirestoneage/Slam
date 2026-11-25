@@ -99,11 +99,18 @@
     M.T.some(m => m.l === "Current pace") && M.T.every((m, i) => !i || m.pos >= M.T[i - 1].pos)
   );
   const overlap = list =>
-    list.some(
-      (m, i) =>
-        i && m.pos - list[i - 1].pos < ((m.l.length * 7 + 18 + list[i - 1].l.length * 7 + 18) / 2 / 300) * 1000 - 0.5
+    list.some((m, i) =>
+      list.some(
+        (k, j) =>
+          j !== i && k.row === m.row && !(tmdSpan(m)[1] + 8 <= tmdSpan(k)[0] || tmdSpan(k)[1] + 8 <= tmdSpan(m)[0])
+      )
     );
-  chk("no two mark labels overlap on a 300px track", !overlap(M.T) && !overlap(M.X));
+  chk("no two mark labels overlap on the same row of a 300px track", !overlap(M.T) && !overlap(M.X));
+  chk(
+    "with two rows, the year marks and All free fit",
+    M.T.some(m => m.l === "1 yr") && M.X.some(m => m.l === "All free"),
+    [M.T.map(m => m.l), M.X.map(m => m.l)]
+  );
   chk(
     "a mark out of reach is faded with its trade-off",
     timeMoneyDial(tmdDebtSpec(c, "avalanche", free, null)).includes("tmdmk") &&

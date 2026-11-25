@@ -1131,6 +1131,8 @@ function moneyTab() {
   if (typeof moneyTabPlanRows === "function") h = moneyTabPlanRows(h); /* csp.js: the spending plan, the audit */
   if (typeof moneyTabRcRow === "function")
     h = moneyTabRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
+  if (typeof moneyTabLook === "function")
+    h = moneyTabLook(h); /* look.js: the stat row and the charts, under the title */
   return h;
 }
 function moneyTabBase() {
@@ -1143,7 +1145,7 @@ function moneyTabBase() {
     dk = detailKeys(c);
   const tot = (v, rows) => `<b class="${rows.every(x => x.s) ? "" : "guess"}">${money(v)}</b>`;
   const sec = (title, key, rows, total, addLabel) =>
-    `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div>${typeof allocBar === "function" ? allocBar(c, ALLOC_BY_ROWS[key], null, { slim: true, end: true }) : ""}<div class="stack" style="margin-top:8px">${rows.map((x, i) => ledRow(key, i, x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
+    `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div>${typeof allocBar === "function" ? allocBar(c, ALLOC_BY_ROWS[key], null, { slim: true, end: true }) : ""}${typeof ledSortChips === "function" ? ledSortChips(c, key, rows) : ""}<div class="stack" style="margin-top:8px">${(typeof ledOrder === "function" ? ledOrder(c, key, rows) : rows.map((x, i) => ({ x, i }))).map(o => ledRow(key, o.i, o.x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
   const prow = (label, val, key) =>
     `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret">›</span></span></button>`;
   return `<div class="stack"><h1>Money</h1><div class="small muted">Every number the game uses lives here. Tap any line to change it. It updates everywhere at once. Faded numbers are guesses that don't count yet.</div>
@@ -5375,6 +5377,8 @@ function goalsCard(c, d, sec) {
     real = c.placed || G.demo,
     sh = Math.round((c.goalShare == null ? 0.5 : c.goalShare) * 100);
   const row = g => {
+    if (sec === "open" && typeof goalCardLook === "function")
+      return goalCardLook(c, d, g, sim, simAll); /* look.js: a goal card */
     const gi = goalInfo(c, d, g, sim, simAll);
     return `<button class="rowbtn" data-a="goal" data-v="${g.id}"><span><b>${esc(g.n)}</b><div class="tiny muted"><span class="${g.s ? "" : "guess"}">${money(g.cost)}</span>${g.s ? "" : " guess"} · ${gi.placed ? eraT(g.era) + dlNote(c, g, sim) : "Someday, not placed"}</div></span><b class="${gi.real ? "" : "guess"}" style="text-align:right" data-fid="g:${g.id}">${gi.fit ? (gi.placed ? gi.txt : gi.at <= 0 ? "Ready now" : "About " + fmtDur(gi.at) + " if you start now") : "Roadblock: " + BLOCKS[gi.blk][0]}</b></button>`;
   };
@@ -5383,7 +5387,7 @@ function goalsCard(c, d, sec) {
     eras.push(
       `<div class="row between small"><span>${eraN(e)}</span><b class="${real ? "" : "guess"}" style="text-align:right" data-fid="e:${e}">${eraWhen(c, d, sim, e)}</b></div>`
     );
-  return `<div class="card" ${sec || ""}><div class="row between"><h3>Someday list</h3>${ib("term:goals")}</div>${gs.length ? `<div class="tiny muted">Every money choice moves these dates.</div><div class="stack" style="margin-top:6px">${gs.map(row).join("")}</div>` : `<div class="small muted">A trip, a home, a wedding, quitting your job. Add one and the game shows how far away it is.</div>`}<button class="${gs.length ? "ghost" : "primary"} wide" style="margin-top:8px" data-a="gadd">+ Add a goal</button>
+  return `<div class="card" ${sec || ""}><div class="row between"><h3>Someday list</h3>${ib("term:goals")}</div>${gs.length ? `<div class="tiny muted">Every money choice moves these dates.</div><div class="${sec === "open" && typeof goalCardLook === "function" ? "dkgoals" : "stack"}" style="margin-top:6px">${gs.map(row).join("")}</div>` : `<div class="small muted">A trip, a home, a wedding, quitting your job. Add one and the game shows how far away it is.</div>`}<button class="${gs.length ? "ghost" : "primary"} wide" style="margin-top:8px" data-a="gadd">+ Add a goal</button>
  ${eras.length ? `<details style="margin-top:8px"><summary>When each era arrives</summary><div class="inner stack">${eras.join("")}<div class="tiny muted">At today's pace${real ? "" : ", from guesses"}. It moves every time your numbers do.</div>${gs.some(g => g.era != null) ? `<div class="small" style="margin-top:4px">Share of your leftover money that goes to goals</div><div class="chips">${[25, 50, 75, 100].map(p => `<button class="chip ${sh === p ? "on" : ""}" data-a="gshare" data-v="${p}">${p}%</button>`).join("")}</div>` : ""}${mathBox(["Money left over each month: " + money(sim.M) + " (what comes in minus what goes out).", "It goes to your first $1,000, then debt charging 8% or more, then your full emergency fund, then investing.", "Goals you've placed take " + sh + "% of it once their era arrives. The rest keeps following the eras.", "Debt is counted at about 22% a year and investments at 7% a year after inflation. Those are long-run averages, not promises."])}</div></details>` : ""}</div>`;
 }
 function eraPick(c, d, g, act) {
@@ -5466,6 +5470,7 @@ function goalSheet(id) {
 /* goalView() makes the full sheet of one goal. goalViewBase() is the part from this file. */
 function goalView() {
   let h = goalViewBase();
+  if (typeof goalViewLook === "function") h = goalViewLook(h); /* look.js: the Time-Money dial of this goal */
   if (typeof goalViewSim === "function") h = goalViewSim(h); /* sim.js: the simulators that fit this goal */
   if (typeof goalViewCountdown === "function") h = goalViewCountdown(h); /* countdown.js: the countdown of this goal */
   return h;

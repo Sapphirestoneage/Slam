@@ -481,18 +481,22 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .dkspark{margin-top:4px}
 .dkchart{width:100%;height:auto;display:block}.dkchart text{fill:var(--muted);font-size:10px;font-family:var(--body)}
 .dklegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:4px}.dklegend i,.dklist i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.dkdonut{display:flex;gap:14px;align-items:center}.dkdonut .dklist{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.dkdc{fill:var(--text);font-size:13px;font-weight:700}
+.dkdonut{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.dkdonut svg{flex:none}.dkdonut .dklist{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:4px}.dkdonut .dklist .row{gap:8px}.dkdonut .dklist b{flex:none}.dkdc{fill:var(--text);font-size:13px;font-weight:700}
 .dkprog{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.dkprog i{display:block;height:100%;background:var(--good);border-radius:99px}
 .dkdays{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}.dkday{flex:0 0 46px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}.dkday.on{border-color:var(--sap);color:var(--text)}.dkday.mk i{font-style:normal;font-size:10.5px;color:var(--good)}
-.dkgrid{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:1000px){.dkgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}}
+.dkgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
 .dkgoals{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:700px){.dkgoals{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tmd{display:flex;flex-direction:column;gap:12px}
 .tmdtrack{display:flex;flex-direction:column;gap:4px}
 .tmdr{width:100%;accent-color:var(--sap);height:28px;margin:0}
-.tmdmarks{position:relative;height:34px}
+.tmdmarks{position:relative;height:34px}.tmdmarks.two{height:70px}
 .tmdmk{position:absolute;top:0;transform:translateX(-50%);min-height:30px;padding:4px 8px;font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:99px;background:var(--panel2);white-space:nowrap}
 .tmdmk.l{transform:none}.tmdmk.r{transform:translateX(-100%)}.tmdmk.on{border-color:var(--sap);background:var(--hl)}.tmdmk.far{opacity:.5;border-style:dashed}
 .tmdsay{font-weight:600}
+button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;font-weight:400;cursor:pointer}button.dkgoal:hover{border-color:var(--sap)}
+.dkgicon{width:32px;height:32px;border-radius:10px;background:var(--hl);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700}
+.dkgname{font-size:17px}
+.hqtop{display:flex;flex-direction:column;gap:10px}.ledsort{margin-top:6px}.ledsort .chip{padding:6px 12px;font-size:13.5px}
 </style>
 </head>
 <body>
@@ -522,19 +526,19 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 <script src="core/quizcore.js?v=2e3732b9"></script>
 <script src="data/quizskins.js?v=332b0e1e"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=13daffcf"></script>
-<script src="screens/dash.js?v=fd097882"></script>
+<script src="screens/ui.js?v=c00d88aa"></script>
+<script src="screens/dash.js?v=5242bbc8"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
 <script src="features/year.js?v=0c383449"></script>
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=442b6691"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
-<script src="screens/planner.js?v=aac1b1fb"></script>
+<script src="screens/planner.js?v=9ab75929"></script>
 <script src="account/cloud.js?v=79bc2c4e"></script>
-<script src="screens/ux.js?v=81ec3d03"></script>
+<script src="screens/ux.js?v=81be5ef1"></script>
 <script src="core/metrics.js?v=9b0ea529"></script>
-<script src="features/debts.js?v=cfb4d465"></script>
+<script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=152cbc32"></script>
@@ -636,6 +640,7 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 <script src="data/patchnotes.js?v=2df141e3"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
+<script src="features/look.js?v=33f78aeb"></script>
 <script src="features/book.js?v=df4c4956"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
 <script src="features/fbreport.js?v=a8944662"></script>

@@ -251,6 +251,7 @@ function dbOneBodyBase(c, i) {
 /* dbSheet() makes the full sheet of the debt plan. dbSheetBase() is the part from this file. */
 function dbSheet() {
   let h = dbSheetBase();
+  if (typeof dbSheetLook === "function") h = dbSheetLook(h); /* look.js: the stat row, the order, the Time-Money dial */
   if (typeof dbSheetOwed === "function") h = dbSheetOwed(h); /* owed.js: the button "What each debt costs you" */
   if (typeof dbSheetSim === "function") h = dbSheetSim(h); /* sim.js: the simulators about debt */
   if (typeof dbSheetRc === "function") h = dbSheetRc(h); /* recalc.js: the row "Recalculating", when a date moved */

@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 139. Lines: 84,456. Top-level functions: 1880. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-25. Files: 140. Lines: 84,864. Top-level functions: 1897. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -33,19 +33,19 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 19 | `core/quizcore.js` | 475 | 17 | 0 | 0 | The one quiz engine: the questions a set of answers leads to, the scoring (with scores from outside as an input), ties, the top two, the confidence le... |
 | 20 | `data/quizskins.js` | 4,421 | 0 | 0 | 0 | Data only. The quiz skins of the one quiz engine (letters, address, houses, avatars, sheet, pyramid, mountain, stars, sins), and the skills, skill tre... |
 | 21 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
-| 22 | `screens/ui.js` | 6,542 | 214 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
-| 23 | `screens/dash.js` | 366 | 26 | 2 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
+| 22 | `screens/ui.js` | 6,547 | 214 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
+| 23 | `screens/dash.js` | 386 | 27 | 2 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
 | 24 | `features/games.js` | 673 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
 | 25 | `features/games2.js` | 1,463 | 40 | 19 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 26 | `features/year.js` | 782 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
 | 27 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
 | 28 | `screens/profiles.js` | 136 | 6 | 4 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
 | 29 | `screens/smart.js` | 679 | 15 | 5 | 0 | The setup questions change with each answer |
-| 30 | `screens/planner.js` | 1,281 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
+| 30 | `screens/planner.js` | 1,282 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 31 | `account/cloud.js` | 565 | 23 | 0 | 0 | The game saves itself to the account of the player |
-| 32 | `screens/ux.js` | 839 | 37 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
+| 32 | `screens/ux.js` | 845 | 37 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 33 | `core/metrics.js` | 1,859 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
-| 34 | `features/debts.js` | 447 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
+| 34 | `features/debts.js` | 448 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
 | 35 | `features/import.js` | 274 | 7 | 9 | 0 | Fill in the spending from a bank or card statement file |
 | 36 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
 | 37 | `features/quick.js` | 276 | 12 | 1 | 0 | Quick math. Three small what-if questions: does this car fit, how much home fits, and what one dollar becomes |
@@ -147,10 +147,11 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 133 | `data/patchnotes.js` | 183 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 134 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 135 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
-| 136 | `features/book.js` | 599 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 137 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 138 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 139 | `features/built.js` | 1,193 | 4 | 4 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 136 | `features/look.js` | 375 | 16 | 1 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
+| 137 | `features/book.js` | 599 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 138 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 139 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 140 | `features/built.js` | 1,193 | 4 | 4 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -168,7 +169,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 757 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 758 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

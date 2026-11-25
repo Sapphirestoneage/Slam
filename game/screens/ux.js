@@ -125,7 +125,13 @@ function homeWelcome() {
 /* Part of home() in ui.js. Adds the tab title and the four tiles at the top, and the button "Show more" at the bottom. */
 function homeQuadTop(h) {
   if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
-  const top = tabHead() + homeQuad(C(), D);
+  const top =
+    tabHead() +
+    /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
+    '<div class="hqtop">' +
+    (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +
+    homeQuad(C(), D) +
+    "</div>";
   return h
     .replace('<div class="stack">', () => '<div class="stack hq' + (HOME_MORE ? "" : " less2") + '">' + top)
     .replace(

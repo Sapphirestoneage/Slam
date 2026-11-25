@@ -467,6 +467,7 @@ function planTab() {
   if (typeof planTabPath === "function") h = planTabPath(h); /* paths.js: the path that the player picked */
   /* strat.js: the section "Moves to try". With no strat.js, the place mark is taken out. */
   h = typeof planTabStrat === "function" ? planTabStrat(h) : h.replace("<!--moveshere-->", "");
+  if (typeof planTabPeriod === "function") h = planTabPeriod(h); /* look.js: the pay period */
   return h;
 }
 function planTabMain() {
