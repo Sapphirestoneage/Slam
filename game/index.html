@@ -469,6 +469,30 @@ button.qcont{display:flex;flex-direction:column;align-items:flex-start;gap:4px;w
 button.qstar{min-height:32px;width:32px;padding:0;border:2px solid var(--line);background:none;border-radius:8px;color:var(--muted)}
 button.qstar.on{border-color:var(--a3);color:#fff}
 .qtab .rowbtn,.qrecent .rowbtn{min-height:44px}
+/* the dashboard kit (screens/dash.js, DESIGN.md "Reference: Tally") */
+.dklabel{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dkcap{font-size:13.5px;color:var(--muted);margin:-2px 0 4px}
+.dkcard .dkhead{margin-bottom:6px}
+.dkstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:1000px){.dkstats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.dktile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:84px;font-weight:400;width:100%}
+button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
+.dknum{font-size:22px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.dkspark{margin-top:4px}
+.dkchart{width:100%;height:auto;display:block}.dkchart text{fill:var(--muted);font-size:10px;font-family:var(--body)}
+.dklegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:4px}.dklegend i,.dklist i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dkdonut{display:flex;gap:14px;align-items:center}.dkdonut .dklist{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.dkdc{fill:var(--text);font-size:13px;font-weight:700}
+.dkprog{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.dkprog i{display:block;height:100%;background:var(--good);border-radius:99px}
+.dkdays{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}.dkday{flex:0 0 46px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}.dkday.on{border-color:var(--sap);color:var(--text)}.dkday.mk i{font-style:normal;font-size:10.5px;color:var(--good)}
+.dkgrid{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:1000px){.dkgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}}
+.dkgoals{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:700px){.dkgoals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tmd{display:flex;flex-direction:column;gap:12px}
+.tmdtrack{display:flex;flex-direction:column;gap:4px}
+.tmdr{width:100%;accent-color:var(--sap);height:28px;margin:0}
+.tmdmarks{position:relative;height:34px}
+.tmdmk{position:absolute;top:0;transform:translateX(-50%);min-height:30px;padding:4px 8px;font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:99px;background:var(--panel2);white-space:nowrap}
+.tmdmk.l{transform:none}.tmdmk.r{transform:translateX(-100%)}.tmdmk.on{border-color:var(--sap);background:var(--hl)}.tmdmk.far{opacity:.5;border-style:dashed}
+.tmdsay{font-weight:600}
 </style>
 </head>
 <body>
@@ -499,6 +523,7 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="data/quizskins.js?v=332b0e1e"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
 <script src="screens/ui.js?v=13daffcf"></script>
+<script src="screens/dash.js?v=fd097882"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
 <script src="features/year.js?v=0c383449"></script>
@@ -509,7 +534,7 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="account/cloud.js?v=79bc2c4e"></script>
 <script src="screens/ux.js?v=81ec3d03"></script>
 <script src="core/metrics.js?v=9b0ea529"></script>
-<script src="features/debts.js?v=1c0610a2"></script>
+<script src="features/debts.js?v=cfb4d465"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=152cbc32"></script>

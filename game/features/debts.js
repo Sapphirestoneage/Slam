@@ -106,6 +106,7 @@ function dbPlan(c, order, extra) {
   list.sort(ORD[order] || ORD.avalanche);
   let month = 0,
     total = 0;
+  const series = [list.reduce((t, d) => t + d.left, 0)];
   while (list.some(d => d.left > 0.005) && month < 1200) {
     month++;
     let pool = extra || 0;
@@ -127,6 +128,12 @@ function dbPlan(c, order, extra) {
       pool -= p;
     }
     for (const d of list) if (d.left <= 0.005 && d.off === null) d.off = month;
+    series.push(
+      Math.max(
+        0,
+        list.reduce((t, d) => t + d.left, 0)
+      )
+    );
   }
   const done = list.every(d => d.left <= 0.005);
   return {
@@ -137,7 +144,31 @@ function dbPlan(c, order, extra) {
     debts: list,
     first: list[0] || null,
     paying: list.reduce((t, d) => t + d.pay, 0) + (extra || 0),
+    series /* the total still owed at the start and after each month (for the balance chart) */,
   };
+}
+/* THE REVERSE: the extra a month that clears every debt in `months` months or fewer, in this order.
+   The forward run is dbPlan. A search on whole dollars: the smallest extra whose run ends by then.
+   Returns { extra, months, interest } or null when no extra up to `cap` is enough. */
+function dbExtraFor(c, order, months, cap) {
+  months = Math.max(1, Math.round(months));
+  const ends = x => {
+    const p = dbPlan(c, order, x);
+    return p.months != null && p.months <= months;
+  };
+  let lo = 0,
+    hi = Math.max(10, cap || dbLive(c).reduce((t, o) => t + o.x.amt, 0));
+  if (ends(0)) return Object.assign({ extra: 0 }, dbPick(dbPlan(c, order, 0)));
+  if (!ends(hi)) return null;
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (ends(mid)) hi = mid;
+    else lo = mid;
+  }
+  return Object.assign({ extra: hi }, dbPick(dbPlan(c, order, hi)));
+}
+function dbPick(p) {
+  return { months: p.months, interest: p.interest };
 }
 function dbStatus(c) {
   const L = dbLive(c);
