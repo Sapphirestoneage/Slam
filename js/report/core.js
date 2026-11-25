@@ -1,0 +1,510 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Report a bug or idea: the one core for the web app and the game. A person taps Bug, Idea or Confusing, adds a note
+// and a picture if they want, and the report carries where they were: the screen name, the last 3 taps (the names of
+// the buttons, never what was typed), the device, the browser width and the app version. No money number goes with it.
+// A report is kept on the device first, then sent to the table public.reports (supabase/migrations/
+// 20261125190000_reports.sql). Until that table exists, it stays on the device and sends itself later.
+// The game has classic scripts: tools/game_report_build.mjs makes game/core/reportcore.js from this file.
+
+export const RP_TYPES = [
+  ['bug', 'Bug', 'Something does not work'],
+  ['idea', 'Idea', 'Something to add or change'],
+  ['confusing', 'Confusing', 'Not sure what to do here'],
+];
+export const RP_NOTE_MAX = 1000;
+export const RP_SHOT_MAX = 200000; // letters of the picture as text (about 150 KB): the same cap is in the database file
+export const RP_SHOT_KEEP = 3; // pictures kept on one device while they wait
+export const RP_KEEP = 20; // reports kept on one device
+export const RP_TAPS = 3;
+export const RP_STORE = 'slam_reports_v1';
+export const RP_TABLE = 'reports';
+export const RP_FILE = '20261125190000_reports.sql';
+export const RP_SAID = {
+  sent: 'Sent. Thank you.',
+  saved: 'Saved on this device. It sends itself when the report inbox is ready.',
+  fixed: "You reported this. It's fixed.",
+};
+
+/* A name is letters, digits and a few marks. Anything else (a dollar sign, a line break) goes. */
+export function rpName(s, max) {
+  return String(s == null ? '' : s)
+    .replace(/[^A-Za-z0-9 _:>./'-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max || 60);
+}
+/* The words on a button, with every digit taken out: a tap is the name of the button, never an amount. */
+export function rpLabel(s) {
+  return rpName(String(s == null ? '' : s).replace(/[$€£]?\d[\d,.]*%?/g, ' '), 40);
+}
+/* The last 3 taps, the newest last. */
+export function rpTap(list, name) {
+  const n = rpName(name, 40);
+  if (!n) return (list || []).slice(-RP_TAPS);
+  return (list || []).concat([n]).slice(-RP_TAPS);
+}
+export function rpTypeLabel(t) {
+  const r = RP_TYPES.find(x => x[0] === t);
+  return r ? r[1] : 'Report';
+}
+/* Phone, tablet or computer, the system and the browser, from the browser's own description of itself. */
+export function rpDevice(ua, width) {
+  const u = String(ua || ''),
+    w = Math.max(0, Math.round(+width || 0)),
+    tablet = /iPad|Tablet/i.test(u) || (/Android/i.test(u) && !/Mobile/i.test(u)),
+    phone = !tablet && /Mobi|iPhone|iPod|Android/i.test(u),
+    os = /iPhone|iPad|iPod/i.test(u)
+      ? 'iOS'
+      : /Android/i.test(u)
+        ? 'Android'
+        : /Windows/i.test(u)
+          ? 'Windows'
+          : /CrOS/i.test(u)
+            ? 'ChromeOS'
+            : /Mac OS X|Macintosh/i.test(u)
+              ? 'Mac'
+              : /Linux/i.test(u)
+                ? 'Linux'
+                : '',
+    pick = [
+      ['Edge', /Edg(?:e|A|iOS)?\/(\d+)/],
+      ['Opera', /OPR\/(\d+)/],
+      ['Samsung Internet', /SamsungBrowser\/(\d+)/],
+      ['Firefox', /(?:Firefox|FxiOS)\/(\d+)/],
+      ['Chrome', /(?:Chrome|CriOS)\/(\d+)/],
+      ['Safari', /Version\/(\d+)[\d.]* (?:Mobile\/\S+ )?Safari/],
+    ].find(p => p[1].test(u)),
+    kind = tablet ? 'tablet' : phone ? 'phone' : u ? 'computer' : '';
+  return {
+    device: [kind, os].filter(Boolean).join(', '),
+    browser: pick ? pick[0] + ' ' + u.match(pick[1])[1] : '',
+    width: w,
+  };
+}
+/* The app version of the game: one short code made from the content stamps of its scripts (the ?v= of each script
+   address in the page, written by tools/game_stamp.cjs). Any change of any script gives a new code. */
+export function rpVersion(stamps) {
+  const list = (stamps || []).filter(Boolean).slice().sort();
+  if (!list.length) return '';
+  let h = 0x811c9dc5;
+  const s = list.join('|');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return 'game-' + ('0000000' + h.toString(16)).slice(-8);
+}
+/* The app version of the web app: the day the server last changed the page (on GitHub Pages, the day of the publish). */
+export function rpWebVersion(lastModified) {
+  const d = new Date(lastModified || '');
+  return isNaN(d) ? 'web' : 'web-' + d.toISOString().slice(0, 10);
+}
+/* A picture is kept only when it is a small picture as text. */
+export function rpShotOk(s) {
+  return typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s) && s.length <= RP_SHOT_MAX;
+}
+export function rpId(rnd) {
+  const r = rnd || Math.random,
+    hex = n => Array.from({ length: n }, () => Math.floor(r() * 16).toString(16)).join('');
+  if (!rnd && typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return hex(8) + '-' + hex(4) + '-4' + hex(3) + '-a' + hex(3) + '-' + hex(12);
+}
+/* One report, ready to keep and to send. Returns null when no type was picked. */
+export function rpMake(o) {
+  const type = RP_TYPES.some(t => t[0] === o.type) ? o.type : null;
+  if (!type) return null;
+  const d = rpDevice(o.ua, o.width);
+  return {
+    id: o.id || rpId(),
+    type,
+    note: String(o.note == null ? '' : o.note)
+      .replace(/\s+\n/g, '\n')
+      .trim()
+      .slice(0, RP_NOTE_MAX),
+    app: o.app === 'web' ? 'web' : 'game',
+    screen: rpName(o.screen, 120),
+    taps: (o.taps || []).map(t => rpName(t, 40)).filter(Boolean).slice(-RP_TAPS),
+    width: d.width,
+    device: d.device,
+    browser: d.browser,
+    version: rpName(o.version, 40),
+    shot: rpShotOk(o.shot) ? o.shot : null,
+    made_at: o.now || new Date().toISOString(),
+  };
+}
+
+/* ---------- on the device ---------- */
+/* The list on the device: [{ row, state: 'saved' | 'sent' }], the newest first. */
+export function rpQueueAdd(q, row) {
+  let out = [{ row, state: 'saved' }].concat((q || []).filter(x => x && x.row && x.row.id !== row.id));
+  let shots = 0;
+  out = out.map(x => {
+    if (!x.row.shot) return x;
+    shots++;
+    return shots > RP_SHOT_KEEP ? { ...x, row: { ...x.row, shot: null }, shotDropped: true } : x;
+  });
+  while (out.length > RP_KEEP) {
+    const i = out.map(x => x.state).lastIndexOf('sent');
+    out.splice(i >= 0 ? i : out.length - 1, 1);
+  }
+  return out;
+}
+/* A report that was sent keeps its line on the device, without the picture. */
+export function rpQueueSent(q, id) {
+  return (q || []).map(x => (x.row.id === id ? { ...x, state: 'sent', row: { ...x.row, shot: null } } : x));
+}
+export function rpPending(q) {
+  return (q || []).filter(x => x && x.state !== 'sent');
+}
+export function rpLoad(ls) {
+  try {
+    const t = ls && ls.getItem(RP_STORE),
+      q = t ? JSON.parse(t) : [];
+    return Array.isArray(q) ? q.filter(x => x && x.row && x.row.id) : [];
+  } catch (e) {
+    rpErr(e, 'reportcore: rpLoad');
+    return [];
+  }
+}
+/* Keeps the list. When the device has no room, it tries again without the pictures. Returns what it kept. */
+export function rpKeep(ls, q) {
+  try {
+    ls.setItem(RP_STORE, JSON.stringify(q));
+    return q;
+  } catch (e) {
+    rpErr(e, 'reportcore: rpKeep');
+  }
+  const bare = q.map(x => (x.row.shot ? { ...x, row: { ...x.row, shot: null }, shotDropped: true } : x));
+  try {
+    ls.setItem(RP_STORE, JSON.stringify(bare));
+  } catch (e) {
+    rpErr(e, 'reportcore: rpKeep (2)');
+  }
+  return bare;
+}
+function rpErr(e, where) {
+  if (typeof report === 'function') report(e, where);
+}
+
+/* ---------- to the database ---------- */
+const rpHead = cfg => ({
+  apikey: cfg.key,
+  Authorization: 'Bearer ' + (cfg.token || cfg.key),
+  'Content-Type': 'application/json',
+});
+/* Sends one report. 'sent', or why it stays on the device: 'wait' (the table is not there yet), 'offline',
+   'later' (anything else). An account that is signed in sends it as its own; a visitor sends it with no owner. */
+export async function rpSend(row, cfg) {
+  if (!cfg || !cfg.url || !cfg.key || !cfg.fetch) return 'wait';
+  let r;
+  try {
+    r = await cfg.fetch(cfg.url + '/rest/v1/' + RP_TABLE, {
+      method: 'POST',
+      headers: { ...rpHead(cfg), Prefer: 'return=minimal' },
+      body: JSON.stringify(row),
+    });
+  } catch (e) {
+    rpErr(e, 'reportcore: rpSend');
+    return 'offline';
+  }
+  if (r.ok || r.status === 409) return 'sent';
+  let code = '';
+  try {
+    code = String(((await r.json()) || {}).code || '');
+  } catch (e) {
+    rpErr(e, 'reportcore: rpSend (2)');
+    code = '';
+  }
+  return r.status === 404 || code === 'PGRST205' || code === '42P01' ? 'wait' : 'later';
+}
+/* Sends each report that waits, the oldest first. Stops at the first one that cannot go. */
+export async function rpFlush(q, cfg) {
+  let out = q || [],
+    sent = 0,
+    state = 'sent';
+  for (const x of rpPending(out).reverse()) {
+    state = await rpSend(x.row, cfg);
+    if (state !== 'sent') break;
+    out = rpQueueSent(out, x.row.id);
+    sent++;
+  }
+  return { q: out, sent, state: rpPending(out).length ? state : 'sent' };
+}
+/* The reports of this account that the admin marked Fixed. Empty when nobody is signed in, or the table waits. */
+export async function rpFixedFetch(cfg) {
+  if (!cfg || !cfg.url || !cfg.key || !cfg.fetch || !cfg.token || !cfg.uid) return [];
+  try {
+    const r = await cfg.fetch(
+      cfg.url + '/rest/v1/' + RP_TABLE + '?select=id,type,screen,made_at,fixed_at&status=eq.fixed&owner=eq.' + encodeURIComponent(cfg.uid) + '&order=fixed_at.desc&limit=20',
+      { headers: rpHead(cfg) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d) ? d : [];
+  } catch (e) {
+    rpErr(e, 'reportcore: rpFixedFetch');
+    return [];
+  }
+}
+/* The fixed reports the person has not been told about yet. told is the list of ids already shown. */
+export function rpFixedNew(rows, told) {
+  const seen = told || [];
+  return (rows || []).filter(r => r && r.id && !seen.includes(r.id));
+}
+
+/* ---------- the admin inbox ---------- */
+/* The newest first. type: 'all', 'bug', 'idea' or 'confusing'. open: true leaves out the fixed ones. */
+export function rpInbox(rows, type, open) {
+  return (rows || [])
+    .filter(r => r && (!type || type === 'all' || r.type === type) && (!open || r.status !== 'fixed'))
+    .slice()
+    .sort((a, b) => (String(a.made_at) < String(b.made_at) ? 1 : String(a.made_at) > String(b.made_at) ? -1 : 0));
+}
+export function rpCounts(rows) {
+  const c = { all: 0, bug: 0, idea: 0, confusing: 0, open: 0 };
+  (rows || []).forEach(r => {
+    c.all++;
+    if (c[r.type] != null) c[r.type]++;
+    if (r.status !== 'fixed') c.open++;
+  });
+  return c;
+}
+/* A screen name of the game is "tab" or "tab > sheet". */
+export function rpWhere(screen) {
+  const p = String(screen || '')
+    .split('>')
+    .map(x => x.trim());
+  return { tab: p[0] || '', kind: p[1] || '' };
+}
+/* The address that opens the person's game at that screen (admin only; the database checks again). A report from
+   the web app opens that page. A report with no account has no game to open. */
+export function rpOpenHref(r) {
+  if (!r) return '';
+  if (r.app === 'web') {
+    const p = String(r.screen || '').split(' ')[0];
+    return /^[a-z0-9-]+\.html$/.test(p) ? '../' + p : '';
+  }
+  return r.owner ? './?as=' + encodeURIComponent(r.owner) + '&at=' + encodeURIComponent(r.screen || '') : '';
+}
+
+/* ---------- the picture ---------- */
+/* Makes the chosen picture small: at most 900 pixels on its long side, then lower quality until it fits the cap.
+   Returns the picture as text, or null when the browser cannot read the file. */
+export function rpShrink(file, doc) {
+  return new Promise(done => {
+    try {
+      const url = URL.createObjectURL(file),
+        img = new Image();
+      img.onload = () => {
+        try {
+          let side = 900,
+            out = null;
+          for (const q of [0.7, 0.55, 0.4, 0.3]) {
+            const k = Math.min(1, side / Math.max(img.naturalWidth, img.naturalHeight, 1)),
+              cv = doc.createElement('canvas');
+            cv.width = Math.max(1, Math.round(img.naturalWidth * k));
+            cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+            cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+            out = cv.toDataURL('image/jpeg', q);
+            if (rpShotOk(out)) break;
+            out = null;
+            side = Math.round(side * 0.8);
+          }
+          URL.revokeObjectURL(url);
+          done(out);
+        } catch (e) {
+          rpErr(e, 'reportcore: rpShrink (draw)');
+          done(null);
+        }
+      };
+      img.onerror = () => done(null);
+      img.src = url;
+    } catch (e) {
+      rpErr(e, 'reportcore: rpShrink');
+      done(null);
+    }
+  });
+}
+
+/* ---------- the sheet ---------- */
+/* One look for the three places (the game, the web app, the pages that stand alone). The colors come from the page. */
+export const RP_CSS = `
+.rp-btn{font:inherit;font-size:14px;font-weight:700;min-height:44px;min-width:44px;padding:8px 14px;border-radius:12px;border:2px solid var(--rp-line,#5b6b9a);background:transparent;color:var(--rp-text,inherit);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.18);white-space:nowrap}
+.rp-btn:focus-visible{outline:3px solid var(--rp-a,#5b8cff);outline-offset:2px}
+.rp-btn:active{transform:translateY(1px)}
+.rp-btn.rp-go{background:var(--rp-a,#2046d4);border-color:var(--rp-a,#2046d4);color:#fff}
+.rp-btn[disabled]{opacity:.55;cursor:default}
+.rp-btn[aria-pressed="true"]{background:var(--rp-a,#2046d4);border-color:var(--rp-a,#2046d4);color:#fff}
+.rp-back{position:fixed;inset:0;z-index:100000;background:rgba(4,8,24,.6);display:flex;align-items:flex-end;justify-content:center;padding:0}
+@media (min-width:600px){.rp-back{align-items:center;padding:20px}}
+.rp-box{width:100%;max-width:440px;max-height:92vh;overflow:auto;background:var(--rp-bg,#fff);color:var(--rp-text,#111);border:1px solid var(--rp-line,#5b6b9a);border-radius:16px 16px 0 0;padding:16px;display:flex;flex-direction:column;gap:12px;font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;box-sizing:border-box}
+@media (min-width:600px){.rp-box{border-radius:16px}}
+.rp-box *{box-sizing:border-box}
+.rp-box h2{font-size:20px;margin:0;font-family:inherit;color:inherit}
+.rp-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rp-types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rp-types .rp-btn{width:100%;padding:8px 4px}
+.rp-small{font-size:13px;color:var(--rp-muted,#5a6480);margin:0}
+.rp-box label{display:block;font-size:14px;font-weight:600;margin:0 0 4px;color:inherit}
+.rp-box textarea{width:100%;min-height:76px;padding:10px;border-radius:10px;border:2px solid var(--rp-line,#5b6b9a);background:var(--rp-in,transparent);color:inherit;font:inherit;resize:vertical}
+.rp-box textarea:focus{outline:none;border-color:var(--rp-a,#2046d4)}
+.rp-box details{border:1px solid var(--rp-line,#5b6b9a);border-radius:10px;padding:0 10px}
+.rp-box summary{cursor:pointer;font-size:14px;font-weight:600;min-height:44px;display:flex;align-items:center}
+.rp-box dl{margin:0 0 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
+.rp-box dt{color:var(--rp-muted,#5a6480)}.rp-box dd{margin:0;overflow-wrap:anywhere}
+.rp-shot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rp-shot img{max-width:72px;max-height:72px;border-radius:8px;border:1px solid var(--rp-line,#5b6b9a)}
+.rp-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.rp-said{font-weight:600;margin:0}
+.rp-solorow{display:flex;justify-content:flex-end;max-width:var(--rp-max,none);margin:0 auto;padding:8px 12px 0}
+.topbar .rp-web{min-height:44px;flex:none}
+@media print{.rp-btn.rp-open,.rp-back{display:none!important}}
+`;
+const rpEl = (doc, tag, attrs, kids) => {
+  const n = doc.createElement(tag);
+  Object.keys(attrs || {}).forEach(k => {
+    if (k === 'text') n.textContent = attrs[k];
+    else if (k.slice(0, 2) === 'on') n[k] = attrs[k];
+    else n.setAttribute(k, attrs[k]);
+  });
+  (kids || []).forEach(c => c && n.appendChild(c));
+  return n;
+};
+/* Puts the look in the page one time. theme: { bg, text, line, a, muted, in } as CSS values. */
+export function rpStyle(doc, theme) {
+  if (!doc.getElementById('rp-css')) {
+    const s = rpEl(doc, 'style', { id: 'rp-css' });
+    s.textContent = RP_CSS;
+    (doc.head || doc.documentElement).appendChild(s);
+  }
+  const t = theme || {},
+    root = doc.documentElement;
+  ['bg', 'text', 'line', 'a', 'muted', 'in'].forEach(k => {
+    if (t[k]) root.style.setProperty('--rp-' + k, t[k]);
+  });
+}
+/* The button "Report": outlined (secondary), 44 pixels high, a verb label. */
+export function rpButton(doc, label, onTap) {
+  return rpEl(doc, 'button', { type: 'button', class: 'rp-btn rp-open', 'data-rp': 'open', text: label || 'Report', onclick: onTap });
+}
+/* The one sheet. o: { screen, taps, width, device, browser, version, send(report) -> Promise<'sent' | other> }.
+   The person picks a type, may add a note and a picture, and taps Send report. */
+export function rpDialog(doc, o) {
+  const old = doc.getElementById('rp-dialog');
+  if (old) old.remove();
+  const S = { type: null, shot: null, busy: false },
+    back = rpEl(doc, 'div', { class: 'rp-back', id: 'rp-dialog' }),
+    close = () => {
+      back.remove();
+      doc.removeEventListener('keydown', key, true);
+      if (o.onClose) o.onClose();
+    },
+    key = e => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        close();
+      }
+    },
+    said = rpEl(doc, 'p', { class: 'rp-small', role: 'status', text: 'Pick one of the three first.' }),
+    go = rpEl(doc, 'button', { type: 'button', class: 'rp-btn rp-go', 'data-rp': 'send', disabled: '', text: 'Send report' }),
+    types = RP_TYPES.map(t =>
+      rpEl(doc, 'button', {
+        type: 'button',
+        class: 'rp-btn',
+        'data-rp': 'type',
+        'data-v': t[0],
+        'aria-pressed': 'false',
+        title: t[2],
+        text: t[1],
+        onclick: () => {
+          S.type = t[0];
+          types.forEach(b => b.setAttribute('aria-pressed', b.getAttribute('data-v') === S.type ? 'true' : 'false'));
+          go.removeAttribute('disabled');
+          said.textContent = t[2] + '.';
+        },
+      })
+    ),
+    note = rpEl(doc, 'textarea', { id: 'rp-note', rows: '3', maxlength: String(RP_NOTE_MAX), placeholder: 'Type it, or tap the mic on your keyboard and say it.' }),
+    file = rpEl(doc, 'input', { type: 'file', accept: 'image/*', class: 'rp-file', id: 'rp-file', tabindex: '-1', 'aria-hidden': 'true' }),
+    shotBox = rpEl(doc, 'div', { class: 'rp-shot' }),
+    shotSay = rpEl(doc, 'p', { class: 'rp-small', text: 'You choose the picture. It is made small and goes with your report. Only you and the person who runs SLAM can see it.' }),
+    drawShot = () => {
+      const kids = [
+        S.shot ? rpEl(doc, 'img', { src: S.shot, alt: 'The picture you chose' }) : null,
+        rpEl(doc, 'button', { type: 'button', class: 'rp-btn', 'data-rp': 'pick', text: S.shot ? 'Choose a different picture' : 'Add a picture', onclick: () => file.click() }),
+        S.shot
+          ? rpEl(doc, 'button', {
+              type: 'button',
+              class: 'rp-btn',
+              'data-rp': 'unpick',
+              text: 'Remove picture',
+              onclick: () => {
+                S.shot = null;
+                file.value = '';
+                drawShot();
+              },
+            })
+          : null,
+      ];
+      shotBox.replaceChildren(...kids.filter(Boolean));
+    };
+  file.onchange = async () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    const s = await rpShrink(f, doc);
+    S.shot = s;
+    drawShot();
+    if (!s) shotSay.textContent = 'That picture could not be read here. The report can go without it.';
+  };
+  go.onclick = async () => {
+    if (!S.type || S.busy) return;
+    S.busy = true;
+    go.setAttribute('disabled', '');
+    go.textContent = 'One moment';
+    const state = await o.send({ type: S.type, note: note.value, shot: S.shot });
+    box.replaceChildren(
+      rpEl(doc, 'h2', { text: state === 'sent' ? 'Thank you' : 'Kept safe' }),
+      rpEl(doc, 'p', { class: 'rp-said', role: 'status', 'data-rp': 'said', text: state === 'sent' ? RP_SAID.sent : RP_SAID.saved }),
+      rpEl(doc, 'p', { class: 'rp-small', text: 'It carries the screen you were on, so there is nothing more to explain.' }),
+      rpEl(doc, 'button', { type: 'button', class: 'rp-btn rp-go', 'data-rp': 'done', text: 'Done', onclick: close })
+    );
+  };
+  drawShot();
+  const facts = [
+      ['Screen', o.screen || 'This screen'],
+      ['Last taps', (o.taps || []).join(', ') || 'None yet'],
+      ['Device', [o.device, o.width ? o.width + ' wide' : ''].filter(Boolean).join(', ') || 'Not known'],
+      ['Browser', o.browser || 'Not known'],
+      ['App version', o.version || 'Not known'],
+    ],
+    dl = rpEl(doc, 'dl');
+  facts.forEach(f => {
+    dl.appendChild(rpEl(doc, 'dt', { text: f[0] }));
+    dl.appendChild(rpEl(doc, 'dd', { text: f[1] }));
+  });
+  const box = rpEl(doc, 'div', { class: 'rp-box', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'rp-title' }, [
+    rpEl(doc, 'div', { class: 'rp-row' }, [
+      rpEl(doc, 'h2', { id: 'rp-title', text: 'Report a bug or idea' }),
+      rpEl(doc, 'button', { type: 'button', class: 'rp-btn', 'data-rp': 'close', text: 'Close', onclick: close }),
+    ]),
+    rpEl(doc, 'p', { class: 'rp-small', text: 'One tap is enough. Where you were goes with it.' }),
+    rpEl(doc, 'div', { class: 'rp-types', role: 'group', 'aria-label': 'What kind' }, types),
+    said,
+    rpEl(doc, 'div', {}, [rpEl(doc, 'label', { for: 'rp-note', text: 'Anything to add? (optional)' }), note]),
+    rpEl(doc, 'div', {}, [rpEl(doc, 'label', { for: 'rp-file', text: 'A picture (optional)' }), file, shotBox, shotSay]),
+    rpEl(doc, 'details', {}, [
+      rpEl(doc, 'summary', { text: 'What goes with it' }),
+      dl,
+      rpEl(doc, 'p', { class: 'rp-small', style: 'margin-bottom:10px', text: 'The names of the last buttons you tapped, never what you typed. No money numbers.' }),
+    ]),
+    go,
+  ]);
+  back.appendChild(box);
+  back.onclick = e => {
+    if (e.target === back) close();
+  };
+  doc.addEventListener('keydown', key, true);
+  doc.body.appendChild(back);
+  types[0].focus();
+  return { close, el: back };
+}
