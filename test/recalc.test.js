@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import * as RC from '../js/math/recalc.js';
 
+const { RC_SCRIPTS_REVIEWED, rcScriptsFor, RC_MUST, RC_SCRIPTS } = RC;
 const { rcYm, rcAddMonths, rcMonthsBetween, rcMonthName, rcSpan, rcRoute, rcHoldExtra, rcWords, rcTriage, rcScript, rcClassOf, rcRefill, rcSafeLine, rcMonthState, rcAudit, RC_ORDER } = RC;
 
 test('months: add, between, names', () => {
@@ -58,6 +59,17 @@ test('the words of the card never blame', () => {
   const all = [w.title, w.line, w.next, rcWords(r, { what: 'Debt free' }).next, rcWords({ ...r, noDate: true, newYm: null }, {}).line].join(' ');
   assert.doesNotMatch(all, /mistake|failed|behind|off track/i);
   assert.equal(rcWords({ moved: false }), null);
+  assert.equal(w.win, false);
+});
+
+test('a date that moves sooner reads as a win: New route, and how much sooner', () => {
+  const s = rcRoute({ planAt: '2026-09-03', planMonths: 30, nowAt: '2026-11-25', months: 25 });
+  const w = rcWords(s, { what: 'Debt free' });
+  assert.equal(w.win, true); assert.equal(w.title, 'New route'); assert.equal(w.head, 'New route: 3 months sooner');
+  assert.equal(w.line, 'New route: 3 months sooner. Debt free was Mar 2029. From where you are today it is Dec 2028.');
+  // later keeps the calm words
+  const l = rcWords(rcRoute({ planAt: '2026-09-03', planMonths: 30, nowAt: '2026-11-25', months: 31 }), { what: 'Debt free' });
+  assert.equal(l.title, 'Recalculating'); assert.equal(l.win, false); assert.equal(l.head, null);
 });
 
 test('triage: the money goes down the order, and the first group that comes up short is named', () => {
@@ -78,8 +90,30 @@ test('triage: the money goes down the order, and the first group that comes up s
   assert.equal(rcTriage({ income: null, bills }), null);
   // a bill with no amount is open, and takes nothing
   assert.equal(rcTriage({ income: 100, bills: [{ name: 'Rent', cls: 'housing', amount: null }] }).open, 1);
-  assert.deepEqual(RC_ORDER.map(o => o[0]), ['housing', 'utilities', 'food', 'transport', 'minimums', 'rest']);
+  assert.deepEqual(RC_ORDER.map(o => o[0]), ['housing', 'utilities', 'food', 'health', 'childcare', 'transport', 'minimums', 'rest']);
+  assert.deepEqual(RC_MUST, ['housing', 'utilities', 'food', 'health', 'childcare']);
+  assert.equal(RC_ORDER.find(o => o[0] === 'childcare')[1], 'Childcare, if it lets you keep working');
   assert.equal(rcClassOf('Wants, travel, gifts'), 'rest');
+});
+
+test('health insurance, medicine and childcare are paid right after housing, utilities and food', () => {
+  assert.equal(rcClassOf('Health insurance'), 'health'); assert.equal(rcClassOf('Prescriptions'), 'health');
+  assert.equal(rcClassOf('Kids', 'Childcare and babysitting'), 'childcare', 'the line name decides inside the Kids category');
+  assert.equal(rcClassOf('Kids', 'Toys, birthdays, school supplies'), 'rest');
+  const bills = [{ name: 'Car', cls: 'transport', amount: 300 }, { name: 'Daycare', cls: rcClassOf('Kids', 'Daycare'), amount: 800 }, { name: 'Visa', cls: 'minimums', amount: 100 },
+    { name: 'Insurance', cls: rcClassOf('Health insurance'), amount: 400 }, { name: 'Rent', cls: 'housing', amount: 1500 }, { name: 'Groceries', cls: 'food', amount: 500 }];
+  const t = rcTriage({ income: 3300, bills });
+  assert.deepEqual(t.rows.map(r => r.name), ['Rent', 'Groceries', 'Insurance', 'Daycare', 'Car', 'Visa']);
+  assert.deepEqual(t.rows.map(r => r.paid), [1500, 500, 400, 800, 100, 0]);
+  assert.equal(t.firstShort, 'transport');
+});
+
+test('the phone scripts stay in the code for review and reach no screen while the switch is off', () => {
+  assert.equal(RC_SCRIPTS_REVIEWED, false, 'Eli has not reviewed the scripts yet (QUESTIONS 581). Turn this on only with that review.');
+  const t = rcTriage({ income: 100, bills: [{ name: 'Rent', cls: 'housing', amount: 900 }] });
+  assert.equal(rcScriptsFor(t), null);
+  assert.equal(rcScriptsFor(t, true).length, 1);
+  for (const [cls] of RC_ORDER) assert.ok(RC_SCRIPTS[cls]?.say.length, `${cls} has words to review`);
 });
 
 test('the emergency fund refill: the gap, the months and the month it is whole', () => {
@@ -122,6 +156,19 @@ test('the audit: cost then, cost over time, FI days, hours, repeats and the year
   // nothing known about the plan: the dollars then still show, the rest stays empty
   const B = rcAudit({ events });
   assert.equal(B.rows[0].later, null); assert.equal(B.rows[0].fiDays, null); assert.equal(B.tax, null); assert.equal(B.mistake.later, null);
+  assert.equal(A.measure, 'fiDays'); assert.equal(B.measure, null);
+});
+
+test('the guard: with a day of saving at zero or less there are no FI days, and hours of work stand in', () => {
+  const events = [{ id: 'a', kind: 'Late fee', amount: 40, tag: 'mistake', yearsAgo: 0.2 }];
+  for (const perDay of [0, -12, null]) {
+    const G = rcAudit({ events, realReturn: 0.05, years: 20, perDay, hourly: 25, yearIncome: 48000 });
+    assert.equal(G.rows[0].fiDays, null, `perDay ${perDay}`); assert.equal(G.mistake.fiDays, null);
+    assert.equal(G.measure, 'hours'); assert.equal(G.rows[0].hours, 1.6);
+    assert.ok(Math.abs(G.tax - 40 / 48000) < 1e-12, 'the mistake tax does not depend on saving');
+  }
+  assert.equal(rcAudit({ events, perDay: 0, hourly: null }).measure, null);
+  assert.equal(rcAudit({ events, perDay: 5, hourly: 25 }).measure, 'fiDays');
 });
 
 // ---------- one function for the web app and the game ----------

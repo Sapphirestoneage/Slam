@@ -109,7 +109,8 @@ function kitTabs(act, cur, list) {
   return `<div class="seg kittabs">${list.map(t => `<button class="${t[0] === cur ? "on" : ""}" data-a="${act}" data-v="${esc(String(t[0]))}">${esc(t[1])}</button>`).join("")}</div>`;
 }
 /* A SMALL CHART.
-   o.lines: a list of { pts: [[x, y]], dash, name }. o.mark: { x, label } draws a vertical line.
+   o.lines: a list of { pts: [[x, y]], dash, name, color, dashes }. color and dashes (a dash pattern, or ""
+   for a solid line) are optional: they tell three or more lines apart. o.mark: { x, label } draws a vertical line.
    o.zero draws the line y = 0. o.fx and o.fy write the axis values. */
 function kitChart(o) {
   const w = 320,
@@ -139,7 +140,7 @@ function kitChart(o) {
   const lines = o.lines
     .map(
       (l, i) =>
-        `<path d="${path(l.pts)}" fill="none" stroke="${i ? "var(--a3)" : "var(--sap)"}" stroke-width="2.5" ${l.dash || i ? 'stroke-dasharray="5 4"' : ""}/>`
+        `<path d="${path(l.pts)}" fill="none" stroke="${l.color || (i ? "var(--a3)" : "var(--sap)")}" stroke-width="2.5" ${l.dashes ? 'stroke-dasharray="' + l.dashes + '"' : l.dashes === "" ? "" : l.dash || i ? 'stroke-dasharray="5 4"' : ""}/>`
     )
     .join("");
   const zero =
@@ -151,7 +152,7 @@ function kitChart(o) {
       ? `<line x1="${X(o.mark.x)}" x2="${X(o.mark.x)}" y1="${T}" y2="${h - B}" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="${X(o.mark.x)}" cy="${Y(o.mark.y == null ? 0 : o.mark.y)}" r="4.5" fill="#fff"/><text x="${Math.min(w - 60, Math.max(L + 30, X(o.mark.x)))}" y="${T + 9}" text-anchor="middle">${esc(o.mark.label || "")}</text>`
       : "";
   const legend = o.lines.some(l => l.name)
-    ? `<div class="row wrap tiny muted" style="gap:10px">${o.lines.map((l, i) => (l.name ? `<span><span class="kitkey ${i ? "dash" : ""}"></span>${esc(l.name)}</span>` : "")).join("")}</div>`
+    ? `<div class="row wrap tiny muted" style="gap:10px">${o.lines.map((l, i) => (l.name ? `<span><span class="kitkey ${i ? "dash" : ""}"${l.color ? ` style="border-top:3px ${l.dashes ? (l.dashes === "2 3" ? "dotted" : "dashed") : "solid"} ${l.color}"` : ""}></span>${esc(l.name)}</span>` : "")).join("")}</div>`
     : "";
   return `<figure class="kitchart" style="margin:0"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(o.label || "Chart")}">${zero}${lines}${mark}<text x="${L - 4}" y="${T + 4}" text-anchor="end">${esc(fy(y1))}</text><text x="${L - 4}" y="${h - B}" text-anchor="end">${esc(fy(y0))}</text><text x="${L}" y="${h - 8}" text-anchor="start">${esc(fx(x0))}</text><text x="${w - Rt}" y="${h - 8}" text-anchor="end">${esc(fx(x1))}</text></svg>${legend}${o.caption ? `<figcaption class="tiny muted">${esc(o.caption)}</figcaption>` : ""}</figure>`;
 }

@@ -10,6 +10,7 @@ import { recalcOf, notesOf } from '../recalc.js';
 import { openCalmLetter } from './exercise-letter-ui.js';
 import { rcMonthName } from '../math/recalc.js';
 import { money } from '../format.js';
+import { soonPart } from './soon.js';
 
 const save = (ctx, patch) => ctx.store.setDoc('settings', { recalc: { ...notesOf(ctx.store.doc), ...patch } });
 const whenOf = iso => new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -18,17 +19,21 @@ const whenOf = iso => new Date(iso).toLocaleString('en-US', { month: 'short', da
 function routeCard(app, ctx, R, where) {
   const cards = where === 'debt' ? R.cards.filter(c => c.id === 'debt') : R.cards;
   if (!cards.length) return null;
-  const lead = cards[0];
-  return h('section.card.rc-card', { 'aria-label': 'Recalculating', 'data-rc': 'route' },
-    h('div.row-line', { style: { gap: '10px', alignItems: 'baseline' } }, h('span.label', {}, 'Recalculating'), h('span.muted.small', {}, `From where you are today, against the plan kept ${whenOf(R.kept.at)}`)),
+  const lead = cards[0], wins = cards.every(c => c.words.win);
+  const keepWin = c => S.button('Keep it as a win', { size: 'small', iconName: 'check', tip: 'Adds a win to this month, with the star on the calendar', onClick: () => {
+    ctx.store.add('win', { name: c.winName, values: { date: ctx.now().toISOString().slice(0, 10) } }, { type: 'Win' });
+    S.toast('Kept as a win. It is on this month\'s calendar.', { undo: () => ctx.store.undo() });
+  } });
+  return h(`section.card.rc-card${wins ? '.rc-win' : ''}`, { 'aria-label': wins ? 'New route' : 'Recalculating', 'data-rc': 'route' },
+    h('div.row-line', { style: { gap: '10px', alignItems: 'baseline' } }, h('span.label', {}, wins ? 'New route' : 'Recalculating'), wins ? h('strong.rc-win-head', {}, lead.words.head.replace(/^New route: /, '')) : null, h('span.muted.small', {}, `From where you are today, against the plan kept ${whenOf(R.kept.at)}`)),
     cards.map(c => h('div.rc-dates', {},
       h('div', {}, h('span.label', {}, c.id === 'debt' ? 'Debt free was' : 'Work optional was'), h('div.rc-date.rc-old', {}, c.words.was)),
       h('span.rc-arrow', { 'aria-hidden': 'true' }, '→'),
       h('div', {}, h('span.label', {}, 'Now'), h('div.rc-date', {}, c.words.is ?? 'No date yet')),
-      h('p.rc-line', {}, c.words.line))),
-    h('div.row-line.rc-turn', { style: { gap: '10px' } }, h('span.label', {}, 'Your next turn'), h('strong', {}, lead.words.next),
+      h('p.rc-line', {}, c.words.line, c.words.win ? (c.winKept ? h('span.tag.plain', { style: { marginLeft: '8px' } }, '★ Kept as a win') : h('span', { style: { marginLeft: '8px' } }, keepWin(c))) : null))),
+    h('div.row-line.rc-turn', { style: { gap: '10px' } }, h('span.label', {}, 'Your next turn'), h('strong', {}, (cards.find(c => !c.words.win) ?? lead).words.next),
       lead.id === 'debt' && lead.hold != null ? S.button(`Make ${money(lead.hold)} more a month the plan`, { size: 'small', onClick: () => { ctx.store.setDoc('settings', { debtExtra: (ctx.metrics().inputs.debtExtra ?? 0) + lead.hold }); S.toast(`${money(lead.hold)} more a month to debt is the plan now.`, { undo: () => ctx.store.undo() }); } }) : null,
-      where !== 'debt' && lead.id === 'debt' ? S.button('Open Debt payoff', { size: 'small', iconName: 'right', onClick: () => app.go('#/plan/debt-payoff') }) : null),
+      where !== 'debt' && lead.id === 'debt' && !lead.words.win ? S.button('Open Debt payoff', { size: 'small', iconName: 'right', onClick: () => app.go('#/plan/debt-payoff') }) : null),
     S.moreBlock(`rc:math:${where}`, () => h('div.stack.small', { style: { gap: '4px' } },
       h('span', {}, 'The old date is the one the plan gave on the day it was last kept (End session, Month end or Save snapshot).'),
       h('span', {}, 'The new date starts from today\'s balances, payments and spending. It never assumes you are where the old plan said you would be.'),
@@ -41,14 +46,15 @@ function triageCard(ctx, R) {
   const T = R.triage; if (!T) return null;
   return h('section.card.rc-card', { 'aria-label': 'When it won\'t all get paid', 'data-rc': 'triage' },
     h('div.row-line', { style: { gap: '10px', alignItems: 'baseline' } }, h('span.label', {}, 'When it won\'t all get paid'), h('strong', {}, `${money(T.income)} comes in and ${money(T.total)} is due: ${money(T.short)} more than the month has.`)),
-    h('p.muted.small', { style: { margin: '4px 0 8px' } }, 'Pay in this order. A roof, the lights, food and the way to work come before any lender.'),
+    h('p.muted.small', { style: { margin: '4px 0 8px' } }, 'Pay in this order. A roof, the lights, food, health cover and medicine, and childcare if it lets you keep working come first. Then the way to work, then lenders.'),
     h('ol.rc-order', {}, T.groups.map(g => h('li', {}, h('span.rc-name', {}, g.label), h('span.muted.small', {}, `${money(g.amount)} due`),
       h('span.rc-paid', {}, g.unpaid > 0.5 ? (g.paid > 0.5 ? `${money(g.paid)} now, ${money(g.unpaid)} to arrange` : `${money(g.unpaid)} to arrange`) : 'paid in full')))),
-    S.moreBlock('rc:scripts', () => h('div.stack', { style: { gap: '12px' } }, T.scripts.map(g => h('div.rc-script', {},
-      h('strong', {}, `${g.label}: ${g.script.who}`), h('ul', {}, g.script.say.map(line => h('li', {}, `"${line}"`))), h('span.muted.small', {}, g.script.note)))), { label: `What to say on the phone (${T.scripts.length})` }),
+    T.scripts ? S.moreBlock('rc:scripts', () => h('div.stack', { style: { gap: '12px' } }, T.scripts.map(g => h('div.rc-script', {},
+      h('strong', {}, `${g.label}: ${g.script.who}`), h('ul', {}, g.script.say.map(line => h('li', {}, `"${line}"`))), h('span.muted.small', {}, g.script.note)))), { label: `What to say on the phone (${T.scripts.length})` })
+      : soonPart({ id: 'rc-scripts', title: 'What to say on the phone', line: 'Word-for-word scripts for each call are on the way. Until then: call before the due date, say what you can pay, and ask for a payment plan.' }),
     S.moreBlock('rc:triage-math', () => h('div.stack.small', { style: { gap: '4px' } },
       h('span', {}, `Income this month: ${money(T.income)} (take-home, from Income).`), h('span', {}, `Due: ${money(T.total)} (your share of each Budget line, plus each debt's payment).`),
-      h('span', {}, 'The income goes to housing first, then utilities, food, transport, minimum payments, then the rest. Each gets what is left.'),
+      h('span', {}, 'The income goes to housing first, then utilities, food, health insurance and medicine, childcare if it lets you keep working, transport, minimum payments, then the rest. Each gets what is left.'),
       T.open ? h('span', {}, `${T.open} ${T.open === 1 ? 'line has' : 'lines have'} no amount yet and are not counted.`) : null), { label: 'Show the math' }));
 }
 

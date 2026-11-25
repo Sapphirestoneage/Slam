@@ -88,6 +88,9 @@ const junk = h => (h.replace(/data-v="[^"]*"/g, '').match(/.{40}(undefined|NaN|\
 /* Switches in screens/ux.js. HOME_MORE and ME_MORE: show all parts of the Home tab and the Me tab.
    UX_NOSAMPLE = false: the sample game shows with no welcome screen in front of it.
    BIG: no game script in this repository reads it. */
+/* The switch in core/soon.js. "now": an error that the game would cover with the card "Coming soon" is thrown
+   at once, so a test fails on a real defect. coming-soon.js sets it to "none" for its own checks. */
+SOON_AFTER = "now";
 BIG = true;
 HOME_MORE = true;
 ME_MORE = true;

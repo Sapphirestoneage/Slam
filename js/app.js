@@ -20,6 +20,7 @@ import { agendaPanel } from './ui/agenda-ui.js';
 import { walkButton, stopWalk, startSessionOne } from './ui/walk-ui.js';
 import { TABS, parseRoute, search, routeForPlace, tabRoute } from './nav.js';
 import { SCREENS, progressOf, personBar } from './screens.js';
+import { guardScreen, ERRORS } from './ui/soon.js'; // Coming soon: a screen that is not ready shows a calm card
 import { ownPlanPerson, setBothScreen, offersBoth, bothPreviewOn } from './registry/couples.js';
 import { startFastTrack, fastTrackLabel } from './ui/fasttrack-ui.js';
 import { keepPlace } from './ui/place.js';
@@ -539,7 +540,7 @@ const app = {
     // Batch 33 (finding 23): FOO, Scorecard, Transitions and Current vs Proposed follow the same switch, so it shows there too.
     const followsSwitch = planScreen || ['plan/foo', 'plan/scorecard', 'plan/transitions', 'plan/scenarios'].includes(`${tab.id}/${sub.id}`);
     const whose = this.hasClient && followsSwitch && (ownPlanPerson(this.store.doc) || bothPreviewOn(this.store.doc)) ? S.live(this.ctx, () => personBar(this.ctx)) : null;
-    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), whose, screen ? screen(this, this.ctx) : null); this.sectionLinks(); };
+    const draw = () => { this.chrome(); this.parkingDock(); clear($('main'), whose, guardScreen(screen, () => screen(this, this.ctx), `screen ${tab.id}/${sub.id}`)); this.sectionLinks(); };
     // A redraw of the same screen never loses your place (R165): scroll, list scroll and the control you were on.
     // Batch 20 (Rocket Surgery): a new screen opens at its top (a tab tap used to land half way down, where the last
     // screen was scrolled); Back and Forward return to where that screen was left.
@@ -581,6 +582,6 @@ startTypical(app); // batch 31: typical at your age on the money boxes (one hook
 app.applyPrefs();
 const last = app.prefs.clientId ? loadClient(adapter, app.prefs.clientId) : null;
 app.open(last, { save: false });
-window.slam = app; // for the console and the screenshot script
+window.slam = app; app.errors = ERRORS; // for the console and the screenshot script; slam.errors lists what the Coming soon card covered
 startTips(document.body); // B8: plain-language tooltips
 // B9: Report this is on every screen, in the top bar's More menu (batch 13: no floating button over the page).

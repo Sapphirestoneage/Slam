@@ -542,7 +542,9 @@
     ].join(" ");
     chk(
       "no em dash, no blame word and no red in the words",
-      !/—/.test(said) && !/mistake|failed|behind|off.track/i.test(said) && !/#f00|#ff0000|\bred\b/i.test(RP_CSS)
+      said.indexOf(String.fromCharCode(8212)) < 0 &&
+        !/mistake|failed|behind|off.track/i.test(said) &&
+        !/#f00|#ff0000|\bred\b/i.test(RP_CSS)
     );
   })().catch(e => chk("the test ran to its end", false, String(e && e.stack)));
 }

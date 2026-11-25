@@ -7,13 +7,14 @@
    INPUT       The profile: c.x.rc = { base, safe }. base = { at, df, fi, cash } is the plan as it was
                last kept: the months to debt-free and to financial independence on that day, and the
                cash. The open sheet (W.kind): rc. The taps of the player (the actions in OUTPUT).
-   OUTPUT      Functions: rcgStore, rcgNow, rcgBase, rcgBills, rcgCalc, rcgCard, rcgRow, rcSheet, rcBook.
+   OUTPUT      Functions: rcgStore, rcgNow, rcgBase, rcgBills, rcgCalc, rcgCard, rcgRow, rcgScripts,
+               rcSheet, rcBook.
                Parts of functions in other files: homeRcRow (home in ui.js), moneyTabRcRow (moneyTab in
-               ui.js), dbSheetRc (dbSheet in debts.js). Actions (ACT): rc, rckeep, rchold, rcspent,
-               rcsafeoff. Menu: "Recalculating: month check".
+               ui.js), dbSheetRc (dbSheet in debts.js). Actions (ACT): rc, rckeep, rcwin, rchold,
+               rcspent, rcsafeoff. Menu: "Recalculating: month check".
    DEPENDS ON  core/report.js, core/engine.js, core/recalc.js (the math, a copy of js/math/recalc.js of
                the main app), screens/ui.js, features/kit.js, features/debts.js (dbPlan, dbLive, dbPay),
-               features/reveal.js (homeRowAdd), features/exletter.js.
+               features/reveal.js (homeRowAdd), features/exletter.js, core/soon.js (soonPart).
    RULES       The words never blame the player. The game does not say that the player did something
                wrong, or that the player is late. It says "Recalculating", and it shows the new date.
                The new date starts from the numbers of today, not from where the old plan said the
@@ -59,19 +60,29 @@ function rcgBase(c, d) {
   return S.base;
 }
 /* The bills of one month for the triage. The five parts of the spending, and the debt payments. The debt payments
-   are inside "Fun and everything else" in the profile, thus this function takes them out of that part. */
+   are inside "Fun and everything else" in the profile, thus this function takes them out of that part.
+   Health insurance and medicine, and childcare that lets the player keep working, are in the must-pay tier (the
+   owner, 2026-11-25). The profile has no part for them. The player gives the two amounts by taps (c.x.rct). The
+   function takes health out of "Bills and subscriptions" and childcare out of "Fun and everything else". */
 function rcgBills(c) {
   const sp = (c.spends || []).filter(x => x.amt > 0);
   if (!sp.length) return [{ name: "Everything you spend", cls: "rest", amount: c.spend }];
   const pay = typeof dbLive === "function" ? dbLive(c).reduce((t, o) => t + dbPay(o.x).v, 0) : 0,
     fun = sp.find(x => x.k === "Fun and everything else"),
     carve = fun ? Math.min(pay, fun.amt) : 0,
+    bills = sp.find(x => x.k === "Bills and subscriptions"),
+    hv = kitValue(c, "rct", "health", 0),
+    cv = kitValue(c, "rct", "care", 0),
+    health = bills && hv.given ? Math.min(hv.v, bills.amt) : 0,
+    care = fun && cv.given ? Math.min(cv.v, fun.amt - carve) : 0,
     rows = sp.map(x => ({
       name: x.k,
       cls: RCG_CLS[x.k] || "rest",
-      amount: x === fun ? x.amt - carve : x.amt,
+      amount: x === fun ? x.amt - carve - care : x === bills ? x.amt - health : x.amt,
     }));
   if (carve > 0) rows.push({ name: "Debt payments", cls: "minimums", amount: carve });
+  if (health > 0) rows.push({ name: "Health insurance and medicine", cls: "health", amount: health });
+  if (care > 0) rows.push({ name: "Childcare", cls: "childcare", amount: care });
   return rows.filter(r => r.amount > 0);
 }
 /* All of Recalculating for one profile: the routes, the words, the triage, the refill, the safe line, the month. */
@@ -115,9 +126,10 @@ function rcgCalc(c, d) {
 /* The one calm card, as HTML. full is true on the sheet (with the buttons) and false in a row. */
 function rcgCard(X) {
   if (!X.cards.length) return "";
-  const lead = X.cards[0];
+  const lead = X.cards.find(k => !k.words.win) || X.cards[0],
+    wins = X.cards.every(k => k.words.win);
   return (
-    `<div class="tile stack rccard" style="gap:8px;border-left:4px solid var(--sapphire, #4a78d6)"><div class="eyebrow">Recalculating</div>` +
+    `<div class="tile stack rccard${wins ? " rcwin" : ""}" style="gap:8px;border-left:4px solid var(--sapphire, #4a78d6)"><div class="eyebrow">${wins ? "New route" : "Recalculating"}</div>${wins ? `<h2 class="glow" style="margin:0">${esc(X.cards[0].words.head.replace(/^New route: /, ""))}</h2>` : ""}` +
     X.cards
       .map(
         k =>
@@ -125,12 +137,14 @@ function rcgCard(X) {
       )
       .join("") +
     `<div class="small"><span class="tiny muted">Your next turn</span><br><b>${esc(lead.words.next)}</b></div>` +
+    (wins ? `<button class="primary wide" data-a="rcwin">Celebrate it, and keep the new date</button>` : "") +
     (X.hold !== null
       ? `<button class="primary wide" data-a="rchold" data-v="${X.hold}">Add ${money(X.hold)} a month to my debt plan</button>`
       : !X.triage && X.step && X.step.a
         ? `<button class="primary wide" data-a="${X.step.a}" data-v="${X.step.v == null ? "" : esc(String(X.step.v))}">${esc(X.step.l || "Go")}</button>`
         : "") +
-    `<button class="ghost wide slim" data-a="rckeep">Keep the new date as my plan</button></div>`
+    (wins ? "" : `<button class="ghost wide slim" data-a="rckeep">Keep the new date as my plan</button>`) +
+    `</div>`
   );
 }
 /* One slim row for Home, the Money tab and the debt plan. It shows only when something moved or the month is short. */
@@ -148,7 +162,7 @@ function rcgRow(c, d) {
       : X.triage
         ? "This month is " + money(X.triage.short) + " short. See the order to pay in"
         : "Cushion refill: " + money(X.refill.gap) + " to put back";
-  return `<button class="rowbtn bare homerow rcrow" data-a="rc"><span class="small"><b>Recalculating</b> · ${esc(say)}</span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn bare homerow rcrow" data-a="rc"><span class="small"><b>${k && k.words.win ? esc(k.words.head) : "Recalculating"}</b> · ${esc(say)}</span><span class="caret">›</span></button>`;
 }
 /* Part of home() in ui.js. One calm row under the top numbers. */
 function homeRcRow(h) {
@@ -212,6 +226,17 @@ function rcBook(c) {
   }
   return { title: "Recalculating", rows };
 }
+/* The phone scripts of the triage. While RC_SCRIPTS_REVIEWED is false (core/recalc.js), rcScriptsFor() returns null
+   and the player sees the shared "Coming soon" part (soonPart in core/soon.js). No script text is in the HTML. */
+function rcgScripts(T) {
+  const L = rcScriptsFor(T);
+  if (!L)
+    return soonPart(
+      "What to say on the phone",
+      "Word-for-word scripts for each call are on the way. Until then: call before the due date, say what you can pay, and ask for a payment plan."
+    );
+  return `<details class="math"><summary>What to say on the phone</summary><div class="inner small stack" style="gap:8px">${L.map(g => `<div><b>${esc(g.label)}: ${esc(g.script.who)}</b>${g.script.say.map(l => `<div>"${esc(l)}"</div>`).join("")}<div class="tiny muted">${esc(g.script.note)}</div></div>`).join("")}</div></details>`;
+}
 function rcSheet() {
   const c = C(),
     d = D || derive(c),
@@ -226,20 +251,34 @@ function rcSheet() {
   h += rcgCard(X);
   if (T)
     h +=
-      `<div class="tile stack rctriage" style="gap:6px"><div class="eyebrow">When it won't all get paid</div><div class="small"><b>${money(T.income)} comes in and ${money(T.total)} goes out: ${money(T.short)} more than the month has.</b></div><div class="tiny muted">Pay in this order. A roof, the lights, food and the way to work come before any lender.</div>` +
+      `<div class="tile stack rctriage" style="gap:6px"><div class="eyebrow">When it won't all get paid</div><div class="small"><b>${money(T.income)} comes in and ${money(T.total)} goes out: ${money(T.short)} more than the month has.</b></div><div class="tiny muted">Pay in this order. A roof, the lights, food, health cover and medicine, and childcare if it lets you keep working come first. Then the way to work, then lenders.</div>` +
       T.groups
         .map(
           (g, i) =>
             `<div class="row between small" style="gap:8px"><span>${i + 1}. <b>${esc(g.label)}</b> <span class="muted">${money(g.amount)}</span></span><span>${g.unpaid > 0.5 ? (g.paid > 0.5 ? money(g.paid) + " now, " : "") + money(g.unpaid) + " to arrange" : "paid in full"}</span></div>`
         )
         .join("") +
-      `<details class="math"><summary>What to say on the phone</summary><div class="inner small stack" style="gap:8px">${T.groups
-        .filter(g => g.unpaid > 0.5)
-        .map(g => {
-          const s = rcScript(g);
-          return `<div><b>${esc(g.label)}: ${esc(s.who)}</b>${s.say.map(l => `<div>"${esc(l)}"</div>`).join("")}<div class="tiny muted">${esc(s.note)}</div></div>`;
-        })
-        .join("")}</div></details></div>`;
+      rcgScripts(T) +
+      `<details class="math rctcare"><summary>Health cover, medicine and childcare</summary><div class="inner stack" style="gap:8px"><div class="small muted">These are paid right after home, bills and food. Give the amounts and they move up the order.</div>` +
+      kitAsk(
+        c,
+        "rct",
+        "health",
+        "Health insurance and medicine a month",
+        [0, 100, 200, 400, 600, 900].map(v => [v, money(v)]),
+        0,
+        { typed: true, help: "It comes out of Bills and subscriptions." }
+      ) +
+      kitAsk(
+        c,
+        "rct",
+        "care",
+        "Childcare a month, if it lets you keep working",
+        [0, 200, 500, 800, 1200, 1800].map(v => [v, money(v)]),
+        0,
+        { typed: true, help: "It comes out of Fun and everything else." }
+      ) +
+      `</div></details></div>`;
   if (F)
     h += `<div class="tile stack rcrefill" style="gap:6px"><div class="eyebrow">Cushion refill</div><div class="small"><b>${F.months !== null ? "Whole again by " + rcMonthName(F.ym) : money(F.gap) + " to put back"}</b></div><div class="small">Your cash was ${money(F.target)} and is ${money(F.balance)} today. It was used. That is what it is for.${F.months !== null ? " At " + money(F.monthly) + " left over a month: " + F.months + (F.months === 1 ? " month." : " months.") : " Nothing is left over to put back yet. The date shows when something is."}</div><button class="ghost wide slim" data-a="rckeep">It is back, or this is my plan now</button></div>`;
   if (X.state.hard && X.letter && mine)
@@ -273,7 +312,7 @@ function rcSheet() {
         " is the smallest extra amount a month, in steps of $25, that makes the debt plan end on the old date."
       : null,
     T
-      ? "The order: home, utilities and bills, food, getting around, debt payments, then the rest. Each gets what is left."
+      ? "The order: home, utilities and bills, food, health insurance and medicine, childcare if it lets you keep working, getting around, debt payments, then the rest. Each gets what is left."
       : null,
     T && (c.spends || []).length
       ? "Your debt payments are counted inside Fun and everything else, so they are taken out of it and paid before the rest."
@@ -302,6 +341,23 @@ Object.assign(ACT, {
     save();
     if (W && W.kind === "rc") drawSheet();
     else render();
+  },
+  /* A date moved sooner. This is a win: the game celebrates it (celebrate() in ui.js, the same screen as each other
+     win), and the new date becomes the kept plan. */
+  rcwin: () => {
+    const c = C(),
+      d = derive(c),
+      X = rcgCalc(c, d),
+      w = X.cards.filter(k => k.words.win);
+    if (!w.length) return;
+    const n = rcgNow(c, d);
+    rcgStore(c).base = { at: todayISO(), df: n.df, fi: n.fi, cash: n.cash };
+    save();
+    celebrate(
+      w[0].words.head,
+      w.map(k => (k.id === "debt" ? "Debt free" : "Work optional") + ": " + k.words.is + " (was " + k.words.was + ")"),
+      "From where you are today. This date is your plan now."
+    );
   },
   /* Add the extra amount to the debt plan. The old date comes back. */
   rchold: t => {

@@ -13,3 +13,4 @@ test/
 tools/
 game/x1.json
 game/x2.json
+game/core/withdraw.js

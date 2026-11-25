@@ -95,8 +95,8 @@ function mauSheet() {
     line = r =>
       [
         r.later !== null ? money(Math.round(r.later)) + " over time" : null,
-        r.fiDays !== null ? mauNum(r.fiDays) + " FI days" : null,
-        r.hours !== null ? mauNum(r.hours) + " hours of work" : null,
+        X.measure === "fiDays" && r.fiDays !== null ? mauNum(r.fiDays) + " FI days" : null,
+        X.measure === "hours" && r.hours !== null ? mauNum(r.hours) + " hours of work" : null,
       ]
         .filter(Boolean)
         .join(" · "),
@@ -132,6 +132,47 @@ function mauSheet() {
       h += `<div class="tile stack" style="gap:4px"><b class="small">Repeats</b>${X.repeats.map(k => `<div class="small">${esc(k.kind)}: ${k.count} times, ${money(k.cost)}. One fix here pays more than one time.</div>`).join("")}</div>`;
     if (X.untagged) h += `<div class="tiny muted">${X.untagged} with no tag. They are in neither total.</div>`;
   }
+  if (X.rows.length) {
+    const perDay = X.left > 0 ? (X.left * 12) / 365 : 0,
+      box = (label, lines) =>
+        `<details class="math"><summary>${label}</summary><div class="inner tiny stack" style="gap:4px">${lines
+          .filter(Boolean)
+          .map(l => `<div>${esc(l)}</div>`)
+          .join("")}</div></details>`;
+    h += box(
+      X.measure === "hours" ? "Show the math: hours of work" : "Show the math: FI days",
+      X.measure === "fiDays"
+        ? [
+            "FI days = the cost ÷ what you put away in a day.",
+            "A day of saving: " + money(X.left) + " left over a month × 12 ÷ 365 = " + cents(perDay) + ".",
+            "Tagged mistake: " +
+              money(X.mistake.cost) +
+              " ÷ " +
+              cents(perDay) +
+              " = " +
+              mauNum(X.mistake.fiDays) +
+              " FI days.",
+            "It is the days of saving that the events took. It is not a new date.",
+          ]
+        : X.measure === "hours"
+          ? [
+              "Nothing is left over to put away this month, so a day of saving is zero and FI days cannot be worked out.",
+              "Hours of work = the cost ÷ your real hourly wage.",
+              "Tagged mistake: " + money(X.mistake.cost) + " = " + mauNum(X.mistake.hours) + " hours of work.",
+            ]
+          : [
+              "FI days = the cost ÷ what you put away in a day.",
+              "Nothing is left over this month and you have no hourly wage now, so the screen shows dollars only.",
+            ]
+    );
+    h += box("Show the math: mistake tax", [
+      "Mistake tax = the events of the last 12 months that you tagged mistake ÷ one year of take-home pay.",
+      X.tax !== null
+        ? money(X.lastYear) + " ÷ " + money(c.take * 12) + " = " + (X.tax * 100).toFixed(1) + "%."
+        : "It shows when your pay is known.",
+      "Older events, and events tagged unavoidable, are not in it.",
+    ]);
+  }
   h += mathBox([
     "Cost then: the amount you gave.",
     X.years !== null
@@ -141,11 +182,6 @@ function mauSheet() {
         X.years +
         " years from today)."
       : "Over time: the amount grown at the return of your plan until work becomes optional. It shows when your plan has that date.",
-    X.left > 0
-      ? "FI days: the amount ÷ what you put away in a day (" + money(X.left) + " a month × 12 ÷ 365)."
-      : "FI days: the amount ÷ what you put away in a day. It shows when a month has money left over.",
-    "Hours of work: the amount ÷ your real hourly wage.",
-    "Mistake tax: the events of the last 12 months tagged mistake ÷ 12 months of take-home pay.",
     "Repeats: the same kind tagged mistake two times or more.",
   ]);
   h += `<div class="tiny muted">FI days ${kitInfo("mau_fidays")}</div><button class="ghost wide slim" data-a="mauoff">Turn the audit off</button>`;

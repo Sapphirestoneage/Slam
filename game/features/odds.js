@@ -10,7 +10,8 @@
                answer), c.x.odds (the answers). data/market.js. The open sheet (W.kind): odds.
    OUTPUT      Functions: oddsInputs, oddsYears, oddsRun, oddsCalc, oddsChanges, oddsRandom, oddsSolve,
                oddsPick, oddsTabs, oddsSheet, oddsBook. Actions (ACT): odds, oddstab. Menu: "Retirement odds".
-   DEPENDS ON  data/market.js, core/engine.js, screens/ui.js, features/retire.js (the engine adapter),
+   DEPENDS ON  data/market.js, core/engine.js, core/withdraw.js (the rules of "Compare the ways"),
+               screens/ui.js, features/retire.js (the engine adapter),
                features/kit.js. USES LATER, behind a typeof test: features/mix.js.
    RULES       All amounts are in today's dollars: the returns in the history data are after inflation,
                and the adapter turns the engine's numbers into today's dollars. A run "works" when the
@@ -56,24 +57,34 @@ function oddsYears() {
 }
 /* ONE RUN. rets is a list of [stocks, bonds] for each year from now. Before the stop age, the monthly money
    goes in. From the stop age, the method of the engine sets the spending each year, and the money that
-   Social Security, a pension and other income do not cover comes out. Returns if the money lasts. */
+   Social Security, a pension and other income do not cover comes out. Returns if the money lasts.
+   With P.way (a way of core/withdraw.js, for "Compare the ways"), the rule of that way sets the spending
+   (waySpend), its timing says when the money comes out (wayPay: the first day, each month or the last
+   day), and its way to hold money changes the return of the year (wayReturn). Each row of rets is then
+   [stocks, bonds, inflation, CAPE, dividend yield, bond yield], and the result has paid: the spending of
+   each year, what the way aimed to pay, and what was short. P.growth is the return of the plan. */
 function oddsRun(P, rets) {
   let p = P.inv,
     retBal = null,
     prior = 0,
     last = 0,
     out = null,
+    shortAge = null,
     strat = null;
-  const H = P.death - P.age;
+  const H = P.death - P.age,
+    way = P.way || null,
+    mem = {},
+    paid = way ? [] : null;
   for (let y = 0; y < H; y++) {
     const age = P.age + y,
-      r = P.stock * rets[y][0] + (1 - P.stock) * rets[y][1];
+      row = rets[y];
+    let r = P.stock * row[0] + (1 - P.stock) * row[1];
     if (age < P.ret) p = p * (1 + r) + P.monthly * 12;
     else {
       if (retBal == null) {
         retBal = p;
         prior = P.spend;
-        strat = retireStrategy(P.method, p > 0 ? P.spend / p : 0.04, false);
+        strat = retireStrategy(way ? "risk_based" : P.method, p > 0 ? P.spend / p : 0.04, false);
       }
       const income = P.now + (age >= 67 ? P.ss : 0) + (P.pen && age >= P.pen.age ? P.pen.amt : 0),
         st = {
@@ -90,18 +101,66 @@ function oddsRun(P, rets) {
           portfolioExpectedReturn: 0.05,
           portfolioVolatility: 0.12,
           portfolioEquityWeight: P.stock,
-        },
+        };
+      if (way) {
+        const before = y ? last : null,
+          start = p,
+          rule = waySpend(
+            way,
+            {
+              need: P.spend,
+              start,
+              k: age - P.ret,
+              age,
+              endAge: P.death - 1,
+              last: before,
+              infl: y ? rets[y - 1][2] : null,
+              cape: row[3],
+              stock: P.stock,
+              growth: P.growth || 0,
+              /* the one rule that the engine works out: keep the odds in a band */
+              risk: () => (start > 0 ? retireSpending(start, st, strat) : prior),
+            },
+            mem
+          ),
+          /* a way marked gross sets what comes out of the money: income adds to the spending */
+          w = way.gross ? rule.spend : Math.max(0, rule.spend - income),
+          spent = way.gross ? rule.spend + income : rule.spend;
+        if (way.hold)
+          r = wayReturn(
+            way,
+            { r, s: row[0], b: row[1], dy: row[4], by: row[5] },
+            { stock: P.stock, k: age - P.ret, last: before, start, w },
+            mem
+          );
+        const step = wayPay(p, w, r, way.timing || "start");
+        p = step.p;
+        prior = rule.spend;
+        paid.push({
+          age,
+          spend: step.short > 0.5 ? Math.max(0, spent - step.short) : spent,
+          aim: rule.aim,
+          short: step.short > 0.5 ? step.short : 0,
+          share:
+            way.gross && rule.aim > 0 ? Math.max(0, w - (step.short > 0.5 ? step.short : 0)) / rule.aim : undefined,
+        });
+        if (step.short > 0.5 && out == null) {
+          out = age + 1;
+          shortAge = age;
+        }
+      } else {
         /* with no money left, the need stays: what income does not cover cannot be paid */
-        spend = p > 0 ? retireSpending(p, st, strat) * (P.smile ? retireSmile(age, P.ret) : 1) : prior,
-        w = Math.max(0, spend - income);
-      prior = spend;
-      p = (p - w) * (1 + r);
-      if (p < 0 && out == null) out = age + 1;
+        const spend = p > 0 ? retireSpending(p, st, strat) * (P.smile ? retireSmile(age, P.ret) : 1) : prior,
+          w = Math.max(0, spend - income);
+        prior = spend;
+        p = (p - w) * (1 + r);
+        if (p < 0 && out == null) out = age + 1;
+      }
     }
     last = r;
     if (p < 0) p = 0;
   }
-  return { ok: out == null, end: p, out };
+  return { ok: out == null, end: p, out, paid, shortAge };
 }
 /* THE REPLAY OF REAL HISTORY: each start year with enough years after it (the years wrap when the plan is
    longer than the data). */

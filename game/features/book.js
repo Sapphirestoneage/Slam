@@ -30,6 +30,7 @@ const BOOK_PARTS = [
   pathsBook,
   simBook,
   tkoBook,
+  cmpBook,
   agesBook,
   stressBook,
   blocksBook,
