@@ -1019,7 +1019,8 @@ function ledRow(sec, i, x) {
   return h;
 }
 function ledRowBase(sec, i, x) {
-  return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(x.k)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret">›</span></span></button>`;
+  const nm = sec === "debts" && typeof debtName === "function" ? debtName(x) : x.k; /* mycards.js: the name of a card */
+  return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(nm)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret">›</span></span></button>`;
 }
 const LVN = [
   ["Amounts", "How much is in each one"],
@@ -2474,6 +2475,8 @@ const SEC = {
 };
 SEC.spends = ["cat", "Money going out", "s", SPEND_K, null];
 function rowEdit(sec, i) {
+  if (typeof rowEditCard === "function" && rowEditCard(sec, i))
+    return; /* mycards.js: a card line opens Your credit cards */
   const c = C();
   W = { kind: "row", sec, i, pad: null, o: moneyO(c) };
   sheet(() => {
@@ -2516,7 +2519,9 @@ function rowEdit(sec, i) {
             "It's called the APR. It's on your statement. 8% or more counts as expensive debt." +
               (x.apr && x.apr !== "?"
                 ? ""
-                : " Right now the game is treating this one as " + (x.high ? "8% or more." : "under 8%.")) +
+                : x.amt > 0
+                  ? " For now the game assumes " + (x.high ? "8% or more" : "under 8%") + ". Tap a rate to change it."
+                  : "") +
               (x.rate != null && bandOf(x.rate) === x.apr ? " You entered " + x.rate + "%." : "")
           ) + ratePad()
         : "") +
@@ -3191,6 +3196,7 @@ const ACT = {
       k = t.dataset.v,
       S = SEC[sec],
       dk = DEBT_KINDS.find(x => x[0] === k);
+    if (typeof rowAddCard === "function" && rowAddCard(sec, k)) return; /* mycards.js: the card questions */
     c[sec].push(sec === "debts" ? { k, amt: 0, high: dk ? dk[2] : false, s: false, was: 0 } : { k, amt: 0, s: false });
     if (S[4] && !c[S[4]].includes(k)) c[S[4]].push(k);
     afterMoney(c, D.realm, false);

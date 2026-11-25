@@ -86,7 +86,8 @@ function dbPlan(c, order, extra) {
     const x = o.x;
     return {
       i: o.i,
-      name: x.k,
+      name: typeof debtName === "function" ? debtName(x, c) : x.k /* mycards.js: each card by its name */,
+      end: typeof cardEndOf === "function" ? cardEndOf(x) : 999999 /* mycards.js: when a 0% ends */,
       bal: x.amt,
       apr: dbRate(x).v / 100,
       pay: dbPay(x).v,
@@ -98,7 +99,7 @@ function dbPlan(c, order, extra) {
   });
   const hp = d => (d.hassle != null && d.bal > 0 ? d.hassle / d.bal : -1),
     ORD = {
-      avalanche: (a, b) => b.apr - a.apr || a.bal - b.bal,
+      avalanche: (a, b) => b.apr - a.apr || a.end - b.end || a.bal - b.bal,
       snowball: (a, b) => a.bal - b.bal || b.apr - a.apr,
       hassle: (a, b) => hp(b) - hp(a) || b.apr - a.apr,
     };

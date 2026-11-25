@@ -166,6 +166,16 @@ const PATCH_NOTES = [
       "The web page How much home fits has the same four answers, from the same math.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Your credit cards, one by one",
+    l: [
+      "What you owe now has Your credit cards: one line for each card, with its own balance and rate. Tap a card to open it.",
+      "Add a card by taps: who issued it, whether you pay it off every month, the balance, and the rate. Exact rates like 6.66% work too.",
+      "A 0% card waits until its 0% ends, and shows what to pay a month to clear it in time.",
+      "Not ready to split? One total for all your cards still works. Each card you add sharpens it.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

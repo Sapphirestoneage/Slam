@@ -768,6 +768,7 @@ function migrate(c) {
   return n;
 }
 function syncDebt(c) {
+  if (typeof cardSync === "function") cardSync(c); /* mycards.js: paid-in-full cards, the 0% end, the rough total */
   c.debt = rsum(c.debts);
   c.high = c.debts.some(x => x.high && x.amt > 0) ? "yes" : "no";
   c.debts.forEach(x => {
@@ -851,10 +852,11 @@ function applyTypical(c) {
           : 2000,
     W = vk.reduce((x, k) => x + INV_W[k], 0);
   c.invs = vk.map(k => c.invs.find(x => x.k === k) || { k, amt: Math.round((V * INV_W[k]) / W / 500) * 500, s: false });
-  c.debts = c.debtKinds.map(k => {
-    const old = c.debts.find(x => x.k === k),
+  /* every line of a kind stays: a player can have several credit cards (mycards.js) */
+  c.debts = c.debtKinds.flatMap(k => {
+    const old = c.debts.filter(x => x.k === k),
       d = DEBT_KINDS.find(x => x[0] === k);
-    return old || { k, amt: d[1], high: d[2], s: false, was: d[1] };
+    return old.length ? old : [{ k, amt: d[1], high: d[2], s: false, was: d[1] }];
   });
   if (!s.match)
     c.match = !isEmployee(c) ? "no match offered" : c.accts.includes("Retirement plan at work") ? "yes" : "no";

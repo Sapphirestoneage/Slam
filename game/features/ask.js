@@ -103,7 +103,7 @@ function askSheet() {
     v = x.amt || 0,
     top =
       (typeof allocBar === "function" ? allocBar(c, k, rows) : "") +
-      `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
+      `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(k === "debt" && typeof debtName === "function" ? debtName(x, c) : x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
     back = i > 0 || st !== "amt" ? askBtn("askback", "Back one", "ghost slim") : "";
   w.sti = i;
   w.st = st;
