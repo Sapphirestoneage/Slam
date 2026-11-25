@@ -1376,6 +1376,7 @@ function drawSheetOnce() {
   if (typeof drawSheetUx === "function") drawSheetUx(); /* ux.js: the button "Back", the button "Look up a word" */
   if (typeof drawSheetNav === "function") drawSheetNav(); /* nav.js: the trail, and the row Back / Forward / Close */
   if (typeof drawSheetStars === "function") drawSheetStars(); /* stars.js: paint the canvas of the galaxy */
+  if (typeof drawSheetQuest === "function") drawSheetQuest(); /* questlog.js: the exact spot of a round */
 }
 /* CLOSE THE SHEET.
    closeSheet() is the full function. It calls each part by name.
@@ -1629,6 +1630,7 @@ const SETUP = [
   },
 ];
 function openSetup(mode) {
+  if (typeof openSetupQuest === "function" && openSetupQuest(mode)) return; /* questlog.js: back to the same question */
   const edit = mode === "edit",
     base = edit ? clone(C()) : newChar();
   if (edit) {

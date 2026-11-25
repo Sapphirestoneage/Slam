@@ -380,6 +380,12 @@ function cpDraw() {
   }
   const top = `<div class="row"><a class="back btn" href="./">‹ Back to the game</a><button data-a="out">Sign out</button></div>${roHatsHTML("coach", CP.roles, true)}`;
   if (!CP.roles.coach && !CP.roles.admin) {
+    /* roles.js: the route guard. A player who opens the coach page lands on Home. */
+    const to = typeof roGuardTo === "function" ? roGuardTo("coach", CP.roles) : "./";
+    if (to && typeof location !== "undefined" && location.replace) {
+      location.replace(to);
+      return;
+    }
     el.innerHTML =
       top +
       `<h1>Not a coach</h1><div class="card"><p>You are signed in as <b>${cpEsc(me)}</b>. This page works for an account with the coach role. The app owner turns that role on.</p></div>`;

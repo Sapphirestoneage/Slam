@@ -799,21 +799,158 @@ function menuSheet() {
   if (typeof menuSheetHats === "function") h = menuSheetHats(h); /* roles.js: the control "switch hat" */
   return h;
 }
+/* THE MENU (UX pass, phase 2): a search box, the last 3 tools used, then groups that open one at a time.
+   Each group has an icon and a count. A group for a role shows only to that role (roles.js). */
+const MENU_GROUPS = [
+  [
+    "money",
+    "💰",
+    "My money",
+    [
+      "quest",
+      "since",
+      "okay",
+      "elem",
+      "summary",
+      "play",
+      "safe",
+      "rc",
+      "ledger",
+      "vault",
+      "values",
+      "csp",
+      "audit",
+      "fork",
+      "book",
+      "onepage",
+      "sins",
+    ],
+  ],
+  ["people", "🏠", "People and home", ["people", "house", "fair", "jobs", "rolemap", "care", "kids"]],
+  [
+    "plans",
+    "🔀",
+    "Plans and what-ifs",
+    [
+      "moves",
+      "stratlib",
+      "paths",
+      "windfall",
+      "odds",
+      "stress",
+      "takeout",
+      "ages",
+      "sims",
+      "blocks",
+      "cdn",
+      "trips",
+      "career",
+      "offers",
+      "transit",
+      "drills",
+    ],
+  ],
+  [
+    "tools",
+    "🧮",
+    "Tools and calculators",
+    ["quick", "gig", "sign", "owed", "taxv", "cover", "mix", "study", "lever", "mult", "xray", "acwhy", "nxa"],
+  ],
+  ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew"]],
+  ["games", "🎲", "Games and quizzes", ["qz", "galaxy"]],
+  ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag"]],
+  ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
+  ["admin", "🛠️", "Admin", ["built", "testkit"], "admin"],
+];
+/* The rows a player may see: no add-on row that is off, no row of a role the account does not have. */
+function menuItems(r) {
+  return MENU.filter(m => (!m[4] || adOn(m[4])) && (typeof roMenuOk !== "function" || roMenuOk(m[1], r)));
+}
+/* The groups with their rows. A row that no group names goes to "Tools and calculators". Empty groups go. */
+function menuGroups(items, r) {
+  const named = {};
+  MENU_GROUPS.forEach(g => g[3].forEach(a => (named[a] = g[0])));
+  return MENU_GROUPS.filter(g => !g[4] || typeof roCan !== "function" || roCan(g[4], r))
+    .map(g => ({
+      id: g[0],
+      ico: g[1],
+      n: g[2],
+      role: g[4] || null,
+      items: items.filter(m => named[m[1]] === g[0] || (g[0] === "tools" && !named[m[1]])),
+    }))
+    .filter(g => g.items.length || g.role);
+}
+/* The rows that match the words of the search box, in the name or in the few words under it. */
+function menuFind(q, items) {
+  const w = String(q || "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!w.length) return [];
+  return items.filter(m => {
+    const t = (m[0] + " " + m[3]).toLowerCase();
+    return w.every(x => t.includes(x));
+  });
+}
+/* The last 3 tools the player opened from the menu that they can still see. */
+function menuRecent(items) {
+  const ok = {};
+  items.forEach(m => (ok[m[1]] = m));
+  return (Array.isArray(G.menuRecent) ? G.menuRecent : [])
+    .filter(a => ok[a])
+    .slice(0, 3)
+    .map(a => ok[a]);
+}
+function menuRow(m, due) {
+  return `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret">›</span>`}</button>`;
+}
 function menuSheetBase() {
   const c = C(),
     t = todayISO(),
-    due = c.lastDaily !== t || (c.payKnown && t >= c.payNext);
+    due = c.lastDaily !== t || (c.payKnown && t >= c.payNext),
+    items = menuItems(),
+    rec = menuRecent(items),
+    pages = { coach: ["Open the coach page", "coach"], admin: ["Open the admin page", "admin"] };
   return (
     head("Menu", "Everything else") +
-    `<div class="stack">${MENU.filter(m => !m[4] || adOn(m[4]))
+    `<div class="stack"><div class="field"><label class="small" for="mnfind">Find a tool</label><input type="search" id="mnfind" class="mnfind" placeholder="Find a tool..." autocomplete="off"></div><div id="mnres" class="stack" hidden></div><div id="mnall" class="stack">${
+      rec.length
+        ? `<div class="small muted">Recently used</div><div class="mnrecent">${rec.map(m => `<button class="mnrec" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}">${m[0]}</button>`).join("")}</div>`
+        : ""
+    }${menuGroups(items)
       .map(
-        m =>
-          `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret">›</span>`}</button>`
+        g =>
+          `<details class="mng" name="mng" data-g="${g.id}"><summary><span class="mngh"><span class="mnico" aria-hidden="true">${g.ico}</span><b>${g.n}</b><span class="pill mncount">${g.items.length + (pages[g.id] ? 1 : 0)}</span></span></summary><div class="stack mnrows">${g.items.map(m => menuRow(m, due)).join("")}${pages[g.id] ? `<button class="rowbtn menurow" data-a="hat" data-v="${pages[g.id][1]}"><span><b>${pages[g.id][0]}</b><div class="tiny muted">The ${g.id} page, in a new screen</div></span><span class="caret">›</span></button>` : ""}${g.id === "people" && !G.demo ? `<button class="rowbtn menurow" data-a="menugo" data-k="act" data-v="addperson"><span><b>Add another person</b><div class="tiny muted">A partner, a kid or someone you help</div></span><span class="caret">›</span></button>` : ""}</div></details>`
       )
-      .join("")}</div>
- ${!G.demo ? `<button class="ghost wide slim" data-a="menugo" data-k="act" data-v="addperson">Add another person</button>` : ""}`
+      .join("")}</div></div>`
   );
 }
+/* Typing in "Find a tool...": the matches show in place of the groups. The box itself is never drawn again. */
+function menuFindPaint(el) {
+  if (!el || typeof document === "undefined") return;
+  const res = document.getElementById("mnres"),
+    all = document.getElementById("mnall");
+  if (!res || !all) return;
+  const q = el.value || "",
+    hits = menuFind(q, menuItems());
+  res.hidden = !q.trim();
+  all.hidden = !!q.trim();
+  res.innerHTML = q.trim()
+    ? hits.length
+      ? hits.map(m => menuRow(m, false)).join("")
+      : `<div class="small muted">Nothing matches "${esc(q)}". Try one word, like debt or rent.</div>`
+    : "";
+}
+if (typeof document !== "undefined" && document.addEventListener)
+  document.addEventListener("input", e => {
+    if (e.target && e.target.id === "mnfind") {
+      try {
+        menuFindPaint(e.target);
+      } catch (x) {
+        report(x, "planner.js: menuFindPaint");
+      }
+    }
+  });
 function whoBtn() {
   const c = C(),
     nm = G.demo ? "Sample" : String(c.name || "You"),
@@ -1011,6 +1148,14 @@ Object.assign(ACT, {
   menugo: t => {
     const k = t.dataset.k,
       v = t.dataset.v;
+    /* roles.js: a row of a role that the account does not have goes to Home */
+    if (typeof roMenuOk === "function" && !roMenuOk(v)) {
+      closeSheet();
+      go("home");
+      return;
+    }
+    G.menuRecent = [v].concat((Array.isArray(G.menuRecent) ? G.menuRecent : []).filter(x => x !== v)).slice(0, 6);
+    if (typeof saveQuiet === "function") saveQuiet();
     closeSheet();
     if (k === "tab") go(v);
     else soonTap(v, t); /* soon.js: a menu row with no action shows "Coming soon" */
