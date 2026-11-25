@@ -66,31 +66,45 @@ export function rcHoldExtra(run, monthsWanted, { step = 25, max = 2000 } = {}) {
 export function rcWords(route, { what = 'Your date', hold = null, turn = null } = {}) {
   if (!route || !route.moved) return null;
   const was = rcMonthName(route.oldYm), is = rcMonthName(route.newYm);
+  // A date that moves sooner is a money win, and reads as one (Eli, Nov 25 2026). The calm words are for later.
+  if (!route.noDate && !route.later) {
+    const head = `New route: ${rcSpan(route.shift)} sooner`;
+    return { title: 'New route', win: true, head, line: `${head}. ${what} was ${was}. From where you are today it is ${is}.`, next: turn ?? 'Nothing to change. Keep doing what you are doing.', was, is };
+  }
   const line = route.noDate
     ? `${what} was ${was}. On today's numbers there is no date yet.`
     : `${what} was ${was}. From where you are today it is ${is}, ${rcSpan(route.shift)} ${route.later ? 'later' : 'sooner'}.`;
   const next = turn ?? (route.later || route.noDate
     ? (hold != null ? `$${hold.toLocaleString('en-US')} more a month brings ${was} back.` : 'Keep the usual payments this month. The new date is the plan now.')
     : 'Nothing to change. Keep doing what you are doing.');
-  return { title: 'Recalculating', line, next, was, is };
+  return { title: 'Recalculating', win: false, head: null, line, next, was, is };
 }
 
 // ---------- when it won't all get paid ----------
-// The order to pay in when the bills are more than the income (Eli, Nov 25 2026): a roof, the lights and water,
-// food, the way to get to work, the minimum payments, then the rest.
+// The order to pay in when the bills are more than the income (Eli, Nov 25 2026, with Eli's answer to QUESTIONS 581
+// the same day): a roof, the lights and water, food, then health insurance and medicine, then childcare if it lets
+// you keep working (these five are the must-pay tier), then the way to get to work, the minimum payments, the rest.
 export const RC_ORDER = [
-  ['housing', 'Housing'], ['utilities', 'Utilities'], ['food', 'Food'], ['transport', 'Transport'], ['minimums', 'Minimum payments'], ['rest', 'The rest'],
+  ['housing', 'Housing'], ['utilities', 'Utilities'], ['food', 'Food'], ['health', 'Health insurance and medicine'], ['childcare', 'Childcare, if it lets you keep working'],
+  ['transport', 'Transport'], ['minimums', 'Minimum payments'], ['rest', 'The rest'],
 ];
+export const RC_MUST = ['housing', 'utilities', 'food', 'health', 'childcare'];
 // A Budget category (or a line's own name) to its place in the order.
 const RC_CLASS = {
   housing: ['Rent or mortgage', 'Rent', 'Mortgage', 'Renters or home insurance', 'Renters insurance', 'Home insurance', 'Property tax', 'HOA'],
   utilities: ['Electric, gas, water', 'Internet, phone', 'Internet', 'Phone', 'Electric', 'Gas', 'Water', 'Heat'],
   food: ['Groceries', 'Groceries, dining out, coffee'],
+  health: ['Health insurance', 'Health insurance (not through work)', 'Prescriptions', 'Medicine', 'Medication'],
+  childcare: ['Childcare', 'Childcare and babysitting', 'Daycare', 'Day care', 'After-school care'],
   transport: ['Car insurance', 'Gas or charging, tolls, parking', 'Gas or charging', 'Tolls and parking', 'Car maintenance, registration', 'Transit, Uber', 'Transit', 'Car payment', 'Car loan'],
 };
-export function rcClassOf(name) {
-  const n = String(name ?? '').trim().toLowerCase();
-  for (const cls of Object.keys(RC_CLASS)) if (RC_CLASS[cls].some(x => x.toLowerCase() === n)) return cls;
+// name: the Budget category. line: the line's own name, looked at first (childcare is a line inside the Kids category).
+export function rcClassOf(name, line = null) {
+  for (const word of [line, name]) {
+    const n = String(word ?? '').trim().toLowerCase();
+    if (!n) continue;
+    for (const cls of Object.keys(RC_CLASS)) if (RC_CLASS[cls].some(x => x.toLowerCase() === n)) return cls;
+  }
   return 'rest';
 }
 // income: what comes in this month. bills: [{ name, cls, amount }] (cls from rcClassOf, or 'minimums' for a debt's
@@ -117,9 +131,15 @@ export function rcTriage({ income = null, bills = [] } = {}) {
     firstShort: firstShort ? firstShort.cls : null, open: rows.filter(r => r.amount == null).length };
 }
 // What to say on the phone. No phone numbers here: the number is on the bill or the back of the card.
+// NOT REVIEWED. Eli has not read these words yet (QUESTIONS 581), so no screen shows them: while
+// RC_SCRIPTS_REVIEWED is false, rcScriptsFor returns null and both apps show a "Coming soon" card in their place.
+// To ship them: Eli reads RC_SCRIPTS below, then this one switch goes to true and the game copy is rebuilt.
+export const RC_SCRIPTS_REVIEWED = false;
 export const RC_SCRIPTS = {
   housing: { who: 'Your landlord or mortgage servicer', say: ['I want to stay current, and this month I can pay {pay} of the {due} by the due date.', 'Can I pay the other {gap} by a date we agree on, with no late fee?', 'Can you send me that in writing?'], note: 'Call before the due date. A plan agreed early is easier to get than one asked for after.' },
   utilities: { who: 'The utility (the number on the bill)', say: ['My income dropped this month and I can pay {pay} of the {due}.', 'Do you have a payment plan or a hardship program I can apply for?', 'Will my service stay on while the plan is in place?'], note: 'Ask for the hardship or payment-plan desk by name.' },
+  health: { who: 'Your health insurer or pharmacy', say: ['I want to keep my cover. This month I can pay {pay} of the {due}.', 'Is there a grace period, and what date does it end?', 'Is there a lower-cost plan or a generic for this prescription?'], note: 'Ask what date cover would stop. That date is the one that matters.' },
+  childcare: { who: 'Your childcare provider', say: ['I need this care to keep working. This month I can pay {pay} of the {due}.', 'Can I pay the other {gap} over the next few weeks?', 'Do you know of a subsidy or a sliding scale I could apply for?'], note: 'Providers hear this often. Ask early, before the bill is due.' },
   food: { who: 'Food comes before the calls below', say: ['Food is paid before any lender. There is no call to make for this one.'], note: 'A local food bank fills a gap for a month with no cost to the plan.' },
   transport: { who: 'Your car lender or insurer', say: ['I need the car to get to work. This month I can pay {pay} of the {due}.', 'Can you move the due date, or put this payment at the end of the loan?', 'Will this be reported as late if I pay on the new date?'], note: 'Lenders call it a deferral or an extension.' },
   minimums: { who: 'The card issuer or lender (the number on the back of the card)', say: ['I have had a drop in income. This month I can pay {pay} toward the minimum of {due}.', 'Do you have a hardship plan that lowers the payment or the rate for a few months?', 'Can the late fee be waived, and how will this month be reported?'], note: 'Ask for the hardship department. Write down the name, the date and what was agreed.' },
@@ -131,6 +151,12 @@ export function rcScript(group) {
   const s = RC_SCRIPTS[group?.cls] ?? RC_SCRIPTS.rest;
   const fill = t => t.replace('{pay}', rcDollars(group.paid)).replace('{due}', rcDollars(group.amount)).replace('{gap}', rcDollars(group.unpaid));
   return { who: s.who, say: s.say.map(fill), note: s.note };
+}
+
+// The scripts for the groups that come up short, or null while the words wait for Eli's review.
+export function rcScriptsFor(triage, reviewed = RC_SCRIPTS_REVIEWED) {
+  if (!reviewed || !triage) return null;
+  return triage.groups.filter(g => g.unpaid > 0.5).map(g => ({ cls: g.cls, label: g.label, script: rcScript(g) }));
 }
 
 // ---------- the emergency fund refill ----------
@@ -173,7 +199,8 @@ export function rcMonthState({ routes = [], triage = null, refill = null, open =
 // events: [{ id, what, kind, amount, tag ('mistake', 'unavoidable' or null), yearsAgo }].
 // For each one: the cost then (amount); the cost over time (what that money would be worth by the end of the plan,
 // `years` from today, at the plan's return after inflation, in today's dollars); FI days (the days of saving it
-// took: the amount divided by what is put away in a day); and hours of work when the hourly pay is known.
+// took: the amount divided by what is put away in a day); and hours of work when the hourly pay is known. When a
+// day of saving is zero or less there are no FI days, and the screens show hours of work in their place (measure).
 // Totals by tag, the repeats (the same kind tagged mistake two times or more), and the mistake tax (the mistakes of
 // the last 12 months as a share of a year of take-home pay).
 export function rcAudit({ events = [], realReturn = null, years = null, perDay = null, hourly = null, yearIncome = null } = {}) {
@@ -182,16 +209,20 @@ export function rcAudit({ events = [], realReturn = null, years = null, perDay =
     const amount = e.amount ?? null;
     return { id: e.id, what: e.what, kind: e.kind ?? null, tag: e.tag ?? null, yearsAgo: e.yearsAgo ?? null, amount,
       later: amount == null ? null : grow(amount, e.yearsAgo),
-      fiDays: amount == null || !(perDay > 0) ? null : amount / perDay,
+      fiDays: amount == null || !(perDay > 0) ? null : amount / perDay, // no FI days when nothing is put away in a day (zero or less)
       hours: amount == null || !(hourly > 0) ? null : amount / hourly };
   });
   const sum = (list, k) => (list.some(r => r[k] == null) ? null : list.reduce((s, r) => s + r[k], 0));
-  const total = tag => { const mine = rows.filter(r => r.tag === tag && r.amount != null); return { count: mine.length, cost: mine.reduce((s, r) => s + r.amount, 0), later: sum(mine, 'later'), fiDays: sum(mine, 'fiDays'), hours: sum(mine, 'hours') }; };
+  // a measure that cannot be worked out is empty for the total too, also when no event has the tag (empty is not zero)
+  const can = { later: realReturn != null && years != null, fiDays: perDay > 0, hours: hourly > 0 };
+  const total = tag => { const mine = rows.filter(r => r.tag === tag && r.amount != null); return { count: mine.length, cost: mine.reduce((s, r) => s + r.amount, 0), later: can.later ? sum(mine, 'later') : null, fiDays: can.fiDays ? sum(mine, 'fiDays') : null, hours: can.hours ? sum(mine, 'hours') : null }; };
   const kinds = new Map();
   for (const r of rows) if (r.tag === 'mistake' && r.amount != null && r.kind) { const k = kinds.get(r.kind) ?? { kind: r.kind, count: 0, cost: 0 }; k.count += 1; k.cost += r.amount; kinds.set(r.kind, k); }
   const lastYear = rows.filter(r => r.tag === 'mistake' && r.amount != null && r.yearsAgo != null && r.yearsAgo < 1).reduce((s, r) => s + r.amount, 0);
   return { rows, mistake: total('mistake'), unavoidable: total('unavoidable'), untagged: rows.filter(r => r.tag == null).length, open: rows.filter(r => r.amount == null).length,
     repeats: [...kinds.values()].filter(k => k.count >= 2).sort((a, b) => b.cost - a.cost),
+    // which measure the screen shows next to the dollars: FI days, or hours of work when a day of saving is zero or less
+    measure: perDay > 0 ? 'fiDays' : hourly > 0 ? 'hours' : null,
     tax: yearIncome > 0 ? lastYear / yearIncome : null, lastYear };
 }
 // The kinds of money event the audit offers by tap.

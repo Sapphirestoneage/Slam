@@ -7,7 +7,7 @@
    INPUT       soonTap(name, t): name is the data-a value of the tapped button, t is the button.
                soonDraw(fn, where): fn returns the HTML of a sheet or a tab. soonRun(fn, where, el):
                fn draws something, el is the selector to put the card in when fn throws.
-   OUTPUT      7 functions. The tap "soonclose" (the button of the card) is handled here, not in ACT,
+   OUTPUT      8 functions. The tap "soonclose" (the button of the card) is handled here, not in ACT,
                thus the card can close when the actions themselves are damaged.
    DEPENDS ON  core/report.js. The browser loads this file second.
    USES LATER  Names from files that the browser loads later, each behind a typeof test: ACT, SH, W, tab,
@@ -24,6 +24,13 @@ let SOON_AFTER = "later",
 /* The card. It says what is true and what the player can do. No error text, no blame. */
 function soonHTML() {
   return `<div class="card stack soon" role="status"><div class="eyebrow">Coming soon</div><h2>This part is not ready yet</h2><div class="small muted">Nothing of yours changed, and the rest of the game works as before.</div><div class="row"><button class="primary" data-a="soonclose">Back to the game</button></div></div>`;
+}
+/* The same calm words for one part inside a screen that is built but waits (first use: the phone scripts of
+   Recalculating, until the owner has read them). A tag, the title of the part, and one line. No button. */
+function soonPart(title, line) {
+  const e = s =>
+    String(s == null ? "" : s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
+  return `<div class="tile small soonpart" role="note" style="border-style:dashed"><span class="pill">Coming soon</span> <b>${e(title)}</b><div class="tiny muted" style="margin-top:4px">${e(line)}</div></div>`;
 }
 /* The sheet with the card. */
 function soonSheet() {
