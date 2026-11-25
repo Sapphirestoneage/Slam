@@ -10,7 +10,7 @@ import { myShare } from './math/spending.js';
 import { layerSnapshot } from './math/layers.js';
 import { actualOf, instances, ymOf } from './month.js';
 import { CALM_LETTER, exerciseOf } from './exercises/calm-letter.js';
-import { rcRoute, rcHoldExtra, rcWords, rcMonthsBetween, rcYm, rcTriage, rcClassOf, rcScript, rcRefill, rcSafeLine, rcMonthState, rcAudit, RC_KINDS } from './math/recalc.js';
+import { rcRoute, rcHoldExtra, rcWords, rcMonthsBetween, rcYm, rcTriage, rcClassOf, rcScriptsFor, rcRefill, rcSafeLine, rcMonthState, rcAudit, RC_KINDS } from './math/recalc.js';
 
 export const notesOf = doc => doc.settings?.recalc ?? {};
 const keptPlan = doc => [...(doc.snapshots || [])].reverse().find(s => s.metrics && (s.metrics.debtFreeMonths != null || s.metrics.monthsToFi != null)) ?? null;
@@ -39,7 +39,7 @@ export function recalcOf(doc, ref, m, { now = new Date(), open = openThisMonth(d
   // The triage: every line that is yours this month, and each debt's payment, down the order.
   const x = m.inputs, mine = l => myShare(l, { roommates: x.roommates ?? 0 }).value ?? null;
   const lines = (x.typedLines || []).filter(l => l.amount != null && !x.dupOf?.[l.id] && l.status !== 'Not for me' && !['Debt', 'Retirement'].includes(l.draftt));
-  const bills = [...lines.map(l => ({ name: l.name || l.category || 'A line', cls: rcClassOf(l.category), amount: mine(l) })),
+  const bills = [...lines.map(l => ({ name: l.name || l.category || 'A line', cls: rcClassOf(l.category, l.name), amount: mine(l) })),
     ...(x.debts || []).filter(d => !d.inFull && (d.balance ?? 0) > 0 && d.payment != null).map(d => ({ name: `${d.name || d.type || 'Debt'} payment`, cls: 'minimums', amount: d.payment }))];
   // One total for the month: what goes out is take-home less the surplus, the same number The gap shows. When the
   // lines and the debts add up to less than that (a gut number with few lines), the rest is one row at the end.
@@ -47,7 +47,7 @@ export function recalcOf(doc, ref, m, { now = new Date(), open = openThisMonth(d
   const listed = bills.reduce((t, b) => t + (b.amount ?? 0), 0);
   if (out != null && out - listed > 0.5) bills.push({ name: 'Everything else in your spending number', cls: 'rest', amount: out - listed });
   const T = bills.length ? rcTriage({ income: x.takeHome ?? null, bills }) : null;
-  const triage = T && T.short > 0.5 ? { ...T, scripts: T.groups.filter(g => g.unpaid > 0).map(g => ({ ...g, script: rcScript(g) })) } : null;
+  const triage = T && T.short > 0.5 ? { ...T, scripts: rcScriptsFor(T) } : null; // scripts: null until Eli has reviewed the words (RC_SCRIPTS_REVIEWED)
   // With the triage on, the one next turn is the order to pay in, not an extra payment.
   if (triage) hold = null;
   const turn = triage ? 'Start with the order below: housing first. The dates settle once the month is covered.' : null;
@@ -77,6 +77,8 @@ export function recalcOf(doc, ref, m, { now = new Date(), open = openThisMonth(d
     const s = rcSafeLine({ cap: mine(safeRec), spent });
     if (s) safe = { ...s, id: safeRec.id, name: safeRec.name || safeRec.category || 'Fun' };
   }
+  // A date that moved sooner is a win. Keeping it adds a Win row (the calendar's stars); once kept, the button goes.
+  for (const c of cards) if (c.words.win) { c.winName = `${c.id === 'debt' ? 'Debt free' : 'Work optional'}: ${c.words.head.replace(/^New route: /, '')} (now ${c.words.is})`; c.winKept = (doc.records || []).some(r => r.kind === 'win' && r.name === c.winName); }
   const state = rcMonthState({ routes: [debt, fi], triage, refill, open });
   return { kept, cards, debt, fi, hold, triage, refill, safe, state, letter: exerciseOf(doc, CALM_LETTER.id),
     safeChoices: (x.typedLines || []).filter(l => l.amount != null && ['Wants', 'Other'].includes(l.draftt) && l.status !== 'Not for me').map(l => ({ id: l.id, name: l.name || l.category })) };
