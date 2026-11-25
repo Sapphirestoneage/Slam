@@ -2442,7 +2442,7 @@ function shareSheet() {
   sheet(
     () =>
       head("Share", "Scan to open the game") +
-      `<div class="qr">${window.QR_SVG || ""}</div><div class="small muted">${esc(window.QR_URL || "")}</div><div class="tiny muted">The page is private until you share it from its page on claude.ai. Do that first, or the code opens a locked page.</div><button class="primary wide" data-a="close">Close</button>`
+      `<div class="qr">${window.QR_SVG || ""}</div><div class="small muted">${esc(window.QR_URL || "")}</div><div class="tiny muted">Point a phone camera at the code, or send the address. It opens the first screen of SLAM, with Start. No account is needed to try it.</div><button class="primary wide" data-a="close">Close</button>`
   );
 }
 function backupSheet() {

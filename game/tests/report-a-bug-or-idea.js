@@ -336,6 +336,10 @@
         amReportsHTML().includes("waits for the database file of 2026-11-25") &&
         amReportsHTML().includes(RP_FILE)
     );
+    chk(
+      "the long name of the database file wraps on a phone",
+      /overflow-wrap:anywhere">This part waits for the database file of 2026-11-25/.test(amReportsHTML())
+    );
     AM.reports = [
       {
         id: "1",

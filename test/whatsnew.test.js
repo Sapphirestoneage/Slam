@@ -12,6 +12,13 @@ test('the web app reads the one list of the game, the newest first', async () =>
   assert.equal(list[0], globalThis.PATCH_NOTES.at(-1), 'the last entry of the file is shown first');
 });
 
+test('what landed on Nov 25 2026 is in the list: the launch run and the two runs next to it', async () => {
+  const titles = (await loadNotes()).map(e => e.t).join(' | ');
+  for (const k of ['front door', 'Founding Testers', 'Compare the ways', 'Export for Excel or Google Sheets', 'Privacy']) assert.ok(titles.includes(k), k);
+  const words = JSON.stringify(globalThis.PATCH_NOTES);
+  assert.ok(!/\b(mistake|failed|behind|off track|bug|broken)\b/i.test(words), 'no blame word');
+});
+
 test('the order and the date in plain words', () => {
   const a = { d: '2026-11-23', t: 'A' }, b = { d: '2026-11-25', t: 'B' }, c = { d: '2026-11-25', t: 'C' };
   assert.deepEqual(notesSorted([a, b, c]).map(e => e.t), ['C', 'B', 'A']);

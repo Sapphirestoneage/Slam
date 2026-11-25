@@ -10,7 +10,7 @@
                Supabase. The address of the page (a sign-in link that comes back from an email).
    OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, doorFireBtn, doorShow, doorHide,
                doorGate, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
-               doorEarly. The constant DOOR_LINK (the link for the slide and the QR code).
+               doorEarly, doorJustSaved, doorRedraw. The constant DOOR_LINK (the link for the slide and the QR code).
    DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton), account/trust.js (TRUST_LINE,
                TRUST_PAGE: the advice line and the privacy page). index.html loads both before this
                file.
@@ -23,7 +23,7 @@
                changed, so link marks such as ?ref= and ?as= stay for the files that read them.
                tools/qr_slam.py makes docs/qr-slam.png from DOOR_LINK; test/launch-link.test.js compares
                the link here, in the tool and in docs/LAUNCH-LINK.md.
-   STATE       DOOR (done, want, el, guest, shown).
+   STATE       DOOR (done, want, el, guest, shown, saved).
    ========================================================================= */
 const DOOR_LINK = "https://sapphirestoneage.github.io/Slam/game/";
 const DOOR = { done: null, want: "", el: null, guest: false, shown: false };
@@ -177,9 +177,28 @@ function doorGateBack() {
 /* supa.js calls this when a person is signed in. The landing goes away, and the game is no more a guest game. */
 function doorSigned() {
   doorHide();
+  const was = DOOR.guest;
   DOOR.guest = false;
   DOOR.want = "";
   if (doorGet("slam_guest")) doorPut("slam_guest", null);
+  if (was) {
+    DOOR.saved = true;
+    doorRedraw();
+  }
+}
+/* True after a visitor made an account in this visit: the answer sheet then says that the game is kept. */
+function doorJustSaved() {
+  return !!DOOR.saved;
+}
+/* The game of a visitor now belongs to an account. Draw the screen and the open sheet again, so that no row and
+   no button still offers to make an account. */
+function doorRedraw() {
+  try {
+    if (typeof render === "function" && typeof G !== "undefined") render();
+    if (typeof SH !== "undefined" && SH && typeof drawSheet === "function") drawSheet();
+  } catch (e) {
+    report(e, "door.js: doorRedraw");
+  }
 }
 /* The visitor with no account now has a game on this device. The landing does not show again here. */
 function doorKept() {

@@ -7,6 +7,7 @@ import { keyNumbers } from '../math/metrics.js';
 import * as S from '../ui/staples.js';
 import { debtList, spendingList, debtCharts } from '../ui/lists.js';
 import { money } from '../format.js';
+import { ymOf } from '../month.js';
 import { payoffMonths } from '../math/debt.js';
 
 const [ref, demo] = await Promise.all([
@@ -157,5 +158,5 @@ clear(document.getElementById('page'),
   section('Inputs', 'income', inputsCard()),
   section('Summary strip and money', 'goals', moneyCard()),
   visualsCard(),
-  S.recordList(ctx, spendingList(ref)),
+  S.recordList(ctx, spendingList(ref, { ym: ymOf() })), // the list names its month in its title, so it needs one
   section('When nothing is entered yet', 'taxes', emptiesCard()));

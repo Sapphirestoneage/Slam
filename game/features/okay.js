@@ -104,7 +104,10 @@ function okSheet() {
     `<div class="tile small"><b>Your one next step</b><div>${esc(o.next.t)}</div>${o.next.s ? `<div class="tiny muted">${esc(o.next.s)}</div>` : ""}</div>` +
     (guest
       ? `<button class="primary wide go" data-a="doorsave">Save my answer: make a free account</button><div class="tiny muted">Right now your game is on this device only. An account keeps it and takes it to your other devices.</div><button class="ghost wide" data-a="${o.next.a}" data-v="${o.next.v == null ? "" : o.next.v}">${esc(o.next.l || "Do the next step")}</button>`
-      : `<button class="primary wide go" data-a="${o.next.a}" data-v="${o.next.v == null ? "" : o.next.v}">${esc(o.next.l || "Do the next step")}</button>`) +
+      : (typeof doorJustSaved === "function" && doorJustSaved()
+          ? `<div class="banner small" data-fid="ok:saved">Your account is made, and this game is now kept in it.</div>`
+          : "") +
+        `<button class="primary wide go" data-a="${o.next.a}" data-v="${o.next.v == null ? "" : o.next.v}">${esc(o.next.l || "Do the next step")}</button>`) +
     `<button class="ghost wide" data-a="elem">Meet your character</button>` +
     `<details class="math"><summary>What this answer uses</summary><div class="inner tiny stack" style="gap:4px"><div>Cushion: your tap on "how long could you cover your bills", as months of typical spending. With your real cash and spending it becomes cash divided by a month of spending.</div><div>A $1,000 surprise: your own tap, yes or no.</div><div>In and out: typical take-home pay minus typical spending for your age, work and home, for one pay period.</div><div>Debt: the kinds you tapped. Cards, payday loans and the like count as a high rate.</div><div>Investing: your own tap.</div><div>Where that puts you: the first era whose step is not done yet.</div><div>Education and tools, not financial advice.</div></div></details>`
   );
