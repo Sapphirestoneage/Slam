@@ -1,6 +1,6 @@
 # Live Session Mode: notes for the next parts of the build
 
-Run "Live Session Mode (Nov 25 2026)". Parts 1 to 5 are built. This page is for the worker of each later part
+Run "Live Session Mode (Nov 25 2026)". Parts 1 to 7 are built. This page is for the worker of each later part
 and for the part "Tests, checks and report". It is not for the player.
 
 ## The switch
@@ -30,6 +30,10 @@ tables. Realtime: nothing to switch on with default settings; see the top of the
 | `game/account/livecoach.js` | The coach's card on `coach.html`. |
 | `game/account/livefill.js` | Parts 3 to 5, what one line means: the number reader, the fields, the topic, "Confirming", the cue words. No profile. |
 | `game/account/liveland.js` | Parts 3 to 5 on the profile: a value lands, protection, corrections, the handshake, what-ifs, the heard list, `lfAttach`. |
+| `game/account/livegame.js` | Part 6: the join to the client's SAVED game (`lgAttach`, `lgClient`, `lgCoach`, `lgFirst`). |
+| `game/account/livescreen.js` | Part 6: the two screens during the call, and the plan (`lsView`, `lsNext`, `lsNums`, `lsRecalc`, `lsPlan`, `livePartCoach`, `livePartClient`). |
+| `game/account/livereview.js` | Part 7: the review after End (`lrvCounts`, `lrvGroups`, `lrvApprove`, `lrvApproveGroup`, `lrvFix`, `lrvOut`, `lrvWhatif`, `livePartEnded`, `livePartClick`). |
+| `game/data/askwords.js` | The words of "one small question at a time" (ASK, ASK_NONE), for the game and for the card "Next question to ask". |
 
 Rules in `live.js`:
 
@@ -88,9 +92,9 @@ scripted lines (`game/tests/live-fill-*.js`). The numbers are in `LF`: a topic l
 (`TOPIC_MS`), a correction is a new number in 8 seconds (`FIX_MS`), a "Confirming" waits 10 seconds (`ASK_MS`),
 a yes that repeats a coach's line of the last 3 seconds is an echo (`ECHO_MS`).
 
-### NOT WIRED YET: the client's real game (for the worker of Part 6)
+### The client's real game (wired in Part 6: see "Parts 6 and 7" below)
 
-`session.html` holds no game. On the page `lfAttach(LR.R, { clock })` runs with no game, so each device only
+Before Part 6, `session.html` held no game. On the page `lfAttach(LR.R, { clock })` runs with no game, so each device only
 shows what the other device sends, and today nothing sends. To switch the fill on, the client's device calls
 `lfAttach(R, { game, clock })` with an adapter of the client's saved game:
 
@@ -259,6 +263,73 @@ each is in `game/tests/live-fill-number-reader.js`:
 Known weak points: "two hundred fifty thousand" is read as two numbers (so it is kept, not set). "in 2,000"
 written with no comma after "in" is refused as a year. The word lists are English only. A recognizer that
 writes "18 50" for "eighteen fifty" gives two numbers (kept, not set).
+
+## Parts 6 and 7: the screens and the review (as built Nov 25 2026)
+
+### The join to the saved game (`livegame.js`)
+
+- `session.html` now loads the game's own files that work with no game screen: `core/engine.js`, `core/recalc.js`,
+  `data/askwords.js`, `features/alloc.js`, `screens/dash.js`, `account/cloud.js` (`clSig`, `clMergePerson`),
+  `account/coachpage.js` (`cpGame`, `cpPack`, `cpSaveGame`). Their few lines that touch the game's menus (`ACT`,
+  `MENU`, `GLOSS`) run only when those exist. No function is copied onto the page.
+- `lrRoom` calls `lgAttach(R, { sb, uid, name, owner, store, clock, change })` before `R.join()`.
+  - The client's device (`lgClient`): reads the client's saved game; a new client gets `lgFirst(name)` (the shape of
+    `fresh()`, one `newChar` with the typed name, saved at once with "Share with my coach" on: `cpSaveGame` inserts
+    rows with `share_with_coach: true`). Each change of the call: `c.mod` (the stamp), a copy in the device store
+    (`slam_live_game_<uid>`), and `cpSaveGame` 0.8 seconds later (again each 15 seconds while the server is out of
+    reach). A copy left on the device by a reload is merged by the stamps (`clMergePerson`).
+  - The coach's device (`lgCoach`): reads the client's shared game; after End it reads it again and the review saves
+    each tap through `A.act(fn)`, which is `cpSaveGame` plus the mark `g.coachEdit` and one line `audit_write`.
+  - After a load the whole heard list goes to the other device once the room is joined (a reload is whole again).
+- What the page does NOT do: `afterMoney()` of the game (the snapshot of today and the badges). The game does it at
+  its next change of a money number. The totals are the game's own (`allocFillAll`).
+
+### The screens (`livescreen.js`)
+
+- The client's device works out the view (`lsView`: the profile by area, the four numbers, the next question, the
+  plan) after each thing heard and sends it with the fill signal; the coach's device shows what arrives, or its own
+  read of the shared game before the client's device is in the room.
+- The next question: `lsAskOrder(c)` is `sharpList(c)` of the game (plus the plain first question for debt and
+  investing when there are none), the words are `ASK` / `ASK_NONE`. A line is skipped when it is made real (Close or
+  Exact), set by a call (`h`), or heard in this call. The handshake card shows the words for the oldest firm Guess,
+  checked with the reader of the call (`lsConfirmSay`: "Confirming rent 1,850"); a rough Guess asks for a firm number.
+- The four numbers: free to spend (`freeToSpend`), next goal date (`goalSim`), net worth (`derive().nw`),
+  high-interest debt-free (`debtOutlook`), each with its mark, as stat tiles of `screens/dash.js`. When one moves:
+  one line with the words of Recalculating (`rcRoute`, `rcWords`: sooner is "New route", later is calm), 20 seconds.
+- The plan ("Show plan" after End, both screens): `ERAS[derive(c).era]`, the first 3 of `candidates()`, and
+  `paySuggest()` for the next payday, each with the Guess mark when the plan rests on a Guess.
+
+### The review (`livereview.js`)
+
+- Stored: `c.x.live.review[itemId] = { st: "ok" | "fixed" | "out", by, at, v, was, how, back, gone, quote, type, link,
+  with }`; `rows[rowKey].out` and `marks[fieldId].out = { by, at }` after "Leave it out". Compatibility: new keys only,
+  added Nov 25 2026; a profile without them reads as "nothing reviewed"; nothing was renamed or removed.
+- Approve writes who and when only. A fix lands through `lfPut` as a Guess (never Close, never Exact), and only where
+  the call may set a value (`lfOpen`). "Leave it out" puts a row back to `rows[rowKey].base` when the row still holds
+  the amount of the call (a row the call added is taken away again; a game's guess row is then re-fitted by the
+  game's own `allocFillAll`, as any guess row is). The quote stays in the record and in the heard list.
+
+## For Parts 8 and 9 (where they plug in)
+
+- **The AI pass and the Samsung file go into the SAME review.** Put each proposed value as one item of
+  `c.x.live.heard` (`lfItem` shape) with `src: "ai"` or `src: "file"`, `st: "kept"`, `key`, `label`, `area`, `v`, `show`,
+  `quote` (the words it came from), `why` ("Proposed by the AI pass"), `sid` of the session. `lrvSource` already says
+  "the AI pass" / "the Samsung file"; `lrvGroups` puts them in their area, not sure first; Approve marks them; "This is
+  right" does NOT set the value (a kept item has no value on the profile): a proposed value lands only by the fix
+  "Use a number they said" (add the proposed number to `marks[key].all`, or give `lrvChoices` a `pick` from the item),
+  so nothing applies without the coach. A proposed what-if type: `lfWhatifSuggest(c, id, type, "ai")`; "Approve all"
+  then sets it (`lrvApprove`). Session notes and the next-call agenda: a new card in `lrvReviewHTML`, above "By area".
+  The button "Drop in your recording's text file" goes in `lrvReviewHTML` under the summary line.
+- **"Delete this transcript"** (Part 9): after the review, in `lrvReviewHTML` (the coach) and in `lrvClientEndHTML`
+  (the client), one tap with a confirm. Transcript text is kept in these places, and the delete must clear each:
+  1. the table `live_lines` (needs a delete right or a function for the two members: none exists yet);
+  2. the device store of each side: `lvBufPack` under the session key (lines that wait), and `slam_live_game_<uid>`
+     (a copy of the profile while a save waits);
+  3. the client's saved game: `c.x.live.heard[].quote` and `.answer.quote`, `c.x.live.marks[].quote` and
+     `.all[].quote`, `c.x.live.whatifs[].quote`, `c.x.live.review[].quote`. Clearing the quotes must keep the values,
+     the levels and the records (who, when): blank the text, do not delete the items;
+  4. the Realtime channel keeps nothing.
+- Coach-side reminder after the AI pass ("Delete the recording from your phone"): under the drop-in button.
 
 ## What a real dry run must check (not possible from the build machine)
 

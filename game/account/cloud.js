@@ -488,18 +488,20 @@ function menuSheetCloud(h) {
 function backupSheetCl() {
   return `<div class="banner small"><b>Your game saves itself to your account</b>, every time you tap. Open this page on another device while signed in and everyone is there. <span class="tiny muted" data-cloud>${esc(clStatus())}</span></div>`;
 }
-(() => {
-  const _b = ACT.backup;
-  ACT.backup = t => {
-    _b(t);
-    const inner = SH;
-    SH = function () {
-      return inner().replace(/(<div class="field">)/, backupSheetCl() + "$1");
+/* session.html loads this file with no game screens (no ACT, MENU): the menu parts below are for the game page */
+if (typeof ACT !== "undefined")
+  (() => {
+    const _b = ACT.backup;
+    ACT.backup = t => {
+      _b(t);
+      const inner = SH;
+      SH = function () {
+        return inner().replace(/(<div class="field">)/, backupSheetCl() + "$1");
+      };
+      drawSheet();
     };
-    drawSheet();
-  };
-})();
-const _mi = MENU.findIndex(m => m[1] === "backup");
+  })();
+const _mi = typeof MENU !== "undefined" ? MENU.findIndex(m => m[1] === "backup") : -1;
 if (_mi >= 0) {
   const m = MENU.splice(_mi, 1)[0];
   m[0] = "Backup copy";
@@ -507,21 +509,22 @@ if (_mi >= 0) {
   MENU.splice(MENU.length - 1, 0, m);
 }
 
-(() => {
-  const _rm = ACT.prmyes;
-  ACT.prmyes = t => {
-    const p = W && G.chars[W.rm];
-    if (p && G.chars.length > 1) {
-      G.gone = (G.gone || []).filter(n => n !== p.name).concat([p.name]);
-    }
-    _rm(t);
-  };
-  const _pp = ACT.people;
-  ACT.people = t => {
-    _pp(t);
-    clCheck();
-  };
-})();
+if (typeof ACT !== "undefined")
+  (() => {
+    const _rm = ACT.prmyes;
+    ACT.prmyes = t => {
+      const p = W && G.chars[W.rm];
+      if (p && G.chars.length > 1) {
+        G.gone = (G.gone || []).filter(n => n !== p.name).concat([p.name]);
+      }
+      _rm(t);
+    };
+    const _pp = ACT.people;
+    ACT.people = t => {
+      _pp(t);
+      clCheck();
+    };
+  })();
 if (typeof window !== "undefined" && document && document.getElementById && document.getElementById("app")) {
   setTimeout(clStart, 0);
   try {

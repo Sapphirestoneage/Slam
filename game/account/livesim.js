@@ -10,7 +10,8 @@
    OUTPUT      Functions: simClock, simStore, simWake, simId, simSpeech, simHub, simDb, simPair,
                simScript, simGame, simScriptFill, simSb.
    DEPENDS ON  account/live.js, account/liveio.js (simPair makes two lioRoom controllers). With o.game,
-               simPair also needs account/livefill.js and account/liveland.js (lfAttach).
+               simPair also needs account/livefill.js and account/liveland.js (lfAttach); with o.sb, also
+               account/livegame.js (lgAttach) and what it needs.
                session.html loads this file. The tests load it by themselves.
    RULES       simDb follows the rules of supabase/migrations/20261125210000_live_sessions.sql: a link
                works one time and for 7 days, only a coach makes a link, only the two members read a
@@ -305,7 +306,7 @@ function simDb(clock, opt) {
   return S;
 }
 /* Two devices in one session, each with its own controller and its own stand-ins. o: { clock, db, hub, sid,
-   coach, client, coachCan, clientCan, change }. Gives { coach, client }: each one is { R, speech, wake,
+   coach, client, coachCan, clientCan, change, sb, name, game }. Gives { coach, client }: each one is { R, speech, wake,
    store }. A store can be passed in again (o.stores) to stand for a reload of the page. */
 function simPair(o) {
   const one = (side, uid, can) => {
@@ -329,8 +330,22 @@ function simPair(o) {
     return dev;
   };
   const P = { coach: one("coach", o.coach, o.coachCan), client: one("client", o.client, o.clientCan) };
-  /* o.game (simGame): the client's device holds the game and fills it; the coach's device shows the list */
-  if (o.game && typeof lfAttach === "function") {
+  /* o.sb (simSb): each device is joined to the saved game the way session.html does it (lgAttach in
+     account/livegame.js): the client's device loads, fills and saves the client's game; the coach's device
+     reads it. o.name: the name typed on the invite screen.
+     o.game (simGame): the client's device holds the game and fills it; the coach's device shows the list */
+  if (o.sb && typeof lgAttach === "function") {
+    lgAttach(P.client.R, {
+      sb: o.sb.as(o.client),
+      uid: o.client,
+      name: o.name || "Sam",
+      store: P.client.store,
+      clock: o.clock,
+      change: o.change,
+    });
+    lgAttach(P.coach.R, { sb: o.sb.as(o.coach), owner: o.client, clock: o.clock, change: o.change });
+  } else if (o.game && typeof lfAttach === "function") {
+    P.client.R.game = o.game;
     lfAttach(P.client.R, { game: o.game, clock: o.clock });
     lfAttach(P.coach.R, { clock: o.clock });
   }

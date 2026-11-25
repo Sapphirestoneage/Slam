@@ -30,13 +30,21 @@
 const LG_KEY = "slam_live_game_"; /* + the id of the account: the profile of the call, kept on the device */
 const LG_SAVE_MS = 800; /* a change goes to the account this long after the last change */
 const LG_RETRY_MS = 15000; /* a save that did not go through is sent again */
+const LG_LINK_TRIES = 60; /* after a load, wait this many half seconds for the live link before the list goes out */
 
 /* The first game of a new client: the shape of fresh() in screens/ui.js, with one new person and no sample
    people. tests/live-game-join.js compares the keys with fresh(), so the two cannot drift apart. */
 function lgFirst(name) {
   return {
     v: 4,
-    chars: [newChar({ name: String(name || "").trim().slice(0, 60) || "You" })],
+    chars: [
+      newChar({
+        name:
+          String(name || "")
+            .trim()
+            .slice(0, 60) || "You",
+      }),
+    ],
     active: 0,
     house: { share: "No one" },
     gamer: false,
@@ -111,7 +119,12 @@ function lgClient(o) {
     A.g = r.g || lgFirst(o.name);
     let c = lgPerson(A.g);
     if (!c) {
-      c = newChar({ name: String(o.name || "").trim().slice(0, 60) || "You" });
+      c = newChar({
+        name:
+          String(o.name || "")
+            .trim()
+            .slice(0, 60) || "You",
+      });
       A.g.chars.push(c);
       A.g.active = A.g.chars.length - 1;
     }
@@ -295,9 +308,18 @@ function lgAttach(R, o) {
     R.tell({ k: "fill", all: R.fill.heard, n: R.fill.n });
     R.fire("fill", { all: R.fill.heard, n: R.fill.n, here: true });
   };
+  /* the list goes to the other device when the live link is open: the load can end before R.join() opened it
+     (R.room is set by R.join after the channel opened; R.link alone is true before that) */
+  let tries = 0;
+  const wholeWhenLinked = () => {
+    if (R.closed) return;
+    if ((R.room && R.link) || tries >= LG_LINK_TRIES) return whole();
+    tries++;
+    o.clock.set(wholeWhenLinked, 500);
+  };
   A.ready = A.load().then(
     ok => {
-      whole();
+      wholeWhenLinked();
       return ok;
     },
     e => {

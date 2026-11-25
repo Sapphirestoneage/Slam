@@ -410,7 +410,9 @@ function cpDraw() {
 async function cpSaveGame(owner, mutate, first) {
   const q = await CP.sb.from("games").select("id,name,data,updated_at,share_with_coach").eq("owner", owner);
   if (q.error) throw q.error;
-  const G0 = cpGame(q.data) || (typeof first === "function" && !(q.data || []).some(r => r.name === "slam_meta") ? { g: first() } : null);
+  const G0 =
+    cpGame(q.data) ||
+    (typeof first === "function" && !(q.data || []).some(r => r.name === "slam_meta") ? { g: first() } : null);
   if (!G0) throw new Error("no saved game");
   const out = mutate(G0.g);
   if (out === null) return null;

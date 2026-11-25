@@ -146,30 +146,33 @@ function addDaysISO(iso, n) {
   return new Date(Date.parse(iso) + n * 864e5).toISOString().slice(0, 10);
 }
 
-Object.assign(ACT, {
-  /* "That's all of it": the part that is not placed yet goes away, and the guess becomes the real total. */
-  allocall: t => {
-    const k = t.dataset.v,
-      A = ALLOC[k],
-      c = C();
-    if (!A) return;
-    const a = allocArea(c, k),
-      real = (c[A.rows] || []).filter(x => x.s);
-    c[A.rows] = real;
-    a.g = rsum(real);
-    a.done = true;
-    a.over = 0;
-    a.at = todayISO();
-    const pr = D && D.realm;
-    if (typeof afterMoney === "function") afterMoney(c, pr, false);
-    else syncAll(c);
-    render();
-    if (SH) drawSheet();
-  },
-});
-Object.assign(GLOSS, {
-  alloc: [
-    "Placed and not placed yet",
-    'Your first guess stays the total until your real numbers add up to it. Each number you make real is placed. The rest is not placed yet, and it is still a guess. If your real numbers add up to more than the guess, they become the total. Tap "That\'s all of it" when the rest does not exist.',
-  ],
-});
+/* session.html loads this file with no game screens (no ACT, GLOSS): only the fill (allocFillAll) runs there */
+if (typeof ACT !== "undefined")
+  Object.assign(ACT, {
+    /* "That's all of it": the part that is not placed yet goes away, and the guess becomes the real total. */
+    allocall: t => {
+      const k = t.dataset.v,
+        A = ALLOC[k],
+        c = C();
+      if (!A) return;
+      const a = allocArea(c, k),
+        real = (c[A.rows] || []).filter(x => x.s);
+      c[A.rows] = real;
+      a.g = rsum(real);
+      a.done = true;
+      a.over = 0;
+      a.at = todayISO();
+      const pr = D && D.realm;
+      if (typeof afterMoney === "function") afterMoney(c, pr, false);
+      else syncAll(c);
+      render();
+      if (SH) drawSheet();
+    },
+  });
+if (typeof GLOSS !== "undefined")
+  Object.assign(GLOSS, {
+    alloc: [
+      "Placed and not placed yet",
+      'Your first guess stays the total until your real numbers add up to it. Each number you make real is placed. The rest is not placed yet, and it is still a guess. If your real numbers add up to more than the guess, they become the total. Tap "That\'s all of it" when the rest does not exist.',
+    ],
+  });
