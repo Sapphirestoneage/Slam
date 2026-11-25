@@ -13,6 +13,8 @@
 --      (20261125190000_reports.sql), the row of the finished setup with the share code, if that table exists
 --      (20261125190000_founding_and_referrals.sql), and the rows of the web app, if its tables exist (docs/cloud-schema.sql:
 --      accounts, space_members);
+--      and the rows of Live Session Mode, if its tables exist (20261125210000_live_sessions.sql): the transcript
+--      lines, the sessions, the tag "coaching client of this coach", the invite links;
 --   3. keeps the lines of the audit log, with the email of this person removed from them, and adds one line
 --      "account_self_delete" with no email;
 --   4. removes the sign-in (auth.users). The database then removes the sessions of that sign-in by itself.
@@ -38,6 +40,12 @@ begin
   if to_regclass('public.account_setup') is not null then execute 'delete from public.account_setup where user_id = $1' using me; end if;
   if to_regclass('public.space_members') is not null then execute 'delete from public.space_members where member = $1' using me; end if;
   if to_regclass('public.accounts') is not null then execute 'delete from public.accounts where owner = $1' using me; end if;
+  -- Live Session Mode (20261125210000_live_sessions.sql), if its tables exist: the transcript lines, the sessions,
+  -- the tag "coaching client of this coach", and the invite links. A session has two members: it goes with either one.
+  if to_regclass('public.live_lines') is not null then execute 'delete from public.live_lines where by = $1 or session in (select id from public.live_sessions where coach = $1 or client = $1)' using me; end if;
+  if to_regclass('public.live_sessions') is not null then execute 'delete from public.live_sessions where coach = $1 or client = $1' using me; end if;
+  if to_regclass('public.coach_clients') is not null then execute 'delete from public.coach_clients where coach = $1 or client = $1' using me; end if;
+  if to_regclass('public.live_invites') is not null then execute 'delete from public.live_invites where coach = $1' using me; end if;
   update admin_audit set actor_email = null where actor = me;
   update admin_audit set target_email = null where target = me;
   insert into admin_audit (actor, role, action) values (me, 'player', 'account_self_delete');

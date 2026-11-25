@@ -10,6 +10,8 @@
                (supabase/migrations/20261124170000_roles_audit_coach.sql).
    OUTPUT      Functions that only work out values: cpGame, cpNums, cpFlags, cpSnap, cpDiff, cpAssign,
                cpPack, cpCsv, cpInvite, cpInviteUrl. Functions of the page: cpLoad, cpDraw, cpClick.
+   PARTS       account/livecoach.js adds Live Session Mode by four named parts: lcLoad (cpLoad), lcCard
+               (cpDraw), lcClientRow (cpClientCard), lcClick (cpClick).
    DEPENDS ON  core/report.js, account/supa.js (the two public settings), account/roles.js. With
                core/engine.js on the page, the era comes from derive(). Only coach.html loads this file.
    RULES       The database decides what a coach can read: only games with "Share with my coach" on.
@@ -324,6 +326,8 @@ async function cpLoad() {
       report(e, "coachpage.js: cpLoad");
     }
   roAudit(CP.sb, "view_roster", null, CP.list.length + " clients");
+  if (typeof lcLoad === "function")
+    await lcLoad(); /* livecoach.js: the invites and the sessions of Live Session Mode */
   cpDraw();
 }
 function cpClientCard(cl) {
@@ -351,6 +355,7 @@ function cpClientCard(cl) {
     .map(l => `<li>${cpEsc(l)}</li>`)
     .join("")}</ul><button data-a="seen" data-o="${cl.owner}">Mark as seen</button></div>
   ${typeof cpxCard === "function" ? cpxCard(cl) : "" /* coachplus.js: the stage, the milestones, before and after */}
+  ${typeof lcClientRow === "function" ? lcClientRow(cl) : "" /* livecoach.js: Start session */}
   <button class="primary wide" data-a="open" data-o="${cl.owner}" data-k="${cpEsc(cl.names)}">Open game</button><p class="muted">What you change there saves to their game, and they see a note that their coach made a change.</p>
   <div class="who"><b>Assign a quest</b><p class="muted">One tap puts it in their Next Steps, marked "From your coach".</p>${
     cl.people.length > 1
@@ -388,6 +393,7 @@ function cpDraw() {
       ? ""
       : `<p class="flag">Notes, quests and "seen" marks stay on this device for now. They move to your account when the app owner runs the database file of 2026-11-24.</p>`) +
     (typeof cpxBar === "function" ? cpxBar() : "") /* coachplus.js: the demo line, totals, pipeline, search */ +
+    (typeof lcCard === "function" ? lcCard() : "") /* livecoach.js: Start session with a new client, the invites */ +
     (CP.list.length
       ? typeof cpxList === "function"
         ? cpxList() /* coachplus.js: the roster after the search, the stage and the sort */
@@ -425,6 +431,7 @@ async function cpClick(t) {
   if (o) CP.open = o;
   CP.msg = "";
   /* coachplus.js: the demo, the stages, the report. In the demo no tap writes to the database. */
+  if (typeof lcClick === "function" && (await lcClick(t))) return; /* livecoach.js: the taps of Live Session Mode */
   if (typeof cpxClick === "function" && (await cpxClick(t, cl))) return;
   if (a === "out") {
     await CP.sb.auth.signOut();

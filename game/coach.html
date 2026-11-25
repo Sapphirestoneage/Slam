@@ -30,6 +30,7 @@ ul{margin:0;padding-left:20px}li{margin:2px 0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{min-height:40px;padding:8px 12px;border-radius:99px;font-weight:600;font-size:14px;text-align:left}.chip.on{background:var(--a1);border-color:var(--a1);color:#fff}
 table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba td{text-align:left;padding:4px 6px;border-top:1px solid var(--line)}table.ba th{color:var(--muted);font-weight:600}table.ba td{white-space:nowrap}
 .flag.demo{font-size:15px}.flag.demo button{margin-top:8px}
+.lclink{border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:14px;overflow-wrap:anywhere;user-select:all}.lcrow{border-top:1px solid var(--line);padding-top:8px}button[disabled]{opacity:.55;cursor:default}.soonpart{border:1px dashed var(--line);border-radius:10px;padding:10px}.tiny{font-size:13px}
 #cpxprint{display:none}
 @media print{body{background:#fff;color:#000}main{display:none}#cpxprint{display:block;padding:24px;font:14px/1.5 system-ui,sans-serif}#cpxprint pre{white-space:pre-wrap;font:inherit}}
 </style>
@@ -39,11 +40,17 @@ table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
+<script src="core/soon.js?v=cafe08bf"></script>
+<script src="account/trust.js?v=0ff43c9d"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="core/engine.js?v=ba43c790"></script>
 <script src="account/roles.js?v=04de2e61"></script>
-<script src="account/coachpage.js?v=5f99b243"></script>
+<script src="account/coachpage.js?v=af5d4f28"></script>
 <script src="account/coachplus.js?v=cb375456"></script>
+<script src="account/liveflag.js?v=f76b7a68"></script>
+<script src="account/live.js?v=95bdda0f"></script>
+<script src="account/liveio.js?v=277d3016"></script>
+<script src="account/livecoach.js?v=2b06a0f7"></script>
 <script>
 /* The coach page. The database checks everything again: an account with no coach role gets no client back, whatever this page shows. */
 CP.sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
