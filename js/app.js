@@ -4,6 +4,7 @@
 import { h, clear, icon } from './ui/dom.js';
 import { arrive, leftPopover, missingFor, land } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
+import { setRough } from './format.js'; // Rough numbers (the one switch, in the More menu)
 import { whatsNew } from './ui/whatsnew-ui.js'; // the patch notes, in the More menu
 import { openReport } from './report/page.js';
 import { startTips } from './ui/tips.js';
@@ -164,6 +165,7 @@ const app = {
       h('div.tb-right', {},
         this.findBox(), more,
         h('label.field.time-pick', {}, time), cv, gear,
+        this.prefs.rough ? h('button.icon-btn.more-btn.rough-btn', { type: 'button', 'aria-pressed': 'true', 'data-focus': 'rough', title: 'Rough numbers is on: amounts show as ranges. Click to show exact amounts', onclick: () => this.setPref('rough', false) }, 'Rough numbers on') : null,
         // Report a bug or idea (js/report): in the bar, in the flow, on every screen. Outlined: it is never the primary.
         h('button.icon-btn.more-btn.rp-web', { type: 'button', 'data-focus': 'report', title: 'Report a bug, an idea or a confusing screen. Where you are goes with it.', onclick: () => openReport() }, 'Report a bug or idea'))));
     // Home is one screen with one nav row: no sub-tab bar there (About you shows the bar, with the way back).
@@ -307,6 +309,7 @@ const app = {
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
       item('Report a bug or idea', 'flag', () => openReport()), // the same sheet as the Report button of the top bar (js/report)
       item("What's new", 'star', () => whatsNew(anchor)), // the patch notes, the same list as the game's Menu
+      item(this.prefs.rough ? 'Rough numbers: on (show exact)' : 'Rough numbers: show ranges', 'lock', () => this.setPref('rough', !this.prefs.rough)), // one switch: ranges in place of exact amounts on every screen
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {
@@ -418,6 +421,8 @@ const app = {
     root.dataset.clientView = this.prefs.clientView ? 'on' : 'off';
     if (this.store) this.store.who = this.prefs.clientView ? 'Client' : 'Coach'; // F6
     root.dataset.font = this.prefs.font || 'inter';
+    setRough(this.prefs.rough); // Rough numbers: a range in place of every exact amount (display only)
+    root.dataset.rough = this.prefs.rough ? 'on' : 'off';
   },
   // ---------- The agenda bar: on every tab while a session runs, collapsed to one line (coach only) ----------
   _bar: { open: false, back: null, rev: null, A: null },

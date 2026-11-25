@@ -135,3 +135,4 @@ Kept by `tools/backlog.py` when it rebuilds this file. Add each to the spec's Fe
 ## Built since this list was made
 
 - Mistake cost tracker (Phase 4, above): built Nov 25 2026 as the opt-in Mistake audit. Web app: Report, History, the closed section under Year in review. Game: the menu and the end of the Yearly Review. The spec's Feature list row still says Backlog.
+- Pareto of spending, Enough and room for error, Lifestyle creep detector and BL.20 Rough / privacy mode (above): built Nov 25 2026 (run Not built, groups 1 to 5, Part 3). Web app: Cash flow › Budget (Spending over the years, The few lines that make most of it), Plan › Goals (Enough and room for error), the More menu (Rough numbers). Game: Menu › Lifestyle creep and enough, Me › Rough numbers. The Fulfillment curve and the Enough meter stay for run 1 Part 8 (Joy and enough), on the same engine (`js/math/enough.js`). The spec's Feature list rows still say Backlog
