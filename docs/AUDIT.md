@@ -34,7 +34,8 @@ Marketplace premium credit, a free year's tax, the Medicare extra premium, the w
 every conversion line, one or two people), the earliest age work can stop, and Recalculating (`js/math/recalc.js`, added
 Nov 25 2026: the old date and the new date counted month by month on a calendar, the triage paid class by class, the
 emergency fund refill put back month by month, the safe-to-fail line, and the opt-in audit's totals with the cost over
-time worked out by logarithms).
+time worked out by logarithms; the same day, after Eli's answers to QUESTIONS 580: the Barista number with health
+insurance added, and the months back to the Coast number in closed form, where SLAM steps month by month).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

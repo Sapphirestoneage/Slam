@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 132. Lines: 77,391. Top-level functions: 1773. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-25. Files: 132. Lines: 77,513. Top-level functions: 1776. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -27,7 +27,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 13 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
 | 14 | `core/engine.js` | 3,856 | 123 | 0 | 0 | The engine: the data model of one profile and all the math |
 | 15 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
-| 16 | `core/recalc.js` | 434 | 16 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
+| 16 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
 | 17 | `core/reportcore.js` | 592 | 28 | 2 | 0 | Report a bug or idea: one report with the screen name, the last 3 taps, the device, the width and the app version; the list on the device; the sending... |
 | 18 | `account/gate.js` | 67 | 7 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
 | 19 | `screens/ui.js` | 6,530 | 214 | 135 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
@@ -40,7 +40,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 26 | `screens/planner.js` | 1,281 | 55 | 18 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 27 | `account/cloud.js` | 563 | 23 | 0 | 0 | The game saves itself to the account of the player |
 | 28 | `screens/ux.js` | 839 | 37 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
-| 29 | `core/metrics.js` | 1,858 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
+| 29 | `core/metrics.js` | 1,859 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
 | 30 | `features/debts.js` | 415 | 16 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
 | 31 | `features/import.js` | 274 | 7 | 9 | 0 | Fill in the spending from a bank or card statement file |
 | 32 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
@@ -91,7 +91,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 77 | `features/cover.js` | 448 | 7 | 1 | 0 | Insurance needs. In place of the yes / no checks, each kind of cover gets a needs calculation, the gap in dollars, and one next step: disability (abou... |
 | 78 | `features/mix.js` | 325 | 7 | 1 | 0 | Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee |
 | 79 | `features/slept.js` | 117 | 5 | 0 | 0 | While you slept. What the invested money of the player earned per hour, per day, per month and per year, at the return of the plan, next to the real h... |
-| 80 | `features/coast.js` | 136 | 5 | 1 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
+| 80 | `features/coast.js` | 202 | 6 | 3 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
 | 81 | `features/sim.js` | 437 | 20 | 0 | 0 | The simulator engine. One decision with 2 to 4 options |
 | 82 | `features/sims/rentbuy.js` | 196 | 2 | 0 | 0 | Simulator 1: rent or buy. The price, the rate, the down payment, the stay, the rent and its growth, the home growth, the upkeep, the closing and selli... |
 | 83 | `features/sims/mortgage.js` | 143 | 2 | 0 | 0 | Simulator 2: pay off the mortgage early, or invest the same money |
@@ -138,7 +138,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 124 | `features/exletter.js` | 162 | 5 | 0 | 0 | One exercise: Letter from your calm self |
 | 125 | `features/recalc.js` | 390 | 13 | 8 | 0 | Recalculating. When the real numbers move a date of the plan, one calm card shows the old date, the new date and the one next turn |
 | 126 | `features/audit.js` | 257 | 5 | 3 | 0 | The Mistake audit. It is optional |
-| 127 | `data/patchnotes.js` | 143 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 127 | `data/patchnotes.js` | 152 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 128 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 129 | `features/book.js` | 598 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 130 | `features/questlog.js` | 426 | 23 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
@@ -161,7 +161,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 722 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 723 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

@@ -136,6 +136,15 @@ const PATCH_NOTES = [
       "The sign-up screen and the foot of each main screen say it: Education and tools, not financial advice.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Coast and the FI ratio, a little clearer",
+    l: [
+      "If your invested money dips under your Coast number after you reached it, Home shows one quiet line: Recalculating, how far under, and the new Coast date. Nothing to fix.",
+      "The FI ratio in Key numbers has an i that says how it differs from While you slept.",
+      "In the web app, the order of steps for a Lean, Barista or Fat goal now moves only the late steps. The first five never move.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

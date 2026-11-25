@@ -81,6 +81,67 @@
   chk("one tap closes it, with the day", C().x.coast.seen === todayISO());
   go("home");
   chk("the card shows one time only", !app().includes("coastcard") && cstCalc(C()).reached && !cstCalc(C()).show);
+  /* the "i" of the FI ratio: how it differs from While you slept */
+  X("keynums");
+  X("kngroup", "free");
+  X("metric", "firatio");
+  chk(
+    "the sheet of the FI ratio has an i for the difference from While you slept",
+    ov().includes('data-k="gloss:firslept"') && ov().includes("While you slept")
+  );
+  chk(
+    "the i says the 4% draw and the return of the plan",
+    /4% draw/.test(GLOSS.firslept[1]) && /return of your plan/.test(GLOSS.firslept[1])
+  );
+  X("close");
+  /* back under Coast after the card was closed: one quiet Recalculating card */
+  const top = C().invs[0].amt;
+  C().invs[0].amt = Math.round(derive(C()).coastNum) - 5000;
+  syncAll(C());
+  save();
+  const KB = cstCalc(C());
+  chk(
+    "under Coast again: not reached, the first card stays closed, the below card shows",
+    !KB.reached && !KB.show && !!KB.below && KB.below.show
+  );
+  chk(
+    "the gap is the Coast number less the invested money",
+    Math.abs(KB.below.by - (KB.coast - KB.inv)) < 1e-6,
+    KB.below.by
+  );
+  /* 2,000 a month goes in (5,000 - 3,000). The saving, counted back to today, covers the gap in month 3. */
+  const gB = Math.pow(1 + R, 1 / 12),
+    cover = n => (2000 * (1 - Math.pow(gB, -n))) / (gB - 1);
+  chk(
+    "the new Coast date is the month the saving closes the gap",
+    KB.below.months === 3 && cover(2) < KB.below.by && cover(3) >= KB.below.by,
+    KB.below.months
+  );
+  go("home");
+  const belowHtml = app().split("coastbelow")[1] || "";
+  chk(
+    "Home shows Recalculating with Eli's words",
+    app().includes("coastbelow") &&
+      belowHtml.includes("Recalculating") &&
+      /Below Coast by \$[\d,]+\. New Coast date: [A-Z][a-z]{2} \d{4}\./.test(belowHtml)
+  );
+  chk(
+    "it is never a warning: no amber, no red, no blame word",
+    !/class="[^"]*(red|bad|warn)[^"]*"/.test(belowHtml.split("coastbelowok")[0]) &&
+      !/warning|behind|off track|mistake|fail/i.test(belowHtml.split("coastbelowok")[0])
+  );
+  X("coastbelowok");
+  go("home");
+  chk("one tap closes it for this month", !app().includes("coastbelow") && cstCalc(C()).below.show === false);
+  chk("the spreadsheet has the months back to Coast", cstBook(C()).rows.find(r => r.id === "fr_back").v === 3);
+  delete C().x.coast.below;
+  C().invs[0].s = false;
+  syncAll(C());
+  chk("a guessed balance gets no below card", cstCalc(C()).below === null);
+  C().invs[0].s = true;
+  C().invs[0].amt = top;
+  syncAll(C());
+  chk("back at Coast: the below card is gone", cstCalc(C()).below === null && cstCalc(C()).reached);
   /* a Guess gets no card */
   delete C().x.coast;
   C().invs[0].s = false;

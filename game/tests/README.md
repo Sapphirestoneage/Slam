@@ -56,7 +56,7 @@ Each file has the name of its feature.
 | `taking-money-out.js` | Taking money out: the order, guardrails, the years before 59 and a half, health cover | `features/takeout.js`, `data/takeout2026.js` |
 | `two-ages.js` | Two ages: work optional and money reachable, for each person | `features/ages.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |
-| `fi-ratio-and-coast-card.js` | The FI ratio on Key numbers, and the card "You can stop sprinting" | `features/coast.js` |
+| `fi-ratio-and-coast-card.js` | The FI ratio on Key numbers with its "i", the card "You can stop sprinting", and the quiet Recalculating card under Coast | `features/coast.js` |
 | `before-you-sign.js` | Before you sign | `features/sign.js` |
 | `famous-money-ideas.js` | Famous money ideas | `features/ideas.js` to `ideas5.js`, `ideasz.js`, `roof.js` |
 | `fire-drills.js` | Money fire drills, the ladder, one-way doors, the tour | `features/drills.js` |

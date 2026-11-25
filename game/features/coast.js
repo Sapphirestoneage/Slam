@@ -5,16 +5,22 @@
                calm card on Home, one time, on the day the invested money reaches the Coast number.
    INPUT       The profile: c.inv, c.spend, c.age, c.ret, c.spends, c.invs, c.x.coast (seen: the day the
                player closed the card). derive(c): d.coastNum, d.g[7], d.toRet.
-   OUTPUT      Functions: firCalc, knMetricsFir, cstCalc, homeCoastCard, cstBook. Actions (ACT): coastok.
-               Parts of functions in other files: knMetricsFir (knMetrics in metrics.js), homeCoastCard
-               (home in ui.js).
-   DEPENDS ON  core/engine.js (derive, SWR, todayISO), core/metrics.js (knRows, knSt, knPct),
-               screens/ui.js, features/kit.js, features/reveal.js (homeRowAdd).
+               (3) Back under Coast: when the invested money falls under the Coast number after the
+               card was closed, one quiet card "Recalculating" with the gap and the new Coast date.
+   OUTPUT      Functions: firCalc, knMetricsFir, knOneFir, cstCalc, homeCoastCard, cstBook. Actions
+               (ACT): coastok, coastbelowok. Parts of functions in other files: knMetricsFir (knMetrics
+               in metrics.js), knOneFir (knOne in metrics.js), homeCoastCard (home in ui.js).
+   DEPENDS ON  core/engine.js (derive, SWR, R, todayISO), core/metrics.js (knRows, knSt, knPct),
+               core/recalc.js (rcCoast, rcCoastWords, rcYm), screens/ui.js, features/kit.js,
+               features/reveal.js (homeRowAdd).
    RULES       No new math for the Coast number: derive() works it out (d.coastNum), and d.g[7] says if
                it is reached. The investment income is the invested money times the withdrawal rate of
                the game (SWR), the same rate as the freedom number, so 100% is the same finish line.
                The card does not show on a Guess: a number that is a guess gets no verdict. The card
                shows one time. The player closes it with one tap.
+               Back under Coast is never a warning (Eli, 2026-11-25). The card says "Recalculating",
+               the gap and the new Coast date. core/recalc.js works them out (rcCoast), the same
+               function as the web app. The player closes it for the month with one tap.
    ========================================================================= */
 /* The FI ratio: the investment income of a month divided by the spending of a month. */
 function firCalc(c) {
@@ -28,6 +34,26 @@ function firCalc(c) {
     ratio: spend > 0 ? income / spend : null,
     st: knSt(knRows(c).sp, c.invs || []),
   };
+}
+/* The "i" of the FI ratio: how it differs from "While you slept" (Eli, 2026-11-25). */
+kitTerms({
+  firslept: [
+    "FI ratio and While you slept",
+    "Two different questions. The FI ratio asks: how much of my monthly spending could my investments pay for, for good? It uses the 4% draw, the definition the FIRE community uses for the freedom number, so 100% is the day work is optional. While you slept asks: what did my money earn? It uses the return of your plan (7% a year after inflation unless you chose another). Earnings are higher than the draw, because part of what the money earns must stay invested so that it lasts.",
+  ],
+});
+/* Part of knOne() in metrics.js. On the sheet of the FI ratio, adds one line with the "i". */
+function knOneFir(h) {
+  try {
+    if (W.id !== "firatio") return h;
+    return (
+      h +
+      `<div class="tile row between firinfo" style="gap:8px"><span class="small">How is this different from While you slept?</span><button class="term" data-a="info" data-k="gloss:firslept" aria-label="FI ratio and While you slept: what is the difference?">i</button></div>`
+    );
+  } catch (e) {
+    report(e, "coast.js: knOneFir");
+    return h;
+  }
 }
 /* Part of knMetrics() in metrics.js. Adds the FI ratio to the group "Freedom". */
 function knMetricsFir(c, add) {
@@ -72,6 +98,19 @@ function cstCalc(c, d) {
   const st = knSt(knRows(c).sp, c.invs || []),
     seen = (c.x && c.x.coast && c.x.coast.seen) || null,
     reached = d.coastNum > 0 && d.toRet > 0 && !!d.g[7];
+  /* Back under Coast, after the card was closed. Not on a Guess. Closed for one month at a time. */
+  const open = !!seen && !reached && d.coastNum > 0 && d.toRet > 0 && st !== "Guess",
+    K = open
+      ? rcCoast({
+          invested: c.inv || 0,
+          coast: d.coastNum,
+          monthly: d.save / 12,
+          realReturn: R,
+          nowAt: todayISO(),
+          maxMonths: Math.round(d.toRet * 12),
+        })
+      : null,
+    month = rcYm(todayISO());
   return {
     coast: d.coastNum,
     inv: c.inv || 0,
@@ -80,6 +119,15 @@ function cstCalc(c, d) {
     reached,
     seen,
     show: reached && !seen && st !== "Guess",
+    below:
+      K && K.below
+        ? Object.assign({}, K, {
+            words: rcCoastWords(K),
+            month,
+            monthly: d.save / 12,
+            show: !(c.x && c.x.coast && c.x.coast.below === month),
+          })
+        : null,
   };
 }
 /* Part of home() in ui.js. The calm card "You can stop sprinting", one time, under the top numbers. */
@@ -88,6 +136,11 @@ function homeCoastCard(h) {
     const c = C();
     if (!c || !(c.placed || G.demo) || typeof homeRowAdd !== "function") return h;
     const K = cstCalc(c);
+    if (K.below && K.below.show)
+      return homeRowAdd(
+        h,
+        `<div class="card stack homerow coastbelow" style="gap:8px"><div class="row between"><b>${esc(K.below.words.title)}</b>${kitPill(K.st)}</div><div class="small">${esc(K.below.words.line)}</div><div class="tiny muted">${esc(K.below.words.next)}</div><details class="math"><summary>Show the math</summary><div class="inner tiny stack" style="gap:4px"><div>Your Coast number for age ${esc(String(K.ret))}: ${money(Math.round(K.coast))}</div><div>Invested: ${money(K.inv)}</div><div>${money(Math.round(K.coast))} − ${money(K.inv)} = ${money(Math.round(K.below.by))}</div><div>The Coast number grows each month at the same return as your money. Thus the date is the month in which the ${money(Math.round(K.below.monthly))} you put in each month closes that gap.</div></div></details><button class="ghost slim" data-a="coastbelowok">Got it</button></div>`
+      );
     if (!K.show) return h;
     return homeRowAdd(
       h,
@@ -101,7 +154,8 @@ function homeCoastCard(h) {
 /* The rows for the spreadsheet of the plan. */
 function cstBook(c) {
   const F = firCalc(c),
-    d = derive(c);
+    d = derive(c),
+    K = cstCalc(c, d);
   return {
     title: "FI ratio and Coast",
     rows: [
@@ -122,6 +176,12 @@ function cstBook(c) {
         note: "From the game: the freedom number at your stop age, brought back to today",
       },
       { id: "fr_over", label: "Invested less the Coast number", v: F.inv - d.coastNum, f: "={fr_inv}-{fr_coast}" },
+      {
+        id: "fr_back",
+        label: "Months back to the Coast number",
+        v: K.below ? (K.below.months == null ? "" : K.below.months) : "",
+        note: "Only when the invested money fell under the Coast number after you reached it. From the game: counted month by month",
+      },
     ],
   };
 }
@@ -129,6 +189,12 @@ Object.assign(ACT, {
   coastok: () => {
     const c = C();
     kitStore(c, "coast").seen = todayISO();
+    save();
+    render();
+  },
+  coastbelowok: () => {
+    const c = C();
+    kitStore(c, "coast").below = rcYm(todayISO());
     save();
     render();
   },
