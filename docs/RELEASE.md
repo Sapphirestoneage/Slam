@@ -22,6 +22,7 @@ So a half-built feature, or a test that does not pass on `main`, never reaches t
 
 What changes for you:
 
+- **The link for the slide and its QR code** are in `docs/LAUNCH-LINK.md` (the picture is `docs/qr-slam.png`).
 - **The public link stays the same**: https://sapphirestoneage.github.io/Slam/game/ for the game, and
   https://sapphirestoneage.github.io/Slam/ for the web app. A QR code or a slide with that link keeps working.
 - **The site only changes when a promote runs.** A push to `main` no longer changes what people see. Each run ends

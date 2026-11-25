@@ -878,7 +878,7 @@ def run(cases, ref, il=None):
                 ck('shift', o['shift'], shift, 0); ck('moved', o['moved'], shift != 0); ck('later', o['later'], shift > 0)
         elif fn == 'rcTriage':
             # each class in turn takes what it can from the money left (a pool per class, not a walk down one list)
-            order = ['housing', 'utilities', 'food', 'transport', 'minimums', 'rest']
+            order = ['housing', 'utilities', 'food', 'health', 'childcare', 'transport', 'minimums', 'rest']   # Eli, 2026-11-25: health cover, medicine and childcare are must-pay
             left, total, first, paid = float(x['income']), 0.0, None, {}
             for k, cls in enumerate(order):
                 mine = [b for b in x['bills'] if b['cls'] == cls and b['amount'] is not None]
@@ -911,7 +911,9 @@ def run(cases, ref, il=None):
             mis = [e for e in ev if e['tag'] == 'mistake']; una = [e for e in ev if e['tag'] == 'unavoidable']
             later = lambda e: e['amount'] * math.exp((x['years'] + e['yearsAgo']) * math.log(1 + x['realReturn']))   # by logs, not by a power
             ck('count', o['mCount'], len(mis), 0); ck('cost then', o['mCost'], sum(e['amount'] for e in mis)); ck('cost over time', o['mLater'], sum(later(e) for e in mis))
-            ck('days of saving', o['mDays'], sum(e['amount'] for e in mis) / x['perDay'], 1e-6); ck('hours', o['mHours'], sum(e['amount'] for e in mis) / x['hourly'], 1e-6)
+            saving = x['perDay'] is not None and x['perDay'] > 0   # the guard: no FI days when a day of saving is zero or less
+            ck('days of saving', o['mDays'], sum(e['amount'] for e in mis) / x['perDay'] if saving else None, 1e-6); ck('hours', o['mHours'], sum(e['amount'] for e in mis) / x['hourly'], 1e-6)
+            ck('the measure is FI days', o['measure'] == 'fiDays', saving); ck('the measure is hours of work', o['measure'] == 'hours', not saving)
             ck('unavoidable then', o['uCost'], sum(e['amount'] for e in una)); ck('unavoidable over time', o['uLater'], sum(later(e) for e in una))
             ck('untagged', o['untagged'], sum(1 for e in x['events'] if e['tag'] is None), 0); ck('open', o['open'], sum(1 for e in x['events'] if e['amount'] is None), 0)
             ck('share of a year of pay', o['tax'], sum(e['amount'] for e in mis if e['yearsAgo'] < 1) / x['yearIncome'], 1e-9)

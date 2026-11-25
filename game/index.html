@@ -449,8 +449,11 @@ button.frontbtn{min-height:64px;text-align:left;font-size:15px;line-height:1.25;
 .questbtn{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--a3);background:var(--panel2);color:var(--text);border-radius:10px;padding:6px 10px;min-height:40px;font-weight:700;white-space:nowrap}
 .questbtn.slim{min-height:32px;padding:3px 8px;font-size:13px}
 .questbtn.wide{width:100%;justify-content:center;margin-top:8px}
+/* Report a bug or idea (features/fbreport.js): the button in the top bar and at the end of each sheet */
+.topbar .rp-top{flex:none;min-height:44px;padding:6px 12px}
+.rp-sheetrow{display:flex;justify-content:flex-end;margin-top:4px}
 .topbar .questbtn{flex:none}
-@media (max-width:520px){.topbar{flex-wrap:wrap}.topbar .questbtn{order:5;flex:1 1 100%;justify-content:center;min-height:38px}}
+@media (max-width:520px){.topbar{flex-wrap:wrap}.topbar .questbtn{order:5;flex:1 1 0;justify-content:center;min-height:44px}.topbar .rp-top{order:6}}
 .homerow.qhome,.less2>.homerow.qhome{flex-direction:column;align-items:stretch;gap:6px}
 .questbtn .qpin{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
 button.qcont{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;text-align:left;color:var(--text)}
@@ -470,9 +473,9 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <div id="ov"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
-<script src="core/soon.js?v=6c003dea"></script>
-<script src="account/door.js?v=71e3d3f8"></script>
-<script src="account/supa.js?v=48ab714b"></script>
+<script src="core/soon.js?v=cafe08bf"></script>
+<script src="account/door.js?v=a1c351c7"></script>
+<script src="account/supa.js?v=13075a49"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
 <script src="data/qr.js?v=bfe2796b"></script>
@@ -482,24 +485,25 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
 <script src="core/engine.js?v=ba43c790"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
-<script src="core/recalc.js?v=a7b2d897"></script>
+<script src="core/recalc.js?v=e70eee5f"></script>
+<script src="core/reportcore.js?v=6a3377b4"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=ae299f83"></script>
+<script src="screens/ui.js?v=35db2842"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
 <script src="features/year.js?v=0c383449"></script>
 <script src="features/chart.js?v=bab4800c"></script>
-<script src="screens/profiles.js?v=29e118cc"></script>
+<script src="screens/profiles.js?v=442b6691"></script>
 <script src="screens/smart.js?v=2e800c77"></script>
-<script src="screens/planner.js?v=84a1ceb4"></script>
+<script src="screens/planner.js?v=4cd1145d"></script>
 <script src="account/cloud.js?v=55bd518f"></script>
-<script src="screens/ux.js?v=da93d895"></script>
+<script src="screens/ux.js?v=39080c86"></script>
 <script src="core/metrics.js?v=f430ed43"></script>
 <script src="features/debts.js?v=47c93dbf"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=152cbc32"></script>
-<script src="features/reveal.js?v=cc1e3afa"></script>
+<script src="features/reveal.js?v=bf2a008c"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=7034ac10"></script>
 <script src="features/gig.js?v=b1de10b2"></script>
@@ -590,10 +594,13 @@ button.qstar.on{border-color:var(--a3);color:#fff}
 <script src="account/roles.js?v=04de2e61"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
-<script src="features/recalc.js?v=24a3a588"></script>
-<script src="features/audit.js?v=cd62b3a3"></script>
+<script src="features/recalc.js?v=71188793"></script>
+<script src="features/audit.js?v=d893fdb8"></script>
+<script src="data/patchnotes.js?v=2d4a6079"></script>
+<script src="features/founding.js?v=c2cce197"></script>
 <script src="features/book.js?v=4b237793"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
-<script src="features/built.js?v=a6f0f6ca"></script>
+<script src="features/fbreport.js?v=a8944662"></script>
+<script src="features/built.js?v=b0315adc"></script>
 </body>
 </html>

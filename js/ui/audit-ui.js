@@ -45,22 +45,30 @@ function auditBody(ctx) {
     h('div.audit-what', {}, h('strong', {}, r.what || r.kind || 'An event'), h('span.muted.small', {}, r.yearsAgo == null ? '' : ` · ${rcMonthName(events.find(e => e.id === r.id)?.ym)}`)),
     h('div.audit-cost', {}, r.amount == null ? h('span.muted', {}, 'No amount yet') : money(r.amount)),
     S.toggle(TAGS, r.tag, v => setEvent(r.id, { tag: v }), { label: `Tag for ${r.what || r.kind}`, clearable: true }),
-    h('div.audit-later.muted.small', {}, [r.later != null ? `${money(Math.round(r.later))} over time` : null, days(r.fiDays), hours(r.hours)].filter(Boolean).join(' · ') || 'Over time shows once the plan has a date'),
+    h('div.audit-later.muted.small', {}, [r.later != null ? `${money(Math.round(r.later))} over time` : null, A.measure === 'fiDays' ? days(r.fiDays) : A.measure === 'hours' ? hours(r.hours) : null].filter(Boolean).join(' · ') || 'Over time shows once the plan has a date'),
     S.iconButton('trash', `Remove ${r.what || r.kind}`, () => { put({ events: events.filter(e => e.id !== r.id) }); S.toast('Removed.', { undo: () => ctx.store.undo() }); }, { tiny: true }));
   const tile = (label, t, note) => h('div.metric', {}, h('span.label', {}, label), h('div.big', {}, money(t.cost)),
-    h('span.muted.small', {}, [`${t.count} ${t.count === 1 ? 'event' : 'events'}`, t.later != null ? `${money(Math.round(t.later))} over time` : null, days(t.fiDays), hours(t.hours)].filter(Boolean).join(' · ')), note ? h('span.muted.small', {}, note) : null);
+    h('span.muted.small', {}, [`${t.count} ${t.count === 1 ? 'event' : 'events'}`, t.later != null ? `${money(Math.round(t.later))} over time` : null, A.measure === 'fiDays' ? days(t.fiDays) : A.measure === 'hours' ? hours(t.hours) : null].filter(Boolean).join(' · ')), note ? h('span.muted.small', {}, note) : null);
   return h('div.card.audit', { 'data-rc': 'audit' },
     h('p.muted.small', { style: { marginTop: 0 } }, 'Tag each one yourself. Unavoidable is a real answer: a transmission is not a choice. Untagged ones are counted in neither total.'),
     form,
     A.rows.length ? h('ul.audit-list', {}, A.rows.map(row)) : h('p.muted', {}, 'Nothing listed yet.'),
     A.rows.length ? h('div.shelf', { style: { marginTop: '12px' } }, tile('Tagged mistake', A.mistake, A.tax != null ? `Mistake tax: ${pct1(A.tax)} of a year of take-home (the last 12 months, ${money(A.lastYear)})` : null), tile('Tagged unavoidable', A.unavoidable, 'What a cushion is for')) : null,
+    A.rows.length ? h('div.row-line.audit-maths', { style: { gap: '12px', marginTop: '8px', alignItems: 'flex-start' } },
+      S.moreBlock('audit:math-days', () => h('div.stack.small', { style: { gap: '4px' } }, ...(A.measure === 'fiDays'
+        ? [h('span', {}, `FI days = the cost / what you put away in a day.`), h('span', {}, `A day of saving: ${money(A.saved)} left over a month x 12 / 365 = ${money(Math.round(A.saved * 12 / 365))}.`), h('span', {}, `Tagged mistake: ${money(A.mistake.cost)} / ${money(Math.round(A.saved * 12 / 365))} a day = ${days(A.mistake.fiDays)}.`), h('span', {}, 'It is the days of saving the events took, not a new FI date.')]
+        : A.measure === 'hours'
+          ? [h('span', {}, 'Nothing is left over to put away this month, so a day of saving is zero and FI days cannot be worked out.'), h('span', {}, 'Hours of work = the cost / what an hour of your work pays, after tax.'), h('span', {}, `Tagged mistake: ${money(A.mistake.cost)} = ${hours(A.mistake.hours)}.`)]
+          : [h('span', {}, 'FI days = the cost / what you put away in a day. Nothing is left over this month, and Income has no hours yet, so neither FI days nor hours of work can be shown.')])), { label: A.measure === 'hours' ? 'Show the math: hours of work' : 'Show the math: FI days' }),
+      S.moreBlock('audit:math-tax', () => h('div.stack.small', { style: { gap: '4px' } },
+        h('span', {}, 'Mistake tax = the events you tagged mistake in the last 12 months / one year of take-home pay.'),
+        A.tax != null ? h('span', {}, `${money(A.lastYear)} / ${money(Math.round(A.lastYear / A.tax))} = ${pct1(A.tax)}.`) : h('span', {}, A.lastYear > 0 ? 'It shows once Income has your take-home pay.' : 'Nothing is tagged mistake in the last 12 months, so there is nothing to divide.'),
+        h('span', {}, 'Older events and the ones tagged unavoidable are left out.')), { label: 'Show the math: mistake tax' })) : null,
     A.repeats.length ? h('div.audit-repeats', {}, h('span.label', {}, 'Repeats'), h('ul', {}, A.repeats.map(k => h('li', {}, `${k.kind}: ${k.count} times, ${money(k.cost)}. One fix here pays more than once.`)))) : null,
     S.moreBlock('audit:math', () => h('div.stack.small', { style: { gap: '4px' } },
       h('span', {}, 'Cost then: the amount you typed.'),
       h('span', {}, A.years != null && A.realReturn != null ? `Over time: that amount grown at the plan's ${pct1(A.realReturn)} a year after inflation, from the month it happened to the month work becomes optional (${A.years.toFixed(1)} years from today). Today's dollars.` : 'Over time: the amount grown at the plan\'s return until work becomes optional. It shows once the plan has that date.'),
-      h('span', {}, A.saved != null ? `FI days: the amount divided by what you put away in a day (${money(A.saved)} a month x 12 / 365). It is the days of saving the event took.` : 'FI days: the amount divided by what you put away in a day. It shows once the month has money left over.'),
-      h('span', {}, 'Hours of work: the amount divided by your real hourly pay, when Income has the hours.'),
-      h('span', {}, 'Mistake tax: the events tagged mistake in the last 12 months, divided by 12 months of take-home pay.'),
-      h('span', {}, 'Repeats: the same kind tagged mistake two times or more.')), { label: 'Show the math' }),
+      h('span', {}, 'FI days (or hours of work, when nothing is left over to save) and the mistake tax each have their own Show the math, above.'),
+      h('span', {}, 'Repeats: the same kind tagged mistake two times or more.')), { label: 'Show the math: cost then and over time' }),
     h('div.row-line', { style: { marginTop: '10px' } }, S.button('Turn the audit off', { size: 'small', onClick: () => { put({ on: false }); S.toast('The audit is off. Your list is kept.', { undo: () => ctx.store.undo() }); } })));
 }

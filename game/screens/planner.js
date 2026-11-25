@@ -788,7 +788,7 @@ const MENU = [
   ["Glossary", "glossary", "act", "Every money word in plain English"],
   ["Theme", "themes", "act", "Change the look and the voice"],
   ["Rearrange Home", "dash", "act", "Move cards up, down or out of the way"],
-  ["Flag this screen", "flag", "act", "Tell Eli something's off here"],
+  ["Report a bug or idea", "flag", "act", "Tell Eli what's off here, or what you wish it did"],
 ];
 /* menuSheet() makes the full menu. menuSheetBase() is the part from this file. */
 function menuSheet() {
@@ -827,7 +827,7 @@ function whoBtn() {
 function topbarHTML() {
   const nb = NAV.back.length,
     nf = NAV.fwd.length;
-  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button></span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}`; /* questlog.js: the button "Where am I" */
+  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button></span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
 }
 function tabsHTML() {
   const c = C(),

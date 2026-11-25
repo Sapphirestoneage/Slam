@@ -66,6 +66,30 @@ const WB = [
     "A tap that has no action yet, or a screen that cannot draw, shows one calm card and a way back. The error is still recorded for Eli.",
     null,
   ],
+  [
+    "who",
+    "Founding Testers: the first 50 accounts that finish setup",
+    "b",
+    () => WB_FN("finishSetupFounding") && WB_FN("homeFoundingCard") && WB_FN("meTabFounding") && WB_HAS("fdmail"),
+    "A mark on Me, on People and on the character sheet, and one card, one time, that offers a free 20-minute walkthrough with Eli (an email draft). Only the account's own records decide who is in the first 50: until Eli runs the database file, no mark and no card show.",
+    null,
+  ],
+  [
+    "who",
+    "Share SLAM: your own link",
+    "b",
+    () => WB_HAS("fdshare") && WB_FN("fdCode") && WB_FN("suRefKeep"),
+    "Menu, then Share SLAM. One short code for each account, Copy my link, and the share sheet of the phone. No rewards yet. The link never carries a money number.",
+    "fdshare",
+  ],
+  [
+    "feel",
+    "What's new: the patch notes",
+    "b",
+    () => WB_HAS("whatsnew") && typeof PATCH_NOTES !== "undefined" && PATCH_NOTES.length > 0,
+    "Menu, then What's new. What changed, the newest first, in plain words. Each run adds one entry.",
+    "whatsnew",
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   [
     "in",
@@ -353,6 +377,20 @@ const WB = [
     () => WB_HAS("quest") && WB_FN("questSheet") && WB_FN("questContinue") && WB_FN("topbarQuest"),
     "One button on every tab and sheet: Continue, one pinned focus, one nudge, Journey, Areas, Questions and Time, and the last places you went. Home shows one Continue card.",
     "quest",
+  ],
+  [
+    "feel",
+    "Report a bug or idea, from any screen",
+    "p",
+    () =>
+      WB_HAS("flag") &&
+      WB_FN("fbOpen") &&
+      WB_FN("topbarReport") &&
+      WB_FN("sheetReportRow") &&
+      WB_FN("rpMake") &&
+      WB_FN("homeReportFixed"),
+    'One Report button on every tab, sheet, the welcome screen and the sign-in screen: tap Bug, Idea or Confusing, add a note or a picture if you want. The screen, your last 3 taps, the device and the app version go with it, and no money numbers. It replaces Flag this screen. Until the owner runs the database file of 2026-11-25, a report stays saved on this device and sends itself after; the admin inbox and the note "You reported this. It\'s fixed." start then.',
+    null,
   ],
   [
     "plan",

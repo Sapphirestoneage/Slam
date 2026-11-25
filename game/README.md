@@ -20,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 124 script files in a fixed order (123 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 131 script files in a fixed order (130 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -41,7 +41,7 @@ Open http://localhost:8000/game/. Without an internet connection the game runs i
 npm run test:game
 ```
 
-The command runs 75 test files (1,933 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+The command runs 78 test files (2,185 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
 
 All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
 
@@ -57,11 +57,11 @@ The scripts are in five folders. The folder shows the role of a file. It does no
 
 | Folder | Role | Files |
 |--------|------|-------|
-| `core/` | The math, the data model, the error record and the card "Coming soon". Each screen depends on these files. | `report.js`, `soon.js`, `engine.js`, `engine2.js`, `recalc.js` (the math of Recalculating: a copy of `js/math/recalc.js` of the main app, made by `tools/game_recalc_build.mjs`; do not edit it), `metrics.js`, `withdraw.js` (the ways to take money out: a generated copy of `js/math/withdraw.js` of the main app; do not edit it, run `node tools/game_withdraw_build.mjs`) |
-| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `limits2026.js` (the 2026 account limits, from the IRS), `takeout2026.js` (the early-access rules and the health-plan credit table), `cardtemplate.js` (the template of one card: fields, switches, categories; the admin page loads it too), `cards2026.js` (93 cards as full template records; `tools/game_cards_build.mjs` makes it), `health2026.js` (average 2026 health premiums, from KFF), `retire-*.json` (the tax tables of the retirement engine, changed from YAML) |
-| `account/` | Sign-in, the database, the save to the cloud, the roles, and the add-on system. | `supa.js`, `cloud.js`, `gate.js`, `addon.js`, `coachplus.js` (the demo with made-up clients, results, the pipeline; only `coach.html` loads it), `roles.js` (the hats Player, Coach and Admin, and the audit lines; all three pages load it), `cardadmin.js` and `adminmore.js` (only `admin.html` loads them), `coachpage.js` (only `coach.html` loads it) |
+| `core/` | The math, the data model, the error record and the card "Coming soon". Each screen depends on these files. | `report.js`, `soon.js`, `engine.js`, `engine2.js`, `recalc.js` (the math of Recalculating: a copy of `js/math/recalc.js` of the main app, made by `tools/game_recalc_build.mjs`; do not edit it), `reportcore.js` (Report a bug or idea: a copy of `js/report/core.js` of the main app, made by `tools/game_report_build.mjs`; do not edit it), `metrics.js`, `withdraw.js` (the ways to take money out: a generated copy of `js/math/withdraw.js` of the main app; do not edit it, run `node tools/game_withdraw_build.mjs`) |
+| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `limits2026.js` (the 2026 account limits, from the IRS), `takeout2026.js` (the early-access rules and the health-plan credit table), `cardtemplate.js` (the template of one card: fields, switches, categories; the admin page loads it too), `cards2026.js` (93 cards as full template records; `tools/game_cards_build.mjs` makes it), `health2026.js` (average 2026 health premiums, from KFF), `patchnotes.js` (the patch notes of "What's new"; each run adds one entry at the end; the web app reads it too), `retire-*.json` (the tax tables of the retirement engine, changed from YAML) |
+| `account/` | Sign-in, the database, the save to the cloud, the roles, and the add-on system. | `door.js` (the front door: the landing screen of a new visitor, before `supa.js`), `supa.js`, `cloud.js`, `gate.js`, `addon.js`, `coachplus.js` (the demo with made-up clients, results, the pipeline; only `coach.html` loads it), `roles.js` (the hats Player, Coach and Admin, and the audit lines; all three pages load it), `cardadmin.js`, `adminmore.js` and `foundadmin.js` (only `admin.html` loads them), `coachpage.js` (only `coach.html` loads it) |
 | `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js` |
-| `features/` | One file for each feature. Each file adds its sheets and its actions. | 80 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
+| `features/` | One file for each feature. Each file adds its sheets and its actions. | 83 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
 | `vendor/` | Code from outside the game. Do not edit it. The game loads `retire-engine.js` before `core/engine.js`. | `retire-engine.js` (the retirement engine, one bundle), `retire-worker.js` (its Web Worker), `RETIRE-ENGINE-LICENSE.txt` |
 | `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
 | `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
@@ -78,6 +78,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | Insurance needs, investment mix and fees, while you slept | `features/cover.js`, `features/mix.js`, `features/slept.js` |
 | The FI ratio on Key numbers, and the card "You can stop sprinting" on Home | `features/coast.js` |
 | The simulators: the engine, and one file for each | `features/sim.js`, `features/sims/*.js` |
+| The front door (the landing screen, Start with no account) and the answer to "Am I okay?" | `account/door.js`, `features/okay.js`, `docs/LAUNCH-LINK.md`, `tools/qr_slam.py`, `tools/e2e/door_walk.cjs` |
 | My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
 | The spreadsheet of the plan (each number with its formula) | `features/book.js` |
 | Where am I (the Quest Log): Continue, the trail, Journey, Areas, Questions, Time | `features/questlog.js` |
@@ -88,6 +89,8 @@ These files stay in `game/` because the browser or the tools look for them there
 | Port batch 1, countdowns on My Goals, two job offers, which account next | `features/countdown.js`, `features/offers.js`, `features/nextacct.js` |
 | Port batch 1, the ledger with three statements, the card vault | `features/ledger.js`, `features/vault.js` |
 | Recalculating (the new date and the next turn, the short month, the cushion refill, the safe-to-fail line), the letter exercise, the optional Mistake audit | `features/recalc.js`, `features/exletter.js`, `features/audit.js`, `core/recalc.js` |
+| Report a bug or idea: the button on each screen, the list on the device, the note "It's fixed"; the admin Reports inbox | `features/fbreport.js`, `core/reportcore.js`, `account/adminmore.js` |
+| Founding Testers (the first 50 accounts that finish setup), Share SLAM (the personal link `?ref=code`), What's new (the patch notes) | `features/founding.js`, `data/patchnotes.js`, `account/foundadmin.js`, `supabase/migrations/20261125190000_founding_and_referrals.sql` (not applied) |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

@@ -16,7 +16,8 @@
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/supa.js (suGate), screens/ui.js (ACT, G, KEY, W, fresh, openSetup,
                drawSheet, render).
-   RULES       One primary button (Start). The landing never shows to a person who is signed in, and
+   RULES       The button Report is the button of features/fbreport.js (the same class and the same
+               action "flag"); fbScreen() there names this screen "front door". One primary button (Start). The landing never shows to a person who is signed in, and
                never to a visitor who already has a game on this device. The address of the page is not
                changed, so link marks such as ?ref= and ?as= stay for the files that read them.
                tools/qr_slam.py makes docs/qr-slam.png from DOOR_LINK; test/launch-link.test.js compares
@@ -76,7 +77,7 @@ function doorHtml(wait) {
  #door .door-what p{margin:0}#door .door-tiny{font-size:13px;line-height:1.35;color:var(--muted,#9fb0dd)}
  #door .door-sheet{display:block;text-align:center;min-height:44px;box-sizing:border-box;padding:11px 10px;border-radius:12px;border:2px solid var(--line,#3a55a0);color:inherit;font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 2px 0 rgba(0,0,0,.25)}
  #door .door-link{color:var(--a3,#8fb0ff);text-decoration:underline}
- #door .door-msg{min-height:18px;font-size:14px}`;
+ #door .door-msg{min-height:18px;font-size:14px}#door .door-rep{display:flex;justify-content:flex-end}`;
   return `<style>${css}</style><div class="door-in">
  <p class="door-eye">SLAM the Game</p>
  <h1>Find out if you're okay with money in 2 minutes, no typing, free.</h1>
@@ -91,7 +92,8 @@ function doorHtml(wait) {
  <p><b>Education and tools, not financial advice.</b></p>
  ${DOOR_PRIVACY ? `<p><a class="door-link" href="${DOOR_PRIVACY}">Privacy: what is stored and who sees it</a></p>` : ""}
  ${blankFireSheetBtn()}
- </div></details></div>`;
+ </div></details>
+ <div class="door-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div></div>`;
 }
 /* Put the landing screen on the page. */
 function doorShow() {

@@ -34,7 +34,9 @@ Each file has the name of its feature.
 |-----------|---------|-------------------------|
 | `addon-sealed-files.js` | The sealed add-on files (needs private files) | `account/addon.js`, `x1.json`, `x2.json` |
 | `coming-soon.js` | The card "Coming soon": a tap with no action, an action or a screen that throws, a Menu row with no action, a failed probe in What's built; and a Menu row stays open | `core/soon.js`, `screens/ui.js`, `screens/planner.js`, `screens/ux.js` (uxPop), `features/built.js` |
+| `founding-share-whats-new.js` | Founding Testers (the mark and the one-time card come only from the answer of the database), the personal share link (`?ref=code`), the patch notes "What's new", the admin section, and the database file read as text (the grants, the row rules, the limit of 50) | `features/founding.js`, `data/patchnotes.js`, `account/supa.js` (suRef, suRefKeep), `account/foundadmin.js`, `admin.html` |
 | `ask-front-door.js` | The Ask front door on Home | `features/ask3.js` |
+| `front-door.js` | The front door: a new visitor sees the landing screen, a signed-in person does not, Start opens "Am I okay?" first with no account, the taps end on the answer (a Guess, no verdict word), the offer to save by making an account, the link marks stay, the built list row | `account/door.js`, `features/okay.js`, and their calls in `account/supa.js`, `screens/ui.js`, `screens/ux.js`, `screens/planner.js`, `account/cloud.js` |
 | `insurance-needs.js` | Insurance needs | `features/cover.js` |
 | `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
 | `plan-spreadsheet.js` | The spreadsheet of the plan: each formula worked out and compared with the game | `features/book.js` |
@@ -132,4 +134,5 @@ The add-on source is not in this repository. Thus the tests of the add-on conten
 | `strategy-engine.js` | The Strategy Engine ("Moves to try"): the template, the loop of each strategy, the house hack and the balance transfer by hand, the ranking | `features/strat.js`, `data/strategies.js`, `data/metros.js` |
 | `coach-demo-and-results.js` | The coach page: the demo with made-up clients, milestones and days to a first win, before and after, the pipeline, search and sort | `account/coachplus.js` |
 | `roles-coach-admin.js` | The hats (Player, Coach, Admin), the coach page, the admin sections, the sign-up line, and the database file read as text | `account/roles.js`, `account/coachpage.js`, `account/adminmore.js`, `coach.html`, `admin.html` |
+| `report-a-bug-or-idea.js` | Report a bug or idea: the button on each screen, what a report carries, the list on the device, the sending, the note "It's fixed", the admin Reports inbox, and the database file read as text | `core/reportcore.js`, `features/fbreport.js`, `account/adminmore.js`, `admin.html` |
 | `sync-no-change-lost.js` | The sync of two devices and a coach: a stamp for each person, the later copy wins, no open task is lost, a failed save is sent again | `account/cloud.js`, `account/coachpage.js` |

@@ -23,6 +23,36 @@ const SUPA_URL = "https://twuxggigsfsdczsyvupk.supabase.co";
 const SUPA_KEY = "sb_publishable_tSWobVdlrb-I5pTiGORWHA_z9JD5K-Z";
 const SUPA = { on: false, sb: null, uid: null, email: "", ready: null, ids: {}, share: true };
 
+/* A share link has ?ref=code (features/founding.js makes it). The code a person arrives with is kept on this
+   device from the first page load, through the sign-up, until setup is finished. The first code stays.
+   suRefClean() takes only letters and digits, thus the link cannot carry anything else. */
+const SU_REF = "slam_ref";
+function suRefClean(s) {
+  const c = String(s == null ? "" : s)
+    .trim()
+    .toLowerCase();
+  return /^[a-z0-9]{4,32}$/.test(c) ? c : "";
+}
+function suRef() {
+  try {
+    return typeof localStorage === "undefined" ? "" : suRefClean(localStorage.getItem(SU_REF));
+  } catch (e) {
+    report(e, "supa.js: suRef");
+    return "";
+  }
+}
+function suRefKeep(search) {
+  try {
+    const q = suRefClean(new URLSearchParams(search || "").get("ref"));
+    if (q && !suRef()) localStorage.setItem(SU_REF, q);
+    return q;
+  } catch (e) {
+    report(e, "supa.js: suRefKeep");
+    return "";
+  }
+}
+if (typeof location !== "undefined") suRefKeep(location.search);
+
 (function () {
   if (typeof window === "undefined" || window.claude) return; /* inside Claude: use Claude's own saving */
   if (!window.supabase || !window.supabase.createClient) {
@@ -270,6 +300,7 @@ function suGate(done, mode0) {
  #su-gate input:focus{outline:none;border-color:var(--a1,#5b8cff)}
  #su-gate .su-go{width:100%;margin-top:16px;padding:14px;border:0;border-radius:12px;background:var(--a1,#5b8cff);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
  #su-gate .su-other{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:15px;font-weight:600;cursor:pointer}
+ #su-gate .su-rep{display:flex;justify-content:flex-end;margin-top:6px}
  #su-gate .su-msg{margin-top:12px;font-size:14px;min-height:18px}#su-gate .su-link{background:none;border:0;color:var(--a3,#8fb0ff);text-decoration:underline;font-size:13px;margin-top:10px;cursor:pointer;padding:0}`;
   const el = document.createElement("div");
   el.id = "su-gate";
@@ -282,7 +313,7 @@ function suGate(done, mode0) {
   <button class="su-go" type="submit">${mode === "new" ? "Create my account" : "Sign in"}</button>
   <button type="button" class="su-other" data-m="${mode === "new" ? "in" : "new"}">${mode === "new" ? "I already have an account. Sign in" : "I'm new. Create an account"}</button>
   ${mode === "in" ? `<button type="button" class="su-link" data-forgot>Forgot my password</button>` : ""}
-  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">Coach mode is on: your coach can see your game to help you. You can turn it off anytime in Menu, then My account.</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg">${msg}</div><div class="su-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
     const bk = el.querySelector("[data-door-back]");
     if (bk)
       bk.onclick = () => {
@@ -323,7 +354,12 @@ function suGate(done, mode0) {
           ? await SUPA.sb.auth.signUp({
               email: e,
               password: p,
-              options: { emailRedirectTo: location.origin + location.pathname },
+              /* data.ref: the code of the share link, kept with the account, thus it is not lost when
+                 the person confirms the email on a different device */
+              options: Object.assign(
+                { emailRedirectTo: location.origin + location.pathname },
+                suRef() ? { data: { ref: suRef() } } : {}
+              ),
             })
           : await SUPA.sb.auth.signInWithPassword({ email: e, password: p });
       if (r.error) {

@@ -50,7 +50,7 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   let { ctx, page, errs } = await open(browser, false, 390, 640);
   chk('a new visitor sees the landing screen', await page.locator('#door').isVisible());
   const box = async sel => page.locator(sel).first().boundingBox();
-  for (const [name, sel] of [['the one line', '#door h1'], ['Start', '#door [data-door=start]'], ['Sign in', '#door [data-door=in]'], ['What is this?', '#door summary']]) {
+  for (const [name, sel] of [['the one line', '#door h1'], ['Start', '#door [data-door=start]'], ['Sign in', '#door [data-door=in]'], ['What is this?', '#door summary'], ['Report', '#door [data-a=flag]']]) {
     const b = await box(sel);
     chk(name + ' is on the first screen at 390 x 640, with no scroll', b && b.y >= 0 && b.y + b.height <= 640 && b.x >= 0 && b.x + b.width <= 390, b);
   }
