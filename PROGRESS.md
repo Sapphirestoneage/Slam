@@ -172,6 +172,7 @@ It starts when each of the two other runs has finished the part it is on. The tw
 A line is added here for each part.
 
 - Logged. Waiting for Part 1 of each of the two other runs to land.
+- Part 5, Email: done. `docs/EMAIL-SETUP.md` has the click-by-click steps for Eli: a free Resend account, proving a domain, one key that goes straight into Supabase (Authentication, Emails, SMTP Settings) and nowhere else, the email limit to raise, "Confirm email", a test, and where to look when an email does not arrive. It ends with a five-line checklist, a "Check on the screen" list of what could not be read from an official page, and the sources with the date. No key is in the repository. One line in `docs/CLOUD-SETUP.md` points to it. Nothing in the app changed.
 
 ## Nov 25 2026: RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
 
