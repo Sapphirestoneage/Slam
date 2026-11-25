@@ -176,7 +176,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | A stable public site | Not started | |
-| 2 | Report a bug or idea | Not started | |
+| 2 | Report a bug or idea | Done in the apps; the database file waits for Eli | One Report button on every screen of the game (top bar of each tab, end of each sheet, welcome, sign-in) and of the web app (top bar of the shell, a slim row on each page that stands alone). It replaces Flag this screen and Report this screen; the old notes stay readable. Eli runs `supabase/migrations/20261125190000_reports.sql` one time (NOT APPLIED). Until then a report says "Saved on this device" and sends itself after; the admin section "Reports inbox" says it waits. QUESTIONS 582. |
 | 3 | Founding Testers and sharing | Not started | |
 | 4 | Trust | Not started | |
 | 5 | Email | Not started | |

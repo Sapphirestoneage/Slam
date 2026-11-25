@@ -4,7 +4,7 @@
 import { h, clear, icon } from './ui/dom.js';
 import { arrive, leftPopover, missingFor, land } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
-import { reportThis } from './ui/report-this.js';
+import { openReport } from './report/page.js';
 import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
@@ -161,7 +161,9 @@ const app = {
       h('nav.tabs', { 'aria-label': 'Main tabs' }, TABS.map(t => h('a.tab', { href: tabRoute(t), 'aria-current': t.id === tab.id ? 'page' : null, title: t.job }, t.name))),
       h('div.tb-right', {},
         this.findBox(), more,
-        h('label.field.time-pick', {}, time), cv, gear)));
+        h('label.field.time-pick', {}, time), cv, gear,
+        // Report a bug or idea (js/report): in the bar, in the flow, on every screen. Outlined: it is never the primary.
+        h('button.icon-btn.more-btn.rp-web', { type: 'button', 'data-focus': 'report', title: 'Report a bug, an idea or a confusing screen. Where you are goes with it.', onclick: () => openReport() }, 'Report a bug or idea'))));
     // Home is one screen with one nav row: no sub-tab bar there (About you shows the bar, with the way back).
     $('subtabs').hidden = tab.id === 'home' && (sub.id === 'session' || sub.id === 'review');
     this.agendaBar();
@@ -300,7 +302,7 @@ const app = {
       item('Redo', 'redo', () => this.redo(), { disabled: !this.store.canRedo }),
       item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
-      item('Report this screen', 'flag', () => reportThis(this, anchor)), // batch 13 (item 3): in the More menu, so it never sits over a control
+      item('Report a bug or idea', 'flag', () => openReport()), // the same sheet as the Report button of the top bar (js/report)
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {
