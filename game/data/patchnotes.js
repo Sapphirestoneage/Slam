@@ -176,6 +176,17 @@ const PATCH_NOTES = [
       "Not ready to split? One total for all your cards still works. Each card you add sharpens it.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Career and education",
+    l: [
+      "Menu has Career and education: what a course or a degree costs with the time it takes, the raise after tax, when it pays back, and what it does to your freedom date.",
+      "Start from a 4-year degree, trade school, a certificate or one skill. Each is a sample of the time it takes; the cost and the pay are yours to tap.",
+      "Put trade school and a 4-year degree side by side, stack several credentials and see which ones overlap.",
+      "Leaving a job early? See the dollars of your match that stay with the job, from your own schedule.",
+      "The launch window: a job hop, Roth or traditional now, and a house hack, each as days on your freedom date.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

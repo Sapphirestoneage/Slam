@@ -37,7 +37,10 @@ emergency fund refill put back month by month, the safe-to-fail line, and the op
 time worked out by logarithms; the same day, after Eli's answers to QUESTIONS 580: the Barista number with health
 insurance added, and the months back to the Coast number in closed form, where SLAM steps month by month; and home
 buying and renting, `js/math/homebuy.js`: the payment as the level amount whose discounted sum is the loan, the loan
-left in closed form, each year's position with every payment carried to the end by itself, and the breakeven year).
+left in closed form, each year's position with every payment carried to the end by itself, and the breakeven year; and career and
+education, `js/math/career.js`: the whole price and the raise from their definitions, the loan as the level amount whose
+discounted sum is the loan, the move month by month, the stack's overlaps as sets of months, the vesting steps, and the
+three moves of the launch window).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

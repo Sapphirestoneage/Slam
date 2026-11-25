@@ -416,6 +416,14 @@ const WB = [
   ],
   [
     "plan",
+    "Career and education: a course or degree, a credential stack, the match that stays with the job, the launch window",
+    "b",
+    () => WB_HAS("career") && WB_FN("crRoi") && WB_FN("crgPath") && WB_FN("crVestLeft") && WB_FN("crgLaunch"),
+    "One engine with the web page Does this course or degree pay back?: payback years, lifetime value and the freedom date change, with presets as samples; trade school and a 4-year degree side by side; credentials with overlaps; the match that stays with the job from your own schedule; a job hop, Roth or traditional now and a house hack in days.",
+    "career",
+  ],
+  [
+    "plan",
     "Which account next, up to each limit",
     "b",
     () => WB_HAS("nxa") && WB_FN("nxaCalc") && WB_FN("nxaRows"),

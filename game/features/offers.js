@@ -211,6 +211,7 @@ function offerSheet() {
     "Not counted: the deductible of the health plan, how sure the stock is, and how you would like the work. Those are yours to weigh.",
   ]);
   h += `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="simopen" data-v="job">A new job over the years</button><button class="ghost" style="flex:1" data-a="taxv">Your tax view</button></div>`;
+  h += `<button class="ghost wide slim" data-a="career" data-v="vest">The match that stays with the job if you leave early</button>`;
   return h;
 }
 kitTerms({
