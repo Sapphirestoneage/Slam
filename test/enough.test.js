@@ -196,8 +196,8 @@ const KNOWN = {
   'js/start/app.js': 3, 'game/features/blocks.js': 1, 'game/features/odds.js': 1, 'game/features/sim.js': 2, 'game/features/sims/side.js': 1,
   // fixed tap choices and rule amounts ($25, $50, "at least $100", a $15 travel cost): the same for everyone
   'js/ui/shiftpnl-ui.js': 2, 'game/features/ask2.js': 1, 'game/features/ideas4.js': 2, 'game/features/lever.js': 1, 'game/features/sins.js': 1, 'game/features/gig.js': 2,
-  // js/solo/quick.js (run Part 2): the cents of a cost per use, and New York's own rule amounts
-  'js/solo/canon.js': 1, 'js/solo/return.js': 1, 'js/solo/quick.js': 4, 'game/features/dep.js': 1, 'game/features/ideas5.js': 2,
+  // js/solo/quick.js and gig.js (run Parts 2 and 5): cents (a cost per use, a rate an hour), and New York's own rule amounts
+  'js/solo/canon.js': 1, 'js/solo/return.js': 1, 'js/solo/quick.js': 4, 'js/solo/gig.js': 1, 'game/features/dep.js': 1, 'game/features/ideas5.js': 2,
   // the formatters themselves (each one asks Rough numbers first), and the cents of the game's price tags
   'game/screens/ui.js': 4,
   // the short money of the game's new look ($10k, $1.2M), which hands over to money() while Rough numbers is on

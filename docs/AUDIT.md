@@ -48,6 +48,13 @@ point and cash next to redeem, a group split in whole cents checked against each
 line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
 cash first, then investments).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
+and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
+own tax, and the floor an hour and a job from their definitions; the set-aside with the profit stacked on a job's pay
+by hand (Social Security up to the wage base across both, Medicare, the extra 0.9%, half the self-employment tax off
+income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
+invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
 with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;

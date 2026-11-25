@@ -759,6 +759,7 @@ Object.assign(ACT, {
     if (!z || !ACT[z.a]) return;
     if (z.tab && z.tab !== tab) go(z.tab);
     ACT[z.a]({ dataset: { a: z.a, v: z.v, k: z.k } });
+    if (typeof questSpotUse === "function") questSpotUse(z.a, z.v); /* questlog.js: the exact spot */
     uxChip();
   },
   pmusnext: () => {
