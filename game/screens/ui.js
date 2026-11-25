@@ -6487,10 +6487,8 @@ if (typeof document !== "undefined") {
   document.addEventListener("click", e => {
     const t = e.target.closest("[data-a]");
     if (!t || t.disabled) return;
-    soonTap(
-      t.dataset.a,
-      t
-    ); /* soon.js: runs ACT[name]; a tap with no action, or an action that throws, shows "Coming soon" */
+    /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
+    soonTap(t.dataset.a, t);
   });
   document.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("g[data-a]")) {

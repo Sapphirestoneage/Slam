@@ -11,7 +11,7 @@
                thus the card can close when the actions themselves are damaged.
    DEPENDS ON  core/report.js. The browser loads this file second.
    USES LATER  Names from files that the browser loads later, each behind a typeof test: ACT, SH, W, tab,
-               sheetBase, drawSheet, render, $ (screens/ui.js).
+               sheet, closeSheet, render (screens/ui.js).
    RULES       The card hides nothing. Each stopped error goes to report() (ERRLOG) first. Then, by
                SOON_AFTER: "later" (the game in a browser) throws the same error again after the card
                is on the screen, so the browser console and each test tool that listens for page
@@ -43,7 +43,7 @@ function soonNote(e, where) {
 function soonShow() {
   try {
     if (typeof W !== "undefined") W = null;
-    if (typeof sheetBase === "function") sheetBase(soonSheet);
+    if (typeof sheet === "function") sheet(soonSheet); /* the usual way, so Back and the browser history work */
     else soonWrite("#ov", `<div class="overlay"><div class="sheet stack">${soonHTML()}</div></div>`);
   } catch (e) {
     report(e, "soon.js: soonShow");
@@ -58,15 +58,16 @@ function soonWrite(sel, html) {
 /* The button of the card: close the card, go to Home, draw. */
 function soonClose() {
   try {
-    if (typeof SH !== "undefined") SH = null;
-    if (typeof W !== "undefined") W = null;
     if (typeof tab !== "undefined") tab = "home";
-    soonWrite("#ov", "");
-    if (typeof drawSheet === "function") drawSheet();
+    if (typeof closeSheet === "function") closeSheet(); /* the usual way */
     if (typeof render === "function") render();
   } catch (e) {
     report(e, "soon.js: soonClose");
     if (SOON_AFTER === "now") throw e;
+    /* The usual way is damaged: take the card off directly. */
+    if (typeof SH !== "undefined") SH = null;
+    if (typeof W !== "undefined") W = null;
+    soonWrite("#ov", "");
   }
 }
 /* ONE TAP. The click handler and the menu send each tap through here.
