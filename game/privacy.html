@@ -97,7 +97,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="core/report.js?v=e950ffe0"></script>
-<script src="account/trust.js?v=0ff43c9d"></script>
+<script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script>
 /* The privacy page. The words above are fixed text. This script does two things: the delete button and the
@@ -110,7 +110,7 @@ const list = a => a.length ? `<ul>${a.map(x => `<li>${x}</li>`).join("")}</ul>` 
 function drawDel(){
   if (S.res){
     const w = tuDeleteSays(S.res, S.email);
-    $del.innerHTML = `<p><b>${w.title}</b></p>${w.gone.length ? `<p>Removed:</p>${list(w.gone)}` : ""}${w.stays.length ? `<p>${w.gone.length ? "What stays:" : ""}</p>${list(w.stays)}` : ""}${w.next ? `<p>${w.next}</p>` : ""}${S.res.stop ? `<div class="row"><button data-d="back">OK</button></div>` : ""}`;
+    $del.innerHTML = `<p><b>${w.title}</b></p>${w.gone.length ? `<p>Removed:</p>${list(w.gone)}` : ""}${w.stays.length ? `<p>${w.gone.length ? "What stays:" : ""}</p>${list(w.stays)}` : ""}${w.next ? `<p>${w.next}</p>` : ""}${S.res.stop ? `<div class="row"><button data-d="back">OK</button></div>` : `<div class="row"><a class="btn" href="./">Back to the game</a></div>`}`;
     return;
   }
   if (!S.uid){

@@ -107,6 +107,35 @@ const PATCH_NOTES = [
       "Am I okay?, in the Menu, opens the same answer at any time. Each real number you add recalculates it.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Compare the ways to take money out",
+    l: [
+      "Taking money out has a new tab, Compare the ways. It runs your plan through each way side by side: a steady amount, a share of what is left, guardrails and more.",
+      "Each row shows the first year by month and by year, how it held up in real past markets, the deepest cut, and what is left at the end, with its math.",
+      "Sort by any column, or pin up to three ways to look at them together.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Export for Excel or Google Sheets",
+    l: [
+      "Export, in the Menu, downloads your whole plan as one spreadsheet file. The formulas stay live, so a change in the sheet moves the numbers under it.",
+      "The first tab is the FIRE sheet: your inputs at the top, then one row for each year.",
+      "You can bring an edited sheet back in. You see each change first and choose which ones to keep.",
+      "Start from a blank FIRE sheet opens a simple sheet of your own in Google Sheets. It needs no SLAM account.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Privacy, in plain words",
+    l: [
+      "Privacy, in the Menu, says what is stored, where, and who can see it.",
+      "Share with my coach now starts off for an account made from a public link. It starts on only when you arrive through a coach's invite. You can change it at any time in My account.",
+      "Delete my account is on the Privacy page. It asks two times, then tells you exactly what was removed and what stays.",
+      "The sign-up screen and the foot of each main screen say it: Education and tools, not financial advice.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

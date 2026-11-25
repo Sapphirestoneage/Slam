@@ -39,5 +39,6 @@ pip install qrcode pillow opencv-python-headless
 python3 tools/qr_slam.py --check
 ```
 
-`--check` reads the picture back and compares it with the link. The public site serves the branch `release`
+The same command writes `game/data/qr.js`, the code inside the game (Me, then Share the game), so both codes open
+the same address. `--check` reads both pictures back and compares them with the link. The public site serves the branch `release`
 (`docs/RELEASE.md`): the landing screen is public after the next promote.

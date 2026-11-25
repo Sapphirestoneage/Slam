@@ -22,6 +22,12 @@
   const supa = read("account/supa.js"),
     page = read("privacy.html");
 
+  chk(
+    "after a delete the page gives a way back to the game, next to the answer",
+    /S\.res\.stop \? `<div class="row"><button data-d="back">OK<\/button><\/div>` : `<div class="row"><a class="btn" href="\.\/">Back to the game<\/a><\/div>`/.test(
+      page
+    )
+  );
   /* THE LINE AND THE LINKS */
   chk("the line is the exact one", TRUST_LINE === "Education and tools, not financial advice.");
   chk("the line under the sheets starts with it: one line, not two", EDU.indexOf(TRUST_LINE) === 0);
@@ -387,10 +393,14 @@
       w.stays.join(" ").includes("Your sign-in (a@example.com and the password) is still there") &&
       w.stays.join(" ").includes(TRUST_MAIL)
   );
+  const calm = x =>
+    !/\b(mistakes?|failed|behind|off track)\b/i.test([x.title, x.next].concat(x.gone, x.stays).join(" "));
+  chk("the words after a delete blame nobody (a save that did not go through, not a failed save)", calm(w));
   d = db(() => ({ data: { games: 3, account: true }, error: null }), []);
   ls = dev();
   res = await tuDelete(d, "u1", [ls]);
   w = tuDeleteSays(res, "a@example.com");
+  chk("the same after the database step", calm(w) && /saves that did not go through/.test(w.gone.join(" ")));
   chk(
     "after the database step: one call removes all of it",
     res.full && res.games === 3 && d.log.join() === "rpc delete_my_account,signOut" && res.device === 4

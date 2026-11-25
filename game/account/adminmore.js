@@ -126,7 +126,7 @@ function amReportWho(r, users) {
 /* The section "Reports inbox": the newest first, a filter by type, open the game at that screen, Mark Fixed. */
 function amReportsHTML() {
   const users = typeof S !== "undefined" && S.data && S.data.users ? S.data.users : [],
-    wait = `<p class="muted">This part waits for the database file of 2026-11-25 (supabase/migrations/${RP_FILE}). Run it one time in the Supabase SQL Editor. Until then, each report stays on the device of the person who made it, and sends itself after.</p>`;
+    wait = `<p class="muted" style="overflow-wrap:anywhere">This part waits for the database file of 2026-11-25 (supabase/migrations/${RP_FILE}). Run it one time in the Supabase SQL Editor. Until then, each report stays on the device of the person who made it, and sends itself after.</p>`;
   if (!AM.reports)
     return `<details class="card" style="padding:0 14px"><summary>Reports inbox</summary><div class="tools">${wait}</div></details>`;
   const c = rpCounts(AM.reports),

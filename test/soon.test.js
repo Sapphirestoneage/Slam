@@ -57,5 +57,6 @@ test('soon: the router draws each screen through guardScreen, and the card is ca
   const src = readFileSync(new URL('../js/ui/soon.js', import.meta.url), 'utf8');
   const copy = src.slice(src.indexOf('export function soonCard'), src.indexOf('const later'));
   assert.match(copy, /Coming soon/);
+  assert.match(copy, /minHeight: '44px'/, 'the one button of the card is a full tap target');
   assert.ok(!/broken|failed|wrong|mistake|sorry|oops|error/i.test(copy), 'no verdict word and no error text on the card');
 });

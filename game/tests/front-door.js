@@ -257,8 +257,19 @@
   Object.assign(DOOR, { done: null, want: "", el: null, guest: false, shown: false });
   doorGate(done);
   chk("a visitor with a game on this device goes straight to the game", kids.length === 0 && doorGuest());
+  X("okay");
+  chk("before the account: the open answer offers to save", /data-a="doorsave"/.test(ov()));
   doorSigned();
   chk("after the sign-in the game is not a guest game", !doorGuest() && !("slam_guest" in store));
+  chk(
+    "at once, with no other tap: Home and the open answer no longer offer an account",
+    !/data-a="doorsave"/.test(app()) && !/data-a="doorsave"/.test(ov())
+  );
+  chk(
+    "the open answer says that the game is kept in the account",
+    /Your account is made, and this game is now kept in it\./.test(ov()) && doorJustSaved()
+  );
+  closeSheet();
   chk(
     "after the sign-in Home has no row about this device",
     !/Keep this game: make a free account/.test((render(), app()))
