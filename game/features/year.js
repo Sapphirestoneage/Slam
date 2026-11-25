@@ -474,6 +474,7 @@ function reviewSheet() {
   if (typeof reviewSheetYear === "function") h = reviewSheetYear(h); /* eras.js: the steps that start again each year */
   if (typeof reviewSheetQuota === "function")
     h = reviewSheetQuota(h); /* quota.js: savings rate by month, next year's budget */
+  if (typeof reviewSheetAudit === "function") h = reviewSheetAudit(h); /* audit.js: the button of the optional audit */
   return h;
 }
 function reviewSheetBase() {

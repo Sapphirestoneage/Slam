@@ -71,7 +71,7 @@ export const WORRIES = [
   { id: 'early', group: 'money', label: 'I want to stop working early',
     see: [['My lifetime plan', 'life', null], ['The stress test', 'life', 'stress'], ['Change the withdrawal rate', 'tune', 'withdrawalRate']],
     steps: ['Find the age your money holds from, in your lifetime plan.', 'Sharpen your spending. It moves the date more than anything else.', 'Try the history stress test at that age.', 'Plan health cover for the years before 65.'] },
-  { id: 'behind', group: 'money', label: 'I feel behind on retirement',
+  { id: 'behind', group: 'money', label: 'I want to catch up on retirement',
     see: [['My lifetime plan', 'life', null], ['Earn more or spend less', 'see', 'growth'], ['My time level', 'sharpen', 'time']],
     steps: ['See the date on your real numbers before judging it.', 'Take every dollar of match at work.', 'Raise what you put away by 1% of pay now, and again each year.', 'Look at what Social Security adds in your lifetime plan.'] },
   { id: 'bigBill', group: 'money', label: 'A big bill is coming',

@@ -130,7 +130,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | FI number variants | Not started | |
+| 1 | FI number variants | Done | Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
 | 2 | Home buying and renting | Not started | |
 | 3 | Career and education | Not started | |
 | 4 | Travel | Not started | |
@@ -159,7 +159,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | Recalculating and the audit | Not started | |
+| 1 | Recalculating and the audit | Done | Web app: Home, Budget, Debt, Debt payoff, and Report › History (the audit). Game: Home, the Money tab, the debt plan, the menu, the Yearly Review. One math file for both (`js/math/recalc.js`, copied to `game/core/recalc.js`). 37 strings reworded; `test/tone.test.js` keeps them out. Questions: QUESTIONS.md 581. |
 | 2 | Quick calculators | Not started | |
 | 3 | Lifestyle creep and enough | Not started | |
 | 4 | Eli's frameworks and the canon | Not started | |
@@ -175,11 +175,11 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | A stable public site | Not started | |
+| 1 | A stable public site | Done | The branch `release` and `bash tools/promote.sh` (both suites on the exact `main` commit, fast-forward only). "Coming soon" card in the game and the web app. Eli: switch GitHub Pages to `release` (`docs/RELEASE.md`). **Promote at the end of every run and say so in the summary.** |
 | 2 | Report a bug or idea | Not started | |
 | 3 | Founding Testers and sharing | Not started | |
 | 4 | Trust | Not started | |
-| 5 | Email | Not started | |
+| 5 | Email | Done | `docs/EMAIL-SETUP.md`. Confirmed from Resend's and Supabase's pages (through search, read 2026-11-25): host, port, username, the key as password, the free plan limits, the Supabase links. Not confirmed, so the doc says to read them on the screen: Resend's sign-up labels, the exact labels of the Supabase fields and of "Confirm email", the starting hourly limit (30 or 25). Eli has to do the steps; question 582 in QUESTIONS.md. |
 | 6 | The front door | Not started | |
 
 ## RUN: 4% rule vs guardrails and every way to take money out, side by side (Nov 25 2026)
@@ -187,3 +187,17 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | Compare the ways: one screen in the game and in the web app lifetime plan | Not started | |
+
+## RUN: Export for the FIRE spreadsheet crowd (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The .xlsx export in the game, the FIRE sheet tab, Google Sheets, the Export entry, the blank FIRE sheet button | Not started | |
+
+## RUN: Money sins system and the Rings theme (Nov 25 2026)
+
+| Part | What | State | Notes |
+|------|------|-------|-------|
+| 1 | The read | Not started | Waits for the quiz engine (Not built, groups 1 to 5, Part 11) |
+| 2 | Results and growth | Not started | |
+| 3 | The Rings theme | Not started | |

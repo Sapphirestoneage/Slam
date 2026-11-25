@@ -634,9 +634,11 @@ function home() {
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
+  if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */
   if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions (hidden by default) */
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
+  if (typeof homeRcRow === "function") h = homeRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -712,7 +714,7 @@ function homeBase() {
  ${real ? rateTile(c, d, ds("rate", nb)) : ""}
  ${
    real
-     ? `<div class="grid2" ${ds("tiles", bt.pct === 0 && !monthFlow(c, t.slice(0, 7)).n)}><div class="tile"><div class="tiny muted">Since you started</div><div class="big" data-fid="v:bt">${bt.pct > 0 ? bt.pct + "% better" : bt.pct < 0 ? Math.abs(bt.pct) + "% behind" : "Day 1"}</div><div class="tiny muted" style="margin-top:4px">${bt.pct === 0 ? "Your first money move shows up here." : "Own minus owe went from " + money(bt.from) + " to " + money(bt.now)}</div></div>
+     ? `<div class="grid2" ${ds("tiles", bt.pct === 0 && !monthFlow(c, t.slice(0, 7)).n)}><div class="tile"><div class="tiny muted">Since you started</div><div class="big" data-fid="v:bt">${bt.pct > 0 ? bt.pct + "% better" : bt.pct < 0 ? Math.abs(bt.pct) + "% to regain" : "Day 1"}</div><div class="tiny muted" style="margin-top:4px">${bt.pct === 0 ? "Your first money move shows up here." : "Own minus owe went from " + money(bt.from) + " to " + money(bt.now)}</div></div>
  <div class="tile"><div class="tiny muted">This month, logged</div>${(() => {
    const mf = monthFlow(c, t.slice(0, 7));
    return mf.n
@@ -1115,6 +1117,8 @@ function moneyTab() {
   if (typeof moneyTabLogLink === "function") h = moneyTabLogLink(h); /* moneylog.js: the button for the money log */
   if (typeof moneyTabTaxRow === "function") h = moneyTabTaxRow(h); /* gig.js: the row "Tax money" */
   if (typeof moneyTabPlanRows === "function") h = moneyTabPlanRows(h); /* csp.js: the spending plan, the audit */
+  if (typeof moneyTabRcRow === "function")
+    h = moneyTabRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
   return h;
 }
 function moneyTabBase() {
@@ -2530,7 +2534,12 @@ let SEEN = {},
 /* DRAW THE SCREEN.
    render() is the full function. It calls each part by name.
    renderBase() is the part from this file: the top bar, the open tab, and the tab bar. */
+/* render() draws the main screen. renderAll() is the full draw. If a part of it throws, soon.js puts the card
+   "Coming soon" in the place of the screen, and the error is recorded. */
 function render() {
+  soonRun(renderAll, "ui.js: render", "#app");
+}
+function renderAll() {
   const wel = typeof renderUxStart === "function" ? renderUxStart() : false; /* ux.js: a new player stays on Home */
   /* planner.js: tidy the plan. On the tab "plan", it also draws the screen and returns true. */
   const drawn = typeof renderPlan === "function" ? renderPlan() : false;
@@ -4871,7 +4880,7 @@ function rivalCard(c, d) {
  )
    .map(k => `<button class="chip ${key === k ? "on" : ""}" data-a="rival" data-v="${k}">${RIVALS[k].n}</button>`)
    .join("")}</div><div class="small" style="margin-top:6px"><b>${rs.R.n}.</b> ${rs.R.d}</div>
- ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "You're behind by " + money(-rs.gap) + ". One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div></div>`;
+ ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "Recalculating: " + money(-rs.gap) + " to close. One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div></div>`;
 }
 Object.assign(ACT, {
   stmt: t => {
@@ -4992,7 +5001,7 @@ const MTYPES = [
 const MQ_S = [
   [
     "I feel uneasy until my money is handled the right way.",
-    "A money mistake bothers me for days.",
+    "A money choice that goes wrong bothers me for days.",
     "I'd rather follow the rules than cut a corner to save.",
   ],
   [
@@ -5213,7 +5222,7 @@ function drawSheetBase() {
     (W && (W.kind === "skill" || W.kind === "node")) || SH === glossarySheet
       ? `<div class="tiny muted">${EDU}</div>`
       : "";
-  el.innerHTML = `<div class="overlay"><div class="sheet stack">${SH()}${foot}</div></div>`;
+  el.innerHTML = `<div class="overlay"><div class="sheet stack">${soonDraw(SH, "ui.js: drawSheetBase")}${foot}</div></div>`;
   const nw = el.querySelector ? el.querySelector(".sheet") : null;
   if (nw) nw.scrollTop = sc;
   if (nw && nw.querySelectorAll) {
@@ -6481,13 +6490,13 @@ if (typeof document !== "undefined") {
   document.addEventListener("click", e => {
     const t = e.target.closest("[data-a]");
     if (!t || t.disabled) return;
-    const f = ACT[t.dataset.a];
-    if (f) f(t);
+    /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
+    soonTap(t.dataset.a, t);
   });
   document.addEventListener("keydown", e => {
     if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("g[data-a]")) {
       e.preventDefault();
-      ACT[e.target.dataset.a](e.target);
+      soonTap(e.target.dataset.a, e.target);
     }
   });
   render();

@@ -1555,6 +1555,8 @@ function knMetrics(c, d) {
   }
   /* mix.js: the stock share, from what is inside each investment account */
   if (typeof knMetricsMix === "function") knMetricsMix(c, add);
+  /* coast.js: the FI ratio, what the investments can pay next to the spending */
+  if (typeof knMetricsFir === "function") knMetricsFir(c, add);
   return M;
 }
 const KN_BASE = ["save", "cushion", "growth", "home", "highdebt", "split", "nw", "fi"];

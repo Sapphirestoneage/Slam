@@ -13,5 +13,5 @@ Optional: Authentication, Emails, the "Magic Link" template: add the line "Or ty
 six-digit code box works when the email is opened on another device.
 
 Known limits: Supabase's built-in email sender allows only a few sign-in emails an hour, enough for testing. For real
-use, connect a mail service under Authentication, SMTP. A free project pauses after a week with no activity.
+use, connect a mail service under Authentication, SMTP. The click-by-click steps are in docs/EMAIL-SETUP.md. A free project pauses after a week with no activity.
 Sync is newest-save-wins, a whole plan at a time.

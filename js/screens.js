@@ -2,6 +2,7 @@
 // Every screen's first state, word for word from the Words and states tab. Later phases fill them in.
 import { cardsGiveSection, doubledNotes, cardPlanNote } from './ui/cards-ui.js';
 import { h, icon } from './ui/dom.js';
+import { recalcParts } from './ui/recalc-ui.js';
 import { budgetCompletion, itemRoute } from './completion.js';
 import { paycheckSection } from './ui/paycheck-ui.js';
 import * as S from './ui/staples.js';
@@ -129,7 +130,7 @@ const MM = {
   } },
   debt: { title: 'Debt', sub: 'Every debt and its payoff', body: (app, ctx) => (ctx.gates().areas.debt === false
     ? [h('div.card', {}, h('div.empty', {}, h('span.title', {}, 'No debt, per About you'), addArea(app, ctx, 'debt', 'Debt')))]
-    : [completion(app, listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx),
+    : [completion(app, listCompletion(ctx, r => r.kind === 'debt', ['balance', 'apr'])), hasAny(ctx, ['debt']) ? null : fastTrack(app, ctx), recalcParts(app, ctx, 'debt'),
       withChart(ctx, debtList(ctx.ref, { cards: 'none' }), debtCharts, 'debt'), S.live(ctx, () => (ctx.visible(r => r.kind === 'debt' && r.type === 'Credit card').length ? null : cardsLink(ctx)))]) }, // batch 11 (5a): with cards, they are a row in the list (lead)
   // Answer to 56: credit cards are standard debt with a sub-tab of their own: the cards, utilization, the score.
   'credit-cards': { title: 'Credit cards', sub: 'Every card, how much of the limits you use, your score', body: (app, ctx) => (ctx.gates().areas.debt === false

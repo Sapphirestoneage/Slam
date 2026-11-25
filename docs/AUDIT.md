@@ -31,7 +31,14 @@ from take-home, a single debt (months, interest, the payment that is too small),
 snowball order, the FI number, months to FI, Coast FI, the saving that hits a date, years to FI by savings rate, the
 runway, Start at the finish line, the taxed part of Social Security, tax on gains, required withdrawals, the
 Marketplace premium credit, a free year's tax, the Medicare extra premium, the whole lifetime run (every strategy,
-every conversion line, one or two people), and the earliest age work can stop.
+every conversion line, one or two people), the earliest age work can stop, and Recalculating (`js/math/recalc.js`, added
+Nov 25 2026: the old date and the new date counted month by month on a calendar, the triage paid class by class, the
+emergency fund refill put back month by month, the safe-to-fail line, and the opt-in audit's totals with the cost over
+time worked out by logarithms).
+
+Added Nov 25 2026 (the FI destinations): Fat FI with and without a list of extras, Chubby FI (the midpoint), what
+part-time pay closes and whether it covers health insurance, and every box of the FI date stress test (the second
+engine uses the closed formula for each box, SLAM steps month by month).
 
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the

@@ -525,6 +525,7 @@ export const REFERENCE_LISTS = {
   'limits.401k.appliesTo': 'which account types the 401(k) limit covers',
   'limits.ira.appliesTo': 'which account types the IRA limit covers',
   'limits.commuterNote': 'a note on the commuter limit',
+  fiStress: 'run of Nov 25 2026: the grid of the FI date stress test on Plan › Goals (M9X), the withdrawal rates 3.25%, 3.5%, 4% and 4.5% and the returns 3%, 5% and 7% after inflation, from the prompt of that run (Nov 25 2026); what-if choices, not rates anyone is told to expect',
   typicalRatesNote: 'a note: the card Guess is 25% on purpose; the Fed average is 22.15%',
   'typicalCardLimit.byAge': 'the Card_limit table', 'typicalCardLimit.source': 'the source of the typical card limits (Experian, June 2026)',
   'limits.rothIncome.note': 'a note on the Roth income limit',

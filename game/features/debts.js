@@ -220,6 +220,7 @@ function dbSheet() {
   let h = dbSheetBase();
   if (typeof dbSheetOwed === "function") h = dbSheetOwed(h); /* owed.js: the button "What each debt costs you" */
   if (typeof dbSheetSim === "function") h = dbSheetSim(h); /* sim.js: the simulators about debt */
+  if (typeof dbSheetRc === "function") h = dbSheetRc(h); /* recalc.js: the row "Recalculating", when a date moved */
   return h;
 }
 function dbSheetBase() {

@@ -11,6 +11,7 @@ import { money } from '../format.js';
 import { gapCard } from './gap-ui.js';
 import { libraryFor, learnBlock } from './library-ui.js';
 import { fooRangeLine } from './range-ui.js';
+import { fooDestinationSection } from './destinations-ui.js';
 
 export const FUI = { original: false };
 export const LAUNCH_MOVES = ['Quit and take time off', 'Go part-time', 'Take a sabbatical', 'Start something of my own', 'Move somewhere cheaper'];
@@ -75,7 +76,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   return [head('FOO', 'Your order of operations: what to fund next, and when',
       S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"]], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show the original nine' })),
     f.gap ? gapCard(app, ctx, undefined, { where: 'foo' }) : null, // batch 12 (item 5): the gap on top
-    S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), settings, // batch 13: the path and the steps are the core (open)
+    S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), fooDestinationSection(ctx, f), settings, // batch 13: the path and the steps are the core (open)
     S.sec('foo:steps', { title: 'Every step', open: true, summary: `${f.steps.filter(s => s.status === 'Done').length} of ${f.steps.length} done` }, h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
       FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),

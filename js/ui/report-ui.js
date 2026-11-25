@@ -9,6 +9,7 @@ import { flowWords } from '../math/flow.js';
 import { nextMoves } from '../math/moves.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
+import { auditSection } from './audit-ui.js';
 import { cardPlanNote } from './cards-ui.js';
 import { sheetButtons } from './sheet-ui.js';
 import { soWhat } from '../sowhat.js';
@@ -365,6 +366,7 @@ export function historyScreen(app, ctx) {
       h('tbody', {}, [{ label: 'Now', at: null, metrics: now }, ...[...snaps].reverse()].map(s => h(`tr.row${s.at ? '' : '.now-row'}`, {}, h('td.col-first', {}, s.at ? s.label : h('strong', {}, 'Now')), h('td', {}, s.at ? new Date(s.at).toLocaleString() : 'Today'),
         h('td.num', {}, money(s.metrics.netWorth)), h('td.num', {}, money(s.metrics.debtTotal)), h('td.num', {}, s.metrics.savingsRate == null ? '' : pct(s.metrics.savingsRate)), h('td.num', {}, money(s.metrics.surplus)))))))),
     S.sec('history:wrapped', { title: 'Wrapped, your year in review' }, () => wrapped(ctx, snaps, months, since)),
+    auditSection(app, ctx), // Nov 25 2026: opt-in, closed, opened from here or not at all
     S.sec('history:log', { title: 'Change log' }, () => changeLogTable(ctx))]; // F6: every edit with who
 }
 // F6: the change log, newest first: when, what, field, from, to, who (Coach or Client).

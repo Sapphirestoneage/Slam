@@ -5,11 +5,12 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from '../../js/math/income.js';
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
-import { fiNumber, fiDate, coastFi, solveMonthlySaving } from '../../js/math/fi.js';
+import { fiNumber, fiDate, coastFi, solveMonthlySaving, fatFiNumber, chubbyFiNumber, baristaGap, fiStress } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
+import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, RC_ORDER } from '../../js/math/recalc.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
@@ -41,6 +42,13 @@ for (let i = 0; i < N; i++) {
   { const x = { annualSpending: money(12000, 300000), withdrawalRate: pick([0.03, 0.035, 0.04, 0.047, 0.052]) }; add('fiNumber', x, { fi: v(fiNumber(x)) }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 1500000), monthlyInvesting: rnd() < 0.1 ? 0 : money(50, 9000), realReturn: pick([0.03, 0.05, 0.06, 0.07, 0.08, 0.12]), target: money(200000, 6000000) }; const r = fiDate(x, { from: NOW }); add('fiDate', x, { months: r.value, never: !!r.never }); }
   { const x = { fiNumber: money(300000, 5000000), realReturn: pick([0.05, 0.06, 0.07, 0.08]), age: whole(18, 62), retireAge: pick([55, 60, 65, 67]) }; add('coastFi', x, { coast: v(coastFi(x)) }); }
+  // the FI destinations (run of Nov 25 2026): Fat with or without a list of extras, Chubby, what part-time pay closes, the stress table
+  { const x = { annualSpending: money(12000, 300000), extrasAnnual: rnd() < 0.4 ? null : pick([0, 3000, 6000, 12000, 24000, 60000]), factor: RULES.fatFactor, withdrawalRate: pick([0.03, 0.035, 0.04, 0.047]) };
+    const fat = fatFiNumber(x), regular = v(fiNumber(x)); add('fatFi', x, { fat: v(fat), chubby: v(chubbyFiNumber({ regular, fat: v(fat) })), fromList: !!fat.fromTemplate }); }
+  { const x = { annualSpending: money(12000, 200000), partTimeIncome: money(3000, 90000), healthAnnual: rnd() < 0.3 ? null : pick([0, 3600, 6000, 9600, 14400, 21600]), withdrawalRate: pick([0.03, 0.035, 0.04, 0.047]) };
+    const r = baristaGap(x); add('baristaGap', x, { closes: v(r), covers: r.covers, afterHealth: r.afterHealth, left: r.left }); }
+  { const x = { invested: rnd() < 0.2 ? 0 : money(500, 1500000), monthlyInvesting: rnd() < 0.1 ? 0 : money(50, 9000), annualSpending: money(12000, 240000), rates: ref.fiStress.withdrawalRates, returns: ref.fiStress.returns };
+    const r = fiStress(x, x, { from: NOW }); add('fiStress', x, { rows: r.rows.map(row => ({ target: row.target, months: row.cells.map(c => c.months) })), soonest: r.soonest, latest: r.latest }); }
   { const x = { invested: rnd() < 0.2 ? 0 : money(500, 800000), realReturn: pick([0.05, 0.06, 0.07, 0.08]), target: money(300000, 4000000), months: whole(24, 480) }; add('solveSaving', x, { monthly: v(solveMonthlySaving(x)) }); }
   { const x = { s: whole(1, 99) / 100, realReturn: pick([0.03, 0.05, 0.07]), withdrawalRate: pick([0.03, 0.04, 0.05]) }; add('yearsAtRate', x, { years: yearsAtRate(x.s, x) }); }
   { const x = { cash: rnd() < 0.05 ? 0 : money(100, 200000), spending: money(900, 15000), stillIn: pick([0, 0, 500, 1000, 1500, 2000]), cut: pick([0, 0.1, 0.2, 0.3]) }; const r = runwayOf({ ...x, now: NOW }); add('runway', x, { covered: !!r.covered, months: r.months ?? null, whole: r.whole ?? null, extraMonths: r.extraMonths ?? null }); }
@@ -60,6 +68,15 @@ for (let i = 0; i < N; i++) {
   { const x = { age: whole(18, 75), grossYear: money(15000, 600000), netWorth: rnd() < 0.1 ? 0 : money(500, 5000000) }; const r = expectedWorthOf(x); add('expectedWorth', x, { expected: r.expected, ratio: r.ratio, adjusted: r.adjusted, adjustedRatio: r.adjustedRatio }); }
   { const x = { takeHome: money(1200, 20000), hoursWeek: pick([20, 30, 40, 45, 50, 60]), commuteWeek: pick([0, 2, 5, 8, 10, 15]), costs: pick([0, 50, 150, 300, 500]) }; const r = realWageOf(x); add('realWage', x, { real: r.real, stated: r.stated, hoursPer100: r.hoursPer100 }); }
   { const x = { takeHome: money(1500, 20000) }; x.needs = Math.round(x.takeHome * between(0.2, 0.9)); x.wants = Math.round(x.takeHome * between(0, 0.4)); const r = splitOf(x); add('split', x, { left: r.left, needs: r.shares.needs, wants: r.shares.wants, kept: r.shares.left, markNeeds: r.marks.needs, markWants: r.marks.wants, markLeft: r.marks.left }); }
+  // Recalculating (js/math/recalc.js): the route, the triage, the refill, the safe-to-fail line and the audit.
+  { const x = { planAt: `${whole(2024, 2026)}-${String(whole(1, 12)).padStart(2, '0')}-15`, planMonths: whole(0, 400), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-20`, months: rnd() < 0.1 ? null : whole(0, 420), open: true }; const r = rcRoute(x); add('rcRoute', x, { oldYm: r.oldYm, newYm: r.newYm, shift: r.shift, moved: r.moved, later: r.later, noDate: r.noDate }); }
+  { const CL = RC_ORDER.map(o => o[0]), bills = Array.from({ length: whole(1, 12) }, (_, k) => ({ name: `B${k}`, cls: pick(CL), amount: rnd() < 0.05 ? null : money(10, 4000) })); const x = { income: money(300, 12000), bills }, r = rcTriage(x);
+    add('rcTriage', x, { total: r.total, short: r.short, left: r.left, covered: r.covered, firstShort: r.firstShort ? CL.indexOf(r.firstShort) : null, open: r.open, paid: Object.fromEntries(r.rows.map(b => [b.name, b.paid])) }); }
+  { const x = { target: money(500, 60000), balance: money(1, 70000), monthly: rnd() < 0.1 ? null : money(10, 3000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05` }, r = rcRefill(x); add('rcRefill', x, { gap: r.gap, months: r.months, ym: r.full ? null : r.ym, full: r.full }); }
+  { const x = { cap: money(10, 800), spent: rnd() < 0.1 ? null : money(1, 1200) }, r = rcSafeLine(x); add('rcSafeLine', x, { left: r.left, over: r.over, ranOut: r.ranOut, planCost: r.planCost }); }
+  { const TAGS = ['mistake', 'unavoidable', null], KS = ['Late fee', 'Overdraft', 'Car repair', 'Other'], events = Array.from({ length: whole(1, 9) }, (_, k) => ({ id: `e${k}`, kind: pick(KS), amount: rnd() < 0.08 ? null : money(5, 9000), tag: pick(TAGS), yearsAgo: Math.round(between(0, 6) * 10) / 10 }));
+    const x = { events, realReturn: pick([0.03, 0.04, 0.05, 0.06]), years: whole(1, 40), perDay: money(2, 300), hourly: money(8, 150), yearIncome: money(15000, 300000) }, r = rcAudit(x);
+    add('rcAudit', x, { mCount: r.mistake.count, mCost: r.mistake.cost, mLater: r.mistake.later, mDays: r.mistake.fiDays, mHours: r.mistake.hours, uCost: r.unavoidable.cost, uLater: r.unavoidable.later, untagged: r.untagged, open: r.open, tax: r.tax, repeats: r.repeats.length, repeatCost: r.repeats.reduce((t, k) => t + k.cost, 0) }); }
   { const x = { grossMonthly: money(2000, 40000), otherDebt: rnd() < 0.3 ? 0 : money(50, 6000) }; const r = homeFitsOf(x); add('homeFits', { ...x, rate: RULES.lenderMortgageRate, years: RULES.lenderMortgageYears, taxIns: RULES.lenderTaxInsShare, front: RULES.lenderFront, back: RULES.lenderBack }, { payment: r.payment, loan: r.loan, by: r.by }); }
   { const x = { amount: money(2, 2000), per: pick(['week', 'month']), years: pick([5, 10, 20, 30]) }; const r = habitCostOf({ ...x, ref }); add('habit', x, { grown: r.grown, spent: r.spent, needs: r.needs, times: r.times }); }
   { const x = { amount: money(500, 600000), apr: pick([0, 0.029, 0.04, 0.0655, 0.07, 0.1, 0.15, 0.25]), years: pick([1, 2, 3, 5, 7, 10, 15, 30]) }; const r = loanCostOf({ ...x, ref }); add('loan', x, { payment: r.payment, paid: r.paid, interest: r.interest, interestToday: r.interestToday, invested: r.invested, fiNumber: r.fiNumber }); }

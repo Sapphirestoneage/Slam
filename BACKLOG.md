@@ -131,3 +131,7 @@ Kept by `tools/backlog.py` when it rebuilds this file. Add each to the spec's Fe
 |---|---|---|---|
 | 6 | Send to Google Sheets | Sign in with Google (drive.file scope only), send the workbook to the client's Drive, an Update button, and auto-update on save | Open the books, Nov 3 2026 |
 | 6 | Pull from a connected Google Sheet | Bring changes back from the connected sheet without downloading it, through the same review screen | Open the books, Nov 3 2026 |
+
+## Built since this list was made
+
+- Mistake cost tracker (Phase 4, above): built Nov 25 2026 as the opt-in Mistake audit. Web app: Report, History, the closed section under Year in review. Game: the menu and the end of the Yearly Review. The spec's Feature list row still says Backlog.
