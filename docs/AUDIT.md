@@ -44,6 +44,14 @@ three moves of the launch window; and the money sins read, `js/math/sins.js`, ru
 age on a calendar and the quiz weighted by its share of the plus points, and the month of a defense, the pattern
 added up in the month before and the month from its start).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
+`js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
+with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;
+personal inflation as a weighted sum; two starting ages stepped month by month; kids, a pet and an apartment added up;
+New York's weekly rate from the handbook's rule and the runway with it; consolidation on the second engine's own debt
+and the loan as a sum of discounted payments; leaving a job on the second engine's own tax; roommates by share of the
+space or of the pay; the W-4 check with the child tax credit typed in again; and the month at a glance.
+
 Since Nov 25 2026 (run JOE-1) it also covers the Job of Existing (`js/math/jobs.js`): which of the six unpaid jobs
 a person holds, worked out a second time from each answer that counts, and the order; the hours a month of running
 the money (each job at its tap or its default, the total, Guess / Close / Exact); each task's minutes a month; and

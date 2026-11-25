@@ -135,3 +135,4 @@ Kept by `tools/backlog.py` when it rebuilds this file. Add each to the spec's Fe
 ## Built since this list was made
 
 - Mistake cost tracker (Phase 4, above): built Nov 25 2026 as the opt-in Mistake audit. Web app: Report, History, the closed section under Year in review. Game: the menu and the end of the Yearly Review. The spec's Feature list row still says Backlog.
+- ML.3 Full W-4 withholding calculator (Beta, above): built Nov 25 2026 (run Not built, groups 1 to 5, Part 2) as w4.html: refund or owed this year and the W-4 Step 4(b) or 4(c) amount, federal income tax only. The spec's Feature list row still says Logged LATER.

@@ -160,7 +160,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | Part | What | State | Notes |
 |------|------|-------|-------|
 | 1 | Recalculating and the audit | Done | Web app: Home, Budget, Debt, Debt payoff, and Report › History (the audit). Game: Home, the Money tab, the debt plan, the menu, the Yearly Review. One math file for both (`js/math/recalc.js`, copied to `game/core/recalc.js`). 37 strings reworded; `test/tone.test.js` keeps them out. Questions: QUESTIONS.md 581. |
-| 2 | Quick calculators | Not started | |
+| 2 | Quick calculators | Partly (17 of 18 items built; the $30k/$90k rule is not) | 18 small pages drawn by the one renderer (`js/solo/calc.js`), shelf "Eighteen quick calculators" on one.html: `glance`, `hysa`, `dca`, `timemachine`, `waiting`, `consolidate`, `w4`, `jobless`, `leave`, `apartment`, `roommates`, `kids`, `pet`, `inflation`, `peruse`, `worthit`, `hassle`, `warranty` (.html). Math: `js/math/quick.js` (no imports, copied to `game/core/quick.js`) and `js/math/quickplan.js` (on the payoff math, the tax engine, the household split `rowShare`, M27/M28), M8Q, second engine. Game: Quick math has six as cards (HYSA, all at once or spread, cost per use, the hassle, waiting, a warranty). Not built: the $30k/$90k rule (not known what it is), unemployment outside New York (type your own weekly rate), sourced typical costs for kids, pets and apartments (the person types their own). QUESTIONS 604. |
 | 3 | Lifestyle creep and enough | Not started | |
 | 4 | Eli's frameworks and the canon | Not started | |
 | 5 | Gig and self-employed | Not started | |
