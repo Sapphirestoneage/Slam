@@ -1113,6 +1113,34 @@ def run(cases, ref, il=None):
             better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
             ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
             for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
+        elif fn == 'jobCarry':
+            # by people, not by jobs: each person gathers their part of each job and of each task handed to them
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            dflt = {'cfo': 60, 'accountant': 60, 'planner': 15, 'insurance': 15, 'health': 15, 'deals': 15}
+            jm = {i: (x['mins'][i]['v'] if x['mins'].get(i) is not None and x['mins'][i].get('v') is not None else dflt[i]) for i in ids}
+            hv = x['hv']; rate = hv['tp'] if (hv['tp'] or 0) > 0 else (hv['wage'] if hv['wage'] > 0 else None)
+            ck('rate', o['rate'], rate)
+            off = lambda t: x['exits'].get(t['id']) in ('auto', 'hand', 'drop')
+            mo = lambda t: t['per'] * t['times'] / 12
+            got = []
+            for k in x['keys']:
+                m = 0.0
+                for i in ids:
+                    raw = sum(mo(t) for t in x['tasks'] if t['role'] == i and off(t))
+                    left = jm[i] - min(raw, jm[i])
+                    hold = []
+                    for h in x['assign'].get(i, []):
+                        if h in x['keys'] and h not in hold: hold.append(h)
+                    if not hold: hold = [x['keys'][0]]
+                    if k in hold: m += left / len(hold)
+                    for t in x['tasks']:
+                        if t['role'] == i and x['exits'].get(t['id']) == 'hand' and x['hands'].get(t['id']) == k:
+                            m += mo(t) * (min(raw, jm[i]) / raw)
+                got.append(m)
+            for n, m in enumerate(got): ck('minutes of ' + x['keys'][n], o['min'][n], m, 1e-9)
+            ck('household', o['total'], sum(got), 1e-9)
+            ck('value', o['value'], None if rate is None else sum(got) / 60 * rate, 1e-6)
+            for n, m in enumerate(got): ck('value of ' + x['keys'][n], o['val'][n], None if rate is None else m / 60 * rate, 1e-6)
         elif fn == 'jobWire':
             t = 12 if x['day'] in ('d1', 'd15') else 24 if x['day'] == '1and15' else (x['pay'] if x['pay'] > 0 else 12)
             ck('deposits a year', o['times'], t, 0)

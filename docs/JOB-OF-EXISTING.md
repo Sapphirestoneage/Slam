@@ -31,7 +31,7 @@ makes a second copy of a part.
 | 3. The four exits | The schedules (`c.routines`, `auto`), the seasonal list (`SEASONS`), the automation skills and `celebrate()`, the people (`c.party`) | The same files |
 | 4. Goal to account to auto-deposit | Goals (`goalView`: the part `goalViewWire`; the goal card: `goalCardWire` in `goalCardLook`), the reverse of the Time-Money dial (`goalExtraFor`), the countdown's monthly answer, the four exits (`jobTasks`: two tasks for each wired goal), Today (`todayExtras`: the part `todayExtrasWire`), the Fee X-ray (`compare.js`, one tap from I need one) | `game/features/goalwire.js`; the kinds of account `WIRE_OPTIONS` in `game/data/roles.js`; the math `jobWireTimes`, `jobWirePer`, `jobCheckNext`, `jobAddMonths` in `js/math/jobs.js` |
 | 5. Health and insurance quests | `SEASONS` (a new season `oe`, Nov 1 to 30; the item `tax:hsa`), the tasks of `roles.js` (each quest is one task; the new task `in_review`), `resets()` (the part `resetsCare`), Today (`todayExtras`: the part `todayExtrasCare`), Insurance needs (`cover.js`), the glossary (`kitTerms`) | `game/features/careq.js`; `CARE_QUESTS` in `game/data/roles.js`; the math `jobDateNext` in `js/math/jobs.js` |
-| 6. Household role map | The hand-off record of feature 3 (`c.x.roleMap`), `fair.js` (the labor method), the time prices `c.tp` | Worker 3 |
+| 6. Household role map | The hand-off record of feature 3 (`c.x.roleMap`), `fair.js` (the labor method: its hours and its rate), the time prices `c.tp`, the time ledger (the pay per hour), the jobs sheet (`jobsSheet`: the part `jobsSheetRoleMap`) | `game/features/rolemap.js`; the math `jobHourValue`, `jobCarry` in `js/math/jobs.js` |
 
 ## Merges and notes
 
@@ -55,3 +55,58 @@ makes a second copy of a part.
 - The health and insurance quests are tasks of `JOB_TASKS`. A quest that is in a season is the same task as its
   seasonal item (the `season` list of the task). A date of a plan (an open enrollment window, an FSA deadline, a
   renewal) is the person's tap, kept as "MM-DD" in `c.x.care.dates`. SLAM shows no general date.
+
+## Feature 6 (worker 3): Who carries what
+
+- Where: Me > Your unpaid jobs > Who carries what. Also in the Menu ("Who carries what").
+- The household is the player and each person of "Your people". Pets are not in it. Any number of people. Each
+  person shows by their own name.
+- A tap on a name gives that person the job. A second tap takes it off. A job can have more than one person. A job
+  that nobody tapped stays with the player.
+- The record: one item in `c.x.roleMap` for each person who holds a job:
+  `{ id, role, task: null, who: { k: "me" | "person", n, p }, when }`. Compatibility: the old items all have a task.
+  An item with `task: null` has no exit, so the undo of the four exits does not touch it.
+- The math has one function, `jobCarry` (`js/math/jobs.js`):
+  1. Each job keeps its minutes a month (the tap, or the Guess).
+  2. A task off the plate leaves the job, at the same limit as Living it (a job gives back at most its own time).
+  3. A task handed to a person of the home goes to that person. A task handed to the coach or to a tool leaves the
+     home.
+  4. The time that is left of a job is split equally between the people who hold it.
+  5. The household total is the sum of the people. It is Running it plus the tasks handed to people of the home.
+  6. The value is the hours x the value of an hour (`jobHourValue`): the time price for chores (`c.tp.chores`), else
+     the pay per hour of the time ledger. With neither, no dollar value shows. The hours still show.
+- Sharing costs fairly, Labor counts: each person's admin hours a month are added to their work at home, by name.
+  The rate starts at the same value of an hour. The button "Use these hours in Sharing costs fairly" adds the people
+  of the map by name. There is one split engine (`frCalc` in `game/features/fair.js`).
+- Words: no blame and no score. A person with no job shows "No job yet", not "$0".
+- Each tap saves at once. "Give every job back to you" clears the map, and Undo puts it back.
+
+## The spreadsheet of the plan (Menu > Export)
+
+| Section | Rows | Where |
+|---------|------|-------|
+| Your unpaid jobs (admin hours) | The minutes of each job, the total, the minutes given back, Living it, Running it, the share | `jobBook` (features 1 to 3) |
+| Wired goals | The account, what is left, the months, the amount a month, the deposits a year, each deposit, the day, the next check-in | `wireBook` (feature 4) |
+| Health and insurance dates | Each date the person tapped, and its reminder | `careBook` (feature 5) |
+| Who carries what (household role map) | The value of an hour, each person's minutes and value, the household total and value, who holds each job | `rmBook` (feature 6). Only for a home of 2 or more people. |
+
+Each formula uses only + - * / and names of rows, so it works in Google Sheets, Excel and LibreOffice.
+
+## The glossary (Me > Glossary, and each "i")
+
+| Word | What it means |
+|------|---------------|
+| CFO, Accountant, Financial Planner, Insurance Coordinator, Health Care Admin, Deals Manager | The six unpaid jobs. Each has one line in `game/data/roles.js`. |
+| Hours a month running your money | The time the six jobs take you each month. |
+| Running it and Living it | The time your money still takes, and the time you got back. |
+| The four ways out | Do it, Automate it, Hand it off, Drop it. Each one can be undone. |
+| Wire up a goal, Automatic transfer, High-yield savings account | Feature 4. |
+| EOB, Out-of-pocket max, FSA, Open enrollment, Premium, Beneficiary, Renewal date | Feature 5. HSA and Deductible were in the glossary before. |
+| Who carries what, Household admin time, The value of an hour, Labor counts | Feature 6. |
+
+## The test pass (worker 3)
+
+A think-aloud walk in Chromium, at 390 and 1280 wide, as three made-up people: a solo renter with pay that moves who
+lives with a parent, a couple with two kids, and a household of three partners. Each walk opened the six features in
+order. The findings and the fixes are in STATUS.md (run JOE-1, the last row). The math checks are in
+`test/jobs.test.js` (by hand), `tools/audit` (a second engine) and `game/tests/household-role-map.js`.
