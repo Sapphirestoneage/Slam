@@ -19,7 +19,7 @@ import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
-import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly } from '../../js/math/jobs.js';
+import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext } from '../../js/math/jobs.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -147,6 +147,12 @@ for (let i = 0; i < N; i++) {
   const exits = Object.fromEntries(tasks.filter(() => rnd() < 0.7).map(t => [t.id, pick(['do', 'auto', 'hand', 'drop'])]));
   const ad = jobAdmin(mins), L = jobLiving(ad, tasks, exits);
   add('jobLiving', { mins, tasks, exits }, { total: ad.total, st: ad.st, living: L.living, running: L.running, better: L.better, monthly: tasks.map(jobTaskMonthly) });
+  // features 4 and 5 (run JOE-1): a wired goal's deposit, its quarterly check-in, a date the person taps
+  const w = { monthly: rnd() < 0.1 ? 0 : money(10, 3000), day: pick(['pay', 'd1', 'd15', '1and15']), pay: pick([52, 26, 24, 12, 0]) };
+  const times = jobWireTimes(w.day, w.pay); add('jobWire', w, { times, per: jobWirePer(w.monthly, times) });
+  const day = () => `${2026 + whole(0, 2)}-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`.replace(/-(\d\d)-(3[01]|29)$/, (m, mm, dd) => `-${mm}-${mm === '02' ? '28' : dd === '31' && ['04', '06', '09', '11'].includes(mm) ? '30' : dd}`);
+  const ck = { set: day(), last: rnd() < 0.5 ? null : day(), today: day() }; add('jobCheck', ck, jobCheckNext(ck.set, ck.last, ck.today));
+  const dt = { md: `${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`, today: day(), lead: pick([14, 21, 30, 45]) }; add('jobDate', dt, jobDateNext(dt.md, dt.today, dt.lead));
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

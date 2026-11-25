@@ -169,8 +169,14 @@ function homeRcRow(h) {
   try {
     const c = C();
     if (!c || !(c.placed || G.demo) || typeof homeRowAdd !== "function") return h;
-    const row = rcgRow(c, D || derive(c));
-    return row ? homeRowAdd(h, row) : h;
+    const row = rcgRow(c, D || derive(c)),
+      /* sins.js: the line for the type (a hard month under the row; an ordinary day on its own) */
+      f = typeof sngFrame === "function" ? sngFrame(c, row && /Recalculating/.test(row) ? "hard" : "home") : "";
+    return row
+      ? homeRowAdd(h, row + (f ? `<div class="homerow snframerow">${f}</div>` : ""))
+      : f
+        ? homeRowAdd(h, `<div class="homerow snframerow">${f}</div>`)
+        : h;
   } catch (e) {
     report(e, "recalc.js: homeRcRow");
     return h;
@@ -281,10 +287,12 @@ function rcSheet() {
       `</div></details></div>`;
   if (F)
     h += `<div class="tile stack rcrefill" style="gap:6px"><div class="eyebrow">Cushion refill</div><div class="small"><b>${F.months !== null ? "Whole again by " + rcMonthName(F.ym) : money(F.gap) + " to put back"}</b></div><div class="small">Your cash was ${money(F.target)} and is ${money(F.balance)} today. It was used. That is what it is for.${F.months !== null ? " At " + money(F.monthly) + " left over a month: " + F.months + (F.months === 1 ? " month." : " months.") : " Nothing is left over to put back yet. The date shows when something is."}</div><button class="ghost wide slim" data-a="rckeep">It is back, or this is my plan now</button></div>`;
+  /* sins.js: the line for the type in a hard month (no number changes) */
+  if (X.state.hard && typeof sngFrameTile === "function") h += sngFrameTile(c, "hard");
   if (X.state.hard && X.letter && mine)
     h += `<div class="tile stack rcletter" style="gap:6px"><div class="eyebrow">From you, ${esc(X.letter.at)}</div><div class="small"><i>${esc(X.letter.text)}</i></div><button class="ghost slim" data-a="exletter">Change the letter</button></div>`;
   if (X.state.done)
-    h += `<div class="tile stack rcdone" style="gap:6px"><div><b>Done for this month.</b></div><div class="small muted">Nothing needs you. Close the game and enjoy the month.</div>${mine ? `<div class="row between" style="gap:8px"><span class="tiny muted">${X.letter ? "Your letter for a harder month is kept." : "While it is calm: a few lines to yourself for a harder month."}</span><button class="ghost slim" data-a="exletter">${X.letter ? "Read the letter" : "Write the letter"}</button></div>` : ""}</div>`;
+    h += `<div class="tile stack rcdone" style="gap:6px"><div><b>Done for this month.</b></div><div class="small muted">Nothing needs you. Close the game and enjoy the month.</div>${typeof sngFrame === "function" ? sngFrame(c, "home") : ""}${mine ? `<div class="row between" style="gap:8px"><span class="tiny muted">${X.letter ? "Your letter for a harder month is kept." : "While it is calm: a few lines to yourself for a harder month."}</span><button class="ghost slim" data-a="exletter">${X.letter ? "Read the letter" : "Write the letter"}</button></div>` : ""}</div>`;
   h +=
     `<details class="math rcsafe"${S ? " open" : ""}><summary>Safe-to-fail line${S ? ": " + (S.ranOut ? "used up, and the plan is the same" : money(S.left) + " left of " + money(S.cap)) : ""}</summary><div class="inner stack" style="gap:8px"><div class="small muted">One line for fun or an experiment. It can run out with no effect on the plan: it is part of "Fun and everything else", and the plan counts it used or not.</div>` +
     kitAsk(

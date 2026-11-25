@@ -17,6 +17,8 @@ const head = `/* ===============================================================
                check-ins, the reactions to the app) as weighted pieces that fade with time, the rule that
                a label shows only when two sources agree over about 30 days, the top two of each family,
                "Why we think this", the push-back, and Test the fix. The scoring is the quiz engine.
+               Part 2: the result card and its archetype, the share card with no numbers, the framing
+               line for a type and a moment, couples, the retake each quarter and the history of reads.
    INPUT       Plain data and dates from the caller, and the engine (qzResult). It reads no profile.
    OUTPUT      ${names.length} functions and constants: ${names.join(', ').replace(/(.{1,84})(, |$)/g, '$1$2\n               ').trimEnd()}
    DEPENDS ON  Nothing (the caller hands in core/quizcore.js).

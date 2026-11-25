@@ -650,6 +650,21 @@ const WB = [
   ],
   [
     "feel",
+    "Your money read: the result card, the share card, the two of you and the retake",
+    "b",
+    () =>
+      WB_FN("snCard") &&
+      WB_FN("snFrame") &&
+      WB_FN("snCouple") &&
+      WB_FN("sngCardPart") &&
+      WB_HAS("snshare") &&
+      WB_HAS("sndate") &&
+      snArchetypes(qzSkin("sins")).length === 84,
+    "A name for your read (84 of them, from your main pull and your way of dodging change), the light side and the virtue of each, and one Recalculating move for the month. A share card with no numbers, made only when you tap. Home, the month check and the crash drill add one line for your type once the read has a label. Two people in a household who both turn on sharing see how their reads collide and get a money date to tap through. A gentle retake each quarter, and the sin weakening over the retakes on the character sheet. The graduation story is not built yet.",
+    "sins",
+  ],
+  [
+    "feel",
     "A rival to race",
     "p",
     () => WB_HAS("rival"),
@@ -1130,6 +1145,39 @@ const WB = [
       typeof JOB_ROLES === "object",
     "From answers you already gave, on your character sheet and on Me. Hours a month running your money (Guess, Close, Exact) in the time ledger, and Running it and Living it on Home. Each task: Do it, Automate it, Hand it off, Drop it, each undoable.",
     "jobs",
+  ],
+  [
+    "see",
+    "Goal to account to automatic deposit, in one move of three taps",
+    "b",
+    () =>
+      WB_HAS("wire") &&
+      WB_HAS("wday") &&
+      WB_HAS("wunwire") &&
+      WB_FN("wireAmts") &&
+      WB_FN("goalViewWire") &&
+      WB_FN("goalCardWire") &&
+      WB_FN("wireBook") &&
+      WB_FN("jobWirePer") &&
+      Array.isArray(WIRE_OPTIONS),
+    "On a goal: where the money lives (or I need one, kinds side by side, no default), the amount from the goal's own math, the day (payday first). Then Set once. Check in: quarterly., a check-in with the four ways out, and Unwire with Undo. You set the transfer at your bank.",
+    "gadd",
+  ],
+  [
+    "see",
+    "Health and insurance quests: open enrollment, HSA receipts, the FSA deadline, the EOB, policy renewals, the coverage review",
+    "b",
+    () =>
+      WB_HAS("care") &&
+      WB_HAS("cqday") &&
+      WB_FN("careDue") &&
+      WB_FN("todayExtrasCare") &&
+      WB_FN("resetsCare") &&
+      WB_FN("jobDateNext") &&
+      Array.isArray(CARE_QUESTS) &&
+      SEASONS.some(S => S.k === "oe"),
+    "In the season lists next to tax season, each naming its job, with the four ways out. Tap your own dates once; a reminder lands on Today before each one. Every term opens the glossary.",
+    "care",
   ],
 ];
 function btRows() {

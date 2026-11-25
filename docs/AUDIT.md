@@ -52,7 +52,10 @@ Since Nov 25 2026 (run JOE-1) it also covers the Job of Existing (`js/math/jobs.
 a person holds, worked out a second time from each answer that counts, and the order; the hours a month of running
 the money (each job at its tap or its default, the total, Guess / Close / Exact); each task's minutes a month; and
 Running it and Living it (the minutes of the tasks off the plate, at most each job's own time, and the percent
-better, at least 1 once a minute is back).
+better, at least 1 once a minute is back). Features 4 and 5 of the run add three: a wired goal's deposits a year (by the day it moves)
+and each deposit (the monthly amount × 12 ÷ the deposits, rounded up to a dollar); the quarterly check-in (3 months
+after the last one, with the end of a month moved to its last day); and a date the person taps (its next day, the
+days to go, and whether its reminder shows).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

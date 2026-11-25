@@ -167,3 +167,46 @@ export function jobBetterWords(L) {
   if (!L || !(L.living > 0)) return 'Move one task off your plate and this starts at 1% better.';
   return L.better + '% better: ' + jobHoursWords(L.living) + ' a month back for living.';
 }
+
+// ---------- a goal wired to an account (feature 4) ----------
+// The days the money of a wired goal can move. 'pay' follows the paycheck (the default).
+export const JOB_WIRE_DAYS = [['pay', 'Each payday'], ['d1', 'The 1st'], ['d15', 'The 15th'], ['1and15', 'The 1st and 15th']];
+// The deposits a year of a day choice. payPerYear: the paychecks a year of the person (the caller works it out
+// from the pay frequency, with the game's own periods()). A payday that varies counts as 12.
+export function jobWireTimes(day, payPerYear) {
+  if (day === 'd1' || day === 'd15') return 12;
+  if (day === '1and15') return 24;
+  return payPerYear > 0 ? payPerYear : 12;
+}
+// The amount of each deposit that covers the monthly amount: monthly × 12 ÷ deposits a year, rounded up to a whole
+// dollar. Empty is not zero: no monthly amount gives null.
+export function jobWirePer(monthly, times) {
+  if (!(monthly > 0) || !(times > 0)) return null;
+  return Math.ceil((monthly * 12) / times - 1e-9);
+}
+// An ISO date n months later. A day past the end of the month moves to the last day (Jan 31 + 1 month = Feb 28).
+export function jobAddMonths(iso, n) {
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
+  const t = y * 12 + (m - 1) + n, Y = Math.floor(t / 12), M = t - Y * 12;
+  const last = new Date(Date.UTC(Y, M + 1, 0)).getUTCDate();
+  return Y + '-' + String(M + 1).padStart(2, '0') + '-' + String(Math.min(d, last)).padStart(2, '0');
+}
+// The quarterly check-in of a wired goal: 3 months after the last check-in, or after the day it was wired.
+// Returns { next, due }: due once today is on or after next.
+export function jobCheckNext(set, last, today) {
+  const next = jobAddMonths(last || set, 3);
+  return { next, due: String(today) >= next };
+}
+
+// ---------- the dates of the health and insurance quests (feature 5) ----------
+// The person taps their own date (a month and a day, as 'MM-DD'): an open enrollment window's last day, an FSA
+// deadline, a policy's renewal day. The reminder shows from `lead` days before the date to the date itself.
+// Returns { date: the next such date on or after today, open: whether the reminder shows, days: days to go }.
+export function jobDateNext(md, today, lead = 30) {
+  if (!/^\d\d-\d\d$/.test(String(md || ''))) return null;
+  const y = +String(today).slice(0, 4), [mm, dd] = md.split('-').map(Number);
+  const at = Y => { const last = new Date(Date.UTC(Y, mm, 0)).getUTCDate(); return Y + '-' + String(mm).padStart(2, '0') + '-' + String(Math.min(dd, last)).padStart(2, '0'); };
+  const date = at(y) >= String(today).slice(0, 10) ? at(y) : at(y + 1);
+  const days = Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(String(today).slice(0, 10) + 'T00:00:00Z')) / 86400000);
+  return { date, days, open: days <= lead };
+}

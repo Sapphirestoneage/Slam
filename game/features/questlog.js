@@ -212,6 +212,8 @@ function questNudge(c) {
     (typeof plAutoToday === "function" ? plAutoToday(c) : []).forEach(p =>
       list.push({ id: p.id, t: p.t, a: p.a, v: p.v || "" })
     );
+    const sr = typeof snRetakeNudge === "function" ? snRetakeNudge(c) : null; /* sins.js: retake each quarter */
+    if (sr) list.push(sr);
   } catch (e) {
     report(e, "questlog.js: questNudge");
   }
