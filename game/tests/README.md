@@ -66,6 +66,7 @@ Each file has the name of its feature.
 | `how-it-connects.js` | How it all connects | `features/connect.js` |
 | `later-eras-and-account-line.js` | The later eras and the account line | `features/eras.js` |
 | `meet-your-character.js` | Meet your character | `features/reveal.js` |
+| `your-unpaid-jobs.js` | Your unpaid jobs (run JOE-1, features 1 to 3): the six jobs from the answers of three made-up profiles (a solo renter, a couple with kids, a household of three), the block on the character sheet and on Me, the next step of a job, the admin hours by hand (Guess, Close, Exact), Running it and Living it ("1% better", never 0%), the four ways out and Undo (a schedule, a skill, a hand-off), the household role map record, the Home card, the time ledger tile, the spreadsheet rows, the built list row | `core/jobs.js`, `data/roles.js`, `features/jobs.js` |
 | `mission-board.js` | The mission board | `features/missions.js` |
 | `money-and-values.js` | Is my money going where I want? | `features/values.js` |
 | `money-chart-group.js` | The Money Chart for more than two | `features/together.js` |

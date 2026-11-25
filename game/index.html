@@ -130,11 +130,14 @@ textarea{font-size:12.5px;font-family:ui-monospace,Menlo,monospace}
 .err{color:#ffd3e2;font-size:14px;font-weight:600}
 .qr{background:#fff;padding:10px;border-radius:10px;max-width:240px;margin:0 auto}
 .qr svg{display:block;width:100%;height:auto}
+/* jobs.js */
+.jbrun .dkprog i{background:var(--sap)}.jbrole .dkprog{width:100%}
 @media (prefers-reduced-motion:no-preference){
  .pulse,button.go{animation:pulse 1.6s ease-in-out infinite}
  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--glow),0),0 0 10px 0 rgba(var(--glow),.35)}50%{box-shadow:0 0 0 7px rgba(var(--glow),.35),0 0 26px 6px rgba(var(--glow),.65)}}
  .flash{animation:flash 1.4s ease-out}@keyframes flash{0%{color:#fff;text-shadow:0 0 16px var(--a3),0 0 4px #fff;transform:scale(1.18)}100%{text-shadow:none;transform:none}}
  .flash{display:inline-block}
+ .jbmoved{animation:jbin .6s ease-out}@keyframes jbin{from{transform:translateY(-8px);opacity:.2}to{transform:none;opacity:1}}
  .pop{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.92);opacity:.4}to{transform:none;opacity:1}}
 }
 
@@ -532,11 +535,13 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
+<script src="core/jobs.js?v=d2c478be"></script>
+<script src="data/roles.js?v=050ffd11"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
 <script src="core/quizcore.js?v=2e3732b9"></script>
 <script src="data/quizskins.js?v=332b0e1e"></script>
 <script src="account/gate.js?v=5e37daf9"></script>
-<script src="screens/ui.js?v=c00d88aa"></script>
+<script src="screens/ui.js?v=910a3959"></script>
 <script src="screens/dash.js?v=46243f0e"></script>
 <script src="features/games.js?v=f3991fbd"></script>
 <script src="features/games2.js?v=63ba8d13"></script>
@@ -552,7 +557,7 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=152cbc32"></script>
-<script src="features/reveal.js?v=f0d6caef"></script>
+<script src="features/reveal.js?v=02bd6cc1"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=7034ac10"></script>
 <script src="features/gig.js?v=b1de10b2"></script>
@@ -648,13 +653,14 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 <script src="features/recalc.js?v=71188793"></script>
 <script src="features/audit.js?v=d893fdb8"></script>
 <script src="features/quizzes.js?v=10b1a2e8"></script>
-<script src="data/patchnotes.js?v=735439e3"></script>
+<script src="data/patchnotes.js?v=930112bb"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/look.js?v=33f78aeb"></script>
-<script src="features/book.js?v=79e28aea"></script>
+<script src="features/jobs.js?v=32764356"></script>
+<script src="features/book.js?v=4f4fefb2"></script>
 <script src="features/questlog.js?v=6c4208d8"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=6bf5de39"></script>
+<script src="features/built.js?v=cd75169d"></script>
 </body>
 </html>

@@ -33,6 +33,7 @@ const BOOK_PARTS = [
   coverBook,
   mixBook,
   sleptBook,
+  jobBook,
   rcBook,
   mauBook,
   cstBook,

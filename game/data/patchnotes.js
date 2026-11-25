@@ -178,6 +178,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Your unpaid jobs, and the time you get back",
+    l: [
+      "Your character sheet and Me now show the six unpaid jobs of running your money, from CFO to Deals Manager.",
+      "Your top 3 come from answers you already gave. No new questions.",
+      "Tap a job to see its next step, its tasks, and about how long it takes you a month, in one tap.",
+      "Each task has four ways out: Do it, Automate it, Hand it off, or Drop it. Each one can be undone.",
+      "Home shows Running it next to Living it: the hours your money still takes, and the hours you got back.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Career and education",
     l: [
       "Menu has Career and education: what a course or a degree costs with the time it takes, the raise after tax, when it pays back, and what it does to your freedom date.",

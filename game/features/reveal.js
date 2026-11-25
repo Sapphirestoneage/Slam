@@ -186,8 +186,10 @@ function rvSheet() {
     .join("")}</div>
   <div class="tiny muted">No dollar amounts on this sheet, so it is safe to send to a friend.</div>
   <button class="primary wide" data-a="rvcopy">${w.copied ? "Copied ✓" : "Copy my character sheet"}</button><button class="ghost wide slim" data-a="rvagain">Play the reveal again</button><button class="ghost wide slim" data-a="close">Done</button>`;
+  /* jobs.js: the block "You already work 6 jobs nobody pays you for." */
+  const withJobs = typeof rvSheetJobs === "function" ? rvSheetJobs(sheetH) : sheetH;
   /* element.js: the row "Strengths and your element" */
-  const withEl = typeof rvSheetElement === "function" ? rvSheetElement(sheetH) : sheetH;
+  const withEl = typeof rvSheetElement === "function" ? rvSheetElement(withJobs) : withJobs;
   /* quizzes.js: the quiz results that the player chose to show, and the row "Quizzes" */
   const withQz = typeof rvSheetQuiz === "function" ? rvSheetQuiz(withEl) : withEl;
   /* founding.js: the mark "Founding Tester" */

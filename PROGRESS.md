@@ -248,3 +248,13 @@ A usage limit stopped the workers of three parts. Finished parts are on main and
 that had files written (home buying and renting; Live Session Mode Parts 6 and 7) are kept on the branch
 claude/upbeat-hopper-u0amw2. `STATUS.md`, section "Where the runs stopped", has the table and the order to continue.
 
+
+## Nov 25 2026: RUN: JOE-1, The Job of Existing (Nov 25 2026)
+
+Run name: **JOE-1, The Job of Existing (Nov 25 2026)**. Six features for SLAM the Game, from Eli's prompt: your
+real job is the unpaid work of running your money (CFO, Accountant, Financial Planner, Insurance Coordinator, Health
+Care Admin, Deals Manager), and SLAM does that job for you. Three workers, one after the other. A line is added here
+for each part.
+
+- Logged. What exists and what each feature extends: `docs/JOB-OF-EXISTING.md`.
+- Features 1 to 3, done (worker 1). The six unpaid jobs from answers already given, on the character sheet and on Me, each opening its next step, its tasks and its hours (`game/features/jobs.js`, `game/data/roles.js`); the math in `js/math/jobs.js` with its game copy `game/core/jobs.js` (made by `tools/game_jobs_build.mjs`), hand tests in `test/jobs.test.js`, the second engine in `tools/audit` (jobRoles, jobLiving). Admin hours in the time ledger with Guess / Close / Exact, Running it and Living it on Home, "saves you ~X min/month" with Show the math, 16 rows in the spreadsheet of the plan. The four exits on every recurring task (the list of each job, the player's schedules, the seasonal items), each undoable; Automate it uses the schedule's automatic switch or the automation skill; Hand it off writes the household role map record `c.x.roleMap`. Test: `game/tests/your-unpaid-jobs.js`. QUESTIONS 598.

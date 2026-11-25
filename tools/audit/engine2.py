@@ -1033,6 +1033,42 @@ def run(cases, ref, il=None):
         elif fn == 'careerLaunch':
             ck('job hop a month', o['hop'], x['raise'] * (1 - x['taxPct'] / 100) / 12); ck('left behind', o['hopOnce'], x['left'])
             ck('traditional next to Roth a month', o['roth'], x['yearly'] * (x['nowPct'] - x['laterPct']) / 1200); ck('house hack a month', o['hack'], x['rent'] - x['costs']); ck('house hack months', o['hackMonths'], x['years'] * 12, 0)
+        elif fn == 'jobRoles':
+            a = x
+            def hv(k, v): return v in (a.get(k) or [])
+            def notn(k, *no): return bool(a.get(k)) and a.get(k) not in no
+            pr = a.get('prot') or {}
+            sig = {
+                'cfo': [a.get('steady') == 'Changes month to month', notn('share', 'No one'), notn('deps', 'None'), a['debts'] > 0, a['goals'] > 0],
+                'accountant': [hv('incKinds', 'Side gigs') or hv('incKinds', 'My own business') or a['work'] in ('Self-employed', 'A few jobs or gigs'), len(a['incKinds']) >= 2, a['home'] == 'Owning', notn('invest', 'No'), len(a['accts']) >= 3],
+                'planner': [notn('invest', 'No'), hv('accts', 'Retirement plan at work') or hv('accts', 'IRA or Roth IRA'), a['goals'] > 0, a['deps'] == 'Kids' or hv('live', 'Kids') or a['kids'] > 0, a['age'] >= 50],
+                'insurance': [a['home'] == 'Owning', a['home'] == 'Renting', hv('debtKinds', 'Car loan'), notn('deps', 'None', 'Pets'), any(pr.get(k) == 'Yes' for k in ('renters', 'life', 'disab'))],
+                'health': [hv('accts', 'HSA'), bool(pr.get('health')) and pr.get('health') != 'None right now', a['deps'] == 'Kids' or hv('live', 'Kids') or a['kids'] > 0, a['deps'] == 'Supporting a parent' or hv('live', 'Parents or family'), hv('debtKinds', 'Medical bills')],
+                'deals': [hv('debtKinds', 'Credit card balance') or a['cards'] > 0, a['banks'] >= 2, hv('live', 'Roommates'), a['home'] in ('Renting', 'Owning')],
+            }
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            sc = {i: 1 + sum(1 for v in sig[i] if v) for i in ids}
+            order = sorted(ids, key=lambda i: (-sc[i], ids.index(i)))
+            for i in ids: ck('score ' + i, o['scores'][i], sc[i], 0)
+            ck('the order', o['order'] == order, True)
+        elif fn == 'jobLiving':
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            dflt = {'cfo': 60, 'accountant': 60, 'planner': 15, 'insurance': 15, 'health': 15, 'deals': 15}
+            mins, cfs = {}, []
+            for i in ids:
+                m = x['mins'].get(i)
+                if m is not None and m.get('v') is not None: mins[i] = m['v']; cfs.append(m.get('cf') or 2)
+                else: mins[i] = dflt[i]; cfs.append(1)
+            total = sum(mins.values())
+            st = 'Guess' if any(c <= 1 for c in cfs) else ('Exact' if all(c >= 3 for c in cfs) else 'Close')
+            raw = {i: 0.0 for i in ids}
+            for t in x['tasks']:
+                if x['exits'].get(t['id']) in ('auto', 'hand', 'drop'): raw[t['role']] += t['per'] * t['times'] / 12
+            living = sum(min(raw[i], mins[i]) for i in ids)
+            pct = living / total * 100 if total > 0 else 0
+            better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
+            ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
+            for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
         elif fn == 'rcSafeLine':
             sp = x['spent'] or 0
             ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])

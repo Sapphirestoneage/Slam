@@ -1089,6 +1089,22 @@ const WB = [
   ],
   ["biz", "A community cost-of-living planner", "n", null, "Built once as its own tool. Not in the game.", null],
   ["biz", "A city edition, and a stand-alone lever link with a result to share", "n", null, "Not built.", null],
+  [
+    "see",
+    "Your unpaid jobs: the six jobs of running your money, admin hours, and the four ways out",
+    "b",
+    () =>
+      WB_HAS("jobs") &&
+      WB_HAS("jbexit") &&
+      WB_FN("jobRoles") &&
+      WB_FN("jobLiving") &&
+      WB_FN("rvSheetJobs") &&
+      WB_FN("homeJobsRow") &&
+      WB_FN("ledgerCardJobs") &&
+      typeof JOB_ROLES === "object",
+    "From answers you already gave, on your character sheet and on Me. Hours a month running your money (Guess, Close, Exact) in the time ledger, and Running it and Living it on Home. Each task: Do it, Automate it, Hand it off, Drop it, each undoable.",
+    "jobs",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
