@@ -33,8 +33,7 @@ test('docs/qr-slam.png is a square PNG, at least 1000 pixels wide, made by the t
   assert.match(tool, /docs", "qr-slam\.png"/, 'the tool writes this file');
 });
 
-test('the landing screen shows the blank FIRE sheet link once, through one function', () => {
-  const link = 'https://docs.google.com/spreadsheets/d/1HZBHzEeDgQRmGcqwzaXW1jgd2N3SPSddZkhS7svZhHY/copy';
-  assert.equal(door.split(link).length - 1, 1, 'the link is written one time in door.js');
-  assert.match(door, /function blankFireSheetBtn\(\)/);
+test('the landing screen uses the shared blank FIRE sheet button, and has no second copy of the link', () => {
+  assert.doesNotMatch(door, /docs\.google\.com/, 'the link is in game/features/firelink.js only');
+  assert.match(door, /fireBlankButton\(\{ button: "door-sheet", line: "door-tiny" \}\)/);
 });

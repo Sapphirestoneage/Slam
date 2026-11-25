@@ -97,6 +97,16 @@ const PATCH_NOTES = [
       "What's new, in the Menu, is this page. Each update adds a few lines here.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "A front door, and the question Am I okay?",
+    l: [
+      "A new person who opens the link sees one screen: one line, Start, What is this? and Sign in.",
+      "Start needs no account and no typing. A few pages of taps end on a first answer to Am I okay?, said as a guess, with one next step.",
+      "You can then keep that game by making a free account. Until you do, it stays on your device.",
+      "Am I okay?, in the Menu, opens the same answer at any time. Each real number you add recalculates it.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

@@ -168,8 +168,14 @@ const WB = [
     "see",
     "Copy your numbers out, and the plan as a spreadsheet that comes back in",
     "b",
-    () => WB_HAS("kncopy") && WB_HAS("lgcopy") && WB_HAS("bookcopy"),
-    "The plan copies out as a spreadsheet with live formulas, or saves as a CSV file. The engine's percentile, cash flow and withdrawal tables are their own tabs. A direct link to Google Sheets is not built.",
+    () =>
+      WB_HAS("kncopy") &&
+      WB_HAS("lgcopy") &&
+      WB_HAS("bookcopy") &&
+      WB_HAS("bookxlsx") &&
+      WB_FN("bookWorkbookData") &&
+      WB_FN("fireBlankButton"),
+    "Menu, Export. The plan downloads as an .xlsx file for Excel or Google Sheets, with live formulas and a FIRE sheet as its first tab (one row for each year). It also copies out, or saves as a CSV file. An edited file comes back in, and you see each change first. The .xlsx file needs a connection; the CSV does not. The file was not opened in Google Sheets itself by the builder.",
     "book",
   ],
   [

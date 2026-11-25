@@ -762,6 +762,29 @@ def run(cases, ref, il=None):
                     if n is None: never = True
                     else: soon, late = (n if soon is None else min(soon, n)), (n if late is None else max(late, n))
             ck('soonest', o['soonest'], soon, 0); ck('latest', o['latest'], None if never else late, 0)
+        elif fn == 'fireSheet':
+            # The FIRE sheet (M9I), by another route: a working year is stepped month by month (growth, then that
+            # month's twelfth goes in), where SLAM and the sheet use one closed-form factor for the year.
+            r, need, kind = x['realReturn'], x['spendingAfter'], x['kind']
+            g, bal, dial, first, was_free = (1 + r) ** (1 / 12), x['invested'], 1.0, 0.0, False
+            fi = need / x['safeRate']
+            for row, age in zip(o['rows'], range(x['age'], x['lastAge'] + 1)):
+                if age < x['stopAge']:
+                    put = sum(x['contributions'])
+                    for _ in range(12): bal = bal * g + put / 12
+                    w, spend, rate = 0, x['spending'], (put / x['income'] if x['income'] > 0 else None)
+                else:
+                    start, income = bal, (x['other'] if age >= x['otherAge'] else 0)
+                    if not was_free: first = need / start if start > 0 else 0.0
+                    if kind == 'guardrails' and first:
+                        if need * dial > first * 1.2 * start: dial *= 0.9
+                        elif need * dial < first * 0.8 * start and dial < 1.3: dial *= 1.1
+                        dial = max(0.7, dial)
+                    target = start * x['rate'] if kind == 'share' else min(need * 1.2, max(need * 0.85, start * x['rate'])) if kind == 'floor' else need * dial if kind == 'guardrails' else need
+                    w = min(start, max(0, target - income)); spend, rate = w + income, None
+                    bal, was_free = (start - w) * (1 + r), True
+                ck('balance at year end', row[0], bal); ck('withdrawal', row[1], w); ck('spending', row[2], spend)
+                ck('savings rate', row[3], rate, 1e-9); ck('% to FI', row[4], bal / fi if fi > 0 else None, 1e-6)
         elif fn == 'solveSaving':
             g = (1 + x['realReturn']) ** (1 / 12); n = x['months']
             need = (x['target'] - x['invested'] * g ** n) * (g - 1) / (g ** n - 1)

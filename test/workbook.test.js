@@ -41,7 +41,7 @@ test('every registry field has its column or row, every math entry its row, ever
   const aLabels = byName.Assumptions.rows.map(r => r?.[0]?.v);
   for (const a of ASSUMPTIONS) assert.ok(aLabels.includes(a.label), `Assumption ${a.label}`);
   const order = plan.sheets.map(s => s.name);
-  assert.deepEqual(order.slice(0, SCREEN_TABS.length + 1), ['Start here', ...SCREEN_TABS.map(t => t.name)], 'Start here, then the screens in nav order');
+  assert.deepEqual(order.slice(0, SCREEN_TABS.length + 2), ['FIRE sheet', 'Start here', ...SCREEN_TABS.map(t => t.name)], 'the FIRE sheet first (Nov 25 2026), Start here, then the screens in nav order');
   assert.ok(order.indexOf('Math') > order.indexOf('Assumptions') && order.indexOf('Assumptions') > order.indexOf(SCREEN_TABS.at(-1).name), 'the engine room after the screens');
   for (const r of REPORTS) assert.ok(byName[tabOfReport(r.tab)], `${r.tab} tab`);
   assert.ok(byName[DATA_TAB].hidden, 'the SLAM data tab is hidden');

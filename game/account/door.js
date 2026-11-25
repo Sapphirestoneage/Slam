@@ -8,11 +8,11 @@
    INPUT       The browser storage: slam_guest ("1" = tapped Start, "2" = has a game on this device),
                su_uid (the account that the copy on this device belongs to), the sign-in token of
                Supabase. The address of the page (a sign-in link that comes back from an email).
-   OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, blankFireSheetBtn, doorShow, doorHide,
+   OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, doorFireBtn, doorShow, doorHide,
                doorGate, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
-               doorEarly. The constants DOOR_LINK (the link for the slide and the QR code) and
-               FIRE_SHEET_COPY (the blank FIRE sheet).
-   DEPENDS ON  core/report.js.
+               doorEarly. The constant DOOR_LINK (the link for the slide and the QR code).
+   DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton; index.html loads it before this
+               file).
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/supa.js (suGate), screens/ui.js (ACT, G, KEY, W, fresh, openSetup,
                drawSheet, render).
@@ -25,7 +25,6 @@
    STATE       DOOR (done, want, el, guest, shown).
    ========================================================================= */
 const DOOR_LINK = "https://sapphirestoneage.github.io/Slam/game/";
-const FIRE_SHEET_COPY = "https://docs.google.com/spreadsheets/d/1HZBHzEeDgQRmGcqwzaXW1jgd2N3SPSddZkhS7svZhHY/copy";
 /* The privacy page, when the game has one. Empty: the landing shows no link. */
 const DOOR_PRIVACY = "";
 const DOOR = { done: null, want: "", el: null, guest: false, shown: false };
@@ -54,9 +53,9 @@ function doorGuest() {
 function doorHasGame() {
   return doorGet("slam_guest") === "2";
 }
-/* The button to Eli's blank FIRE sheet. One function, so each screen shows the same button and the same words. */
-function blankFireSheetBtn() {
-  return `<a class="door-sheet" href="${FIRE_SHEET_COPY}" target="_blank" rel="noopener">Start from a blank FIRE sheet</a><div class="door-tiny">A simple Google Sheet that stands alone. It opens your own copy. The export of this app is the full plan.</div>`;
+/* The button to Eli's blank FIRE sheet: the shared button of features/firelink.js, with the look of this screen. */
+function doorFireBtn() {
+  return typeof fireBlankButton === "function" ? fireBlankButton({ button: "door-sheet", line: "door-tiny" }) : "";
 }
 /* The landing screen, as HTML. "wait" is true while the sign-in screen is not ready yet. */
 function doorHtml(wait) {
@@ -91,7 +90,7 @@ function doorHtml(wait) {
  <p>Nothing is typed. Nothing is saved to an account until you choose to make one.</p>
  <p><b>Education and tools, not financial advice.</b></p>
  ${DOOR_PRIVACY ? `<p><a class="door-link" href="${DOOR_PRIVACY}">Privacy: what is stored and who sees it</a></p>` : ""}
- ${blankFireSheetBtn()}
+ ${doorFireBtn()}
  </div></details>
  <div class="door-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div></div>`;
 }

@@ -89,15 +89,15 @@
   );
   chk("the line: Education and tools, not financial advice.", L.includes("Education and tools, not financial advice."));
   chk(
-    "the blank FIRE sheet button, with the template copy link",
-    L.includes(blankFireSheetBtn()) &&
-      blankFireSheetBtn().includes(
-        'href="https://docs.google.com/spreadsheets/d/1HZBHzEeDgQRmGcqwzaXW1jgd2N3SPSddZkhS7svZhHY/copy"'
-      )
+    "the blank FIRE sheet button is the shared one (firelink.js), with the template copy link",
+    L.includes(doorFireBtn()) &&
+      doorFireBtn() === fireBlankButton({ button: "door-sheet", line: "door-tiny" }) &&
+      doorFireBtn().includes('href="' + FIRE_BLANK_URL + '"') &&
+      /\/d\/1HZBHzEeDgQRmGcqwzaXW1jgd2N3SPSddZkhS7svZhHY\/copy$/.test(FIRE_BLANK_URL)
   );
   chk(
     "the button says that the sheet stands alone and that the export is the full plan",
-    /stands alone/.test(blankFireSheetBtn()) && /export of this app is the full plan/.test(blankFireSheetBtn())
+    /stands alone/.test(doorFireBtn()) && /export here is your full plan/.test(doorFireBtn())
   );
   chk("the landing asks for no typing: no input box", !/<input|<textarea/.test(L));
   chk("no account is ready yet: the game was not told to load one", ready === 0);
@@ -305,8 +305,10 @@
   );
   const idx = fs.readFileSync(GAME_DIR + "index.html", "utf8");
   chk(
-    "index.html loads door.js before supa.js",
-    idx.indexOf("account/door.js") > 0 && idx.indexOf("account/door.js") < idx.indexOf("account/supa.js")
+    "index.html loads firelink.js, then door.js, then supa.js",
+    idx.indexOf("features/firelink.js") > 0 &&
+      idx.indexOf("features/firelink.js") < idx.indexOf("account/door.js") &&
+      idx.indexOf("account/door.js") < idx.indexOf("account/supa.js")
   );
   chk(
     "the admin page and the coach page do not load the door",
