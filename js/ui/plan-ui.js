@@ -8,6 +8,7 @@ import { goalsCompletion } from '../completion.js';
 import { h, clear, icon } from './dom.js';
 import { simpleMath } from '../math/simple.js';
 import * as S from './staples.js';
+import { recalcParts } from './recalc-ui.js';
 import { goalSuggestions } from '../whynow.js';
 import { futureDollars } from '../math/fi.js';
 import { flowWords } from '../math/flow.js';
@@ -436,7 +437,7 @@ export function payoffScreen(app, ctx) {
   slider.oninput = () => { PUI.extraDebt = Number(slider.value); clear(out, `${money(PUI.extraDebt)} extra a month`); };
   slider.onchange = () => app.render();
   const at = months => (months == null ? 'Never' : monthName(addMonths(ymOf(ctx.now()), months)));
-  return [head('Debt payoff', 'Each debt shrinking to zero'),
+  return [head('Debt payoff', 'Each debt shrinking to zero'), recalcParts(app, ctx, 'debt'),
     ...soon.map(r => h('div.banner-inline', {}, '⚠ ', `${r.name || r.type}: the 0% promo ends ${r.values.promoEnd}. It moved to the top of the order.`)),
     h('div.card', { style: { marginBottom: '16px' } },
       h('div.slider-row', {}, h('span.label', {}, 'Order'), S.toggle(ORDER_NAMES, order, setOrder, { label: 'Payoff order' }),

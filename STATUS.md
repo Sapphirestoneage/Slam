@@ -159,7 +159,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | Recalculating and the audit | Not started | |
+| 1 | Recalculating and the audit | Done | Web app: Home, Budget, Debt, Debt payoff, and Report › History (the audit). Game: Home, the Money tab, the debt plan, the menu, the Yearly Review. One math file for both (`js/math/recalc.js`, copied to `game/core/recalc.js`). 37 strings reworded; `test/tone.test.js` keeps them out. Questions: QUESTIONS.md 581. |
 | 2 | Quick calculators | Not started | |
 | 3 | Lifestyle creep and enough | Not started | |
 | 4 | Eli's frameworks and the canon | Not started | |

@@ -521,6 +521,8 @@ export const NOT_IN_SHEET = {
   'assumptions.lifeRetireAge': 'a Lifetime plan choice on the self-serve journey (the age work stops, when picked); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
   'settings.start': 'the self-serve journey\'s own choices (what brought you here, what matters most, a home priced, drills ticked, the last statement read): screen choices, not money inputs',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
+  'settings.exercises': 'the answers of the money exercises, by exercise id (the letter from your calm self): the person\'s own words, private by default, not money inputs',
+  'settings.recalc': 'Recalculating\'s own notes (the safe-to-fail line and the opt-in audit\'s tagged events): words and tags about the past, not money inputs of the plan',
   'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',
   'settings.presetsAdded': 'marks that the starter lines were added once',
   'settings.migrated10': 'marks that batch 10 turned untouched starter amounts faded, once per file',

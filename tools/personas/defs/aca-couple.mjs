@@ -36,7 +36,7 @@ export default {
     raise5000: { value: -12651.7, tol: 0.05, note: 'A $5,000 raise ($89,000, over $86,560) ends the help: $24,984 at full price less the $8,584.80 they pay now = $16,399.20 more. Kept 74.95% of $5,000 = $3,747.50. Net -$12,651.70 (batch 54, was -$7,275.70 on the 2026 benchmark).' },
     breakEven5000: { value: 21900, note: '74.95% of the raise has to cover $16,399.20: $21,880.15, so $21,900 in steps of $100 (federal taxable $73,700 stays in the 12% band to $100,800; NY joint stays in its band; batch 54, was $14,800).' },
     zones: { value: [[2600, 21800]], note: '$86,560 - $84,000 = $2,560: $2,500 more stays under, $2,600 is over; $21,900 is the first raise back at or above zero (batch 54, was $14,800).' },
-    says: ['Marketplace premium help', 'behind', 'until it is'],
+    says: ['Marketplace premium help', 'less a year', 'until it is'],
   },
   cannot: [
     'The benchmark plan is KFF\'s 2027 average for New York (every age the same there); the plan they picked may cost more or less than the benchmark.',

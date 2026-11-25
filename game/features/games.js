@@ -99,7 +99,7 @@ function gearWishRows(c, s) {
       .join("")
   );
 }
-const GEAR_WHAT = `<details class="math"><summary>What is a gear slot?</summary><div class="inner small stack" style="gap:4px"><div>A slot is one basic money tool: an account, a kind of cover, or a paper. A full set is what most households end up with.</div><div>An empty slot is not a mistake. Say if you want it, need it, are not interested, or can't have it, and the game plans around that.</div><div>A slot is inactive when it cannot be used now, like a retirement plan at work while you are between jobs. It comes back by itself.</div></div></details>`;
+const GEAR_WHAT = `<details class="math"><summary>What is a gear slot?</summary><div class="inner small stack" style="gap:4px"><div>A slot is one basic money tool: an account, a kind of cover, or a paper. A full set is what most households end up with.</div><div>An empty slot is fine. Say if you want it, need it, are not interested, or can't have it, and the game plans around that.</div><div>A slot is inactive when it cannot be used now, like a retirement plan at work while you are between jobs. It comes back by itself.</div></div></details>`;
 function gearBody(c, d) {
   const s = gearState(c, d),
     sc = gearScore(c, d);

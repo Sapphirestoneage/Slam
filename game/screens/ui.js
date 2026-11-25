@@ -638,6 +638,7 @@ function home() {
   if (typeof homeFrontRow === "function") h = homeFrontRow(h); /* ask3.js: the four questions (hidden by default) */
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
+  if (typeof homeRcRow === "function") h = homeRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -713,7 +714,7 @@ function homeBase() {
  ${real ? rateTile(c, d, ds("rate", nb)) : ""}
  ${
    real
-     ? `<div class="grid2" ${ds("tiles", bt.pct === 0 && !monthFlow(c, t.slice(0, 7)).n)}><div class="tile"><div class="tiny muted">Since you started</div><div class="big" data-fid="v:bt">${bt.pct > 0 ? bt.pct + "% better" : bt.pct < 0 ? Math.abs(bt.pct) + "% behind" : "Day 1"}</div><div class="tiny muted" style="margin-top:4px">${bt.pct === 0 ? "Your first money move shows up here." : "Own minus owe went from " + money(bt.from) + " to " + money(bt.now)}</div></div>
+     ? `<div class="grid2" ${ds("tiles", bt.pct === 0 && !monthFlow(c, t.slice(0, 7)).n)}><div class="tile"><div class="tiny muted">Since you started</div><div class="big" data-fid="v:bt">${bt.pct > 0 ? bt.pct + "% better" : bt.pct < 0 ? Math.abs(bt.pct) + "% to regain" : "Day 1"}</div><div class="tiny muted" style="margin-top:4px">${bt.pct === 0 ? "Your first money move shows up here." : "Own minus owe went from " + money(bt.from) + " to " + money(bt.now)}</div></div>
  <div class="tile"><div class="tiny muted">This month, logged</div>${(() => {
    const mf = monthFlow(c, t.slice(0, 7));
    return mf.n
@@ -1116,6 +1117,8 @@ function moneyTab() {
   if (typeof moneyTabLogLink === "function") h = moneyTabLogLink(h); /* moneylog.js: the button for the money log */
   if (typeof moneyTabTaxRow === "function") h = moneyTabTaxRow(h); /* gig.js: the row "Tax money" */
   if (typeof moneyTabPlanRows === "function") h = moneyTabPlanRows(h); /* csp.js: the spending plan, the audit */
+  if (typeof moneyTabRcRow === "function")
+    h = moneyTabRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
   return h;
 }
 function moneyTabBase() {
@@ -4872,7 +4875,7 @@ function rivalCard(c, d) {
  )
    .map(k => `<button class="chip ${key === k ? "on" : ""}" data-a="rival" data-v="${k}">${RIVALS[k].n}</button>`)
    .join("")}</div><div class="small" style="margin-top:6px"><b>${rs.R.n}.</b> ${rs.R.d}</div>
- ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "You're behind by " + money(-rs.gap) + ". One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div></div>`;
+ ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "Recalculating: " + money(-rs.gap) + " to close. One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div></div>`;
 }
 Object.assign(ACT, {
   stmt: t => {
@@ -4993,7 +4996,7 @@ const MTYPES = [
 const MQ_S = [
   [
     "I feel uneasy until my money is handled the right way.",
-    "A money mistake bothers me for days.",
+    "A money choice that goes wrong bothers me for days.",
     "I'd rather follow the rules than cut a corner to save.",
   ],
   [

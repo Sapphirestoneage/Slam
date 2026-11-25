@@ -25,7 +25,7 @@ const IG_SCRIPTS = [
   ["Buying something is how I cheer myself up.", "Worship"],
   ["What I own shows how well I am doing.", "Status"],
   ["I would rather look like I have money than talk about not having it.", "Status"],
-  ["I feel behind when friends buy things I cannot.", "Status"],
+  ["I feel left out when friends buy things I cannot.", "Status"],
   ["I always know what is in my accounts.", "Vigilance"],
   ["Spending on myself makes me a little anxious, even when I can afford it.", "Vigilance"],
   ["I do not tell people what I earn or have.", "Vigilance"],
@@ -441,7 +441,7 @@ igAdd({
   n: "Inversion: how would I ruin myself?",
   by: "Charlie Munger",
   one: "Instead of asking how to get rich, ask what would wreck you, and do not do that.",
-  what: "His habit of inverting a problem: list everything that would guarantee failure, then avoid those things. In money, avoiding the big mistakes matters more than finding the clever moves. Here it is a fire drill.",
+  what: "His habit of inverting a problem: list everything that would guarantee failure, then avoid those things. In money, avoiding the big losses matters more than finding the clever moves. Here it is a fire drill.",
   fit: (c, d) => true,
   body: x => {
     const c = x.c,
@@ -484,7 +484,7 @@ igAdd({
 const IG_FEARS = {
   job: [
     "Losing my job",
-    "A few months with no paycheck, cutting back hard, and feeling like I failed.",
+    "A few months with no paycheck, cutting back hard, and feeling awful about it.",
     [
       ["cush", "Build cash for a few months of basics"],
       ["net", "Keep in touch with five people in my field"],

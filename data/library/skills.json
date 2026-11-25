@@ -13383,10 +13383,10 @@
    "level": 19,
    "leverage": "A",
    "name": "Grant yourself money amnesty",
-   "description": "A formal, written self-forgiveness for past money mistakes",
+   "description": "A formal, written self-forgiveness for past money choices",
    "does": "Shame is the most expensive emotion in finance",
    "fits": "Clears the way for PS L20+",
-   "proof": "The letter exists; the mistake gets mentioned without flinching",
+   "proof": "The letter exists; what happened gets mentioned without flinching",
    "prerequisites": [
     "money-psychology-make-money-discussable"
    ],

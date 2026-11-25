@@ -717,6 +717,41 @@ table.rows tr.row .owner-chip { min-width: 84px; justify-content: space-between;
 /* Batch 58: one adult's part of a shared row, on the slim line under it. */
 tr.row-note .part-line { margin-right: 12px; }
 
+/* Recalculating (Nov 25 2026): one calm card. Sapphire edge, no red, no amber: nothing here is a warning. */
+.rc-card { margin-bottom: var(--s4); padding: 12px 16px; border-left: 4px solid var(--primary); }
+.rc-card .rc-dates { display: grid; grid-template-columns: 170px 20px 130px 1fr; gap: 4px 16px; align-items: end; margin-top: 8px; }
+.rc-card .rc-date { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.rc-card .rc-old { color: var(--text-2); font-weight: 600; }
+.rc-card .rc-arrow { font-size: 1.2rem; color: var(--text-2); padding-bottom: 2px; }
+.rc-card .rc-line { margin: 0; align-self: center; }
+.rc-card .rc-turn { margin-top: 10px; align-items: center; flex-wrap: wrap; }
+.rc-order { margin: 0 0 8px; padding-left: 22px; display: grid; gap: 6px; }
+.rc-order li { padding-left: 4px; }
+.rc-order li > span { vertical-align: baseline; }
+.rc-order .rc-name { font-weight: 600; display: inline-block; width: 190px; }
+.rc-order .muted { display: inline-block; width: 110px; }
+.rc-order .rc-paid { margin-left: 12px; }
+.rc-script ul { margin: 4px 0; padding-left: 20px; }
+.rc-letter .rc-quote { font-size: 1.1rem; margin: 6px 0 10px; font-style: italic; }
+.rc-done .rc-done-head { font-size: 1.15rem; }
+.rc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rc-chips .chip-btn { height: auto; min-height: 34px; padding: 6px 12px; text-align: left; white-space: normal; border-radius: 16px; }
+.rc-area { width: 100%; height: auto; padding: 6px 8px; }
+.rc-area textarea { width: 100%; border: 0; background: transparent; font: inherit; color: inherit; resize: vertical; outline: none; }
+.audit .audit-add { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-start; margin: 8px 0 12px; }
+.audit .audit-add-btn { padding-top: 22px; }
+.audit .audit-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.audit .audit-row { display: grid; grid-template-columns: minmax(140px, 1.2fr) 90px 230px minmax(160px, 2fr) 36px; gap: 8px 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border-row); }
+.audit .audit-cost { text-align: right; font-weight: 600; }
+.audit .audit-repeats ul { margin: 4px 0 0; padding-left: 20px; }
+@media (max-width: 720px) {
+  .rc-card .rc-dates { grid-template-columns: 1fr 20px 1fr; }
+  .rc-card .rc-line { grid-column: 1 / -1; }
+  .rc-order .rc-name { width: auto; display: block; }
+  .rc-order .muted { width: auto; }
+  .rc-order .rc-paid { margin-left: 0; display: block; }
+  .audit .audit-row { grid-template-columns: 1fr auto; }
+  .audit .audit-row .seg, .audit .audit-later { grid-column: 1 / -1; }
 /* The FI destinations (run of Nov 25 2026): the views on Plan › Goals, the stress table, the pod, the FOO by
    destination, and the Coast card on Home. */
 .dest-card { display: flex; flex-direction: column; gap: var(--s3); }

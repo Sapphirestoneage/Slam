@@ -655,6 +655,68 @@ def run(cases, ref, il=None):
             pi = pay * (1 - x['taxIns']); r = x['rate'] / 12
             loan = sum(pi / (1 + r) ** k for k in range(1, x['years'] * 12 + 1))   # each payment discounted on its own
             ck('payment', o['payment'], pay); ck('loan', o['loan'], loan, max(1.0, loan * 1e-9)); ck('the 36% line is the tighter one', o['by'] == 'back', b1 < a1)
+        elif fn == 'rcRoute':
+            # count the months on a calendar, one at a time, instead of by arithmetic on year * 12 + month
+            def walk(y, m, n):
+                for _ in range(n):
+                    m += 1
+                    if m == 13: y, m = y + 1, 1
+                return y, m
+            oy, om = walk(int(x['planAt'][:4]), int(x['planAt'][5:7]), x['planMonths'])
+            ck('old month', int(o['oldYm'][:4]) * 100 + int(o['oldYm'][5:7]), oy * 100 + om, 0)
+            if x['months'] is None:
+                ck('no date', o['noDate'], True); ck('moved', o['moved'], True)
+            else:
+                ny, nm = walk(int(x['nowAt'][:4]), int(x['nowAt'][5:7]), x['months'])
+                ck('new month', int(o['newYm'][:4]) * 100 + int(o['newYm'][5:7]), ny * 100 + nm, 0)
+                shift, y, m = 0, min((oy, om), (ny, nm))[0], min((oy, om), (ny, nm))[1]
+                while (y, m) != max((oy, om), (ny, nm)):
+                    y, m = walk(y, m, 1); shift += 1
+                if (ny, nm) < (oy, om): shift = -shift
+                ck('shift', o['shift'], shift, 0); ck('moved', o['moved'], shift != 0); ck('later', o['later'], shift > 0)
+        elif fn == 'rcTriage':
+            # each class in turn takes what it can from the money left (a pool per class, not a walk down one list)
+            order = ['housing', 'utilities', 'food', 'transport', 'minimums', 'rest']
+            left, total, first, paid = float(x['income']), 0.0, None, {}
+            for k, cls in enumerate(order):
+                mine = [b for b in x['bills'] if b['cls'] == cls and b['amount'] is not None]
+                for b in mine:
+                    p = min(b['amount'], left); paid[b['name']] = p; left -= p; total += b['amount']
+                    if p < b['amount'] and first is None: first = k
+            ck('total', o['total'], total); ck('short', o['short'], max(0.0, total - x['income'])); ck('left over', o['left'], max(0.0, x['income'] - total))
+            ck('covered', o['covered'], total <= x['income']); ck('first short', o['firstShort'], first, 0)
+            ck('open', o['open'], sum(1 for b in x['bills'] if b['amount'] is None), 0)
+            for name, p in paid.items(): ck('paid ' + name, o['paid'][name], p)
+            ck('everything paid adds up', sum(v for v in o['paid'].values() if v is not None), min(total, x['income']))
+        elif fn == 'rcRefill':
+            gap = max(0, x['target'] - x['balance'])
+            ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)
+            if gap > 0 and x['monthly']:
+                n, back = 0, 0.0
+                while back < gap - 1e-9:   # put the money back month by month until it is whole
+                    back += x['monthly']; n += 1
+                ck('months', o['months'], n, 0)
+                y, m = int(x['nowAt'][:4]), int(x['nowAt'][5:7]) + n
+                while m > 12: y, m = y + 1, m - 12
+                ck('month it is whole', int(o['ym'][:4]) * 100 + int(o['ym'][5:7]), y * 100 + m, 0)
+            elif gap > 0:
+                ck('no months without money going back', o['months'], None)
+        elif fn == 'rcSafeLine':
+            sp = x['spent'] or 0
+            ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])
+        elif fn == 'rcAudit':
+            ev = [e for e in x['events'] if e['amount'] is not None]
+            mis = [e for e in ev if e['tag'] == 'mistake']; una = [e for e in ev if e['tag'] == 'unavoidable']
+            later = lambda e: e['amount'] * math.exp((x['years'] + e['yearsAgo']) * math.log(1 + x['realReturn']))   # by logs, not by a power
+            ck('count', o['mCount'], len(mis), 0); ck('cost then', o['mCost'], sum(e['amount'] for e in mis)); ck('cost over time', o['mLater'], sum(later(e) for e in mis))
+            ck('days of saving', o['mDays'], sum(e['amount'] for e in mis) / x['perDay'], 1e-6); ck('hours', o['mHours'], sum(e['amount'] for e in mis) / x['hourly'], 1e-6)
+            ck('unavoidable then', o['uCost'], sum(e['amount'] for e in una)); ck('unavoidable over time', o['uLater'], sum(later(e) for e in una))
+            ck('untagged', o['untagged'], sum(1 for e in x['events'] if e['tag'] is None), 0); ck('open', o['open'], sum(1 for e in x['events'] if e['amount'] is None), 0)
+            ck('share of a year of pay', o['tax'], sum(e['amount'] for e in mis if e['yearsAgo'] < 1) / x['yearIncome'], 1e-9)
+            by = defaultdict(list)
+            for e in mis: by[e['kind']].append(e['amount'])
+            rep = {k: v for k, v in by.items() if len(v) >= 2}
+            ck('repeats', o['repeats'], len(rep), 0); ck('repeat cost', o['repeatCost'], sum(sum(v) for v in rep.values()))
         elif fn == 'habit':
             # each payment grown on its own to the end, then added up (no annuity formula)
             n = 52 if x['per'] == 'week' else 12

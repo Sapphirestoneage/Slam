@@ -24,7 +24,7 @@ function draw(api) {
       h('details.st-fold', {}, h('summary', {}, 'Whose idea this is, and why the number differs a little'),
         h('p.st-small', {}, 'Multiplying a weekly cost by 752, or a monthly one by 173, is Mr. Money Mustache\'s shortcut for ten years at 7%. Those two numbers compound the 7% in weekly and monthly pieces, which adds up to a little more than 7% a year. Here a year grows by the plan\'s return and no more, so ten years comes out about 1% lower.'),
         h('p.st-small', {}, '"Every $100 a month needs $30,000 invested" is the 4% rule read backwards: 25 times a year of it. It is said all over the FIRE community.'),
-        h('p.st-small', {}, 'This counts money only. A habit you love is not a mistake; the number is here so the choice is made with it in view.')));
+        h('p.st-small', {}, 'This counts money only. A habit you love is a fine use of money; the number is here so the choice is made with it in view.')));
   };
   let card = answerCard();
   const setAmount = (v, typing) => { api.remember({ habitAmount: v }); if (!typing) return api.render(); api.save(); const fresh = answerCard(v); card.replaceWith(fresh); card = fresh; // the whole card, so its sentence never trails the number being typed
