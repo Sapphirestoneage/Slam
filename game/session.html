@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: live session</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--a3:#8fb0ff;--good:#7fd6b0;--amber:#ffb648}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:24px;line-height:1.25;margin:0}h2{font-size:17px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}.tiny{font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;font-size:16px}
+input:focus{outline:none;border-color:var(--a3)}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
+button.big{min-height:64px;font-size:20px;flex:1 1 140px}
+button:active{transform:translateY(1px)}button[disabled]{opacity:.55;cursor:default;box-shadow:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--a3);outline-offset:2px}
+a{color:var(--a3);text-decoration:underline}a.btn{color:var(--text);align-self:flex-start}
+.note{border-left:4px solid var(--amber);padding:6px 10px;font-size:15px}.done{color:var(--good);font-weight:700}.msg{min-height:18px;font-size:15px}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted);white-space:nowrap}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+.pillbig{font-size:18px;font-weight:800;border:2px solid var(--line);border-radius:99px;padding:8px 16px;background:var(--panel);font-variant-numeric:tabular-nums}
+.pillbig.live{border-color:var(--good)}.pillbig.paused{border-color:var(--amber)}
+.lights{display:flex;gap:12px;flex-wrap:wrap}.light{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}.light b{color:var(--text)}
+.light i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);display:inline-block;flex:none}
+.light.green i{background:var(--good);border-color:var(--good)}.light.amber i{background:var(--amber);border-color:var(--amber)}.light.off i{opacity:.5}
+.chips{display:flex;flex-wrap:wrap;gap:10px}.chip{min-width:88px}.chip.on{background:var(--a1);border-color:var(--a1);color:#fff}
+.ctl{display:flex;gap:12px;flex-wrap:wrap}
+ul.heard{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}ul.heard b{color:var(--muted);font-size:13px;margin-right:6px}
+.soft{color:var(--muted);opacity:.7;font-style:italic;min-height:20px;font-size:14px}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="core/report.js?v=e950ffe0"></script>
+<script src="core/soon.js?v=cafe08bf"></script>
+<script src="account/trust.js?v=3d07f04c"></script>
+<script src="account/supa.js?v=2a963457"></script>
+<script src="account/liveflag.js?v=f76b7a68"></script>
+<script src="account/live.js?v=95bdda0f"></script>
+<script src="account/liveio.js?v=4792f52b"></script>
+<script src="account/livefill.js?v=5043282d"></script>
+<script src="account/liveland.js?v=039f1f0c"></script>
+<script src="account/livesim.js?v=56747461"></script>
+<script src="account/liveroom.js?v=f2959cda"></script>
+<script>
+/* The session page of Live Session Mode. With the switch off (account/liveflag.js) it shows "Coming soon" and does nothing else. The database checks each step again. */
+document.addEventListener("submit",ev=>{ev.preventDefault();if(liveOn())lrSubmit(ev.target).catch(e=>{report(e,"session.html: submit");lrSay("That did not go through. Wait a minute, then try again.")})});
+document.addEventListener("click",ev=>{const t=ev.target.closest("[data-a]");if(!t||t.disabled||!liveOn())return;lrClick(t).catch(e=>{report(e,"session.html: click");lrDraw()})});
+lrBoot().catch(e=>{report(e,"session.html: boot");document.getElementById("app").innerHTML=lrSoon()});
+</script>
+</body>
+</html>

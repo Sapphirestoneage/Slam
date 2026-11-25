@@ -130,7 +130,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | FI number variants | Done | Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
+| 1 | FI number variants | Done | Follow-up to Eli's answers (QUESTIONS 580) applied: the FOO by destination moves only the late steps, the Barista number adds health insurance, living apart on the pod view, the quiet Recalculating card under Coast, the "i" on the FI ratio. Web app: Plan › Goals has "FI destinations" (Lean, Barista, Regular, Chubby, Fat, each with its number, date and what it assumes; the Fat list; the Barista gap and health insurance), "FI date stress test" and "Pod FI number" (two or more adults); Plan › FOO has "Your order by destination"; Home has the card "You can stop sprinting". Game: "FI ratio" on Key numbers (Freedom), and the same card on Home. Waiting for Eli: the Chubby midpoint, the three orders of the FOO, what counts as investment income (QUESTIONS 580). |
 | 2 | Home buying and renting | Not started | |
 | 3 | Career and education | Not started | |
 | 4 | Travel | Not started | |
@@ -169,7 +169,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 8 | Family | Not started | |
 | 9 | Ratios on Key numbers | Not started | |
 | 10 | The game | Not started | |
-| 11 | Quiz frameworks: one engine, many skins | Done | Built out of order, before Parts 2 to 10, because the sins run and the quiz styles of quiz.html wait for it. One engine (`js/math/quizcore.js`, copied to `game/core/quizcore.js`), eight skins as data files (`js/quiz/skins/`) and the sins placeholder ("Coming soon"). Web app: `quiz.html`, "More quizzes". Game: Me › Quizzes, and the Menu. The Money Chart (both apps), Quantum Collapse and the Money Letters are scored by the engine with the same results as before. How to add a skin: `docs/QUIZ-ENGINE.md`. Questions: QUESTIONS.md 592. |
+| 11 | Quiz frameworks: one engine, many skins | Done | Built out of order, before Parts 2 to 10, because the sins run and the quiz styles of quiz.html wait for it. One engine (`js/math/quizcore.js`, copied to `game/core/quizcore.js`), eight skins as data files (`js/quiz/skins/`) and the sins placeholder ("Coming soon"). Web app: `quiz.html`, "More quizzes". Game: Me › Quizzes, and the Menu. The Money Chart (both apps), Quantum Collapse and the Money Letters are scored by the engine with the same results as before. How to add a skin: `docs/QUIZ-ENGINE.md`. Questions: QUESTIONS.md 594. |
 
 ## RUN: Launch ready for the Nov 30 soft launch (Nov 25 2026)
 
@@ -207,11 +207,11 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | The invite link is the sign-up | Not started | |
-| 2 | The session room | Not started | |
-| 3 | Live fill (rules only, no AI) | Not started | |
-| 4 | Spoken confirmation | Not started | |
-| 5 | What-ifs log | Not started | |
+| 1 | The invite link is the sign-up | Done in the code, switched off; the database file waits for Eli | The whole run is behind `LIVE_SESSION_READY = false` in `game/account/liveflag.js`: the coach page shows "Coming soon", `game/session.html` shows "Coming soon". With it on: `session.html?invite=token` is the sign-up (name, email, password), the coach page makes and lists the links. **Eli: run `supabase/migrations/20261125210000_live_sessions.sql` one time (NOT APPLIED).** QUESTIONS 592. |
+| 2 | The session room | Done in the code, switched off; not tried with real microphones | Rules as values (`game/account/live.js`), adapters with stand-ins, plain screens for the coach and the client; Parts 6 and 7 replace the body by the named parts `livePartCoach`, `livePartClient`, `livePartEnded`. Text only: nothing records audio. Two real devices, real speech recognition and the real realtime channel were not tried; the list for a dry run is in `docs/LIVE-SESSION-BUILD.md`. |
+| 3 | Live fill (rules only, no AI) | Rules done and tested, switched off; NOT joined to a real saved game yet (Part 6) | `game/account/livefill.js` (the number reader, the fields, the topic) and `liveland.js` (a value lands in the game's own row as a Guess with a record `c.x.live.marks`, corrections keep both, a value the person entered is never changed and the heard one is kept with the reason). The session page holds no game, so on the real page nothing fills until Part 6 gives `lfAttach` the client's game. Real speech recognition output was not seen by anyone: the forms are assumed (`docs/LIVE-SESSION-BUILD.md`). Tests: `live-fill-number-reader.js`, `live-fill-rules.js`, `live-fill-two-devices.js`. |
+| 4 | Spoken confirmation | Rules done and tested, switched off | "Confirming <field> <number>" on the coach's line, then the client's yes in 10 seconds: the value is set and raised to Close the game's way (`s: true`), never Exact. No, a time limit, an echo of the coach's word, a "Confirming" from the client's side and a protected field change nothing and say why. One event (`confirmed`) reaches both devices; the pulse on the screen is Part 6. |
+| 5 | What-ifs log | Rules done and tested, switched off | A line with a cue word is not a fact: it goes to `c.x.live.whatifs` with the quote, the speaker and the time; the counter text is ready ("3 what-ifs heard"). Types by `lfWhatifSet`: Ceiling / Floor (a limit kept with the field), Scenario (a link to a simulator), Life transition (a link to Break in case of emergency), Goal or wish (one goal on the bucket list). A field for the AI's suggested type exists. The tap for the coach is on the review screen (Part 7). |
 | 6 | Screens | Not started | |
 | 7 | End of call review | Not started | |
 | 8 | After the call (AI pass, behind the switch) | Not started | |

@@ -171,6 +171,30 @@ export function rcRefill({ target = null, balance = null, monthly = null, nowAt 
   return { target, balance, gap, months, ym: rcAddMonths(rcYm(nowAt), months), full: false, monthly };
 }
 
+// ---------- back under Coast ----------
+// The Coast number is reached one day, and then markets move. When the invested balance is under the Coast number
+// again: how far under, and the month it is back at Coast. The Coast number rises each month (one month fewer left
+// to grow) at the same return as the money, so only what goes in closes the gap. monthly: a number, or a function
+// of the month (0, 1, 2...) when the plan's saving changes on the way. null when the balance or the Coast number is
+// not known. months is null when today's numbers give no date within maxMonths (the months left to the stop age).
+export function rcCoast({ invested = null, coast = null, monthly = null, realReturn = null, nowAt = null, maxMonths = 840 } = {}) {
+  if (invested == null || coast == null) return null;
+  if (invested >= coast) return { below: false, by: 0, months: 0, ym: rcYm(nowAt) };
+  const by = coast - invested;
+  if (monthly == null || realReturn == null) return { below: true, by, months: null, ym: null };
+  const g = (1 + realReturn) ** (1 / 12), at = typeof monthly === 'function' ? monthly : () => monthly;
+  let b = invested, t = coast, n = 0;
+  while (b < t && n < maxMonths) { b = b * g + at(n); t = t * g; n += 1; }
+  return b < t ? { below: true, by, months: null, ym: null } : { below: true, by, months: n, ym: rcAddMonths(rcYm(nowAt), n) };
+}
+// The words of the quiet card. Eli's words (Nov 25 2026): "Below Coast by $X. New Coast date: ___." Never a warning.
+export function rcCoastWords(k) {
+  if (!k || !k.below) return null;
+  const by = `$${Math.round(k.by).toLocaleString('en-US')}`;
+  return { title: 'Recalculating', line: `Below Coast by ${by}. New Coast date: ${k.ym ? rcMonthName(k.ym) : 'none yet on today\'s numbers'}.`,
+    next: k.ym ? 'Nothing to change. What you already put in each month brings it back.' : 'Any amount you put in each month sets a new date.' };
+}
+
 // ---------- the safe-to-fail line ----------
 // A fun or experiment line. The plan counts its cap every month whether it is used or not, so it can run out with
 // no effect on the plan. Spending past the cap is ordinary spending (over), and that part the plan does see.

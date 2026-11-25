@@ -28,6 +28,7 @@ import { sessionNo } from '../program.js';
 import { scorecardOf } from '../math/scorecard.js';
 import { ladderOf } from '../math/ladder.js';
 import { saferFi } from '../math/fi.js';
+import { baristaHealthOf } from '../plan.js';
 import { compareOf, netWorthIn, shortfallOf } from '../math/proposed.js';
 import { closeStreak, byCategory, monthView, ymOf, addMonths } from '../month.js';
 import { affordOf } from '../math/afford.js';
@@ -480,10 +481,11 @@ export const MATH = [
   { id: 'M51', name: 'Lean FI number', inputs: 'Food, Accommodation, Transportation lines', unit: 'money', fns: ['fi.leanFiNumber'],
     cols: [{ area: 'spending', key: 'fat', label: 'Food, housing or transportation', unit: 'number', f: 'IF(OR({draftt}="Food",{draftt}="Accommodation",{draftt}="Transportation",{category}="Phone"),1,0)' }],
     sheet: 'IF(SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")=0,"",SUMIFS(Spend_M21,Spend_fat,1,Spend_InMath,"Yes")*12/WithdrawalRate)', app: c => c.targets()['Lean FI'].value },
-  { id: 'M52', name: 'Barista FI number', inputs: 'part-time income', unit: 'money', fns: ['fi.baristaFiNumber'],
-    sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },
+  { id: 'M52', name: 'Barista FI number', inputs: 'part-time income, and what health insurance costs a month once the full-time job is gone (0 when a tap says the part-time job covers it)', unit: 'money', fns: ['fi.baristaFiNumber'],
+    parts: [{ key: 'health', name: 'Health insurance a month, added to the Barista number (0 when the part-time job covers it)', unit: 'money', fromApp: 'tapped on the Barista view of Plan › Goals: the same pick as the Lifetime plan\'s health cover, and a tap that the job covers it; both stay in the app', app: c => baristaHealthOf(c.doc) ?? 0 }],
+    sheet: 'IF(OR(Profile_keepJobAfterLaunch="No",RetirementSpending="",PartTimeIncome=""),"",(RetirementSpending+N(Math_M52_health)-PartTimeIncome)*12/WithdrawalRate)', app: c => c.targets()['Barista FI'].value ?? null },
   { id: 'M9G', name: 'The FI destinations: Fat (with your own list of extras), Chubby, and what part-time pay closes', inputs: 'M50 the Regular FI number, RetirementSpending, the extras tapped on the Fat list (program.destinations.fat), FatFactor while none is tapped, PartTimeIncome, health insurance a month (assumptions.lifeHealth), WithdrawalRate; each date is M53 on the plan\'s own path', unit: 'money',
-    fns: ['fi.fatFiNumber', 'fi.chubbyFiNumber', 'fi.baristaGap', 'destinations.destinationsOf', 'destinations.baristaSooner', 'destinations.fooFor', 'destinations.coastReachedOf'],
+    fns: ['fi.fatFiNumber', 'fi.chubbyFiNumber', 'fi.baristaGap', 'destinations.destinationsOf', 'destinations.baristaSooner', 'destinations.fooFor', 'destinations.coastReachedOf', 'destinations.apartOf'],
     fromApp: 'the Fat list is a set of taps kept on the plan (not a sheet column), and each view carries its date on the plan\'s path (M53, a loop); the second engine (tools/audit) works the three numbers out again', app: c => c.targets()['Fat FI'].value },
   { id: 'M9X', name: 'The FI date stress test: the date at each withdrawal rate and return', inputs: 'M53 the FI date on the plan\'s own path (the debt-first months, the known changes ahead), RetirementSpending, the grid in the reference data (fiStress: withdrawal rates 3.25%, 3.5%, 4%, 4.5%; returns 3%, 5%, 7% after inflation)', unit: 'months',
     fns: ['fi.fiStress', 'destinations.stressOf'],
@@ -878,6 +880,7 @@ export const SUPPORT = {
   'recalc.rcWords': 'the words of the Recalculating card (old date, new date, the next turn)', 'recalc.RC_ORDER': 'the order to pay in when bills are more than income (Eli, 2026-11-25)', 'recalc.rcClassOf': 'a Budget category to its place in that order',
   'recalc.RC_MUST': 'the must-pay tier of that order: housing, utilities, food, health insurance and medicine, childcare (Eli, 2026-11-25)', 'recalc.RC_SCRIPTS_REVIEWED': 'the one switch that keeps the phone scripts off every screen until Eli has reviewed them', 'recalc.rcScriptsFor': 'the scripts for the groups that come up short, or nothing while the switch is off',
   'recalc.rcTriage': 'income paid down the order, bill by bill, with what is left unpaid', 'recalc.RC_SCRIPTS': 'what to say on the phone to each kind of creditor', 'recalc.rcScript': 'one script with the amounts filled in',
+  'recalc.rcCoast': 'back under the Coast number: how far under, and the month what goes in closes the gap (the Coast number M54 rises each month at the same return)', 'recalc.rcCoastWords': 'the words of that quiet card (Below Coast by $X. New Coast date)',
   'recalc.rcRefill': 'the emergency fund gap divided by what goes back in a month, and the month it is whole', 'recalc.rcSafeLine': 'a fun line: what is left of its cap, and that the plan counts the cap either way',
   'recalc.rcMonthState': 'whether anything needs attention this month, and whether it is a hard month', 'recalc.rcAudit': 'the opt-in audit: each past event\'s cost then, grown at the plan\'s return, as days of saving and hours of work, with repeats', 'recalc.RC_KINDS': 'the kinds of money event the audit offers by tap',
   // Aliyah Math (aliyah.html, Run 8): a standalone comparison on data/sources/israel-2026.json; nothing of it is stored in the plan, so the workbook has no column for it.

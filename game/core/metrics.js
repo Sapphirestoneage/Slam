@@ -1658,6 +1658,7 @@ function knAskBodyBase(c, k) {
 function knOne() {
   let h = knOneBase();
   if (typeof knOneSaved === "function") h = knOneSaved(h); /* ask2.js: the line "Saved" after an answer */
+  if (typeof knOneFir === "function") h = knOneFir(h); /* coast.js: the "i" of the FI ratio next to While you slept */
   return h;
 }
 function knOneBase() {

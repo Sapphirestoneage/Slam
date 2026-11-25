@@ -751,6 +751,9 @@ def run(cases, ref, il=None):
             ck('still from investments a year', o['left'], spend - pay if spend > pay else 0)
             ck('after health insurance', o['afterHealth'], None if health is None else pay - health)
             ck('covers health insurance', o['covers'], None if health is None else pay >= health)
+            # the Barista number (M52): the yearly need (spending, plus health insurance when it is tapped, less the pay) at the rate
+            need = spend - pay + (health or 0)
+            ck('Barista FI number', o['barista'], need * (1 / x['withdrawalRate']))
         elif fn == 'fiStress':
             soon, late, never = None, None, False
             for rate, row in zip(x['rates'], o['rows']):
@@ -926,6 +929,33 @@ def run(cases, ref, il=None):
                 ck('month it is whole', int(o['ym'][:4]) * 100 + int(o['ym'][5:7]), y * 100 + m, 0)
             elif gap > 0:
                 ck('no months without money going back', o['months'], None)
+        elif fn == 'rcCoast':
+            # Back under Coast, in closed form. The Coast number and the money grow at the same return, so the gap
+            # closes when the saving alone, counted back to today, covers it: P * (1 - g^-n) / (g - 1) >= gap.
+            inv, coast, pay = x['invested'], x['coast'], x.get('monthly')
+            if inv >= coast:
+                ck('below', o['below'], False); ck('months', o['months'], 0, 0)
+            else:
+                gap = coast - inv
+                ck('below', o['below'], True); ck('how far under', o['by'], gap)
+                g = (1 + x['realReturn']) ** (1 / 12)
+                n = None
+                if pay is not None and pay > 0 and gap * (g - 1) / pay < 1:
+                    n = max(1, math.ceil(-math.log(1 - gap * (g - 1) / pay) / math.log(g) - 1e-9) - 1)
+                    covered = lambda k: pay * (1 - g ** -k) / (g - 1)
+                    while covered(n) < gap * (1 - 1e-12): n += 1
+                    while n > 1 and covered(n - 1) >= gap * (1 + 1e-12): n -= 1
+                    if n > x['maxMonths']: n = None
+                if n is None:
+                    ck('no date', o['months'], None)
+                else:
+                    near = o['months'] is not None and abs(o['months'] - n) <= 1 and abs(pay * (1 - g ** -n) / (g - 1) - gap) < max(1e-6, gap * 1e-9)
+                    if not near: ck('months back to Coast', o['months'], n, 0)
+                    y, m = int(x['nowAt'][:4]), int(x['nowAt'][5:7])
+                    for _ in range(o['months'] or 0):
+                        m += 1
+                        if m == 13: y, m = y + 1, 1
+                    if o['ym'] is not None: ck('the month', int(o['ym'][:4]) * 100 + int(o['ym'][5:7]), y * 100 + m, 0)
         elif fn == 'rcSafeLine':
             sp = x['spent'] or 0
             ck('left', o['left'], max(0, x['cap'] - sp)); ck('over', o['over'], max(0, sp - x['cap'])); ck('ran out', o['ranOut'], x['spent'] is not None and sp >= x['cap']); ck('plan cost', o['planCost'], x['cap'])

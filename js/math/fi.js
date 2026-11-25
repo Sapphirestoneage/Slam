@@ -31,12 +31,18 @@ export function leanFiNumber({ annualFat, withdrawalRate }) {
   const r = fiNumber({ annualSpending: annualFat, withdrawalRate });
   return r.value === null ? { ...r, id: 'M51' } : ok('M51', r.value, `Food, housing and transportation ${fmt.money(annualFat)} a year divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(r.value)}.`);
 }
-// M52: Barista FI.
-export function baristaFiNumber({ annualSpending, partTimeIncome, withdrawalRate }) {
+// M52: Barista FI. healthAnnual (Eli, Nov 25 2026): what health insurance costs a year once the full-time job is gone.
+// It is added to spending, because today's spending does not hold it while an employer pays. Pass null when it is
+// not tapped yet (nothing is added, and the view says so) or 0 when the part-time job gives the cover.
+export function baristaFiNumber({ annualSpending, partTimeIncome, healthAnnual = null, withdrawalRate }) {
   const m = missing({ spending: annualSpending, 'part-time income': partTimeIncome, 'withdrawal rate': withdrawalRate });
   if (m.length) return needs('M52', m);
-  const v = (annualSpending - partTimeIncome) / withdrawalRate;
-  return ok('M52', v, `(${fmt.money(annualSpending)} spending ${'−'} ${fmt.money(partTimeIncome)} part-time income) divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(v)}.`);
+  const health = isBlank(healthAnnual) ? 0 : healthAnnual;
+  const v = (annualSpending + health - partTimeIncome) / withdrawalRate;
+  const text = health > 0
+    ? `(${fmt.money(annualSpending)} spending + ${fmt.money(health)} health insurance ${'−'} ${fmt.money(partTimeIncome)} part-time income) divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(v)}.`
+    : `(${fmt.money(annualSpending)} spending ${'−'} ${fmt.money(partTimeIncome)} part-time income) divided by ${fmt.pct(withdrawalRate)} = ${fmt.money(v)}.`;
+  return { ...ok('M52', v, text), health, healthOpen: isBlank(healthAnnual) };
 }
 
 // M53: months until invested reaches the FI number. Monthly growth then the month's investing.

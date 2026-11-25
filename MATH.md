@@ -82,7 +82,9 @@ Scorecard, Emergency fund: Hole until little e is full; OK with little e full; S
 ## 6. FI numbers and dates (M50 to M57, M70, M72)
 
 - FI number (M50) = retirement spending × 12 ÷ withdrawal rate (today's spending unless typed).
-- Lean FI (M51) = FAT lines × 12 ÷ withdrawal rate; Barista FI (M52) = (spending − part-time income) × 12 ÷ rate; Fat FI = FI × 1.5.
+- Lean FI (M51) = FAT lines × 12 ÷ withdrawal rate; Barista FI (M52) = (spending + health insurance − part-time income) × 12 ÷ rate (health insurance is the cost tapped on the Barista view; 0 when a tap says the part-time job covers it; nothing added while it is not tapped); Fat FI = (spending + the Fat list) × 12 ÷ rate, or FI × 1.5 as the stand-in while no extra is tapped.
+- Back under Coast (js/math/recalc.js, rcCoast): the gap = Coast number − invested. Each month both grow by (1 + r)^(1/12) and the month's investing goes in; the new Coast date is the first month the balance is at or over the Coast number of that month.
+- Living apart (M9Y, apartOf): low = a person's own month × 12 ÷ rate; high = (that month + the other people's parts of the rows they share) × 12 ÷ rate.
 - Coast FI (M54) = FI ÷ (1 + r)^(retire age − age).
 - Quiet Quitting FI (M70) = (FI − minimum × ((1+r)^n − 1) ÷ r) ÷ (1+r)^n, n = FI age − age, minimum = the IRA limit (+ the match if the job is kept).
 - FI date (M53): start at invested; each month multiply by (1 + r)^(1/12) and add the month's investing; count months until the FI number; up to 840 months. Investing a month = 401(k) + HSA + match + the surplus (Invest my surplus on), or the after-tax contributions and Retirement lines (off).
