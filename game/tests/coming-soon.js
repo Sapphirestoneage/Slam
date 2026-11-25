@@ -195,6 +195,36 @@
   SOON_AFTER = "none";
   soonTap("soonclose", {});
 
+  /* A Menu row closes the menu and opens its sheet in one tap. The game's own step back in the browser
+     history (for the menu) arrives after that. It must not close the new sheet, and it must not undo a
+     move to a different tab. Before 2026-11-25 it did both: each Menu row closed again at once. */
+  {
+    const h0 = typeof history === "undefined" ? undefined : history,
+      pushed = [];
+    history = { pushState: st => pushed.push(st), state: null };
+    go("home");
+    X("glossary");
+    UX_BACKS = 1;
+    uxPop({ state: { tab: "home" } });
+    chk(
+      "the game's own step back keeps the sheet that the Menu row opened",
+      SH === glossarySheet && /class="overlay"/.test(ov())
+    );
+    chk("that sheet gets its entry in the history", pushed.length === 1 && pushed[0].sheet === 1 && UX_BACKS === 0);
+    uxPop({ state: { tab: "home" } });
+    chk("the Back button of the browser still closes the sheet", !SH && ov() === "");
+    go("me");
+    UX_BACKS = 1;
+    uxPop({ state: { tab: "home" } });
+    chk(
+      "the game's own step back does not undo a Menu row that goes to a tab",
+      tab === "me" && pushed.length === 2 && pushed[1].tab === "me"
+    );
+    uxPop({ state: { tab: "home" } });
+    chk("the Back button of the browser still goes to the tab before", tab === "home");
+    history = h0;
+  }
+
   /* each tap of the game goes through soonTap */
   const src = require("fs").readFileSync(GAME_DIR + "screens/ui.js", "utf8");
   chk(
