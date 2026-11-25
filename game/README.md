@@ -100,6 +100,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | Your unpaid jobs (the six jobs of running your money), admin hours (Running it and Living it), the four ways out of each task (run JOE-1) | `features/jobs.js`, `data/roles.js`, `core/jobs.js` (a copy of `js/math/jobs.js` of the main app, made by `tools/game_jobs_build.mjs`; do not edit it), `docs/JOB-OF-EXISTING.md` |
 | Lifestyle creep (each category year over year next to income, the lines faster than prices, the quiet card), the few lines (Pareto), Enough and room for error, Rough numbers (run Not built, groups 1 to 5, Part 3) | `features/enough.js`, `core/enough.js` (the one engine with the Budget and Goals of the web app) |
 | Setup as a spiral: five rounds in the order D, A, I, T, E, one number for each round with its chain and route strip, the level change, and "Your first plan" written as a route (UX pass, phase 3) | `features/spiral.js`, `screens/smart.js` (the order of the pages, the taxes round) |
+| The questions inside the rounds: count first, then one at a time (cards, other debts, accounts with a breadcrumb, each source of money, spending group by group), "I know it" in the same spot, how many roommates and kids (UX pass, phase 4) | `features/amounts.js`, `screens/smart.js` (the order of the pages), `core/engine.js` (`hhSize`, `typSpend`) |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

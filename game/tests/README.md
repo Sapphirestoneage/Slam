@@ -99,6 +99,7 @@ Each file has the name of its feature.
 | `stress-testing.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
 | `student-loan-plans.js` | Student loan plans | `features/study.js` |
 | `spiral-onboarding.js` | Setup as a spiral: the rounds D, A, I, T, E, one number each, the chain, the route strip, the level change, the 50/30/20 summary, the first plan and what it depends on | `features/spiral.js`, `screens/smart.js` |
+| `question-design.js` | The questions inside the rounds: count first, each card its own row, a card paid in full is not a debt, the rate chips, the ranges of each kind, "I know it" in the same spot, income each time to a month, roommates and kids, the lines of a spending group, IRA and Roth IRA as two rows | `features/amounts.js`, `screens/smart.js`, `core/engine.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |
 | `what-depends-on-what.js` | What depends on what | `features/dep.js` |
