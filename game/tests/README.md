@@ -104,7 +104,7 @@ Each file has the name of its feature.
 | `what-you-already-know.js` | What you already know (D.A.I.T.E.) | `features/know.js` |
 | `whats-built.js` | The list "What's built" | `features/built.js` |
 | `which-lever-matters-most.js` | Which lever matters most | `features/lever.js` |
-| `working-for-yourself.js` | Working for yourself | `features/gig.js` |
+| `working-for-yourself.js` | Working for yourself, and the run Not built, Part 5: the floor with weeks off on the web app's formula, More (the invoice tracker with Undo, Profit First with the book's sample or your own shares), the copy of `core/gigcore.js` is current (`tools/game_gig_build.mjs --check`) | `features/gig.js`, `core/gigcore.js` |
 | `your-people.js` | Your people | `features/people.js` |
 
 These scripts have no test file of their own: `core/engine.js`, `core/engine2.js`, `core/metrics.js`, `account/supa.js`, `account/gate.js`, `screens/ui.js`, `screens/ux.js`, `screens/planner.js`, `screens/smart.js`, `screens/profiles.js`, `features/games.js`, `features/games2.js`, `features/year.js`, `features/chart.js`, `features/debts.js`, `features/import.js`, `features/house.js`, `features/home.js`, `features/testkit.js`. The test files of other features use many of their functions, but no file examines them directly. `KNOWN-WEAK.md`, section B, lists the weak points of the tests.

@@ -14,6 +14,8 @@ import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
+import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf } from '../../js/math/gig.js';
+import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -137,6 +139,19 @@ for (let i = 0; i < N; i++) {
     add('tripSplit', { people, how, items, total }, { parts: S.parts.map(p => p.amount), total: S.total }); }
   { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(money(0, 30000)), debt: kn(pick([0, 0, money(100, 40000)])), invested: kn(money(0, 1500000)), coast: kn(money(10000, 600000)), fi: kn(money(200000, 2500000)), monthly: pick([null, 0, money(50, 6000)]), trip: pick([null, money(100, 15000)]) }, J = tpJourney(x);
     add('tripJourney', x, { done: J.stages.map(s => s.done), months: J.stages.map(s => s.months), after: J.stages.map(s => (s.after ? [s.after.done, s.after.months] : null)), here: J.here, fromCash: J.fromCash, shift: J.monthsOfSaving }); }
+  // Gig and self-employed (js/math/gig.js and gigplan.js, M8G)
+  { const x = { takeHome: money(1500, 15000), health: pick([0, 0, 300, 800]), retire: pick([0, 3000, 7500, 20000]), costs: pick([0, 100, 600]), hoursWeek: pick([20, 30, 40, 50]), billable: pick([0.5, 0.6, 0.7, 0.8, 0.9, 1]), weeksOff: pick([0, 2, 4, 6, 12]), unitHours: pick([null, 1, 2, 8]), filingStatus: pick(STATUS), place: pick([null, 'ny', 'nyc']) }, r = gigRate(x, ref);
+    add('gigRate', x, { profit: r.profit, hourly: r.hourly, unit: r.unit, need: r.need.year }); }
+  { const x = { profit: money(2000, 400000), wages: pick([0, 0, money(10000, 250000)]), pretax: pick([0, 0, 5000]), filingStatus: pick(STATUS), place: pick([null, 'ny', 'nyc']), earned: pick([null, money(100, 100000)]), set: pick([0, 0, 1500]) }, r = gigSetAside({ ...x, year: 2026 }, ref);
+    add('gigSetAside', x, { yearly: r.yearly, rate: r.rate, se: r.parts.selfEmployment, toMove: r.soFar.ready ? r.soFar.toMove : null }); }
+  { const x = { profit: money(500, 600000), age: whole(22, 72), deferredAtJob: pick([0, 0, 5000, 24500]), want: pick([null, 3000, 9000, 30000, 70000]) }, r = gigRetire(x, ref);
+    add('gigRetire', { ...x, limits: gigLimitsOf(ref.limits) }, { seHalf: r.seHalf, solo: r.solo.total, sep: r.sep, ira: r.ira, first: r.first }); }
+  { const day = d => new Date(Date.UTC(2026, 0, 1) + d * 864e5).toISOString().slice(0, 10), today = day(whole(200, 330));
+    const list = Array.from({ length: whole(1, 8) }, (_, k) => { const sent = whole(0, 320); const inv = { id: k, client: pick(['A', 'B', 'C']), amount: money(50, 20000), sent: day(sent), terms: pick([0, 15, 30, 45, 60]) }; if (rnd() < 0.2) inv.due = day(sent + whole(0, 90)); if (rnd() < 0.4) inv.paid = day(sent + whole(0, 120)); return inv; });
+    const r = gigInvoicesOf(list, today); add('gigInvoices', { list, today }, { waiting: r.waiting, past: r.past, got: r.got, ages: r.ages.map(a => a.total), days: Object.fromEntries(r.rows.map(q => [q.id, q.daysPast])), avg: r.avgDaysToPay }); }
+  { const apps = Array.from({ length: whole(1, 3) }, () => ({ earned: money(20, 5000), tips: pick([0, 50, 300]), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]) })), x = { apps, cash: pick([0, 60, 400]) }, r = gigAppsOf(x);
+    const pcts = { profit: pick([0.01, 0.05, 0.1]), owner: pick([0.3, 0.5]), tax: pick([0.15, 0.25]), opex: pick([0.1, 0.2, 0.3]) }, income = money(100, 20000), pf = gigProfitFirstOf({ income, pcts });
+    add('gigApps', { ...x, pcts, income }, { all: r.all, tips: r.tips, gap: r.gap, owner: pf.ready ? pf.of.owner : null, left: pf.ready ? pf.left : null }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);

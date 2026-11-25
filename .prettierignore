@@ -18,3 +18,4 @@ game/core/homebuy.js
 game/core/career.js
 game/core/quick.js
 game/core/trip.js
+game/core/gigcore.js
