@@ -20,3 +20,4 @@ game/core/quick.js
 game/core/trip.js
 game/core/gigcore.js
 game/core/hardcore.js
+game/core/frameworks.js

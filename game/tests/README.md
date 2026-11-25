@@ -50,6 +50,7 @@ Each file has the name of its feature.
 | `home-buying-and-renting.js` | Rent or buy on the shared engine: the copy of the rules, the bank's payment, the true cost of owning and renting, lines not counted until tapped, PMI, the breakeven year, the two rules of thumb, the closed group, the terms, the spreadsheet rows | `core/homebuy.js`, `features/sims/rentbuy.js`, `features/sim.js` |
 | `career-and-education.js` | Career and education on the shared engine: the copy of the engine, a course priced (payback, lifetime value, the freedom date), a preset that is a sample, empty answers that wait, two paths side by side, the credential stack with an overlap, the match that stays with the job on each schedule, the launch window in days, the link from Two job offers, the spreadsheet rows | `core/career.js`, `features/career.js`, `core/engine.js` |
 | `trips-and-the-journey.js` | Trips and the journey on the shared engine: the copy of the engine (with the household split engine), a trip line by line with the card fee, a line not tapped that waits, points taken off the trip, a group split by share and by item that adds up, the journey with where you are and the trip in days on the freedom date, a trip in another currency kept out of the plan, the spreadsheet rows, the What's built row. |
+| `frameworks-and-canon.js` | Eli's frameworks and the canon on the shared math (`core/frameworks.js`): the eight ideas open clean and follow a tap (SWAN, Second Mouse, Trust, the Advice translator, the Baby Steps, the wealth stages, Die With Zero, the peak), the old 0% tax idea on the same formula, Your Money or Your Life as nine steps in order with 1a, 4, 5, 6, 7 and 9, the quick wins that add only tapped amounts, the one line of the next dollar at the top of Home, the spreadsheet rows. |
 | `simulators.js` | The simulator engine and the 12 simulators, with each flip point | `features/sim.js`, `features/sims/*.js` |
 | `spreadsheet-extras.js` | The savings rate by month, the quotas, next year's budget | `features/quota.js` |
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
@@ -99,6 +100,7 @@ Each file has the name of its feature.
 | `stars.js` | The Galaxy: star states, lanes from real links, gateway stars, Do this | `features/stars.js` |
 | `stress-testing.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
 | `student-loan-plans.js` | Student loan plans | `features/study.js` |
+| `spiral-onboarding.js` | Setup as a spiral: the rounds D, A, I, T, E, one number each, the chain, the route strip, the level change, the 50/30/20 summary, the first plan and what it depends on | `features/spiral.js`, `screens/smart.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |
 | `what-depends-on-what.js` | What depends on what | `features/dep.js` |

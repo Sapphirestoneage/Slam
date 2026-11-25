@@ -100,8 +100,8 @@
       .every(x => x.st === "Guess")
   );
   chk(
-    "a new profile opens the reveal in place of the old card",
-    finishSetupReveal(g) === true && W.kind === "elem" && ov().includes("1 of 4")
+    "a new profile opens the first plan (spiral.js) in place of the old card",
+    finishSetupReveal(g) === true && W.kind === "firstplan" && ov().includes("Your first plan")
   );
   X("close");
   const B = elBook(c);

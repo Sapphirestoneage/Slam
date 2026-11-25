@@ -25,7 +25,7 @@ export function taxableSocialSecurity(ss, other, filingStatus = 'Single') {
   return Math.min(ss * 0.85, (prov - t2) * 0.85 + Math.min(ss / 2, (t2 - t1) / 2));
 }
 // Long-term gains: the top of the 0% and 15% bands by taxable income (IRS Rev. Proc. 2025-32, tax year 2026).
-const GAIN_BANDS = { single: [49450, 545500], joint: [98900, 613700], head: [66200, 579600] };
+export const GAIN_BANDS = { single: [49450, 545500], joint: [98900, 613700], head: [66200, 579600] };
 export function gainsTax(gains, ordinaryTaxable, key = 'single') {
   if (!(gains > 0)) return 0;
   const [t0, t1] = GAIN_BANDS[key] ?? GAIN_BANDS.single, lo = Math.max(0, ordinaryTaxable), hi = lo + gains;
