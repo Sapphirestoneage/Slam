@@ -88,6 +88,8 @@ function clSig(c) {
 /* Take the people as they are now as "seen", with no change of a stamp. After a load or a merge. */
 function clSigAll() {
   CLOUD.sig = {};
+  /* session.html loads this file for clSig and clMergePerson, with no game on the page (account/livegame.js) */
+  if (typeof G === "undefined") return;
   try {
     if (G && G.chars && !G.demo) G.chars.forEach(c => (CLOUD.sig[c.name] = clSig(c)));
   } catch (e) {

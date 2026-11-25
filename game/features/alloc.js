@@ -15,6 +15,8 @@
    CAREFUL     When the real lines already pass the guess, the guessed lines that are left keep
                their own amounts for spending and debt (a cost or a debt is not hidden), and they
                are removed for income, cash and investments (money is not counted twice).
+               A line with x.h (set by a live session, account/liveland.js) is a Guess that keeps its
+               amount: the fill does not change it and does not remove it.
    STATE       c.al[area] = { g: the guess, done: true or false, over: amount, at: date }.
    INPUT       The profile c and its rows: c.incs, c.spends, c.debts, c.cashes, c.invs.
    OUTPUT      allocArea, allocSplit, allocFill, allocFillAll, allocBar.
@@ -72,11 +74,14 @@ function allocFill(c, k) {
     a = allocArea(c, k);
   if (a.done) return;
   const rows = c[A.rows] || [],
-    real = rows.filter(x => x.s),
-    guessed = rows.filter(x => !x.s),
+    /* x.h: a line that a live session set (account/liveland.js). It is a Guess that somebody said, not a
+       guess of the game: it keeps its amount, and it is never removed. */
+    real = rows.filter(x => x.s || x.h),
+    guessed = rows.filter(x => !x.s && !x.h),
     realSum = rsum(real),
     gap = (a.g || 0) - realSum;
   if (!guessed.length) {
+    if (rows.some(x => !x.s)) return; /* only heard guesses are left: the area is not done yet */
     a.done = true;
     a.over = Math.max(0, -gap);
     a.at = todayISO();

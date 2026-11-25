@@ -266,7 +266,8 @@ function lioId() {
      R.ready    the microphone check: "" (not tried), "yes", "no"
      R.hooks    { line: [], drop: [], room: [] }: functions of later parts. line(line) for each line that
                 stays, of both sides; drop(id) when the echo filter takes a line back; room(room) after
-                each change of the room.
+                each change of the room; fill(p) for a signal of the live fill from the other device
+                (account/liveland.js); hello(side) when the other device joined the channel.
    Functions: join, act (ok, headphones, start, pause, resume, end), micCheck, reconnect, flush, leave. */
 function lioRoom(d) {
   const R = {
@@ -286,7 +287,7 @@ function lioRoom(d) {
     msg: "",
     dropped: 0,
     closed: false,
-    hooks: { line: [], drop: [], room: [] },
+    hooks: { line: [], drop: [], room: [], fill: [], hello: [] },
   };
   const key = lvBufKey(d.sid, d.side),
     T = { restart: null, flush: null, hold: null, seen: null };
@@ -528,7 +529,10 @@ function lioRoom(d) {
       else if (p.k === "mic" && p.side !== R.side) {
         R.their = { status: String(p.status || "off") };
         draw();
-      } else if (p.k === "hello" && p.side !== R.side) tellMic();
+      } else if (p.k === "hello" && p.side !== R.side) {
+        tellMic();
+        hook("hello", p.side);
+      } else if (p.k === "fill" && p.side !== R.side) hook("fill", p);
       else if (p.k === "line") heardThere(p.line);
     }
   }
@@ -594,6 +598,9 @@ function lioRoom(d) {
     if (R.room && R.room.state === "live") listen();
   };
   R.flush = flush;
+  /* For account/liveland.js. R.tell(p): send one signal to the other device. R.fire(k, v): run the hooks k. */
+  R.tell = p => d.chan.send(Object.assign({ side: R.side }, p));
+  R.fire = hook;
   R.leave = () => {
     R.closed = true;
     Object.keys(T).forEach(stop);

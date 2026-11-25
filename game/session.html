@@ -45,9 +45,11 @@ ul.heard{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;g
 <script src="account/supa.js?v=2a963457"></script>
 <script src="account/liveflag.js?v=f76b7a68"></script>
 <script src="account/live.js?v=95bdda0f"></script>
-<script src="account/liveio.js?v=277d3016"></script>
-<script src="account/livesim.js?v=f84a492b"></script>
-<script src="account/liveroom.js?v=f88d476e"></script>
+<script src="account/liveio.js?v=4792f52b"></script>
+<script src="account/livefill.js?v=5043282d"></script>
+<script src="account/liveland.js?v=039f1f0c"></script>
+<script src="account/livesim.js?v=56747461"></script>
+<script src="account/liveroom.js?v=f2959cda"></script>
 <script>
 /* The session page of Live Session Mode. With the switch off (account/liveflag.js) it shows "Coming soon" and does nothing else. The database checks each step again. */
 document.addEventListener("submit",ev=>{ev.preventDefault();if(liveOn())lrSubmit(ev.target).catch(e=>{report(e,"session.html: submit");lrSay("That did not go through. Wait a minute, then try again.")})});

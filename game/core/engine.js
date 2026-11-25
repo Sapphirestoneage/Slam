@@ -827,7 +827,9 @@ function applyTypical(c) {
   const TS = fam ? Math.round((t[1] * 0.5) / 100) * 100 : t[1],
     sp = fam ? SPLIT_FAM : SPLIT;
   if (fam && !c.spends.some(x => x.s)) c.moveOut = t[1] - TS;
-  c.spends = SPEND_K.map((k, i) => c.spends.find(x => x.k === k && x.s) || { k, amt: r50(TS * sp[i]), s: false });
+  c.spends = SPEND_K.map(
+    (k, i) => c.spends.find(x => x.k === k && (x.s || x.h)) || { k, amt: r50(TS * sp[i]), s: false }
+  );
   c.spend = Math.max(1, rsum(c.spends));
   let T = (c.can1k === "No" ? 0.1 : COVER[c.cover] || 0.5) * c.spend;
   if (c.can1k === "Yes") T = Math.max(T, 1000);
@@ -836,7 +838,7 @@ function applyTypical(c) {
   if (!ck.length) ck.push("Cash");
   const cw = ck.reduce((a, k) => a + (CASH_W[k] || 0.3), 0);
   c.cashes = ck.map(k => c.cashes.find(x => x.k === k) || { k, amt: r50((T * (CASH_W[k] || 0.3)) / cw), s: false });
-  if (c.can1k === "Yes" && c.cashes.every(x => !x.s) && rsum(c.cashes) < 1000)
+  if (c.can1k === "Yes" && c.cashes.every(x => !x.s && !x.h) && rsum(c.cashes) < 1000)
     c.cashes[c.cashes.length - 1].amt += 1000 - rsum(c.cashes);
   const vk = INV_K.filter(k => c.accts.includes(k)),
     yr = c.spend * 12,

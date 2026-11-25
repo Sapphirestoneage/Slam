@@ -8,8 +8,9 @@
                client" (session.html?sim=coach or ?sim=client), so the room can be seen on one device.
    INPUT       Values only.
    OUTPUT      Functions: simClock, simStore, simWake, simId, simSpeech, simHub, simDb, simPair,
-               simScript.
-   DEPENDS ON  account/live.js, account/liveio.js (simPair makes two lioRoom controllers).
+               simScript, simGame, simScriptFill, simSb.
+   DEPENDS ON  account/live.js, account/liveio.js (simPair makes two lioRoom controllers). With o.game,
+               simPair also needs account/livefill.js and account/liveland.js (lfAttach).
                session.html loads this file. The tests load it by themselves.
    RULES       simDb follows the rules of supabase/migrations/20261125210000_live_sessions.sql: a link
                works one time and for 7 days, only a coach makes a link, only the two members read a
@@ -327,7 +328,72 @@ function simPair(o) {
     });
     return dev;
   };
-  return { coach: one("coach", o.coach, o.coachCan), client: one("client", o.client, o.clientCan) };
+  const P = { coach: one("coach", o.coach, o.coachCan), client: one("client", o.client, o.clientCan) };
+  /* o.game (simGame): the client's device holds the game and fills it; the coach's device shows the list */
+  if (o.game && typeof lfAttach === "function") {
+    lfAttach(P.client.R, { game: o.game, clock: o.clock });
+    lfAttach(P.coach.R, { clock: o.clock });
+  }
+  return P;
+}
+/* A stand-in for the table games of the database, with the calls that account/coachpage.js (cpSaveGame) and
+   account/livegame.js make: from("games").select().eq(), .update().eq(), .insert(), and rpc(). T.as(uid)
+   gives the client of one signed-in account. The rules of the real table: an account reads and writes its
+   own rows; a coach (T.coaches[uid]) reads and writes the rows that are shared with a coach; nobody else
+   sees a row. T.down = true: the server cannot be reached. T.writes counts the rows written. */
+function simSb(clock) {
+  const T = { rows: [], coaches: {}, down: false, writes: 0, n: 0, audits: [] },
+    copy = x => JSON.parse(JSON.stringify(x));
+  T.as = uid => ({
+    from: () => {
+      const q = { op: "select", f: [], patch: null },
+        can = r => r.owner === uid || (!!T.coaches[uid] && r.share_with_coach === true),
+        run = () => {
+          if (T.down) return { data: null, error: { message: "Failed to fetch" } };
+          if (q.op === "insert") {
+            if (q.patch.owner !== uid && !(T.coaches[uid] && q.patch.share_with_coach === true))
+              return { data: null, error: { message: "new row violates row-level security policy" } };
+            const r = Object.assign({ id: "g" + ++T.n }, copy(q.patch));
+            T.rows.push(r);
+            T.writes++;
+            return { data: { id: r.id }, error: null };
+          }
+          const hit = T.rows.filter(r => can(r) && q.f.every(c => (c[2] ? r[c[0]] !== c[1] : r[c[0]] === c[1])));
+          if (q.op === "update") {
+            hit.forEach(r => Object.assign(r, copy(q.patch)));
+            T.writes += hit.length;
+            return { data: null, error: null };
+          }
+          return { data: copy(hit), error: null };
+        },
+        B = {
+          select: () => B,
+          order: () => B,
+          limit: () => B,
+          single: () => B,
+          eq: (k, v) => (q.f.push([k, v, false]), B),
+          neq: (k, v) => (q.f.push([k, v, true]), B),
+          update: p => ((q.op = "update"), (q.patch = p), B),
+          insert: p => ((q.op = "insert"), (q.patch = p), B),
+          then: (a, b) => Promise.resolve().then(run).then(a, b),
+        };
+      return B;
+    },
+    rpc: async (name, args) => {
+      T.audits.push({ by: uid, name, args: copy(args || {}) });
+      return { data: null, error: null };
+    },
+  });
+  return T;
+}
+/* A stand-in for the device that holds the client's game: one profile, and a count of the saves. */
+function simGame(c) {
+  const g = { c, saves: 0 };
+  g.get = () => g.c;
+  g.save = () => {
+    g.saves++;
+  };
+  return g;
 }
 /* A short made-up call: [milliseconds after the line before, side, words]. */
 function simScript() {
@@ -339,5 +405,32 @@ function simScript() {
     [3000, "coach", "Any cards with a balance?"],
     [2500, "client", "One card, about three thousand two hundred on it."],
     [3000, "coach", "Good. That gives us a first picture."],
+  ];
+}
+/* A longer made-up call for the live fill (Parts 3, 4 and 5): topics and answers, a rough number, a
+   correction, a "Confirming" with yes, one with no, and what-ifs. Same shape as simScript(). */
+function simScriptFill() {
+  return [
+    [1500, "coach", "Thanks for joining. How often do you get paid?"],
+    [2500, "client", "I get paid every two weeks, about two thousand one hundred each time."],
+    [4000, "coach", "And what is your rent?"],
+    [2500, "client", "Rent is eighteen fifty a month."],
+    [4000, "coach", "What about groceries?"],
+    [2500, "client", "400-ish, maybe 500."],
+    [4000, "coach", "Any cards with a balance?"],
+    [2500, "client", "One card, about three thousand two hundred on it."],
+    [2500, "client", "No wait, 3,400."],
+    [4000, "coach", "What is the rate on that card?"],
+    [2500, "client", "24.99 percent."],
+    [4000, "coach", "How much is in savings?"],
+    [2500, "client", "Between 3 and 4 thousand."],
+    [4000, "coach", "Confirming rent 1,850."],
+    [2000, "client", "Yes."],
+    [4000, "coach", "Confirming the card balance 3,400."],
+    [2000, "client", "Actually it went up a little."],
+    [4000, "client", "If I moved in with my sister, rent would be 900."],
+    [4000, "coach", "What if you picked up a second job?"],
+    [3000, "client", "Someday I want to take a trip to Japan."],
+    [4000, "coach", "Good. That gives us a first picture."],
   ];
 }

@@ -284,6 +284,9 @@ async function lrRoom(sid) {
     change: lrDraw,
   });
   LR.R.now = () => Date.now();
+  /* liveland.js: this device shows what the device with the client's game heard (R.fill). The page holds no
+     game yet. Part 6 gives lfAttach the adapter of the client's game ({ game }) on the client's device. */
+  if (typeof lfAttach === "function") lfAttach(LR.R, { clock: lioClock() });
   LR.mode = "room";
   LR.ending = false;
   await LR.R.join();
