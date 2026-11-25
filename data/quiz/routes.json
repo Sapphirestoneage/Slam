@@ -9,6 +9,13 @@
    "treeName": "Cash and Safety Net",
    "level": 1
   },
+  "cash-safety-net-create-sinking-funds": {
+   "name": "Create sinking funds",
+   "what": "Named buckets for known irregulars",
+   "tree": "cash-safety-net",
+   "treeName": "Cash and Safety Net",
+   "level": 5
+  },
   "cash-safety-net-fund-the-true-emergency-fund": {
    "name": "Fund the true emergency fund",
    "what": "3-6 months of expenses",
@@ -23,12 +30,26 @@
    "treeName": "Cash and Safety Net",
    "level": 3
   },
+  "deals-smart-buying-audit-subscriptions-quarterly": {
+   "name": "Audit subscriptions quarterly",
+   "what": "Everything recurring re-justified",
+   "tree": "deals-smart-buying",
+   "treeName": "Deals and Smart Buying",
+   "level": 21
+  },
   "deals-smart-buying-renegotiate-the-bills-yearly": {
    "name": "Renegotiate the bills yearly",
    "what": "Insurance, internet, phone re-shopped",
    "tree": "deals-smart-buying",
    "treeName": "Deals and Smart Buying",
    "level": 5
+  },
+  "deals-smart-buying-wait-24-hours": {
+   "name": "Wait 24 hours",
+   "what": "Non-essentials sit one day",
+   "tree": "deals-smart-buying",
+   "treeName": "Deals and Smart Buying",
+   "level": 1
   },
   "debt-leverage-autopay-all-minimums": {
    "name": "Autopay all minimums",
@@ -72,12 +93,40 @@
    "treeName": "Family and Generational Wealth",
    "level": 1
   },
+  "financial-ops-tooling-lock-the-logins": {
+   "name": "Lock the logins",
+   "what": "Password manager + 2FA everywhere financial",
+   "tree": "financial-ops-tooling",
+   "treeName": "Financial Ops and Tooling",
+   "level": 3
+  },
+  "financial-ops-tooling-track-monthly-judgment-free": {
+   "name": "Track monthly, judgment-free",
+   "what": "20 minutes, an app or sheet, no shame",
+   "tree": "financial-ops-tooling",
+   "treeName": "Financial Ops and Tooling",
+   "level": 2
+  },
+  "financial-ops-tooling-version-the-plan": {
+   "name": "Version the plan",
+   "what": "Dated snapshots of plan + assumptions",
+   "tree": "financial-ops-tooling",
+   "treeName": "Financial Ops and Tooling",
+   "level": 20
+  },
   "financial-ops-tooling-write-down-net-worth": {
    "name": "Write down net worth",
    "what": "Every account, one page, one number",
    "tree": "financial-ops-tooling",
    "treeName": "Financial Ops and Tooling",
    "level": 1
+  },
+  "financial-ops-tooling-write-the-household-runbook": {
+   "name": "Write the household runbook",
+   "what": "Every account, process, contact, documented",
+   "tree": "financial-ops-tooling",
+   "treeName": "Financial Ops and Tooling",
+   "level": 13
   },
   "income-career-know-your-market-rate": {
    "name": "Know your market rate",
@@ -142,12 +191,75 @@
    "treeName": "Money Psychology",
    "level": 3
   },
+  "money-psychology-decouple-mood-from-market": {
+   "name": "Decouple mood from market",
+   "what": "Sleep and decisions uncorrelated with balance",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 21
+  },
+  "money-psychology-engineer-around-your-bugs": {
+   "name": "Engineer around your bugs",
+   "what": "Automation aimed at YOUR failure patterns",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 4
+  },
   "money-psychology-fast-from-optimizing-for-30-days": {
    "name": "Fast from optimizing for 30 days",
    "what": "A deliberate month of no tweaks, no new strategies",
    "tree": "money-psychology",
    "treeName": "Money Psychology",
    "level": 13
+  },
+  "money-psychology-grant-yourself-money-amnesty": {
+   "name": "Grant yourself money amnesty",
+   "what": "A formal, written self-forgiveness for past money choices",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 19
+  },
+  "money-psychology-hold-through-real-weather": {
+   "name": "Hold through real weather",
+   "what": "A 15%+ drawdown survived on-plan",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 10
+  },
+  "money-psychology-let-money-go-quiet": {
+   "name": "Let money go quiet",
+   "what": "A quarter where money got only scheduled attention",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 24
+  },
+  "money-psychology-make-money-discussable": {
+   "name": "Make money discussable",
+   "what": "Real-numbers talks with parent, friend, child",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 18
+  },
+  "money-psychology-metabolize-a-real-setback": {
+   "name": "Metabolize a real setback",
+   "what": "Loss absorbed with plan and self-respect intact",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 23
+  },
+  "money-psychology-name-your-money-scripts": {
+   "name": "Name your money scripts",
+   "what": "Scarcity, avoidance, status, vigilance, identified",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 2
+  },
+  "money-psychology-practice-comparison-hygiene": {
+   "name": "Practice comparison hygiene",
+   "what": "Rate and %-to-goal tracked; scoreboards muted",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 8
   },
   "money-psychology-reconcile-two-money-stories": {
    "name": "Reconcile two money stories",
@@ -156,12 +268,40 @@
    "treeName": "Money Psychology",
    "level": 9
   },
+  "money-psychology-renegotiate-enough-honestly": {
+   "name": "Renegotiate enough honestly",
+   "what": "The L6 doc revised for real change, not creep",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 22
+  },
   "money-psychology-route-raises-past-identity": {
    "name": "Route raises past identity",
    "what": "Increases auto-split before they touch lifestyle",
    "tree": "money-psychology",
    "treeName": "Money Psychology",
    "level": 7
+  },
+  "money-psychology-run-a-values-inventory-refresh": {
+   "name": "Run a values inventory refresh",
+   "what": "Annual re-rank of what you actually value now",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 17
+  },
+  "money-psychology-spend-loudly-on-values": {
+   "name": "Spend loudly on values",
+   "what": "One category raised BECAUSE tracking says it pays",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 14
+  },
+  "money-psychology-track-without-judging": {
+   "name": "Track without judging",
+   "what": "90 days of observation, zero shame",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 1
   },
   "money-psychology-unlock-the-spending-muscle": {
    "name": "Unlock the spending muscle",
@@ -233,12 +373,33 @@
    "treeName": "Side Hustles",
    "level": 4
   },
+  "social-capital-get-an-accountability-partner": {
+   "name": "Get an accountability partner",
+   "what": "One person, recurring check-in, shared goals",
+   "tree": "social-capital",
+   "treeName": "Social Capital",
+   "level": 4
+  },
   "social-capital-give-first-systematically": {
    "name": "Give first, systematically",
    "what": "Lead with help: intros, answers, hands",
    "tree": "social-capital",
    "treeName": "Social Capital",
    "level": 3
+  },
+  "social-capital-practice-asking-for-help": {
+   "name": "Practice asking for help",
+   "what": "The skill savers are worst at",
+   "tree": "social-capital",
+   "treeName": "Social Capital",
+   "level": 11
+  },
+  "social-capital-repair-conflicts-on-purpose": {
+   "name": "Repair conflicts on purpose",
+   "what": "The apology, the repair conversation, done well",
+   "tree": "social-capital",
+   "treeName": "Social Capital",
+   "level": 17
   },
   "storms-windfalls-write-playbooks-before-weather": {
    "name": "Write playbooks before weather",
@@ -267,6 +428,13 @@
    "tree": "time-capital",
    "treeName": "Time Capital",
    "level": 1
+  },
+  "time-capital-batch-and-automate-the-chores": {
+   "name": "Batch and automate the chores",
+   "what": "Errand days, meal prep, auto-reorder staples",
+   "tree": "time-capital",
+   "treeName": "Time Capital",
+   "level": 10
   },
   "time-capital-budget-the-calendar-like-money": {
    "name": "Budget the calendar like money",

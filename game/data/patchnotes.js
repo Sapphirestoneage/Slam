@@ -176,6 +176,15 @@ const PATCH_NOTES = [
       "Not ready to split? One total for all your cards still works. Each card you add sharpens it.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Your money read: the money sins",
+    l: [
+      "The money sins quiz is open: fifteen taps on real money moments. It reads your main pull and your main way of dodging change, always as a top two, each with its light side.",
+      "The quiz is only a first guess. Your logged buys, a one-tap \"what was this?\" on a buy over your line, and how you use the game firm it up. Until two agree, it says Early read.",
+      "Push back with Is this really it?, or try one defense for a month with Test the fix. A game lens, not a diagnosis, and it stays with you unless you show it.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

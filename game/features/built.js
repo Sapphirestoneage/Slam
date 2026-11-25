@@ -615,7 +615,7 @@ const WB = [
   ["feel", "Money Chart quiz", "b", () => WB_HAS("mcstart"), "", null],
   [
     "feel",
-    "Quizzes: one engine, eight skins (a money code, the FI Address, houses, an avatar, a character sheet, the pyramid, the FI Pathway, a playful money sign)",
+    "Quizzes: one engine, nine skins (a money code, the FI Address, houses, an avatar, a character sheet, the pyramid, the FI Pathway, a playful money sign, the money sins)",
     "b",
     () =>
       WB_HAS("qz") &&
@@ -623,8 +623,22 @@ const WB = [
       WB_FN("qzCardPart") &&
       typeof QZ_SKINS !== "undefined" &&
       QZ_SKINS.length >= 9,
-    "Each ends on one card with its light side and one next step. A result is private until you show it, and never changes your element without a tap. The money sins quiz is a placeholder: Coming soon.",
+    "Each ends on one card with its light side and one next step. A result is private until you show it, and never changes your element without a tap.",
     "qz",
+  ],
+  [
+    "feel",
+    "The money sins read: your main pull and your main way of dodging change, from four sources",
+    "b",
+    () =>
+      WB_HAS("sins") &&
+      WB_HAS("sncheck") &&
+      WB_FN("snRead") &&
+      WB_FN("sngData") &&
+      typeof QZ_SKINS !== "undefined" &&
+      QZ_SKINS.some(s => s.id === "sins" && !s.soon),
+    "The quiz, your logged spending, one-tap check-ins on a buy over your line (at most 3 a week) and how you use the game. A top two in each family with the light side, Why we think this, Is this really it?, and one defense to test for a month. A label shows only when two sources agree over about 30 days. Private unless you show it. Late night buys, the Safe to spend card and fire drills put off are not read yet: the game does not keep them.",
+    "sins",
   ],
   [
     "feel",

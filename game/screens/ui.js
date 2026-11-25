@@ -4471,17 +4471,21 @@ Object.assign(ACT, {
       lines = [moveLine(m)];
     if (fr) lines.push(fr.k + " is now " + money(fr.amt));
     if (to) lines.push(to.k + " is now " + money(to.amt));
-    celebrate(
-      "Logged",
-      lines.concat(got),
-      o.t === "pay"
-        ? "You owe " + money(m.amt) + " less, and your cash is " + money(m.amt) + " lower."
-        : o.t === "xfer"
-          ? "Money moved. Your total stayed the same."
-          : o.t === "in"
-            ? "Money in."
-            : "Money out."
-    );
+    const done = () =>
+      celebrate(
+        "Logged",
+        lines.concat(got),
+        o.t === "pay"
+          ? "You owe " + money(m.amt) + " less, and your cash is " + money(m.amt) + " lower."
+          : o.t === "xfer"
+            ? "Money moved. Your total stayed the same."
+            : o.t === "in"
+              ? "Money in."
+              : "Money out."
+      );
+    /* sins.js: one tap "what was this?" on a buy over the line or when a pattern trips */
+    if (typeof snAfterLog === "function" && snAfterLog(c, m, done)) return;
+    done();
   },
 });
 

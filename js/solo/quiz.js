@@ -9,7 +9,10 @@ import { DEPTHS, MONEY_CHART, itemsFor, quizOf, groupOf, perceptionOf } from '..
 import { carryUrl } from '../solo.js';
 import { qzFlow, qzLast } from '../math/quizcore.js';
 import { SKINS, skinOf } from '../quiz/skins/index.js';
-import { lensOf, lensPatch, lensNow, elementNow, SHOWN } from '../quiz/store.js';
+import { lensOf, lensPatch, lensNow, elementNow, SHOWN, sinsReadNow } from '../quiz/store.js';
+import { sinsDataOf } from '../quiz/sinsdata.js';
+import { readCard } from '../quiz/read.js';
+import { snPush, snFixStart, snFixEnd, snCheckinAdd, snCheckinSkip } from '../math/sins.js';
 import { ME_ONLY } from '../exercises/calm-letter.js';
 import { askCard, introCard, resultCard, listCard } from '../quiz/page.js';
 import { MIRRORS } from '../mirror.js';
@@ -69,15 +72,28 @@ function draw(api) {
   const toList = () => { api.remember({ lens: null, lensList: true }); api.render(); };
   const lens = () => {
     const st = lensOf(m, open.id), N = lensNow(open, st, element);
-    if (N.card) return resultCard({ N, routes, on: {
-      keep: () => keep(open.id, { kept: N.feed.to }), switch: () => { api.remember({ element: N.feed.to, ...lensPatch(api.mine(), open.id, { kept: null }) }); api.render(); },
-      show: on => keep(open.id, { seen: on ? SHOWN : ME_ONLY }), confirm: () => keep(open.id, { ok: true }), again: () => keep(open.id, { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
-      skills: async () => { location.href = carryUrl('skills', await pack(api.store.doc)); } } });
+    if (N.card && open.id === 'sins') return h('div', {}, resultCard({ N, routes, on: lensOn(st, N) }), sinsRead(st));
+    if (N.card) return resultCard({ N, routes, on: lensOn(st, N) });
     if (!st.go && !N.R.answered) return introCard({ def: open, taps: N.taps, onStart: () => keep(open.id, { go: true }), onList: toList });
     const q = N.R.next;
     return askCard({ def: open, q, n: N.R.answered, of: N.R.of, answer: st.ans[q.id], onPick: v => { const ans = { ...st.ans, [q.id]: v }; keep(open.id, { ans, at: qzFlow(open, ans).done ? new Date().toISOString() : null }); },
       onBack: () => { const ans = { ...st.ans }; delete ans[qzLast(open, ans)]; keep(open.id, { ans }); }, extra: btn('All quizzes', toList, 'slim') });
   };
+  // the money sins: the read under the quiz card (js/quiz/read.js draws it; js/math/sins.js works it out)
+  const sinsRead = st => {
+    const today = new Date().toISOString().slice(0, 10), nowAt = () => new Date().toISOString(), sn = st.sn || {};
+    const read = sinsReadNow(open, m, api.store.doc, today), data = sinsDataOf(api.store.doc), put = f => keep('sins', { sn: { v: 1, ...f(sn) } });
+    return readCard({ def: open, read, data, sn, today, on: {
+      push: (t, said, to) => put(s => snPush(s, t, said, to, nowAt())), fixStart: () => put(s => snFixStart(s, read.fix.trait, read.fix.group, today)),
+      fixEnd: () => put(s => snFixEnd(s, read.ev, today)), check: (b, tag) => put(s => snCheckinAdd(s, b, tag, nowAt())), skip: () => put(s => snCheckinSkip(s, nowAt())),
+      line: v => put(s => ({ ...s, line: v })), show: on => keep('sins', { seen: on ? SHOWN : ME_ONLY, sn: { v: 1, ...sn, show: on } }) } });
+  };
+  const lensOn = (st, N) => ({
+      keep: () => keep(open.id, { kept: N.feed.to }), switch: () => { api.remember({ element: N.feed.to, ...lensPatch(api.mine(), open.id, { kept: null }) }); api.render(); },
+      // the money sins: one switch for who sees it (sn.show), and "That is me" is a push-back that counts as evidence
+      show: on => keep(open.id, { seen: on ? SHOWN : ME_ONLY, ...(open.id === 'sins' ? { sn: { v: 1, ...(st.sn || {}), show: on } } : {}) }),
+      confirm: () => keep(open.id, open.id === 'sins' ? { sn: { v: 1, ...snPush(st.sn || {}, N.R.id, 'yes', null, new Date().toISOString()) } } : { ok: true }), again: () => keep(open.id, { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
+      skills: async () => { location.href = carryUrl('skills', await pack(api.store.doc)); } });
   const list = () => listCard({ rows: SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, def.id), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
     onOpen: id => { api.remember({ lens: id }); api.render(); document.getElementById('ask')?.scrollIntoView?.({ block: 'center' }); }, onChart: open ? () => { api.remember({ lens: null }); api.render(); } : null });
   $('main').replaceChildren(...[

@@ -37,7 +37,9 @@ emergency fund refill put back month by month, the safe-to-fail line, and the op
 time worked out by logarithms; the same day, after Eli's answers to QUESTIONS 580: the Barista number with health
 insurance added, and the months back to the Coast number in closed form, where SLAM steps month by month; and home
 buying and renting, `js/math/homebuy.js`: the payment as the level amount whose discounted sum is the loan, the loan
-left in closed form, each year's position with every payment carried to the end by itself, and the breakeven year).
+left in closed form, each year's position with every payment carried to the end by itself, and the breakeven year; and the money sins read, `js/math/sins.js`, run Money sins Part 1: each source's scores with every piece faded by its own
+age on a calendar and the quiz weighted by its share of the plus points, and the month of a defense, the pattern
+added up in the month before and the month from its start).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

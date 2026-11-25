@@ -199,7 +199,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 
 | Part | What | State | Notes |
 |------|------|-------|-------|
-| 1 | The read | Not started | Waits for the quiz engine (Not built, groups 1 to 5, Part 11) |
+| 1 | The read | Done | `js/math/sins.js` on the quiz engine, the sins skin, quiz.html and the game's "Your money read" with the check-in after Money out. Not built (no data kept): late night, the Safe to spend tap, Recalculating opened, edits after a bad month, drills put off, going back to old numbers; in the web app the app left closed and numbers at Guess. QUESTIONS 597. |
 | 2 | Results and growth | Not started | |
 | 3 | The Rings theme | Not started | |
 

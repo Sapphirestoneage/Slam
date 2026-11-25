@@ -170,7 +170,7 @@ export function qzResult(def, answers = {}, outside = null, opts = {}) {
   const C = def.confidence || {}, need = C.margin ?? 0.1, sources = (F.done && F.answered ? 1 : 0) + S.sources.length;
   const level = !out.ready ? null : opts.confirmed ? 'Exact' : clear && (by !== 'top' || S.margin >= need) && sources >= (C.sources ?? 1) ? 'Close' : 'Guess';
   out.confidence = level ? { level, word: QZ_LEVELS[level],
-    why: level === 'Exact' ? 'You said this one fits.' : level === 'Close' ? 'Every question is answered and one answer stands out.' : !F.done ? 'Not every question is answered yet.' : 'Two answers sit close together, so both are shown.' } : null;
+    why: level === 'Exact' ? 'You said this one fits.' : level === 'Close' ? 'Every question is answered and one answer stands out.' : !F.done ? 'Not every question is answered yet.' : sources < (C.sources ?? 1) ? 'One source so far. The read firms up as more evidence comes in.' : 'Two answers sit close together, so both are shown.' } : null;
   return out;
 }
 const qzUniq = list => [...new Set(list.filter(Boolean))];
