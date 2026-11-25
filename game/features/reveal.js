@@ -192,8 +192,10 @@ function rvSheet() {
   const withEl = typeof rvSheetElement === "function" ? rvSheetElement(withJobs) : withJobs;
   /* quizzes.js: the quiz results that the player chose to show, and the row "Quizzes" */
   const withQz = typeof rvSheetQuiz === "function" ? rvSheetQuiz(withEl) : withEl;
+  /* sins.js: the money read over the retakes (only on the owner's screen) */
+  const withSn = typeof rvSheetSins === "function" ? rvSheetSins(withQz) : withQz;
   /* founding.js: the mark "Founding Tester" */
-  return typeof rvSheetFounding === "function" ? rvSheetFounding(withQz) : withQz;
+  return typeof rvSheetFounding === "function" ? rvSheetFounding(withSn) : withSn;
 }
 Object.assign(ACT, {
   reveal: () => {

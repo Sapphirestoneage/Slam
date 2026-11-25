@@ -218,6 +218,16 @@ const PATCH_NOTES = [
       "Tap your own dates once. A reminder lands on Today before each one.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Your money read gets a name",
+    l: [
+      "After the money sins quiz your read gets a name, like The Someday Koala, with the light side and the virtue of each part.",
+      "Each read also gets one move for this month. A share card carries the name and plain words, never a number.",
+      "Once your read has a label, Home, the month check and the crash drill add one line that fits you.",
+      "Two people who both turn on sharing get a money date to tap through. A gentle retake comes each quarter.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

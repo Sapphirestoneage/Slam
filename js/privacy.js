@@ -132,7 +132,8 @@ export function foldDoc(doc, aud, ref = null) {
   if (aud.who !== 'share') {
     let out = changed ? { ...doc, records } : doc;
     // the money sins read is the client's own: in the coach's screens and a partner's view only when the client turned it on
-    const own = aud.who === 'client' && (!aud.couple || aud.person === 'Me'), start = out.settings?.start, kept = own ? start : lensesForOthers(start);
+    // (Part 2: a partner's own read, 'sinsPartner', is theirs in their own view; each read follows its own switch)
+    const own = aud.who !== 'client' ? null : !aud.couple || aud.person === 'Me' ? 'sins' : aud.person === 'Partner' ? 'sinsPartner' : null, start = out.settings?.start, kept = lensesForOthers(start, own);
     if (kept !== start) out = { ...out, settings: { ...out.settings, start: kept } };
     return controlSeen(aud) ? out : withoutControl(out);
   }

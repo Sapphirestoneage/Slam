@@ -16,20 +16,33 @@ export const lensPatch = (start, id, patch) => ({ lenses: { ...(start?.lenses ||
 // What goes out in a shared copy: every result the person chose to show.
 // The money sins read is stricter (snShared): it goes only when its own "show" is on, and then without the check-ins,
 // the push-backs and the defenses.
+// Part 2 (couples): in a household of two, each adult has a read of their own. The client's is kept under 'sins' (as
+// in Part 1), the partner's under 'sinsPartner' (new; a file without it reads as before). SN_KEYS: every key of a read.
+export const SN_KEYS = { Me: 'sins', Partner: 'sinsPartner' };
+const isRead = id => Object.values(SN_KEYS).includes(id);
+export const sinsKeyOf = person => (person === 'Partner' ? SN_KEYS.Partner : SN_KEYS.Me);
 export function sharedLenses(all) {
   if (!all) return all;
-  return Object.fromEntries(Object.entries(all).filter(([id, s]) => (id === 'sins' ? !!snShared(s) : (s?.seen ?? ME_ONLY) !== ME_ONLY)).map(([id, s]) => [id, id === 'sins' ? snShared(s) : s]));
+  return Object.fromEntries(Object.entries(all).filter(([id, s]) => (isRead(id) ? !!snShared(s) : (s?.seen ?? ME_ONLY) !== ME_ONLY)).map(([id, s]) => [id, isRead(id) ? snShared(s) : s]));
 }
-// The money sins read in any view that is not the person's own (the coach's screens, a partner's view): the read is
-// left out unless the person turned "Show my read" on. Returns the same object when nothing changes.
-export function lensesForOthers(start) {
+// The money sins reads in any view that is not the person's own (the coach's screens, a partner's view): a read is
+// left out unless its person turned "Show my read" on. own: the key of the read of the person looking (their own read
+// stays), or null. Returns the same object when nothing changes. Sharing with a partner (sn.mate) is not "show": the
+// couple part only reads the two names, and only on the quiz page of the household, when both turned it on.
+export function lensesForOthers(start, own = null) {
   const L = start?.lenses;
-  if (!L?.sins || L.sins.sn?.show) return start;
-  const { sins, ...rest } = L;
+  if (!L) return start;
+  const drop = Object.keys(SN_KEYS).map(k => SN_KEYS[k]).filter(id => id !== own && L[id] && !L[id].sn?.show);
+  if (!drop.length) return start;
+  const rest = { ...L };
+  for (const id of drop) delete rest[id];
   return { ...start, lenses: rest };
 }
-// The read of the money sins for this household (js/math/sins.js on the one engine). today: 'YYYY-MM-DD'.
-export const sinsReadNow = (def, start, doc, today) => snRead({ qzResult, QZ_LEVELS }, def, lensOf(start, def.id), sinsDataOf(doc), today);
+// The read of the money sins for this household (js/math/sins.js on the one engine). today: 'YYYY-MM-DD'. key: whose
+// read ('sins' for the client, 'sinsPartner' for a partner).
+// The read of one kept state (a state not saved yet, such as the answers of the last tap).
+export const sinsReadOf = (def, st, doc, today) => snRead({ qzResult, QZ_LEVELS }, def, st || { ans: {} }, sinsDataOf(doc), today);
+export const sinsReadNow = (def, start, doc, today, key = 'sins') => snRead({ qzResult, QZ_LEVELS }, def, lensOf(start, key), sinsDataOf(doc), today);
 // The element the person has now: their own tap first, else the top of the Money Chart (a name like 'Fire'), else none.
 export const elementNow = (start, chartTop = null) => start?.element ?? chartTop ?? null;
 // All a screen shows for one skin. The card shows when every question is answered.

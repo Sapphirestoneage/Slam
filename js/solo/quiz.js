@@ -9,10 +9,12 @@ import { DEPTHS, MONEY_CHART, itemsFor, quizOf, groupOf, perceptionOf } from '..
 import { carryUrl } from '../solo.js';
 import { qzFlow, qzLast } from '../math/quizcore.js';
 import { SKINS, skinOf } from '../quiz/skins/index.js';
-import { lensOf, lensPatch, lensNow, elementNow, SHOWN, sinsReadNow } from '../quiz/store.js';
+import { lensOf, lensPatch, lensNow, elementNow, SHOWN, sinsReadNow, sinsReadOf, sinsKeyOf, SN_KEYS } from '../quiz/store.js';
+import { sinsResultCard, sinsShareOf, sinsRetakeCard, sinsGrowthPart, sinsCouplePart } from '../quiz/result.js';
+import { adultsOf } from '../registry/couples.js';
 import { sinsDataOf } from '../quiz/sinsdata.js';
 import { readCard } from '../quiz/read.js';
-import { snPush, snFixStart, snFixEnd, snCheckinAdd, snCheckinSkip } from '../math/sins.js';
+import { snPush, snFixStart, snFixEnd, snCheckinAdd, snCheckinSkip, snCard, snHistAdd, snRetake, snRetakeDue, snRetakeSkip, snGrowth, snMatePart, snCouple, snDate } from '../math/sins.js';
 import { ME_ONLY } from '../exercises/calm-letter.js';
 import { askCard, introCard, resultCard, listCard } from '../quiz/page.js';
 import { MIRRORS } from '../mirror.js';
@@ -70,31 +72,66 @@ function draw(api) {
   const chartTop = Q.ready ? Q.top.name : null, element = elementNow(m, chartTop), skin = m.lens ? skinOf(m.lens) : null, open = skin && !skin.soon ? skin : null;
   const keep = (id, patch) => { api.remember(lensPatch(api.mine(), id, patch)); api.render(); };
   const toList = () => { api.remember({ lens: null, lensList: true }); api.render(); };
+  // the money sins (Part 2): in a household of two, each adult takes it as themselves (key: whose read it is)
+  const adults = adultsOf(api.store.doc), pair = adults.length >= 2, who = pair && m.sinsWho === 'Partner' ? 'Partner' : 'Me';
+  const keyOf = def => (def.id === 'sins' ? sinsKeyOf(who) : def.id);
+  const whoChips = () => (pair && open.id === 'sins' ? h('div.st-card', { 'data-sn': 'who' }, h('div.st-flabel', {}, 'Taking it as'),
+    h('div.st-chips', {}, adults.slice(0, 2).map(a => chip(a.name, who === a.id, () => { api.remember({ sinsWho: a.id }); api.render(); }))),
+    h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Each of you has a read of your own. Neither sees the other\'s unless you both choose to share.')) : null);
   const lens = () => {
-    const st = lensOf(m, open.id), N = lensNow(open, st, element);
-    if (N.card && open.id === 'sins') return h('div', {}, resultCard({ N, routes, on: lensOn(st, N) }), sinsRead(st));
-    if (N.card) return resultCard({ N, routes, on: lensOn(st, N) });
-    if (!st.go && !N.R.answered) return introCard({ def: open, taps: N.taps, onStart: () => keep(open.id, { go: true }), onList: toList });
+    const key = keyOf(open), st = lensOf(m, key), N = lensNow(open, st, element);
+    if (N.card && open.id === 'sins') return h('div', {}, whoChips(), sinsPart2(key, st), resultCard({ N, routes, on: lensOn(st, N, key) }), sinsRead(st, key));
+    if (N.card) return resultCard({ N, routes, on: lensOn(st, N, key) });
+    if (!st.go && !N.R.answered) return h('div', {}, whoChips(), introCard({ def: open, taps: N.taps, onStart: () => keep(key, { go: true }), onList: toList }));
     const q = N.R.next;
-    return askCard({ def: open, q, n: N.R.answered, of: N.R.of, answer: st.ans[q.id], onPick: v => { const ans = { ...st.ans, [q.id]: v }; keep(open.id, { ans, at: qzFlow(open, ans).done ? new Date().toISOString() : null }); },
-      onBack: () => { const ans = { ...st.ans }; delete ans[qzLast(open, ans)]; keep(open.id, { ans }); }, extra: btn('All quizzes', toList, 'slim') });
+    return askCard({ def: open, q, n: N.R.answered, of: N.R.of, answer: st.ans[q.id], onPick: v => { const ans = { ...st.ans, [q.id]: v }, done = qzFlow(open, ans).done, at = done ? new Date().toISOString() : null;
+        // the money sins: each finished take is kept in the read's history (the sin weakening over the retakes)
+        const extra = done && open.id === 'sins' ? { sn: { v: 1, ...snHistAdd(st.sn || {}, sinsReadOf(open, { ...st, ans, at }, api.store.doc, at.slice(0, 10)), at) } } : {};
+        keep(key, { ans, at, ...extra }); },
+      onBack: () => { const ans = { ...st.ans }; delete ans[qzLast(open, ans)]; keep(key, { ans }); }, extra: btn('All quizzes', toList, 'slim') });
+  };
+  // the money sins, Part 2: the result card, the share card (only on a tap), the retake, the growth and the two of you
+  const sinsPart2 = (key, st) => {
+    const today = new Date().toISOString().slice(0, 10), sn = st.sn || {}, put = f => keep(key, { sn: { v: 1, ...f(sn) } });
+    const read = sinsReadNow(open, m, api.store.doc, today, key), card = snCard(open, read), share = m.sinsShare === key ? sinsShareOf(open, card) : null;
+    const say = t => { const el = document.getElementById('sins-sent'); if (el) el.textContent = t; };
+    const send = async () => { const S = sinsShareOf(open, card), url = `${location.origin}${location.pathname}`;
+      try { if (navigator.share) { await navigator.share({ title: S.title, text: S.text, url }); say('Sent.'); } else { await navigator.clipboard.writeText(`${S.text}\n${url}`); say('Copied. Paste it wherever you like.'); } }
+      catch (e) { if (e?.name !== 'AbortError') say('This browser did not let the page send it. Copy the words instead.'); } };
+    const copy = async () => { try { await navigator.clipboard.writeText(sinsShareOf(open, card).text); say('Copied.'); } catch { say('This browser did not let the page copy. Press and hold the words to copy them.'); } };
+    const hist = sn.hist?.length ? sn.hist : st.at ? snHistAdd(sn, read, st.at).hist : [];
+    // the two of you: only when both reads exist and both people turned sharing with each other on
+    let couplePart = null;
+    if (pair) {
+      const otherKey = key === SN_KEYS.Me ? SN_KEYS.Partner : SN_KEYS.Me, otherSt = lensOf(m, otherKey), otherName = adults.find(a => a.id === (key === SN_KEYS.Me ? 'Partner' : 'Me'))?.name || 'your partner';
+      const meName = adults.find(a => a.id === who)?.name || 'You';
+      const a = snMatePart(read, meName, sn.mate), b = otherSt.at ? snMatePart(sinsReadNow(open, m, api.store.doc, today, otherKey), otherName, otherSt.sn?.mate) : null;
+      const C = snCouple(open, a, b);
+      couplePart = sinsCouplePart({ mate: !!sn.mate, otherName, couple: C, date: C ? snDate(open, a, b) : null, step: m.sinsDateStep || 0,
+        on: { mate: v => put(s => ({ ...s, mate: v })), step: n => { api.remember({ sinsDateStep: n }); api.render(); } } });
+    }
+    return h('div', {}, sinsRetakeCard({ due: snRetakeDue(st, today), on: { retake: () => keep(key, snRetake(st, read)), skip: () => put(s => snRetakeSkip(s, st, today)) } }),
+      sinsResultCard({ def: open, card, share, on: { share: () => { api.remember({ sinsShare: key }); api.render(); }, unshare: () => { api.remember({ sinsShare: null }); api.render(); }, send, copy } }),
+      sinsGrowthPart(snGrowth(open, hist)), couplePart);
   };
   // the money sins: the read under the quiz card (js/quiz/read.js draws it; js/math/sins.js works it out)
-  const sinsRead = st => {
+  const sinsRead = (st, key = 'sins') => {
     const today = new Date().toISOString().slice(0, 10), nowAt = () => new Date().toISOString(), sn = st.sn || {};
-    const read = sinsReadNow(open, m, api.store.doc, today), data = sinsDataOf(api.store.doc), put = f => keep('sins', { sn: { v: 1, ...f(sn) } });
+    const read = sinsReadNow(open, m, api.store.doc, today, key), data = sinsDataOf(api.store.doc), put = f => keep(key, { sn: { v: 1, ...f(sn) } });
     return readCard({ def: open, read, data, sn, today, on: {
       push: (t, said, to) => put(s => snPush(s, t, said, to, nowAt())), fixStart: () => put(s => snFixStart(s, read.fix.trait, read.fix.group, today)),
       fixEnd: () => put(s => snFixEnd(s, read.ev, today)), check: (b, tag) => put(s => snCheckinAdd(s, b, tag, nowAt())), skip: () => put(s => snCheckinSkip(s, nowAt())),
-      line: v => put(s => ({ ...s, line: v })), show: on => keep('sins', { seen: on ? SHOWN : ME_ONLY, sn: { v: 1, ...sn, show: on } }) } });
+      line: v => put(s => ({ ...s, line: v })), show: on => keep(key, { seen: on ? SHOWN : ME_ONLY, sn: { v: 1, ...sn, show: on } }) } });
   };
-  const lensOn = (st, N) => ({
-      keep: () => keep(open.id, { kept: N.feed.to }), switch: () => { api.remember({ element: N.feed.to, ...lensPatch(api.mine(), open.id, { kept: null }) }); api.render(); },
+  const lensOn = (st, N, key = open.id) => ({
+      keep: () => keep(key, { kept: N.feed.to }), switch: () => { api.remember({ element: N.feed.to, ...lensPatch(api.mine(), key, { kept: null }) }); api.render(); },
       // the money sins: one switch for who sees it (sn.show), and "That is me" is a push-back that counts as evidence
-      show: on => keep(open.id, { seen: on ? SHOWN : ME_ONLY, ...(open.id === 'sins' ? { sn: { v: 1, ...(st.sn || {}), show: on } } : {}) }),
-      confirm: () => keep(open.id, open.id === 'sins' ? { sn: { v: 1, ...snPush(st.sn || {}, N.R.id, 'yes', null, new Date().toISOString()) } } : { ok: true }), again: () => keep(open.id, { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
+      show: on => keep(key, { seen: on ? SHOWN : ME_ONLY, ...(open.id === 'sins' ? { sn: { v: 1, ...(st.sn || {}), show: on } } : {}) }),
+      confirm: () => keep(key, open.id === 'sins' ? { sn: { v: 1, ...snPush(st.sn || {}, N.R.id, 'yes', null, new Date().toISOString()) } } : { ok: true }),
+      // the money sins: a retake keeps the old take in the history, and the rest of the read (snRetake)
+      again: () => keep(key, open.id === 'sins' ? snRetake(st, sinsReadNow(open, m, api.store.doc, new Date().toISOString().slice(0, 10), key)) : { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
       skills: async () => { location.href = carryUrl('skills', await pack(api.store.doc)); } });
-  const list = () => listCard({ rows: SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, def.id), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
+  const list = () => listCard({ rows: SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, keyOf(def)), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
     onOpen: id => { api.remember({ lens: id }); api.render(); document.getElementById('ask')?.scrollIntoView?.({ block: 'center' }); }, onChart: open ? () => { api.remember({ lens: null }); api.render(); } : null });
   $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, open ? 'A short tap quiz. Go with your gut: there are no right answers, and nobody sees this but you.' : guessing ? 'Now the same ten, answered the way you think one of your people would. It is a guess: that is the point.' : other && !Q.ready ? 'Someone sent you this to compare. Ten taps, answered as yourself. Go with your gut.' : 'One statement at a time. Go with your gut: there are no right answers, and nobody sees this but you.')),
