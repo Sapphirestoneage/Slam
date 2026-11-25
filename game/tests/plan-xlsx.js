@@ -241,7 +241,7 @@
       const src =
         fs.readFileSync(GAME_DIR + "features/book.js", "utf8") +
         fs.readFileSync(GAME_DIR + "features/firelink.js", "utf8");
-      chk("no em dash, no en dash and no red in the two files", !/[—–]|#ff4d6a|var\(--bad\)/.test(src));
+      chk("no em dash, no en dash and no red in the two files", !/[\u2014\u2013]|#ff4d6a|var\(--bad\)/.test(src));
       chk(
         "the game has no spreadsheet writer of its own: the file comes from the module of the web app",
         /import\("\.\.\/\.\.\/js\/sheet\/planbook\.js"\)/.test(src) && !/exceljs|xl\/worksheets|PK\\x03/i.test(src)
