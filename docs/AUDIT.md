@@ -42,7 +42,11 @@ education, `js/math/career.js`: the whole price and the raise from their definit
 discounted sum is the loan, the move month by month, the stack's overlaps as sets of months, the vesting steps, and the
 three moves of the launch window; and the money sins read, `js/math/sins.js`, run Money sins Part 1: each source's scores with every piece faded by its own
 age on a calendar and the quiz weighted by its share of the plus points, and the month of a defense, the pattern
-added up in the month before and the month from its start).
+added up in the month before and the month from its start; and travel, `js/math/trip.js`, run Finish everything partly
+built Part 4: each line of a trip from its definition with the card fee on the lines paid in another currency, the cents a
+point and cash next to redeem, a group split in whole cents checked against each person's exact share (by shares, or each
+line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
+cash first, then investments).
 
 Since Nov 25 2026 (run JOE-1) it also covers the Job of Existing (`js/math/jobs.js`): which of the six unpaid jobs
 a person holds, worked out a second time from each answer that counts, and the order; the hours a month of running
