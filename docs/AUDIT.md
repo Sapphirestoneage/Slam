@@ -42,7 +42,11 @@ education, `js/math/career.js`: the whole price and the raise from their definit
 discounted sum is the loan, the move month by month, the stack's overlaps as sets of months, the vesting steps, and the
 three moves of the launch window; and the money sins read, `js/math/sins.js`, run Money sins Part 1: each source's scores with every piece faded by its own
 age on a calendar and the quiz weighted by its share of the plus points, and the month of a defense, the pattern
-added up in the month before and the month from its start).
+added up in the month before and the month from its start; and travel, `js/math/trip.js`, run Finish everything partly
+built Part 4: each line of a trip from its definition with the card fee on the lines paid in another currency, the cents a
+point and cash next to redeem, a group split in whole cents checked against each person's exact share (by shares, or each
+line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
+cash first, then investments).
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
@@ -59,7 +63,8 @@ Running it and Living it (the minutes of the tasks off the plate, at most each j
 better, at least 1 once a minute is back). Features 4 and 5 of the run add three: a wired goal's deposits a year (by the day it moves)
 and each deposit (the monthly amount × 12 ÷ the deposits, rounded up to a dollar); the quarterly check-in (3 months
 after the last one, with the end of a month moved to its last day); and a date the person taps (its next day, the
-days to go, and whether its reminder shows).
+days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
+each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each

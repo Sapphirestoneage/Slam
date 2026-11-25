@@ -1055,6 +1055,21 @@ def run(cases, ref, il=None):
                 return sum(max(0, p['add'].get(t, 0)) for p in x['ev'] if p['source'] in ('ledger', 'checkin', 'app') and p['d'] and a <= day(p['d']) < b)
             ck('before', o['before'], pat(st - _dt.timedelta(days=n), st), 1e-9); ck('during', o['during'], pat(st, st + _dt.timedelta(days=n)), 1e-9)
             ck('done', o['done'], (now - st).days >= n); ck('days left', o['daysLeft'], max(0, n - (now - st).days), 0)
+        elif fn == 'snClimb':
+            # one step for each take on which the first take's top held a smaller whole-percent share of the seven
+            # sins' points than at the take before, and one for each ward month whose pattern dropped
+            ids, H = x['sinIds'], x['hist']
+            def share(sc, i):
+                tot = sum(max(0, sc.get(k, 0)) for k in ids)
+                return None if tot <= 0 else max(0, sc.get(i, 0)) / tot
+            n = 0
+            if H and H[0]['sin'] and H[0]['sin']['top']:
+                t0 = H[0]['sin']['top']
+                for k in range(1, len(H)):
+                    a, z = share(H[k - 1]['scores'], t0), share(H[k]['scores'], t0)
+                    if a is not None and z is not None and int(z * 100 + 0.5) < int(a * 100 + 0.5): n += 1   # Math.round, half up
+            n += sum(1 for f in x['fixes'] if f['dropped'] is True)
+            ck('steps', o['n'], n, 0)
         elif fn == 'rcRefill':
             gap = max(0, x['target'] - x['balance'])
             ck('gap', o['gap'], gap); ck('full', o['full'], gap == 0)
@@ -1155,6 +1170,64 @@ def run(cases, ref, il=None):
             at = lambda k: sum(c['monthly'] for c in o['changes'] if c['at'] <= k)
             if x['months'] > 0: ck('a month while learning', at(0), -lost / x['months'])
             ck('a month after', at(x['months']), gain / 12 - pay); ck('a month after the loan', at(x['months'] + n), gain / 12)
+        elif fn == 'tripLines':
+            # Travel: each line from its definition, the card fee on the lines paid in another currency, points off at most the lines
+            d = x['days']; nts = x['nights'] if x['nights'] is not None else (max(0, d - 1) if d is not None else None)
+            L = {'flights': x['flights'], 'lodging': x['lodging'] * nts if x['lodging'] is not None and nts is not None else None, 'food': x['food'] * d if x['food'] is not None and d is not None else None,
+                 'visa': x['visa'], 'insurance': x['insurance'], 'other': x['other']}
+            on = x['fxOn'] if x.get('fxOn') is not None else ['lodging', 'food', 'other']
+            fx = 0 if not on else (None if x['fxPct'] is None else round(sum(L[k] or 0 for k in on) * x['fxPct'] / 100 + 1e-9, 2))
+            vals = [L[k] for k in ('flights', 'lodging', 'food', 'visa', 'insurance', 'other')] + [fx]
+            for i, v in enumerate(vals): ck(f'line {i}', o['lines'][i], v, 0.011)
+            gross = sum(v for v in vals if v is not None); off = min(x['pointsOff'] or 0, gross)
+            ck('gross', o['gross'], gross, 0.011); ck('points off', o['pointsOff'], off, 0.011); ck('total', o['total'], gross - off, 0.02)
+            ck('lines open', o['open'], sum(1 for v in vals if v is None), 0); ck('ready', o['ready'], any(L[k] is not None for k in L))
+        elif fn == 'tripPoints':
+            got = (x['cash'] - x['fees']) / x['points'] * 100; worth = x['points'] * x['cpp'] / 100; spend = worth + x['fees']; keep = x['cash'] - spend
+            ck('cents a point', o['got'], got, 1e-9); ck('worth', o['worth'], worth); ck('redeeming spends', o['spend'], spend); ck('kept', o['keep'], keep)
+            ck('which leads', o['lead'] == ('same' if abs(keep) < 0.01 else 'points' if keep > 0 else 'cash'), True)
+        elif fn == 'tripSplit':
+            # every part in cents; each part is its exact share to within a cent, and the parts add up to the whole
+            P = x['people']; ids = [p['id'] for p in P]; sh = [p['shares'] if p['shares'] else 1 for p in P]
+            if x['how'] == 'item':
+                exact = [0.0] * len(P); whole_c = 0
+                for it in x['items']:
+                    am = [i for i in (it['among'] or []) if i in ids] or ids
+                    c = round(it['amount'] * 100); whole_c += c
+                    for k, pid in enumerate(ids):
+                        if pid in am: exact[k] += c / len(am)
+                tol = len(x['items']) + 0.001
+            else:
+                T = x['total'] if x['total'] is not None else sum(i['amount'] for i in x['items'])
+                whole_c = round(T * 100); exact = [whole_c * s / sum(sh) for s in sh]; tol = 1.001
+            for k in range(len(P)): ck(f'part {k} in cents', round(o['parts'][k] * 100), exact[k], tol)
+            ck('the parts add up', round(sum(o['parts']) * 100), whole_c, 0); ck('total', round(o['total'] * 100), whole_c, 0)
+        elif fn == 'tripJourney':
+            # the six stages from their definitions; the trip from cash first, then investments; refill months = trip / monthly
+            c, db, inv = x['cash'], x['debt'], x['invested']
+            w = None if None in (c, db, inv) else c + inv - db
+            tr = x['trip']; mo = x['monthly'] if x['monthly'] else None
+            fc = None if tr is None or c is None else min(max(0, c), tr)
+            aft = None if tr is None else {'cash': None if c is None else c - fc, 'inv': None if inv is None or fc is None else inv - (tr - fc), 'debt': db, 'worth': None if w is None else w - tr}
+            def st(i, v):
+                have = [v['worth'], v['cash'], v['debt'], v['worth'], v['inv'], v['inv']][i]; tg = [0, 1000, 0, 100000, x['coast'], x['fi']][i]
+                if have is None or tg is None: return None, None
+                if i == 2: return have <= 0, None
+                return have >= tg, max(0, tg - have)
+            now = {'cash': c, 'inv': inv, 'debt': db, 'worth': w}; shift = tr / mo if tr is not None and mo else None
+            first = None
+            for i in range(6):
+                done, left = st(i, now)
+                ck(f'stage {i} reached', o['done'][i], done)
+                m = 0 if done else (math.ceil(left / mo) if left is not None and mo and i in (0, 1, 3) else None)
+                ck(f'stage {i} months', o['months'][i], m, 0)
+                if first is None and done is False: first = i
+                if aft is not None:
+                    ad, _ = st(i, aft); ma = 0 if ad else (m + shift if m is not None and shift is not None else None)
+                    ck(f'stage {i} after the trip', o['after'][i][0], ad); ck(f'stage {i} months after', o['after'][i][1], ma, 1e-6)
+            unknown = any(st(i, now)[0] is None for i in range(6))
+            ck('where you are', o['here'], first if first is not None else (None if unknown else 6), 0)
+            ck('from cash', o['fromCash'], fc); ck('months of saving', o['shift'], shift, 1e-9)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]
@@ -1210,6 +1283,34 @@ def run(cases, ref, il=None):
             better = max(1, int(math.floor(pct + 0.5))) if living > 0 else 0
             ck('total', o['total'], total, 0); ck('state', o['st'] == st, True); ck('living', o['living'], living, 1e-9); ck('running', o['running'], max(0, total - living), 1e-9); ck('better', o['better'], better, 0)
             for k, t in enumerate(x['tasks']): ck('monthly ' + t['id'], o['monthly'][k], t['per'] * t['times'] / 12, 1e-9)
+        elif fn == 'jobCarry':
+            # by people, not by jobs: each person gathers their part of each job and of each task handed to them
+            ids = ['cfo', 'accountant', 'planner', 'insurance', 'health', 'deals']
+            dflt = {'cfo': 60, 'accountant': 60, 'planner': 15, 'insurance': 15, 'health': 15, 'deals': 15}
+            jm = {i: (x['mins'][i]['v'] if x['mins'].get(i) is not None and x['mins'][i].get('v') is not None else dflt[i]) for i in ids}
+            hv = x['hv']; rate = hv['tp'] if (hv['tp'] or 0) > 0 else (hv['wage'] if hv['wage'] > 0 else None)
+            ck('rate', o['rate'], rate)
+            off = lambda t: x['exits'].get(t['id']) in ('auto', 'hand', 'drop')
+            mo = lambda t: t['per'] * t['times'] / 12
+            got = []
+            for k in x['keys']:
+                m = 0.0
+                for i in ids:
+                    raw = sum(mo(t) for t in x['tasks'] if t['role'] == i and off(t))
+                    left = jm[i] - min(raw, jm[i])
+                    hold = []
+                    for h in x['assign'].get(i, []):
+                        if h in x['keys'] and h not in hold: hold.append(h)
+                    if not hold: hold = [x['keys'][0]]
+                    if k in hold: m += left / len(hold)
+                    for t in x['tasks']:
+                        if t['role'] == i and x['exits'].get(t['id']) == 'hand' and x['hands'].get(t['id']) == k:
+                            m += mo(t) * (min(raw, jm[i]) / raw)
+                got.append(m)
+            for n, m in enumerate(got): ck('minutes of ' + x['keys'][n], o['min'][n], m, 1e-9)
+            ck('household', o['total'], sum(got), 1e-9)
+            ck('value', o['value'], None if rate is None else sum(got) / 60 * rate, 1e-6)
+            for n, m in enumerate(got): ck('value of ' + x['keys'][n], o['val'][n], None if rate is None else m / 60 * rate, 1e-6)
         elif fn == 'jobWire':
             t = 12 if x['day'] in ('d1', 'd15') else 24 if x['day'] == '1and15' else (x['pay'] if x['pay'] > 0 else 12)
             ck('deposits a year', o['times'], t, 0)

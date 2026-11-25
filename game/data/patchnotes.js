@@ -226,6 +226,36 @@ const PATCH_NOTES = [
       "Each read also gets one move for this month. A share card carries the name and plain words, never a number.",
       "Once your read has a label, Home, the month check and the crash drill add one line that fits you.",
       "Two people who both turn on sharing get a money date to tap through. A gentle retake comes each quarter.",
+      ],
+    },
+    {
+      d: "2026-11-25",
+    t: "Who carries what",
+    l: [
+      "Share your six unpaid jobs with the people in your home. Tap one or more names onto each job.",
+      "See the admin time of your home, who carries which part, and what that time is worth.",
+      "Sharing costs fairly counts these hours in Labor counts. Find it in Your unpaid jobs.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Trips and the journey",
+    l: [
+      "Menu has Trips and the journey: add up a trip line by line, with flights, lodging, food a day, your card's fee on other currencies, visa fees and travel insurance.",
+      "Points or cash: see the cents a point a redemption gets next to what a point is worth to you, and take the points off the trip in one tap.",
+      "Going with others? Split the trip by share or by item, in one currency, and see each person's part.",
+      "The FIRE journey map: digging out, the first thousand saved, debt free, a hundred thousand, Coast and FI, where you are, and how the trip moves you, in days on your freedom date.",
+      "The web page What does this trip really cost? has all of it too.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "A new theme: The Rings",
+    l: [
+      "Pick The Rings under Theme: seven rings, one ruler for each money sin, and you are the one escaping.",
+      "The ruler of your main pull is your boss in the boss fights. It gets roasted, you never do.",
+      "Check-ins read as the fine print, defenses as wards and Recalculating as the escape route. The plain word always sits next to it.",
+      "A month of a ward that works, or a retake that shows your pull getting quieter, climbs you up a ring. Tap Leave the Rings any time.",
     ],
   },
   {

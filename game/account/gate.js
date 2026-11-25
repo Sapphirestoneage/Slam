@@ -5,7 +5,7 @@
                one question: is this add-on on, now, for the person on the screen? No add-on has its
                name in these files.
    INPUT       The game: G.plain. The profile: c.x.ao, c.x.aok.
-   OUTPUT      7 functions.
+   OUTPUT      8 functions.
    DEPENDS ON  core/report.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: screens/ui.js. With no typeof test, thus safe only after the page has loaded
@@ -57,9 +57,25 @@ function adPlain(fn) {
     ADX.quiet--;
   }
 }
+/* Is this theme off by default for the person on the screen? An add-on can say in its meta that some themes
+   are off by default for a person who has it on (meta.themesOff: a list of theme ids). Such a theme stays out
+   of the picker and is not used, until the person taps "Show it" (c.x.thShow[id]). It names no add-on and
+   says nothing about what an add-on holds. */
+function adThemeOff(id) {
+  try {
+    if (!id || adQuiet()) return false;
+    const on = Object.keys(ADX.has).filter(k => ADX.has[k] && ((ADX.meta[k] || {}).themesOff || []).includes(id));
+    if (!on.some(k => adOn(k))) return false;
+    const c = C();
+    return !(c && c.x && c.x.thShow && c.x.thShow[id]);
+  } catch (e) {
+    report(e, "gate.js: adThemeOff");
+    return false;
+  }
+}
 function thUse(id, fb) {
   try {
-    return !adQuiet() && id && THEMES[id] && adOk(THEMES[id]) ? id : fb;
+    return !adQuiet() && id && THEMES[id] && adOk(THEMES[id]) && !adThemeOff(id) ? id : fb;
   } catch (e) {
     return fb;
   }

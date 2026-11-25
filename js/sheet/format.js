@@ -98,7 +98,8 @@ export const FORMATS = [
   { version: 55, shape: '12c11ccd' }, // Nov 25 2026 (Eli's answers to QUESTIONS 580): M52 the Barista number adds health insurance (the part Math_M52_health, from the app)
   { version: 56, shape: '63e6d98e' }, // Nov 25 2026 (run Finish everything partly built, Part 2): M9O home buying and renting, app-only, and its six rules on the assumptions list
   { version: 57, shape: 'dc0d08dc' }, // Nov 25 2026 (run Finish everything partly built, Part 3): M9Z career and education, app-only, and its three rules on the assumptions list
-  { version: 58, shape: '6532225a' }, // M8Q: the quick calculators (run Not built, Part 2)
+  { version: 58, shape: '4c29eb7b' }, // Nov 25 2026 (run Finish everything partly built, Part 4): M8T travel, app-only, and its two rules on the assumptions list
+  { version: 59, shape: '61df938d' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 2): M8Q the quick calculators, app-only, and the NY unemployment rule on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

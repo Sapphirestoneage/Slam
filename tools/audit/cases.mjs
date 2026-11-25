@@ -15,12 +15,13 @@ import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/
 import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
+import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
-import { snOutside, snFixCheck, SN_RULES } from '../../js/math/sins.js';
+import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
-import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext } from '../../js/math/jobs.js';
+import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext, jobCarry, jobHourValue } from '../../js/math/jobs.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -95,7 +96,12 @@ for (let i = 0; i < N; i++) {
     const x = { ev, now, halfLife: SN_RULES.halfLife }, out = snOutside(ev, now);
     add('snOutside', x, { sources: out.map(o => o.source), scores: Object.fromEntries(out.map(o => [o.source, o.scores])) });
     const fx = { trait: pick(T), group: 'sin', start: day(whole(0, 60)) }, C = snFixCheck(fx, ev, now);
-    add('snFixCheck', { ev, now, fix: fx, days: SN_RULES.fixDays }, { before: C.before, during: C.during, done: C.done, daysLeft: C.daysLeft }); }
+    add('snFixCheck', { ev, now, fix: fx, days: SN_RULES.fixDays }, { before: C.before, during: C.during, done: C.done, daysLeft: C.daysLeft });
+    // the Rings theme (Part 3): the rings climbed, from the history of takes and the months of the wards
+    const SINS7 = ['pride', 'greed', 'envy', 'gluttony', 'lust', 'wrath', 'sloth'], top = pick(SINS7);
+    const hist = Array.from({ length: whole(0, 6) }, (_, k) => ({ at: day(400 - k * 91), sin: { top }, scores: Object.fromEntries(SINS7.map(id => [id, rnd() < 0.1 ? 0 : whole(0, 12)])) }));
+    const fixes = Array.from({ length: whole(0, 5) }, () => ({ trait: pick(SINS7), end: day(whole(0, 300)), dropped: pick([true, false, null]) }));
+    add('snClimb', { hist, fixes, sinIds: SINS7 }, { n: snClimb(hist, fixes, SINS7).length }); }
   // Home buying and renting (js/math/homebuy.js, M9O): the payment, the first month line by line, each year's position, the breakeven year
   { const x = { price: money(90000, 1500000), downPct: pick([3, 5, 10, 20, 25]), ratePct: pick([0, 3, 4.5, 6, 6.5, 7.25, 9]), years: pick([15, 20, 30]), taxPct: pick([0, 0.5, 1.2, 2.5]), insYear: pick([0, 900, 1800, 4200]), pmiPct: pick([0.3, 0.75, 1.5]), hoa: pick([0, 0, 150, 600]), maintPct: pick([1, 1.5, 2]), repairsYear: pick([0, 1500, 5000]),
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
@@ -121,6 +127,16 @@ for (let i = 0; i < N; i++) {
   { const x = { gross: money(15000, 400000), pretax: pick([0, 0, 5000, 23500]), filingStatus: pick(STATUS), kids: pick([0, 0, 1, 3]), withheld: rnd() < 0.1 ? 0 : money(1, 60000), perCheck: rnd() < 0.1 ? 0 : money(1, 4000), checksLeft: whole(0, 26), checksYear: pick([52, 26, 24, 12]) }, r = qcW4({ ...x, ref });
     add('qcW4', x, { owe: r.owe, diff: r.diff, extra: r.extra, deductions: r.deductions }); }
   { const x = { takeHome: money(1000, 30000), spending: money(500, 30000), debtOutside: pick([0, 0, 300]) }, r = qcGlance(x); add('qcGlance', x, { left: r.left, rate: r.rate }); }
+  // Travel (js/math/trip.js, M8T): a trip line by line, points, a group split by share and by item, the journey map
+  { const opt = v => (rnd() < 0.15 ? null : v), x = { flights: opt(money(0, 4000)), lodging: opt(money(0, 500)), days: opt(whole(1, 21)), nights: rnd() < 0.3 ? whole(0, 20) : null, food: opt(money(0, 200)), visa: opt(pick([0, 25, 160])), insurance: opt(money(0, 500)), other: opt(money(0, 1500)),
+      fxPct: opt(pick([0, 1, 2.5, 3])), fxOn: pick([undefined, [], ['flights'], ['lodging', 'food'], ['lodging', 'food', 'other']]), pointsOff: rnd() < 0.3 ? money(0, 3000) : null }, T = tpCost(x);
+    add('tripLines', x, { lines: T.lines.map(l => l.amount), fx: T.fx.amount, gross: T.gross, pointsOff: T.pointsOff, total: T.total, open: T.open.length, ready: T.ready }); }
+  { const x = { cash: money(50, 3000), points: whole(1000, 150000), fees: pick([0, 5.6, 50, 200]), cpp: pick([0.5, 1, 1.25, 1.5, 2]) }, P = tpPoints(x); add('tripPoints', x, { got: P.got, worth: P.worth, spend: P.spend, keep: P.keep, lead: P.lead }); }
+  { const n = whole(2, 6), people = Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}`, shares: pick([null, 1, 1, 2, 3]) })), how = pick(['share', 'item']),
+      items = Array.from({ length: whole(1, 6) }, (_, i) => ({ id: `i${i}`, name: `L${i}`, amount: Math.round(rnd() * 300000) / 100, among: rnd() < 0.4 ? null : people.filter(() => rnd() < 0.6).map(p => p.id) })), total = how === 'share' && rnd() < 0.5 ? Math.round(rnd() * 900000) / 100 : null, S = tpSplit({ people, how, items, total });
+    add('tripSplit', { people, how, items, total }, { parts: S.parts.map(p => p.amount), total: S.total }); }
+  { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(money(0, 30000)), debt: kn(pick([0, 0, money(100, 40000)])), invested: kn(money(0, 1500000)), coast: kn(money(10000, 600000)), fi: kn(money(200000, 2500000)), monthly: pick([null, 0, money(50, 6000)]), trip: pick([null, money(100, 15000)]) }, J = tpJourney(x);
+    add('tripJourney', x, { done: J.stages.map(s => s.done), months: J.stages.map(s => s.months), after: J.stages.map(s => (s.after ? [s.after.done, s.after.months] : null)), here: J.here, fromCash: J.fromCash, shift: J.monthsOfSaving }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);
@@ -164,6 +180,13 @@ for (let i = 0; i < N; i++) {
   const day = () => `${2026 + whole(0, 2)}-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`.replace(/-(\d\d)-(3[01]|29)$/, (m, mm, dd) => `-${mm}-${mm === '02' ? '28' : dd === '31' && ['04', '06', '09', '11'].includes(mm) ? '30' : dd}`);
   const ck = { set: day(), last: rnd() < 0.5 ? null : day(), today: day() }; add('jobCheck', ck, jobCheckNext(ck.set, ck.last, ck.today));
   const dt = { md: `${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 31)).padStart(2, '0')}`, today: day(), lead: pick([14, 21, 30, 45]) }; add('jobDate', dt, jobDateNext(dt.md, dt.today, dt.lead));
+  // feature 6 (run JOE-1): who carries what, for 1 to 5 people, with shared jobs and hand-offs to people and to others
+  const np = whole(1, 5), keys = ['me', 'p1', 'p2', 'p3', 'p4'].slice(0, np);
+  const hands = Object.fromEntries(tasks.filter(t => exits[t.id] === 'hand').map(t => [t.id, pick(keys.concat(['coach', 'tool']))]));
+  const assign = Object.fromEntries(JOB_IDS.filter(() => rnd() < 0.7).map(id => [id, keys.filter(() => rnd() < 0.5).concat(rnd() < 0.1 ? ['gone'] : [])]));
+  const hv = { tp: rnd() < 0.5 ? null : money(10, 120), wage: rnd() < 0.3 ? 0 : money(8, 150) }, rate = jobHourValue(hv.tp, hv.wage).rate;
+  const K = jobCarry(ad, tasks, exits, hands, assign, keys.map(k => ({ key: k, n: k })), rate);
+  add('jobCarry', { mins, tasks, exits, hands, assign, keys, hv }, { rate, total: K.total, value: K.value, min: K.people.map(p => p.min), val: K.people.map(p => p.value) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

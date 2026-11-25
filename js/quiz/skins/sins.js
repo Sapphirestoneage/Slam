@@ -275,6 +275,36 @@ export const SINS = {
       handoff: 'The one who holds the keys shows the other one login and one balance.',
     },
   },
+  // ---------- Part 3: the Rings theme (all words SLAM's own; nothing from any show, book, game or franchise) ----------
+  // Seven rings, one for each sin, each with an original ruler. Dark comedy, cheeky and PG-13: it roasts the sin and
+  // the ruler, never the person; the person is always the one escaping. The game shows these words only while its
+  // Rings theme is picked (game/features/rings.js), with the plain word next to each themed word. js/math/sins.js
+  // (snRuler, snRings, snBoss, snRingWords) puts them together. An add-on may bring a second voice (the game's hook,
+  // RG_VOICE); none of its words are here. The ring order is the person's own: their main pull is the bottom ring.
+  rings: {
+    rulers: {
+      pride: { name: 'Lady Lookatme', ring: 'the Ring of Mirrors', roast: 'Lady Lookatme has never met a price tag she could not turn into a photo.', taunt: 'Get the nicer one. Everyone is watching, darling.', beat: 'She goes pale when the plain option gets said out loud.' },
+      greed: { name: 'The Upsell', ring: 'the Ring of Round Numbers', roast: 'The Upsell thinks enough is a number that moves every time you get close.', taunt: 'You are so close to the next round number. Just one more lap.', beat: 'It goes quiet the moment you say your enough number out loud.' },
+      envy: { name: 'Countess Compare', ring: 'the Ring of Other People\'s Windows', roast: 'Countess Compare keeps a scrapbook of your neighbor\'s kitchen.', taunt: 'They just got one. Funny, you still have the old one.', beat: 'She has no comeback for: would I want this if nobody I know had one?' },
+      gluttony: { name: 'The Duke of Delivery', ring: 'the Ring of Second Helpings', roast: 'The Duke of Delivery knows your door code and your weakest hour.', taunt: 'Long day. Add the dessert. Add the other dessert.', beat: 'One treat, named ahead, and his menu stops working on you.' },
+      lust: { name: 'Impulsa', ring: 'the Ring of Shiny Carts', roast: 'Impulsa falls in love at first scroll and breaks up at the statement.', taunt: 'Only a few left. Buy now, think never.', beat: 'Two days in the cart and she forgets your name.' },
+      wrath: { name: 'Rage Receipt', ring: 'the Ring of Slammed Doors', roast: 'Rage Receipt buys things to win arguments with nobody in the room.', taunt: 'They made you mad. Spend it off. You earned it.', beat: 'One night of sleep cools every receipt it prints.' },
+      sloth: { name: 'Lord Later', ring: 'the Ring of the Snooze Button', roast: 'Lord Later has a to-do list older than his couch, and a nap planned after it.', taunt: 'Tomorrow is a lovely day to start. So is next month.', beat: 'He cannot stand a two-minute start, or anything on autopay.' },
+    },
+    // The themed words, each shown with its plain word next to it.
+    words: {
+      checkin: 'The fine print', ward: 'Your ward', escape: 'The escape route', climb: 'The climb out', boss: 'Your ruler',
+      intro: 'Seven rings, one ruler each, and you are the one escaping. Every virtue you grow climbs you up a ring.',
+      start: 'You start in {ring}, the ring of {sin}. Its ruler is {ruler}.',
+      on: 'You are in {ring}. {left} to the open air.',
+      out: 'You climbed out of every ring. The rulers are filing complaints.',
+      none: 'No ring climbed yet. A month of your ward, or a retake that shows {sin} getting quieter, climbs you up one.',
+      stepTake: 'A retake: {sin} went from {a}% to {z}% of your pull. {virtue} climbed you up a ring.',
+      stepWard: 'A month of the ward "{ward}": the pattern dropped. {virtue} climbed you up a ring.',
+      hold: '{ruler} holds {hold}% of your pull.',
+      bossLine: 'The ruler of your main pull is your boss here. Every ring you climb is a hit on {ruler}.',
+    },
+  },
   confidence: { margin: 0.1, sources: 2 },
   core: { sheet: 'Main pull', how: 'No element: the money sins read habits, so a result never changes your money element. The quiz is the first of four sources; the others are your ledger, one-tap check-ins and how you use the app.' },
 };
