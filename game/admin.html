@@ -30,11 +30,12 @@ ul{margin:4px 0 0;padding-left:20px}.who .row{flex-wrap:wrap;justify-content:fle
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
-<script src="account/supa.js?v=c44df491"></script>
+<script src="account/supa.js?v=f9675fac"></script>
 <script src="data/cardtemplate.js?v=43e535a3"></script>
 <script src="data/cards2026.js?v=bd65802c"></script>
 <script src="account/roles.js?v=04de2e61"></script>
 <script src="account/adminmore.js?v=470e3b46"></script>
+<script src="account/foundadmin.js?v=93aa23f2"></script>
 <script src="account/cardadmin.js?v=ab16003f"></script>
 <script>
 /* The admin page. Everything here is checked again by the database: a signed-in person who is not the admin gets nothing back and can change nothing, whatever this page shows. */
@@ -66,10 +67,11 @@ function draw(){const el=document.getElementById("app"),d=S.data,me=S.session&&S
    ${d.packs.map(p=>{const g=u.packs&&u.packs[p.pack];return `<div class="row"><span>${esc(p.title||"Add-on")}<br><span class="muted">${g?(p.asks?(g.yes?"On. They said yes":"On. Waiting for their one-time yes"):"On for this account"):"Hidden from this account"}</span></span>${seg("pack",u.id,p.pack,!!g)}</div>`}).join("")}
    <details${S.ask&&S.ask.id===u.id?" open":""}><summary>Account tools</summary><div class="tools">${tools(u,mine)}</div></details></div>`}).join("")+
   (typeof caHTML==="function"?caHTML():"")+ /* cardadmin.js: the section "Card library" */
+  (typeof faHTML==="function"?faHTML():"")+ /* foundadmin.js: Founding Testers, and who joined through whom */
   (typeof amHTML==="function"?amHTML():"")+ /* adminmore.js: Health, Audit log, Backup */
   `<button class="wide" data-a="reload">Check for new accounts</button><a href="./" style="color:var(--muted)">Back to the game</a>`}
 async function load(){if(!S.data)draw();const r=await sb.rpc("admin_overview");S.data=r.error?{admin:false}:r.data;S.games={};
- if(S.data.admin){if(typeof amLoad==="function")await amLoad(sb); /* adminmore.js */const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
+ if(S.data.admin){if(typeof amLoad==="function")await amLoad(sb); /* adminmore.js */if(typeof faLoad==="function")await faLoad(sb); /* foundadmin.js */const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
 document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;S.data=null;load()});
 document.addEventListener("input",ev=>{if(typeof caInput==="function")caInput(ev.target)}); /* cardadmin.js: typing in the card form */
 document.addEventListener("change",ev=>{if(typeof caChange==="function")caChange(ev.target)}); /* cardadmin.js: a rate was typed, show its limit */

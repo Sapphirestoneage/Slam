@@ -50,6 +50,7 @@ function profSheet() {
   if (typeof profSheetHouse === "function") h = profSheetHouse(h); /* house.js: the row "Our household" */
   if (typeof profSheetKids === "function") h = profSheetKids(h); /* kids.js: the row "Kids mode" */
   if (typeof profSheetAddon === "function") h = profSheetAddon(h); /* addon.js: the card for the add-ons */
+  if (typeof profSheetFounding === "function") h = profSheetFounding(h); /* founding.js: the mark "Founding Tester" */
   return h;
 }
 function profSheetBase() {

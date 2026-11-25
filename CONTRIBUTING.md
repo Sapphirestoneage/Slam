@@ -53,6 +53,19 @@ after the last push to `main`, and put its last line in the run's summary ("rele
 ..." with the reason). A part that is not finished must show the card "Coming soon", never a broken screen. The
 details, and the steps for GitHub Pages, are in `docs/RELEASE.md`.
 
+## Patch notes: each run adds one entry
+
+The game's Menu has "What's new", and the web app's More menu has the same list. Both read one file,
+`game/data/patchnotes.js`. At the end of a run, add ONE entry at the END of the list, from the run's summary:
+
+```js
+{ d: "2026-11-30", t: "A short title", l: ["What you can do now, and where it is.", "One more short line."] },
+```
+
+The screen shows the newest first. Write from the side of the person who plays: plain words, no file names, no
+jargon, no money numbers. Never "bug", "broken" or "failed" about the person; "fixed" for the app is fine.
+`game/tests/founding-share-whats-new.js` checks the shape and the words.
+
 ## House rules
 
 Math in `js/math` with tests; views never calculate; no red and no verdict words; no em dashes; copy from the

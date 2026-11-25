@@ -639,6 +639,8 @@ function home() {
   if (typeof homeQuestRow === "function")
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
   if (typeof homeRcRow === "function") h = homeRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
+  if (typeof homeFoundingCard === "function")
+    h = homeFoundingCard(h); /* founding.js: the one-time card of a Founding Tester */
   return h;
 }
 /* The top of Home: the welcome screen, or the quiet screen, or the full screen with its first lines. */
@@ -1206,6 +1208,7 @@ function meTab() {
   if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
   if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
+  if (typeof meTabFounding === "function") h = meTabFounding(h); /* founding.js: the mark "Founding Tester" */
   return h;
 }
 function meTabBase() {
@@ -1615,6 +1618,8 @@ function finishSetup() {
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
   const r = finishSetupBase();
   if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
+  if (typeof finishSetupFounding === "function")
+    finishSetupFounding(); /* founding.js: tell the account that setup is finished */
   return r;
 }
 function finishSetupBase() {

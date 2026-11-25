@@ -5,6 +5,7 @@ import { h, clear, icon } from './ui/dom.js';
 import { arrive, leftPopover, missingFor, land } from './ui/arrive.js';
 import { layerSnapshot } from './math/layers.js';
 import { reportThis } from './ui/report-this.js';
+import { whatsNew } from './ui/whatsnew-ui.js'; // the patch notes, in the More menu
 import { startTips } from './ui/tips.js';
 import { timerAfter } from './timer.js';
 import * as S from './ui/staples.js';
@@ -302,6 +303,7 @@ const app = {
       item('Add anything', 'plus', () => this.addAnything(anchor), { disabled: !this.hasClient }),
       this.prefs.clientView ? null : item('Parking lot', 'note', () => this.openParking(anchor), { disabled: !this.hasClient }), // coach only
       item('Report this screen', 'flag', () => reportThis(this, anchor)), // batch 13 (item 3): in the More menu, so it never sits over a control
+      item("What's new", 'star', () => whatsNew(anchor)), // the patch notes, the same list as the game's Menu
       h('span.muted.small', {}, 'Ctrl+Z undoes, Ctrl+Shift+Z redoes, / finds or adds.')), { width: 300 });
   },
   addAnything(anchor) {
