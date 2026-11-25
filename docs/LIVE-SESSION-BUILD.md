@@ -1,9 +1,13 @@
 # Live Session Mode: notes for the next parts of the build
 
-Run "Live Session Mode (Nov 25 2026)". Parts 1 to 7 are built. This page is for the worker of each later part
-and for the part "Tests, checks and report". It is not for the player.
+Run "Live Session Mode (Nov 25 2026)". All 9 parts are built, with the tests and the report. This page is for a
+worker who changes the feature, and its last section is for Eli: "For Eli: before the first real call". It is not
+for the player.
 
-## The switch
+## The switches
+
+`AI_PASS_READY` (Part 8), next to it, is `false` too: with it off the review has no AI button and everything else
+works. `aiOn()` is true only when both are on. Turn it on only after docs/AI-PASS-SETUP.md.
 
 `LIVE_SESSION_READY` in `game/account/liveflag.js`. It is `false`. While it is false: the coach page shows the two
 buttons as one "Coming soon" card, `game/session.html` shows "Coming soon", the game loads `liveflag.js` only, and
@@ -33,6 +37,9 @@ tables. Realtime: nothing to switch on with default settings; see the top of the
 | `game/account/livegame.js` | Part 6: the join to the client's SAVED game (`lgAttach`, `lgClient`, `lgCoach`, `lgFirst`). |
 | `game/account/livescreen.js` | Part 6: the two screens during the call, and the plan (`lsView`, `lsNext`, `lsNums`, `lsRecalc`, `lsPlan`, `livePartCoach`, `livePartClient`). |
 | `game/account/livereview.js` | Part 7: the review after End (`lrvCounts`, `lrvGroups`, `lrvApprove`, `lrvApproveGroup`, `lrvFix`, `lrvOut`, `lrvWhatif`, `livePartEnded`, `livePartClick`). |
+| `game/account/liveai.js` | Part 8: the recorder's file (`laiFileRead`), the speaker match (`laiMatch`, `laiMapSet`), the request (`laiAsk`), the answer checked (`laiParse`), the proposals into the review (`laiMerge`), the AI card and the draft notes (`laiCardHTML`, `laiNotesHTML`), the run (`laiRun`), Save (`laiSaveNotes`). |
+| `game/account/liveforget.js` | Part 9: Delete this transcript (`lvfForget`, `lvfGone`, `lvfCardHTML`, `lvfRun`, `lvfClick`). |
+| `supabase/functions/live-ai-pass/index.ts` | Part 8: the Edge Function, NOT DEPLOYED. |
 | `game/data/askwords.js` | The words of "one small question at a time" (ASK, ASK_NONE), for the game and for the card "Next question to ask". |
 
 Rules in `live.js`:
@@ -369,3 +376,129 @@ writes "18 50" for "eighteen fifty" gives two numbers (kept, not set).
 19. Two people who talk at the same time: which line gets the number?
 20. Count the what-ifs of a real call against what a person would call a what-if: the cue "would", "could"
     and "want to" may catch too much.
+
+## Parts 8 and 9 (as built Nov 25 2026)
+
+### Start waits for the client (a fix from the last walk)
+
+The room has one more step, `mic` (`coach_mic`, `client_mic`: the answer to "Allow the microphone"; the device sends
+it when the check ends). `lvCanStart(room, "coach")` now needs both OKs AND the client's steps done (`lvSetDone`: OK,
+headphones answered, the microphone step answered or a browser that cannot listen). While the client is not done the
+coach's card says "Waiting for them to allow the microphone." (or the headphones question, `lvClientWait`) and offers
+"Start with my side only" (`R.act("start", true)`). `live_session_set` in the SQL file has the same rule (`flag is
+true` = side only) and the step `mic`; the two columns are added with `add column if not exists`.
+
+### Part 8: the AI pass
+
+- The Edge Function `supabase/functions/live-ai-pass/index.ts` (Deno, NOT DEPLOYED). The key comes only from its
+  secret `ANTHROPIC_API_KEY`. It checks the caller with their own sign-in (a supabase client with the caller's JWT):
+  the coach of the session or the admin, and the session must be ended. It reads `live_lines` itself; from the
+  browser it takes only the field list, the what-if ids (with their line ids, never their words) and the optional
+  file text. One request to the Messages API (`claude-opus-5-5`, effort medium, server-side fallbacks on refusal),
+  a strict tool `session_result` as the structured output, caps (200,000 characters in for the lines and for the
+  file, 16,000 tokens out), a 2-minute time limit, typed errors in calm words. It stores nothing. CORS: the site only.
+- The request and the answer: `laiAsk` and `laiParse` (each field id must be a field of `LF_FIELDS`, each value in
+  range, each type one of the five). The stand-in is `simAi` / `simAiReply` in `livesim.js`; a test or the made-up
+  call sets `R.aiFn`. On the real page `laiAdapter` calls `sb.functions.invoke("live-ai-pass")`.
+- The proposals enter the SAME review (`laiMerge`): one kept item each, `src` "ai" or "file", `pass`, `per`, `why`
+  ("Proposed by the AI pass." plus "Only in the Samsung file.", "A rough number.", "Only you said this number.",
+  "The call heard ..."), `unsure` for each of those. A proposal the profile already holds adds nothing. An earlier
+  pass's unreviewed proposals become `corrected` (left out). In the review: not sure first (`lrvUnsureFirst`), the
+  label "Not sure", the primary button "Use this number". **Approve of a proposal uses its number, as a Guess,
+  through `lrvFix` (how "ai"), only where the call may set it; "Approve all" leaves a not-sure proposal for its own
+  tap.** What-if types are `lfWhatifSuggest(..., "ai")`; Approve sets them.
+- Stored: `c.x.live.ai[sid].passes = [{ id, at, tokens: { in, out }, model, n, same, typed, file }]`. The notes and
+  the agenda are NOT on the profile (the client can read their game): the draft is on the coach's device
+  (`slam_live_ai_<sid>`) and goes into `coach_notes` (kind "note", through `cpNote`) only on Save.
+- The coach's view: the card "The AI pass" under the summary line (drop-in, the speaker line, Run, each pass with
+  "About 18,200 tokens (15,800 in, 2,300 out)", the reminder "Delete the recording from your phone."), and the
+  closed card "Session notes and the next call".
+- The file: read in the browser (300 KB), labels on their own line or in front of the words, with or without a time,
+  names given in the recorder ("Eli 00:12"). `laiMatch` looks for each file line of 3 words or more in the app's lines
+  in order (a share of 0.5 of the words), votes the speaker's side, and gives the mapping with a confidence; sure at
+  0.8 when at least 3 lines and a fifth of the file match. Not sure: the coach taps "Speaker 1 is me". No labels: a
+  matching line gets the side of the call, the rest "Not sure". The text sent says "Coach:", "Client:", "Not sure:".
+
+### Part 9: privacy
+
+- `game/privacy.html#live`: text only; Chrome sends the sound to Google; the AI pass sends the words to Anthropic only
+  when the coach runs it (and only when it is switched on); who sees the words (the client, that coach, the admin; the
+  quotes in the game follow the game's own rule); kept until deleted.
+- One line under the consent words of the brief (`LV_CONSENT_MORE`), with a link to the privacy page.
+- Delete this transcript (`liveforget.js`), on the coach's review and on the client's calm screen after the plan:
+  one tap, one confirm. `R.forget()` (liveio.js) removes the session's lines (new rule "the two members delete the
+  lines" and `grant ... delete` in the SQL file: the coach or the client, after End; not the admin from the app, not
+  another coach), the lines that wait on the device, and this page's lines. Then each side's `act` (the client got
+  `lgClient.act`: send what waits, read the saved game again, change, save, drop the device copy) runs `lvfForget`:
+  the quotes of the heard list, the answer, the marks and their `all`, the what-ifs and the review records are made
+  empty; values, levels and records stay; `c.x.live.forgot[sid] = { at, by, n }` gives "Transcript deleted on <date>".
+  When the database still has lines afterwards (a device that was offline sends late: `live_can_write` allows an hour
+  after End), the card says so and offers to delete again.
+
+### Tests
+
+`game/tests/live-ai-pass.js` (Parts 8 and 9) and `game/tests/live-checklist.js` (the list of the build, one check
+each). The two-device files call `simReady(P)` (the client's microphone and headphones steps) before Start.
+`tools/game_walk/live.cjs` walks `session.html?sim=coach` and `?sim=client` at 1280 and 390 in Chromium, with both
+switches on in the test page only.
+
+## For Eli: before the first real call
+
+### What landed
+
+All 9 parts, behind two switches that are both OFF: `LIVE_SESSION_READY` and `AI_PASS_READY` in
+`game/account/liveflag.js`. The invite link that is the sign-up; the session room (both OK, the microphone and
+headphones steps, one Start, Pause and End, text only); the live fill by rules (Guess, corrections, never over a
+value you or they entered); "Confirming" plus their yes (Close, never Exact); the what-ifs list; your screen and the
+client's calm screen; the review after End with Show plan; the AI pass with the recorder's file; the privacy page and
+Delete this transcript. Start now waits until the client allowed the microphone and answered the headphones question
+(or you tap "Start with my side only").
+
+### What was not built
+
+A button inside the game for an existing client to join a session (they open the session page; QUESTIONS 592 (h)); a
+screen that shows ceilings and floors (593 (l)); one line for each credit card in the live fill (593 (j)).
+
+### Not checked in a real browser with real things
+
+Two real devices, real microphones, Chrome's real speech recognition, the real Realtime link, the SQL file in the
+database, the Edge Function on Supabase (it was not run anywhere: no Deno here), a real Samsung Voice Recorder
+file, a real Anthropic answer. Checked: the simulated call in Chromium at 1280 and 390, as the coach and as the
+client, through the AI pass (a stand-in answers) and Delete this transcript: no console error, no sideways scroll,
+no "undefined" or "NaN".
+
+### What you do by hand, in this order
+
+1. Run `supabase/migrations/20261125210000_live_sessions.sql` in the Supabase SQL Editor (the newest copy: it has
+   the microphone step and the delete rule; safe to run two times).
+2. Optional, for Delete my account to remove sessions too: `supabase/migrations/20261125200000_delete_my_account.sql`.
+3. Switch on `LIVE_SESSION_READY` (ask Claude), and do the dry run below.
+4. For the AI pass: each step of `docs/AI-PASS-SETUP.md` (an Anthropic key pasted only into Supabase, the function
+   deployed, then `AI_PASS_READY`).
+
+### The real dry run, as a checklist
+
+- [ ] The coach page: "Start session with a new client" makes a link.
+- [ ] The link in a private window on a second laptop: the invite screen, the sign-up, the email link, the room.
+- [ ] Both devices show the other as in the room within a few seconds (if not: Supabase, Realtime, Settings).
+- [ ] OK on both, the microphone step on both, headphones: your Start waits until their steps are done.
+- [ ] 20 minutes in Chrome on two laptops: both lights stay green, a silence goes amber and back by itself, the
+      clock runs, the screens stay awake.
+- [ ] Their speech recognition starts at Start with no tap on their side (and after a reload). If not: Reconnect.
+- [ ] Headphones on both: no line two times. No headphones on one side and "No": count echo lines and lost lines.
+- [ ] Ten lines: You and Them are right on each screen.
+- [ ] Reload their tab in the middle: it comes back live, no second Start, no line lost.
+- [ ] Wifi off for 30 seconds on one side, talk, wifi on: the lines arrive.
+- [ ] A phone (Safari, Chrome on Android) and Firefox as the client: what the screen says.
+- [ ] Pause, Resume and End from each side; after End the lines are readable as you and as the client, NOT as a
+      second coach account.
+- [ ] A second account opens a used link; a link older than 7 days.
+- [ ] Say each money form of "What the number reader assumes" once and write down what Chrome wrote ("eighteen
+      fifty", "percent", "401k", periods and commas).
+- [ ] How often a sentence is cut in two lines; how often a number is misheard (ten numbers).
+- [ ] "Confirming rent 1,850" and their "yes", ten times: how many work.
+- [ ] With the AI pass set up: drop in the Samsung file, check the speaker line, run the pass, approve one proposal,
+      Save the notes, and check the token count against the Billing page.
+- [ ] Delete this transcript as the client in one session and as you in another: the lines are gone in the table
+      `live_lines`, the numbers stay.
+
