@@ -10,6 +10,7 @@
 // column its own named range (tax brackets, periods).
 
 import { LEVELS, WEIGHTS, PACE, PACE_WORDS, SESSIONS } from './program.js';
+import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
 
@@ -199,6 +200,10 @@ export const ASSUMPTIONS = [
   { id: 'typicalRates.Car loan', name: 'Typical_car', label: 'Typical car loan APR', unit: 'pct', get: r => r.typicalRates['Car loan'], source: FED, date: '2026-08-07' },
   { id: 'typicalCardLimit.all', name: 'Typical_card_limit', label: 'Typical credit card limit, all ages (Current vs Proposed stops a shortfall at the card room when no limit is typed; batch 37, QUESTIONS 320)', unit: 'money', get: r => r.typicalCardLimit.all, source: 'Experian, What\'s the Average Credit Limit on a Credit Card? (June 2026 data)', date: '2026-11-06' },
   // SLAM's own rules, kept in the code.
+  { id: 'rules.wayCapeBase', name: 'WayCapeBase', label: 'CAPE-based spending: the base share of the portfolio a year', unit: 'pct', get: () => WAY_CAPE.a, source: 'Karsten Jeske (Big ERN), Safe Withdrawal Rate series, Part 18 (Aug 30 2017) and Part 54 (Oct 12 2022): intercept 1.75%, slope 0.50; js/math/withdraw.js', date: '2026-11-25' },
+  { id: 'rules.wayCapeSlope', name: 'WayCapeSlope', label: 'CAPE-based spending: the share of 1 divided by the CAPE', unit: 'number', get: () => WAY_CAPE.b, source: 'Karsten Jeske (Big ERN), Safe Withdrawal Rate series, Part 18 (Aug 30 2017) and Part 54 (Oct 12 2022); js/math/withdraw.js', date: '2026-11-25' },
+  { id: 'rules.wayCashReal', name: 'WayCashReal', label: 'Compare the ways: what a cash bucket earns a year, after inflation', unit: 'pct', get: () => WAY_CASH_REAL, source: RULE('js/math/withdraw.js: cash keeps pace with prices; the market history has no cash series (QUESTIONS.md, RUN Compare the ways)'), date: '2026-11-25' },
+  { id: 'rules.wayCutLine', name: 'WayCutLine', label: 'Compare the ways: a year counts as a cut when it pays under this share of what the way aims to pay', unit: 'pct', get: () => WAY_CUT_LINE, source: RULE('js/math/withdraw.js'), date: '2026-11-25' },
   { id: 'rules.cardMinimumFloor', name: 'CardMin_floor', label: 'Card minimum: at least', unit: 'money', get: () => RULES.cardMinimumFloor, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.cardMinimumPct', name: 'CardMin_pct', label: 'Card minimum: share of the balance, plus a month of interest', unit: 'pct', get: () => RULES.cardMinimumPct, source: RULE('js/math/debt.js, M30'), date: '2026-10-28' },
   { id: 'rules.housingLine', name: 'Housing_line', label: 'Housing reference line, share of take-home', unit: 'pct', get: () => RULES.housingLine, source: RULE('Math tab, M2A'), date: '2026-10-28' },

@@ -806,7 +806,7 @@ function menuSheetBase() {
     `<div class="stack">${MENU.filter(m => !m[4] || adOn(m[4]))
       .map(
         m =>
-          `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span><span class="caret">›</span></button>`
+          `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret">›</span>`}</button>`
       )
       .join("")}</div>
  ${!G.demo ? `<button class="ghost wide slim" data-a="menugo" data-k="act" data-v="addperson">Add another person</button>` : ""}`
@@ -1010,7 +1010,7 @@ Object.assign(ACT, {
       v = t.dataset.v;
     closeSheet();
     if (k === "tab") go(v);
-    else if (ACT[v]) ACT[v](t);
+    else soonTap(v, t); /* soon.js: a menu row with no action shows "Coming soon" */
   },
   navback: () => {
     if (!NAV.back.length) return;

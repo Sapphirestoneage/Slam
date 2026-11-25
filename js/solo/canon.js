@@ -75,7 +75,7 @@ const SPECS = {
     run: v => splitOf(v),
     answer: R => ({ lead: 'Of every dollar that lands, needs take', big: pct(R.shares.needs), line: `Wants take ${pct(R.shares.wants)} and ${R.left >= 0 ? `${pct(R.shares.left)} is kept (${money(R.left)} a month)` : `${money(-R.left)} more goes out than comes in`}. The 50/30/20 split of ${money(R.takeHome)} would be ${big(R.marks.needs)}, ${big(R.marks.wants)} and ${big(R.marks.left)}.`,
       rows: [['Needs', `the rule's line is 50%: ${big(R.marks.needs)}`, `${money(R.needs)} · ${pct(R.shares.needs)}`], ['Wants', `the rule's line is 30%: ${big(R.marks.wants)}`, `${money(R.wants)} · ${pct(R.shares.wants)}`], ['Kept, or paying debt down faster', `the rule's line is 20%: ${big(R.marks.left)}`, `${money(R.left)} · ${pct(R.shares.left)}`]],
-      fold: [['Whose idea this is, and where it bends', 'The 50/30/20 rule is from All Your Worth by Elizabeth Warren and Amelia Warren Tyagi. It works on take-home pay.', 'Where rent is high or pay is low, needs run past half for almost everyone, and that is the place you live talking, not a mistake you made. People aiming to stop work early usually keep far more than 20%.']] }),
+      fold: [['Whose idea this is, and where it bends', 'The 50/30/20 rule is from All Your Worth by Elizabeth Warren and Amelia Warren Tyagi. It works on take-home pay.', 'Where rent is high or pay is low, needs run past half for almost everyone, and that is the place you live talking, not something you did. People aiming to stop work early usually keep far more than 20%.']] }),
   },
   home: {
     title: 'How much home would a lender say fits?', why: 'Lenders start from two lines drawn on your pay before taxes. Two numbers show where they land for you, before you ever talk to one.',

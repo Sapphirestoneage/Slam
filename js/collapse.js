@@ -4,13 +4,13 @@
 // The meter is honest arithmetic: the plans still possible are the product of the choices not yet made.
 export const COLLAPSE = [
   { id: 'work', ask: 'How does money come in right now?', options: [['job', 'A paycheck job'], ['self', 'I work for myself'], ['both', 'Both'], ['between', 'Between jobs'], ['student', 'In school'], ['retired', 'Retired']] },
-  { id: 'press', ask: 'Which one is pressing on you most?', options: [['behind', 'Behind on bills'], ['cards', 'Card or payday debt'], ['forgive', 'Student loans I hope to have forgiven'], ['thin', 'No cushion if something breaks'], ['none', 'None of these']] },
+  { id: 'press', ask: 'Which one is pressing on you most?', options: [['behind', 'Bills past due'], ['cards', 'Card or payday debt'], ['forgive', 'Student loans I hope to have forgiven'], ['thin', 'No cushion if something breaks'], ['none', 'None of these']] },
   { id: 'cushion', ask: 'If the money stopped, how long could you cover your bills?', when: a => a.press !== 'behind', options: [['0', 'Under a month'], ['1', '1 to 3 months'], ['3', '3 to 6 months'], ['6', 'More than 6']] },
   { id: 'match', ask: 'Does your job add money to a retirement plan when you do?', when: a => (a.work === 'job' || a.work === 'both') && a.press !== 'behind', options: [['all', 'Yes, and I get all of it'], ['some', 'Yes, but not all of it'], ['no', 'No'], ['unsure', 'Not sure']] },
   { id: 'want', ask: 'What do you want most from your money?', when: a => a.press === 'none' || a.press === 'forgive', options: [['date', 'To stop having to work'], ['safe', 'To feel safe'], ['enjoy', 'To enjoy more of it now'], ['guide', 'Just tell me what to do']] },
 ];
 const MOVES = {
-  stabilize: { title: 'Steady the month first', why: 'Being behind comes before everything else. Seeing how long the money lasts, and what to call about first, is the move.', page: 'runway', label: 'How long would my money last?' },
+  stabilize: { title: 'Steady the month first', why: 'Past-due bills come before everything else. Seeing how long the money lasts, and what to call about first, is the move.', page: 'runway', label: 'How long would my money last?' },
   bridge: { title: 'Stretch what you have', why: 'With no paycheck, the plan is a bridge: how many months are covered and what makes them longer.', page: 'runway', label: 'How long would my money last?' },
   debt: { title: 'Get the expensive debt gone', why: 'Card and payday interest outruns anything investing earns. A date for the last payment is the move.', page: 'debt', label: 'When am I debt free?' },
   cushion: { title: 'Build the first cushion', why: 'One month of bills in the bank turns a surprise into an errand. It comes before investing.', page: 'runway', label: 'How long would my money last?' },

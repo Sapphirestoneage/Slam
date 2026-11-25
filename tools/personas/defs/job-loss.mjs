@@ -73,7 +73,7 @@ export default {
     essentialLine: { value: 31920, note: '200% x $15,960.' },
     next: { value: 'essential', note: '$720 above the $31,200.' },
     health1000: { value: 2204.4, tol: 0.5, note: 'At $32,200 (201.75% of the line, 6.78% + 3.5% of the way to 8.66% = 6.846%) they pay $2,204.40 a year for the benchmark plan instead of $0.' },
-    says: ['The Essential Plan ends', 'behind'],
+    says: ['The Essential Plan ends', 'less a year'],
   },
   cannot: [], // batch 24: Report › Overview reads the benefit's taxes now (the household rates, as on Taxes)
 };

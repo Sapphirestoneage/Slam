@@ -24,6 +24,8 @@ The tests need Node.js only. They need no browser and no package from npm.
 | `junk(html)` | Returns the text near the first such defect. |
 | `skip(why)` | Says that the file cannot run here. The runner shows the reason. |
 
+The harness sets `SOON_AFTER = "now"` (`core/soon.js`). In the game, an error in a tap or in a screen shows the card "Coming soon". In the tests the same error is thrown at once, so a check fails on a real defect.
+
 ## The test files
 
 Each file has the name of its feature.
@@ -31,6 +33,7 @@ Each file has the name of its feature.
 | Test file | Feature | Script that it examines |
 |-----------|---------|-------------------------|
 | `addon-sealed-files.js` | The sealed add-on files (needs private files) | `account/addon.js`, `x1.json`, `x2.json` |
+| `coming-soon.js` | The card "Coming soon": a tap with no action, an action or a screen that throws, a Menu row with no action, a failed probe in What's built; and a Menu row stays open | `core/soon.js`, `screens/ui.js`, `screens/planner.js`, `screens/ux.js` (uxPop), `features/built.js` |
 | `ask-front-door.js` | The Ask front door on Home | `features/ask3.js` |
 | `insurance-needs.js` | Insurance needs | `features/cover.js` |
 | `investment-mix-and-fees.js` | Investment mix and fees, and the key number Stock share | `features/mix.js` |
@@ -47,6 +50,7 @@ Each file has the name of its feature.
 | `tax-view.js` | The tax view | `features/taxview.js`, `features/retire.js` (retireTax) |
 | `two-paths.js` | The two paths | `features/paths.js` |
 | `windfall.js` | The windfall: extra money down the order of the two paths | `features/windfall.js` |
+| `compare-the-ways.js` | Compare the ways: the copy of the rules, the run with a way against a calculation by hand, each row, the sort, the filter, the pins, the custom way, the chart, the spreadsheet rows | `features/ways.js`, `core/withdraw.js`, `features/odds.js` |
 | `taking-money-out.js` | Taking money out: the order, guardrails, the years before 59 and a half, health cover | `features/takeout.js`, `data/takeout2026.js` |
 | `two-ages.js` | Two ages: work optional and money reachable, for each person | `features/ages.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |
@@ -72,6 +76,7 @@ Each file has the name of its feature.
 | `two-job-offers.js` | Two job offers side by side | `features/offers.js` |
 | `which-account-next.js` | Which account next, up to each limit | `features/nextacct.js` |
 | `quick-math.js` | Quick math | `features/quick.js` |
+| `recalculating.js` | Recalculating: the kept plan and the new date, the short month, the cushion refill, the safe-to-fail line, the letter exercise, the optional Mistake audit | `core/recalc.js`, `features/recalc.js`, `features/exletter.js`, `features/audit.js` |
 | `save-status.js` | The save status | `account/cloud.js` |
 | `sharing-costs-fairly.js` | Sharing costs fairly | `features/fair.js` |
 | `sheet-navigation.js` | Back, Forward, Close and "i" on each sheet | `screens/nav.js` |

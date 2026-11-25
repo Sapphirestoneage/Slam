@@ -56,7 +56,7 @@ export function soWhat(key, m, { lowDay = null, first = null, last = null } = {}
     case 'netWorthChange': {
       if (first?.netWorth == null || last?.netWorth == null) return null;
       const d = last.netWorth - first.netWorth;
-      return d < 0 ? { text: `You are ${money(d)} behind where you started. One rough month can do that; the trend matters more.`, action: { label: 'See what changed', href: '#/report/overview' } }
+      return d < 0 ? { text: `You are ${money(d)} under where you started. One rough month can do that; the trend matters more.`, action: { label: 'See what changed', href: '#/report/overview' } }
         : { text: `You are ${money(d)} ahead of where you started.` };
     }
     case 'debtPaid': {

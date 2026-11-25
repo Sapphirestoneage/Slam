@@ -58,6 +58,14 @@ const WB = [
     "Not built. Opt-in setting for shared phones, since this is money data.",
     null,
   ],
+  [
+    "feel",
+    "Coming soon: a part that is not ready never shows as a broken screen",
+    "b",
+    () => WB_FN("soonTap") && WB_FN("soonDraw") && WB_FN("soonRun") && WB_FN("soonHTML"),
+    "A tap that has no action yet, or a screen that cannot draw, shows one calm card and a way back. The error is still recorded for Eli.",
+    null,
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   ["in", "Make a guess real: Guess, Close, Exact", "b", () => WB_HAS("sharp"), "", "sharp"],
   [
@@ -242,7 +250,7 @@ const WB = [
     "see",
     "Money audit score: one score out of 10 built only from real numbers, with every move that would raise it, biggest first",
     "b",
-    () => WB_FN("audCalc") && WB_FN("audMoves") && WB_HAS("audit") && WB_HAS("audmore"),
+    () => WB_FN("mauCalc") && WB_FN("audMoves") && WB_HAS("audit") && WB_HAS("audmore"),
     "In My Money and in the menu. The formula is SLAM's own.",
     "audit",
   ],
@@ -814,6 +822,21 @@ const WB = [
   ],
   [
     "plan",
+    "Compare the ways: the 4% rule, guardrails and each other way to take money out, side by side",
+    "b",
+    () =>
+      WB_HAS("takeout") &&
+      WB_FN("cmpTab") &&
+      WB_FN("cmpRow") &&
+      WB_FN("waySpend") &&
+      WB_FN("cmpBook") &&
+      typeof WAYS === "object" &&
+      WAYS.length > 30,
+    "The same plan through each way to take money out, in families with variants. Each row has the spending of year one, the random markets and real start years that work, the hardest start year, the cuts, the money left and the age work can stop. Sort, filter, pin 3 rows, and one chart from the start year 1966.",
+    "takeout",
+  ],
+  [
+    "plan",
     "Taking money out: withdrawal plans, guardrails, a Roth ladder, health-plan credits",
     "b",
     () => WB_HAS("takeout") && WB_FN("tkoOrder") && WB_FN("tkoGuard") && WB_FN("tkoBridge") && WB_FN("tkoAca"),
@@ -888,7 +911,30 @@ const WB = [
   ["plan", "Advice that fits you now, and advice to unlearn", "n", null, "Not built.", null],
   ["plan", "Start from one worry", "n", null, "The web app has a version. Not in the game.", null],
   ["plan", "Risk guesses you write down, checked later: luck or skill", "n", null, "Not built.", null],
-  ["plan", "Mistake or unavoidable: what mistakes cost over time", "n", null, "Not built.", null],
+  [
+    "plan",
+    "Mistake audit (opt-in): what a past money event cost, then and over time",
+    "b",
+    () => WB_HAS("rcaudit") && WB_FN("mauCalc") && WB_FN("rcAudit"),
+    "Opens from the Yearly Review or the menu. The game does not open it for you.",
+    "rcaudit",
+  ],
+  [
+    "plan",
+    "Recalculating: the old date, the new date and the one next turn",
+    "b",
+    () => WB_HAS("rc") && WB_FN("homeRcRow") && WB_FN("rcRoute"),
+    "Also the order to pay in when a month is short, the cushion refill, and a safe-to-fail line.",
+    "rc",
+  ],
+  [
+    "plan",
+    "Letter from your calm self: written in a calm month, shown in a hard one",
+    "b",
+    () => WB_HAS("exletter") && WB_FN("exLetterBody"),
+    "One exercise. Only you see it.",
+    "exletter",
+  ],
   ["see", "A dashboard you can rearrange, with modes for who you are", "n", null, "Not built.", null],
   ["see", "One number shown as a thermometer, a bucket or a bar", "n", null, "Not built.", null],
   ["see", "Money weather: how it feels, Clear to Storm", "n", null, "Not built.", null],

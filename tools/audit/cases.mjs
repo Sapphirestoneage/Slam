@@ -11,9 +11,11 @@ import { fireSheetRows } from '../../js/math/firesheet.js';
 import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayOf, workYearsOf, coastOf, dollarLaterOf, carFitsOf, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../../js/solo.js';
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
+import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, RC_ORDER } from '../../js/math/recalc.js';
 import { Store, newHousehold } from '../../js/records.js';
 import { answer } from '../../js/journey.js';
-import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom } from '../../js/math/lifetime.js';
+import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
+import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -71,6 +73,15 @@ for (let i = 0; i < N; i++) {
   { const x = { age: whole(18, 75), grossYear: money(15000, 600000), netWorth: rnd() < 0.1 ? 0 : money(500, 5000000) }; const r = expectedWorthOf(x); add('expectedWorth', x, { expected: r.expected, ratio: r.ratio, adjusted: r.adjusted, adjustedRatio: r.adjustedRatio }); }
   { const x = { takeHome: money(1200, 20000), hoursWeek: pick([20, 30, 40, 45, 50, 60]), commuteWeek: pick([0, 2, 5, 8, 10, 15]), costs: pick([0, 50, 150, 300, 500]) }; const r = realWageOf(x); add('realWage', x, { real: r.real, stated: r.stated, hoursPer100: r.hoursPer100 }); }
   { const x = { takeHome: money(1500, 20000) }; x.needs = Math.round(x.takeHome * between(0.2, 0.9)); x.wants = Math.round(x.takeHome * between(0, 0.4)); const r = splitOf(x); add('split', x, { left: r.left, needs: r.shares.needs, wants: r.shares.wants, kept: r.shares.left, markNeeds: r.marks.needs, markWants: r.marks.wants, markLeft: r.marks.left }); }
+  // Recalculating (js/math/recalc.js): the route, the triage, the refill, the safe-to-fail line and the audit.
+  { const x = { planAt: `${whole(2024, 2026)}-${String(whole(1, 12)).padStart(2, '0')}-15`, planMonths: whole(0, 400), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-20`, months: rnd() < 0.1 ? null : whole(0, 420), open: true }; const r = rcRoute(x); add('rcRoute', x, { oldYm: r.oldYm, newYm: r.newYm, shift: r.shift, moved: r.moved, later: r.later, noDate: r.noDate }); }
+  { const CL = RC_ORDER.map(o => o[0]), bills = Array.from({ length: whole(1, 12) }, (_, k) => ({ name: `B${k}`, cls: pick(CL), amount: rnd() < 0.05 ? null : money(10, 4000) })); const x = { income: money(300, 12000), bills }, r = rcTriage(x);
+    add('rcTriage', x, { total: r.total, short: r.short, left: r.left, covered: r.covered, firstShort: r.firstShort ? CL.indexOf(r.firstShort) : null, open: r.open, paid: Object.fromEntries(r.rows.map(b => [b.name, b.paid])) }); }
+  { const x = { target: money(500, 60000), balance: money(1, 70000), monthly: rnd() < 0.1 ? null : money(10, 3000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05` }, r = rcRefill(x); add('rcRefill', x, { gap: r.gap, months: r.months, ym: r.full ? null : r.ym, full: r.full }); }
+  { const x = { cap: money(10, 800), spent: rnd() < 0.1 ? null : money(1, 1200) }, r = rcSafeLine(x); add('rcSafeLine', x, { left: r.left, over: r.over, ranOut: r.ranOut, planCost: r.planCost }); }
+  { const TAGS = ['mistake', 'unavoidable', null], KS = ['Late fee', 'Overdraft', 'Car repair', 'Other'], events = Array.from({ length: whole(1, 9) }, (_, k) => ({ id: `e${k}`, kind: pick(KS), amount: rnd() < 0.08 ? null : money(5, 9000), tag: pick(TAGS), yearsAgo: Math.round(between(0, 6) * 10) / 10 }));
+    const x = { events, realReturn: pick([0.03, 0.04, 0.05, 0.06]), years: whole(1, 40), perDay: money(2, 300), hourly: money(8, 150), yearIncome: money(15000, 300000) }, r = rcAudit(x);
+    add('rcAudit', x, { mCount: r.mistake.count, mCost: r.mistake.cost, mLater: r.mistake.later, mDays: r.mistake.fiDays, mHours: r.mistake.hours, uCost: r.unavoidable.cost, uLater: r.unavoidable.later, untagged: r.untagged, open: r.open, tax: r.tax, repeats: r.repeats.length, repeatCost: r.repeats.reduce((t, k) => t + k.cost, 0) }); }
   { const x = { grossMonthly: money(2000, 40000), otherDebt: rnd() < 0.3 ? 0 : money(50, 6000) }; const r = homeFitsOf(x); add('homeFits', { ...x, rate: RULES.lenderMortgageRate, years: RULES.lenderMortgageYears, taxIns: RULES.lenderTaxInsShare, front: RULES.lenderFront, back: RULES.lenderBack }, { payment: r.payment, loan: r.loan, by: r.by }); }
   { const x = { amount: money(2, 2000), per: pick(['week', 'month']), years: pick([5, 10, 20, 30]) }; const r = habitCostOf({ ...x, ref }); add('habit', x, { grown: r.grown, spent: r.spent, needs: r.needs, times: r.times }); }
   { const x = { amount: money(500, 600000), apr: pick([0, 0.029, 0.04, 0.0655, 0.07, 0.1, 0.15, 0.25]), years: pick([1, 2, 3, 5, 7, 10, 15, 30]) }; const r = loanCostOf({ ...x, ref }); add('loan', x, { payment: r.payment, paid: r.paid, interest: r.interest, interestToday: r.interestToday, invested: r.invested, fiNumber: r.fiNumber }); }
@@ -110,6 +121,35 @@ const slim = run => ({ ok: run.ok, ranOutAge: run.ranOutAge, atRetire: run.atRet
 const L = Math.max(20, Math.round(N * 0.6));
 for (let i = 0; i < L; i++) { const x = lifeCase(); add('lifetime', x, slim(lifetime(x, ref))); }
 for (let i = 0; i < Math.round(L / 6); i++) { const x = lifeCase(); x.strategy = { id: 'fixed' }; add('earliest', x, { age: earliestFreedom(x, ref).age }); }
+// The ways to take money out (js/math/withdraw.js): every way in the list, the ones that are switched off on screen
+// too, each with a made-up market: stocks and bonds that swing, inflation, a CAPE and the two yields.
+const custom = () => wayCustom({ kind: pick(['steady', 'guardrails', 'floor', 'share', 'market']), rate: pick([0.03, 0.0375, 0.045, 0.06]), timing: pick(['start', 'monthly', 'end']), horizon: pick([null, 30, 40]) });
+const anyWay = () => { const w = rnd() < 0.15 ? custom() : pick(WAYS.filter(x => x.rule !== 'risk' && !x.custom)); const o = { ...w };
+  if (rnd() < 0.3) o.timing = pick(['start', 'monthly', 'end']); if (o.rule === 'dwz' && rnd() < 0.6) { o.target = pick([0, 50000, 250000]); o.targetAge = pick([null, 80, 85, 95]); } return o; };
+const market = n => Array.from({ length: n }, () => { const s = between(-0.42, 0.5), b = between(-0.15, 0.25); return { s, b, i: between(-0.06, 0.16), cape: rnd() < 0.05 ? null : between(5, 44), dy: between(0.011, 0.08), by: between(0.006, 0.15) }; });
+const W = Math.max(40, N * 2);
+for (let i = 0; i < W; i++) {
+  { const x = { age: whole(40, 105), stock: whole(0, 100) / 100 }; add('vpwShare', x, { share: vpwShare(x.age, x.stock) }); }
+  { const x = { start: money(1000, 5000000), target: pick([0, 0, 10000, 250000]), n: whole(-2, 60), g: pick([0, 0.02, 0.05, 0.07]) }; add('spendDown', x, { payment: spendDownPayment(x.start, x.target, x.n, x.g) }); }
+  // one pile of money, the way the game's replay runs it
+  { const way = anyWay(), age = whole(40, 75), n = whole(5, 55), x = { way, age, start: money(50000, 6000000), need: money(15000, 200000), income: rnd() < 0.3 ? 0 : money(6000, 60000), incomeAge: pick([62, 67, 70]), stock: pick([0.4, 0.6, 0.8, 1]), growth: pick([0.03, 0.05, 0.07]), seq: market(n) };
+    let p = x.start, last = null, lastI = null; const mem = {}, rows = [];
+    for (let k = 0; k < n; k++) { const y = x.seq[k], a = age + k;
+      const rule = waySpend(way, { need: x.need, start: p, k, age: a, endAge: age + n - 1, last, infl: lastI, cape: y.cape, stock: x.stock, growth: x.growth }, mem), w = way.gross ? rule.spend : Math.max(0, rule.spend - (a >= x.incomeAge ? x.income : 0));
+      let r = x.stock * y.s + (1 - x.stock) * y.b; if (way.hold) r = wayReturn(way, { r, s: y.s, b: y.b, dy: y.dy, by: y.by }, { stock: x.stock, k, last, start: p, w }, mem);
+      const step = wayPay(p, w, r, way.timing ?? 'start'); p = step.p; rows.push([rule.spend, rule.aim, step.short, p]); last = r; lastI = y.i; }
+    add('wayPath', x, { rows }); }
+  { const n = whole(1, 40), cycles = Array.from({ length: n }, (_, k) => { const lasted = rnd() < 0.8; return { start: 1900 + k, lasted, ranOutAge: lasted ? null : whole(60, 95), end: lasted ? money(1000, 9000000) : 0, lowest: pick([1, 1, between(0.2, 1)]), cuts: whole(0, 30) }; });
+    const x = { cycles, tolerate: pick([0.999, 0.849, 0.75, 0.699]) }, H = wayHistory(cycles, x.tolerate); add('wayHistory', x, { n: H.n, ok: H.ok, worst: H.worst.start, deepest: H.deepest, cutsWorst: H.cutsWorst, medianEnd: H.medianEnd }); }
+}
+// The whole-life plan on each way, with taxes, through a made-up market in the free years.
+for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
+  const x = lifeCase(), way = anyWay(); x.strategy = way; x.stocks = pick([0.6, 0.8, 1]); x.cape = between(8, 40);
+  if (way.horizon) x.planAge = x.retireAge + way.horizon - 1;
+  x.seq = market(x.planAge - x.retireAge + 1 + 10).map(y => ({ ...y, r: x.stocks * y.s + (1 - x.stocks) * y.b, stock: x.stocks }));
+  const lead = x.retireAge - x.age, run = lifetime(x, ref, { returns: k => (k < lead ? x.realReturn : x.seq[k - lead] ?? x.realReturn) });
+  add('wayLife', x, { ...slim(run), lowestPaid: run.lowestPaid, cutYears: run.cutYears, firstSpend: run.firstSpend, worked: worked(run, x) });
+}
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;
 console.log(`${cases.length} cases written to ${out}`, JSON.stringify(count));

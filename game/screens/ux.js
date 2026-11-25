@@ -373,11 +373,8 @@ function setupSheetRead(h, w) {
 /* back that works: tabs and sheets go through the browser history */
 const uxHist =
   typeof history !== "undefined" && typeof history.pushState === "function" && typeof addEventListener === "function";
-let UX_POP = false;
-/* The count of the steps back that closeSheetUx() asked the browser for and that are not done yet. The
-   browser does such a step a moment later. A sheet that opened in that moment (a row of the menu closes
-   the menu, then opens its sheet) must stay open. */
-let UX_OWN = 0;
+let UX_POP = false,
+  UX_BACKS = 0; /* the game's own steps back in the browser history that have not arrived yet */
 /* Part of go() in ui.js, step 1 of 2. "prev" is the tab that the player leaves.
    Keeps the scroll position of that tab. Keeps the open sheet, so the chip "Back to ..." can open it again. */
 function goUxStart(t, prev) {
@@ -446,52 +443,60 @@ function closeSheetUx(was) {
   }
   if (uxHist && was && !UX_POP && history.state && history.state.sheet) {
     UX_POP = true;
+    UX_BACKS++;
     try {
-      UX_OWN++;
       history.back();
     } catch (e) {
-      UX_OWN = Math.max(0, UX_OWN - 1);
+      UX_BACKS = 0;
       report(e, "ux.js: closeSheetUx");
     }
     setTimeout(() => {
       UX_POP = false;
     }, 60);
+    setTimeout(() => {
+      UX_BACKS = 0; /* a step back that never arrived must not count for ever */
+    }, 1500);
+  }
+  uxChip();
+}
+/* THE BROWSER WENT ONE STEP BACK (the Back button of the browser, or the game's own step in closeSheetUx).
+   A Menu row closes the menu and opens its sheet, or goes to its tab, in one tap. The game's own step back
+   for the menu arrives after that. It must not close the new sheet or go back to the old tab: the game
+   stays where the tap put it, and that place gets its entry in the history. */
+function uxPop(e) {
+  const own = UX_BACKS > 0;
+  if (own) UX_BACKS--;
+  if (own) {
+    /* The game is where the player's tap put it. The history follows the game, not the other way round. */
+    const was = (e && e.state && e.state.tab) || "";
+    try {
+      if (SH) history.pushState({ tab, sheet: 1 }, "", "#/" + tab + "/open");
+      else if (was && was !== tab) history.pushState({ tab }, "", "#/" + tab); /* a Menu row that goes to a tab */
+    } catch (x) {
+      report(x, "ux.js: uxPop");
+    }
+    uxChip();
+    return;
+  }
+  UX_POP = true;
+  try {
+    if (SH) {
+      closeSheetQuiet();
+      render();
+    } else {
+      const t = (e.state && e.state.tab) || (location.hash.match(/^#\/([a-z]+)/) || [])[1] || "home";
+      if (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map") {
+        tab = t;
+        render();
+      }
+    }
+  } finally {
+    UX_POP = false;
   }
   uxChip();
 }
 if (uxHist) {
-  addEventListener("popstate", e => {
-    if (UX_OWN > 0) {
-      /* the step back of the game itself. A sheet that is open now opened after that step: keep it, and
-         give it its own step in the history, so the button Back of the browser closes it. */
-      UX_OWN--;
-      if (SH) {
-        try {
-          history.pushState({ tab, sheet: 1 }, "", "#/" + tab + "/open");
-        } catch (err) {
-          report(err, "ux.js: popstate");
-        }
-      }
-      uxChip();
-      return;
-    }
-    UX_POP = true;
-    try {
-      if (SH) {
-        closeSheetQuiet();
-        render();
-      } else {
-        const t = (e.state && e.state.tab) || (location.hash.match(/^#\/([a-z]+)/) || [])[1] || "home";
-        if (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map") {
-          tab = t;
-          render();
-        }
-      }
-    } finally {
-      UX_POP = false;
-    }
-    uxChip();
-  });
+  addEventListener("popstate", uxPop);
   try {
     const t = (location.hash.match(/^#\/([a-z]+)/) || [])[1];
     if (t && (UX_TABS.some(x => x[0] === t) || t === "play" || t === "map")) tab = t;

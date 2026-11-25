@@ -11,6 +11,7 @@
 // month by month); and health cost before 65 is the person's own guess.
 // tools/audit/engine2.py works every number here out a second time (docs/AUDIT.md).
 import { federalTax, stateTax } from './income.js';
+import { UNIFORM, waySpend, wayReturn, wayTolerance, WAY_CUT_LINE } from './withdraw.js';
 
 // Social Security counted as income: the provisional-income rule (26 U.S.C. 86). The thresholds are set in the law and
 // are not indexed. [first, second] by filing status.
@@ -33,7 +34,7 @@ export function gainsTax(gains, ordinaryTaxable, key = 'single') {
 }
 // Required withdrawals from taxed-later money: the balance divided by this number at each age (IRS Publication 590-B,
 // Uniform Lifetime Table). They start at 73, or 75 for someone born in 1960 or later (SECURE 2.0).
-const UNIFORM = { 73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1, 80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2, 87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1, 94: 9.5, 95: 8.9, 96: 8.4, 97: 7.8, 98: 7.3, 99: 6.8, 100: 6.4 };
+// The Uniform Lifetime Table is in js/math/withdraw.js (the RMD method of taking money out reads the same table).
 export const requiredWithdrawal = (age, pretax, startAge = 73) => (age >= startAge && pretax > 0 && UNIFORM[Math.min(100, age)] ? pretax / UNIFORM[Math.min(100, age)] : 0);
 // The Marketplace premium credit for 2026 (IRS Rev. Proc. 2025-25; the 2025 HHS poverty guideline, which 2026 coverage
 // uses): the benchmark premium less a share of income that rises with income, and nothing past four times the
@@ -53,6 +54,8 @@ const PENALTY = 0.10;
 const SEASON = 5;           // years a Roth conversion waits before it can come out penalty-free
 const TAX_ROUNDS = 40, CREDIT_ROUNDS = 30; // how many times a year's tax, and its premium credit, may go round before the run moves on
 // tolerate: the lowest share of what life costs a strategy may pay in any year and still count as working.
+// The rules themselves are in js/math/withdraw.js (waySpend), with every other way to take money out: these four are the
+// ones the plan can be set to.
 export const STRATEGIES = [
   { id: 'fixed', tolerate: 0.999, name: 'Steady spending', plain: 'Spend what your life costs every year, whatever the market does. The classic 4% rule works this way.' },
   { id: 'guardrails', tolerate: 0.699, name: 'Guardrails', plain: 'Spend what your life costs, trim 10% after a rough stretch, raise 10% after a good one.' },
@@ -136,6 +139,17 @@ function draw(b, amount, age) {
   return { pretax, penalty, gains, rothGrowth, short: left > 0.5 ? left : 0 };
 }
 
+// Take `amount` out over one year by the timing. 'start' is draw() and the year's growth comes after. 'end' grows the
+// buckets first. 'monthly' takes a twelfth and grows a month, twelve times. grown: the year's growth is already in.
+function grow(b, f) { for (const key of ['taxable', 'pretax', 'roth']) b[key] *= f; }
+function takeOut(b, amount, age, r, timing) {
+  if (timing === 'end') { grow(b, 1 + r); return { ...draw(b, amount, age), grown: true }; }
+  if (timing !== 'monthly') return { ...draw(b, amount, age), grown: false };
+  const m = (1 + r) ** (1 / 12), sum = { pretax: 0, penalty: 0, gains: 0, rothGrowth: 0, short: 0, grown: true };
+  for (let i = 0; i < 12; i++) { const d = draw(b, amount / 12, age); for (const key of ['pretax', 'penalty', 'gains', 'rothGrowth', 'short']) sum[key] += d[key]; grow(b, m); }
+  return sum;
+}
+
 // The run. x:
 //   age, planAge, retireAge, realReturn, start: { taxable, pretax, roth, rothFree }
 //   work: { saving: { pretax, roth, taxable } a year once the plan is at full speed, wait: { years, pretax } the
@@ -143,7 +157,13 @@ function draw(b, amount, age) {
 //   spendingAfter (a year), eras, ss: { claimAge, yearly }, partTime: { yearly, untilAge }, blocks: [...]
 //   strategy: { id, rate }, tax: { filingStatus, place, fill, health }
 // returns(k): the real return for year k of the plan (0 = this year); defaults to x.realReturn every year.
-// Out: { years: [...], ok, ranOutAge, atRetire, end, lifetimeTax, lowestSpend (as a share of need), penalties }.
+//   strategy may be any way of js/math/withdraw.js: its rule sets the year's spending (waySpend), its `timing` says
+//   when the money comes out ('start', the default: the first day of the year; 'monthly': a twelfth each month, twelve
+//   real steps; 'end': the last day), and its `hold` changes the year's return (wayReturn). x.stocks: the share in stocks.
+// returns(k) may also give { r, s, b, i, cape, dy, by, stock } for a year of history: the portfolio's return, and what
+// the market-aware ways and the ways of holding money read (stocks, bonds, inflation, the CAPE, the two yields).
+// Out: { years: [...], ok, ranOutAge, atRetire, end, lifetimeTax, lowestSpend (as a share of need), penalties,
+//        lowestPaid (the lowest share of what the way aimed to pay), cutYears, firstSpend }.
 export function lifetime(x, ref, { returns = null } = {}) {
   const b = { taxable: x.start.taxable ?? 0, pretax: x.start.pretax ?? 0, roth: x.start.roth ?? 0, rothFree: Math.min(x.start.rothFree ?? 0, x.start.roth ?? 0), basis: Math.min(x.start.basis ?? x.start.taxable ?? 0, x.start.taxable ?? 0) };
   const P = x.partner || null, lastAge = x.planAge + (P ? Math.max(0, x.age - P.age) : 0); // with two people, the plan runs until the younger one reaches the last year
@@ -152,11 +172,13 @@ export function lifetime(x, ref, { returns = null } = {}) {
   const years = [], season = []; // season: [{ at: plan year, amount }] conversions waiting five years
   const tax = x.tax || { filingStatus: 'Single' }, room = fillRoom(tax.fill, tax, ref);
   const ssYearly = typeof x.ss?.yearly === 'function' ? x.ss.yearly(x.retireAge) : x.ss?.yearly ?? 0; // stopping work sooner lowers the benefit
-  let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, adjust = 1, wr0 = null, surcharges = 0;
+  let atRetire = null, ranOutAge = null, lifetimeTax = 0, penalties = 0, lowest = 1, surcharges = 0, lowestPaid = 1, cutYears = 0, firstSpend = null, lastR = null, lastI = null;
+  const st = x.strategy || { id: 'fixed' }, timing = st.timing ?? 'start', mem = {}; // mem: what the way remembers from year to year
   const creditHeld = []; // years the premium credit was left out because nothing settled at a line: { age, line }
   const magi = []; // income by plan year, for the Medicare premium two years on (working years are left out: stopping work is a reason Social Security accepts to use the lower income)
   for (let k = 0, age = x.age; age <= lastAge; k++, age++) {
-    const r = returns ? returns(k) : x.realReturn;
+    const given = returns ? returns(k) : x.realReturn, yr = typeof given === 'number' ? { r: given } : given;
+    let r = yr.r, grown = false;
     const through = r === 0 || r <= -1 ? 1 : r / (12 * ((1 + r) ** (1 / 12) - 1)) / (1 + r);
     const free = age >= x.retireAge;
     for (const s of season) if (s.at + SEASON === k) b.rothFree += s.amount; // a conversion from five years ago can now come out
@@ -192,17 +214,10 @@ export function lifetime(x, ref, { returns = null } = {}) {
       }
     } else {
       if (atRetire === null) atRetire = total();
-      const start = total(), need = needAt(age, x), st = x.strategy || { id: 'fixed' };
-      if (wr0 === null) wr0 = start > 0 ? need / start : null;
-      let spend = need;
-      if (st.id === 'percent') spend = start * (st.rate ?? 0.04);
-      else if (st.id === 'floor') spend = Math.min(need * 1.2, Math.max(need * 0.85, start * (st.rate ?? wr0 ?? 0.04)));
-      else if (st.id === 'guardrails' && wr0) {
-        const wr = start > 0 ? need * adjust / start : Infinity;
-        if (wr > wr0 * 1.2) adjust *= 0.9; else if (wr < wr0 * 0.8 && adjust < 1.3) adjust *= 1.1;
-        adjust = Math.max(0.7, adjust); // a cut never goes below 70% of what life costs
-        spend = need * adjust;
-      }
+      const start = total(), need = needAt(age, x), stock = yr.stock ?? x.stocks ?? 0.8;
+      const rule = waySpend(st, { need, start, k: age - x.retireAge, age, endAge: lastAge, last: lastR, infl: lastI, cape: yr.cape ?? x.cape ?? null, stock, growth: x.realReturn }, mem);
+      // A way marked gross sets what leaves the accounts: tax comes out of that amount and other income adds to it.
+      const gross = st.gross ? rule.spend : null; let spend = rule.spend;
       const ss = (age >= (x.ss?.claimAge ?? 200) ? ssYearly : 0) + (P && age - x.age + P.age >= (P.ss?.claimAge ?? 200) ? pSs : 0);
       const rmd = requiredWithdrawal(age, b.pretax, rmdAge), benchmark = x.tax?.aca ? under65(age, x) * (tax.health ?? 0) : 0;
       const earned = (age <= (x.partTime?.untilAge ?? -1) ? x.partTime.yearly ?? 0 : 0) + blockIncome(age, x);
@@ -212,14 +227,18 @@ export function lifetime(x, ref, { returns = null } = {}) {
       // What must come out: spending less what comes in, plus this year's tax (found by going round a few times).
       // The premium credit depends on this year's income, which depends on what is taken out, so it goes round too.
       const on65 = (age >= 65 ? 1 : 0) + (P && age - x.age + P.age >= 65 ? 1 : 0), medicare = on65 ? on65 * medicareSurcharge(magi[k - 2] ?? 0, tax.filingStatus, ref) : 0;
-      let fromPortfolio = Math.max(0, spend + medicare - ss - earned);
+      let fromPortfolio = gross ?? Math.max(0, spend + medicare - ss - earned);
+      if (st.hold) r = wayReturn(st, yr, { stock, k: age - x.retireAge, last: lastR, start, w: fromPortfolio }, mem);
       // This year's tax for a given credit. The tax is paid out of the same buckets, which is itself income, so it goes
       // round until it stops moving (to 50 cents). A required withdrawal comes out first: only what is left can convert.
       const settle = c0 => {
         let due = 0, c = 0;
         for (let i = 0; i < TAX_ROUNDS; i++) {
-          const snap = { ...b }, got = draw(snap, Math.max(0, fromPortfolio - c0) + due, age);
-          const pre = Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, b.pretax - pre));
+          const snap = { ...b }, got = takeOut(snap, gross != null ? Math.max(gross, due) : Math.max(0, fromPortfolio - c0) + due, age, r, timing); // a gross way: the tax comes out of the amount, unless the tax alone is more
+          // With the money out at the start, what is left for a required withdrawal and a conversion is today's balance.
+          // Out monthly or at the end, it is the balance after the year's growth and the year's withdrawals.
+          const must = got.grown ? Math.min(snap.pretax, Math.max(0, rmd - got.pretax)) : 0;
+          const pre = got.grown ? got.pretax + must : Math.max(got.pretax, Math.min(rmd, b.pretax)), conv = Math.min(convert, Math.max(0, got.grown ? snap.pretax - must : b.pretax - pre));
           const t = yearTax({ ordinary: pre + conv + earned + got.rothGrowth, ss, gains: got.gains }, tax, ref) + got.penalty;
           c = benchmark > 0 ? Math.min(benchmark, premiumCredit(pre + conv + earned + got.rothGrowth + got.gains + ss, benchmark, people)) : 0;
           if (Math.abs(t - due) < 0.5) { due = t; break; }
@@ -236,8 +255,9 @@ export function lifetime(x, ref, { returns = null } = {}) {
       // credit, less comes out and income falls under it); none due means income is past the top line.
       if (Math.abs(at.c - credit) >= 1) { credit = 0; at = settle(0); row.creditHeld = at.c >= 1 ? 'bottom' : 'top'; creditHeld.push({ age, line: row.creditHeld }); }
       const taxDue = at.due;
-      fromPortfolio = Math.max(0, fromPortfolio - credit);
-      const d = draw(b, fromPortfolio + taxDue, age);
+      if (gross != null) { fromPortfolio = Math.max(0, gross - taxDue); spend = Math.max(0, fromPortfolio + ss + earned + credit - medicare); }
+      else fromPortfolio = Math.max(0, fromPortfolio - credit);
+      const d = takeOut(b, fromPortfolio + taxDue, age, r, timing); grown = d.grown;
       // A required withdrawal larger than what was needed still comes out: it is taxed and lands in the taxable account.
       const forced = Math.min(b.pretax, Math.max(0, rmd - d.pretax));
       if (forced > 0) { b.pretax -= forced; b.taxable += forced; b.basis += forced; }
@@ -248,19 +268,23 @@ export function lifetime(x, ref, { returns = null } = {}) {
       Object.assign(row, { need, spend: d.short ? Math.max(0, spend - d.short) : spend, tax: taxDue - d.penalty, ss, earned, withdraw: fromPortfolio + taxDue - d.short, convert: conv, penalty: d.penalty, short: d.short });
       lifetimeTax += taxDue - d.penalty; penalties += d.penalty;
       if (need > 0) lowest = Math.min(lowest, row.spend / need);
+      row.aim = rule.aim; if (firstSpend === null) firstSpend = row.spend;
+      if (rule.aim > 0) { const paid = gross != null ? Math.max(0, gross - d.short) / rule.aim : row.spend / rule.aim; lowestPaid = Math.min(lowestPaid, paid); if (paid < WAY_CUT_LINE) cutYears++; }
     }
     if (row.short > 0.5 && ranOutAge === null) ranOutAge = age;
-    for (const key of ['taxable', 'pretax', 'roth']) b[key] *= 1 + r;
+    if (!grown) for (const key of ['taxable', 'pretax', 'roth']) b[key] *= 1 + r;
+    lastR = r; lastI = yr.i ?? null;
     b.rothFree = Math.min(b.rothFree, b.roth); b.basis = Math.min(b.basis, b.taxable);
     years.push({ ...row, taxable: b.taxable, pretax: b.pretax, roth: b.roth, total: total() });
   }
-  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, surcharges, lowestSpend: lowest, creditHeld };
+  return { years, ok: ranOutAge === null, ranOutAge, atRetire: atRetire ?? total(), end: total(), lifetimeTax, penalties, surcharges, lowestSpend: lowest, creditHeld, lowestPaid, cutYears, firstSpend };
 }
 
 // The earliest age work can stop and the money still lasts to the plan's last year, on this strategy: the first age
 // from today whose run never comes up short. { age, run } or { age: null } when no age to 80 works.
-export const toleranceOf = x => STRATEGIES.find(s => s.id === (x.strategy?.id ?? 'fixed'))?.tolerate ?? 0.999;
-export const worked = (run, x) => run.ok && run.lowestSpend >= toleranceOf(x);
+// A way from js/math/withdraw.js (it has a `rule`) is measured against what it aims to pay, with its own tolerance.
+export const toleranceOf = x => (x.strategy?.rule ? wayTolerance(x.strategy) : STRATEGIES.find(s => s.id === (x.strategy?.id ?? 'fixed'))?.tolerate ?? 0.999);
+export const worked = (run, x) => run.ok && (x.strategy?.rule ? run.lowestPaid : run.lowestSpend) >= toleranceOf(x);
 export function earliestFreedom(x, ref, { until = 80 } = {}) {
   for (let a = x.age; a <= until; a++) {
     const run = lifetime({ ...x, retireAge: a }, ref);

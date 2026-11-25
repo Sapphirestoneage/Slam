@@ -16,6 +16,7 @@ import { LISTS } from './registry/assumptions.js';
 import { MODES, modeOf, ownerOf, bothPreviewOn, validPerson, extraAdults, EXTRA_IDS, listsFollowView } from './registry/couples.js';
 import { platformOf } from './math/earnings.js';
 import { CONTROL_KEYS } from './math/control.js';
+import { sharedExercises } from './exercises/calm-letter.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -131,10 +132,12 @@ export function foldDoc(doc, aud, ref = null) {
   const { privateNotes, feedback, timer, ...session } = doc.session || {};
   const spending = { ...(doc.spending || {}) }; delete spending.transactions;
   const settings = { ...(doc.settings || {}) }; delete settings.csvRules; delete settings.merchantRules;
+  if (settings.recalc?.audit) settings.recalc = { ...settings.recalc, audit: null }; // the opt-in audit that looks back is the person's own
+  if (settings.exercises) settings.exercises = sharedExercises(settings.exercises); // an exercise answer marked Me only (the letter from your calm self) stays home
   // Batch 55: a snapshot keeps a copy of every row, so a shared copy folds those too (a private row by its neutral name).
   const snapshots = (doc.snapshots || []).map(sn => (sn.records ? { ...sn, records: sn.records.filter(r => !rowLeftOut(r, aud, mode)).map(r => (rowHidden(r, aud, mode) ? foldRecord(r, ref, { share: true }) : { ...r, notes: notesHidden(r, aud, mode) ? null : r.notes, privateNote: null })) } : sn));
   return withoutControl({ ...doc, records, session, spending, settings, parking: [], sharedCopy: true, snapshots,
-    history: (doc.history || []).filter(e => !folded.has(e.id) && !['privateNote', 'notes'].includes(e.field)) });
+    history: (doc.history || []).filter(e => !folded.has(e.id) && !['privateNote', 'notes', 'exercises'].includes(e.field)) });
 }
 
 // Batch 55: the money-control map (js/math/control.js) is this client's alone, so private by design. Who sees it: the
