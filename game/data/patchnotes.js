@@ -451,6 +451,17 @@ const PATCH_NOTES = [
       "Quest mode's Where you rank reads the same numbers and links here. The web app has the same page.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Your investments, all together",
+    l: [
+      "Investment mix and fees now adds up every account: your stock share next to your own target or the age guide, and how far it has drifted.",
+      "A three-fund check sits next to it: how much is in US stocks, international stocks and bonds, and what sits outside them. A comparison, not advice.",
+      "One company: your employer's stock and any single company, as a share of all you invest.",
+      "Every fund and fee: add funds one by one with their own fee and any sales charge, plus account and advisor fees, all in dollars a year.",
+      "Two new tools: Invest or pay debt (one grid, your own debts marked) and Roth or traditional, by account. The web app has the same page.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

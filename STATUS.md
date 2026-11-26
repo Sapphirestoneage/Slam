@@ -142,7 +142,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 10 | Benefits and health | Not started | |
 | 11 | Estate and marriage | Not started | |
 | 12 | Households | Not started | |
-| 13 | Investing | Not started | |
+| 13 | Investing | Done (city tax in the rate: web app only; the game has no city tax yet) | One engine, `js/math/invest.js` (M8I, copied to `game/core/invest.js`). Web: `invest.html` "Your investments, all together" (on one.html's More to explore): the household mix, three-fund check, one company, every fund and fee, invest or pay debt, Roth or traditional by account. Game: Menu › Tools › Investment mix and fees (new look, funds one by one, loads, account fees, three-fund check, one company), Invest or pay debt, Roth or traditional, by account. Sources: FINRA (10% in one stock, read Nov 26 2026), Bogleheads wiki (three-fund portfolio), the Vanguard glide path. QUESTIONS 631. |
 | 14 | Taxes and self-employed | Not started | |
 | 15 | Safety nets | Not started | |
 | 16 | Giving | Not started | |
