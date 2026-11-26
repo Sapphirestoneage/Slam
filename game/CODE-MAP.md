@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 183. Lines: 111,234. Top-level functions: 2637. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 183. Lines: 111,236. Top-level functions: 2637. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -144,7 +144,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 130 | `features/offers.js` | 265 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
 | 131 | `features/career.js` | 542 | 11 | 1 | 0 | Career and education. Five tabs on one screen: (1) Pays back: what a course or a degree costs with the time it takes, the raise after tax, the payback... |
 | 132 | `features/trip.js` | 483 | 9 | 2 | 0 | Trips and the journey. Four tabs on one screen: (1) The trip: flights, lodging a night, the days away, food a day, the card's fee on other currencies,... |
-| 133 | `features/family.js` | 515 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
+| 133 | `features/family.js` | 516 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
 | 134 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
 | 135 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
 | 136 | `data/cardtemplate.js` | 307 | 8 | 0 | 0 | The template of one card of the card library |
@@ -166,7 +166,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 152 | `features/quizzes.js` | 438 | 20 | 5 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
 | 153 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 154 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 155 | `features/quest.js` | 781 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
+| 155 | `features/quest.js` | 782 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 156 | `data/patchnotes.js` | 448 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 157 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 158 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
@@ -186,7 +186,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 172 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
 | 173 | `features/life.js` | 549 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
 | 174 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
-| 175 | `features/guild.js` | 262 | 12 | 3 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
+| 175 | `features/guild.js` | 262 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
 | 176 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 177 | `features/results.js` | 533 | 21 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
 | 178 | `features/receipt.js` | 245 | 11 | 1 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
