@@ -3,6 +3,8 @@
 // When on: yearly lines for yom tov and Pesach (blank amounts), a kosher grocery note, future tuition as a goal
 // type, and maaser on gross or take-home at a % (default 10%). Pure: no DOM.
 
+import { gvBase } from './math/giving.js';
+
 export const COMMUNITY_LINES = ['Yom tov (food, clothes, guests, travel)', 'Pesach (food, cleaning, travel)'];
 export const KOSHER_NOTE = 'Kosher groceries often cost more than the usual starter guess. Use your real number.';
 export const TUITION_GOAL = 'Future tuition';
@@ -17,12 +19,12 @@ export function communityLinesToAdd(records) {
   return COMMUNITY_LINES.filter(n => !have.has(n)).map(name => ({ name, per: 'year', values: { irregular: true, community: true, draftt: 'Other', amountType: 'Fixed', timing: 'Fixed date' } }));
 }
 
-// Maaser a month: % of gross or of take-home.
+// Maaser a month: % of gross or of take-home. The base is the one function of the Giving page (js/math/giving.js, gvBase).
 export function maaserOf({ basis = 'Take-home', pct = null, grossAnnual = null, takeHome = null }) {
-  const rate = pct ?? MAASER_DEFAULT;
-  const base = basis === 'Gross' ? (grossAnnual == null ? null : grossAnnual / 12) : takeHome;
-  if (base == null) return { value: null, needs: basis === 'Gross' ? 'gross pay' : 'take-home pay', rate };
-  return { value: base * rate, base, rate, text: `${Math.round(rate * 1000) / 10}% of ${basis === 'Gross' ? 'gross' : 'take-home'} pay a month` };
+  const rate = pct ?? MAASER_DEFAULT, gross = basis === 'Gross';
+  const B = gvBase({ base: gross ? 'gross' : 'net', gross: grossAnnual == null ? null : grossAnnual / 12, takeHome });
+  if (!B.ready) return { value: null, needs: gross ? 'gross pay' : 'take-home pay', rate };
+  return { value: B.value * rate, base: B.value, rate, text: `${Math.round(rate * 1000) / 10}% of ${gross ? 'gross' : 'take-home'} pay a month` };
 }
 
 // Batch 15, item 10: the communities a client can pick on About you › Your community and calendar. One today (its

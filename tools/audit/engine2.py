@@ -2244,6 +2244,68 @@ def run(cases, ref, il=None):
                         if r[j] < best[j] - 1e-9: best = r
                     want = best[0]
                 ck('least ' + k, o['cheapest'][k], want)
+        elif fn in ('gvRate', 'gvTarget'):
+            # Giving: the base from its definition, then the rate or the share of it
+            b, tk, gr, co = x['base'], x['takeHome'], x['gross'], x['costs']
+            base = (gr if b == 'gross' else None) if b == 'gross' else (None if tk is None else (tk if b == 'net' else (None if co is None else max(0.0, tk - co))))
+            if fn == 'gvRate':
+                ok_ = base is not None and x['given'] is not None
+                ck('ready', o['ready'], ok_)
+                if ok_: ck('the base', o['of'], base); ck('the rate', o['rate'], x['given'] / base if base > 0 else None, 1e-12)
+            else:
+                share = x['pct'] if x['pct'] is not None else 0.1
+                ck('ready', o['ready'], base is not None); ck('the share', o['share'], share, 1e-12)
+                if base is not None:
+                    ck('the target', o['value'], base * share); ck('the gap', o['gap'], None if x['given'] is None else base * share - x['given'])
+        elif fn == 'gvGift':
+            if x['amount'] is None: ck('not ready', o['ready'], False)
+            else:
+                a, w = x['amount'], x['wage']
+                hrs = a / w if w is not None and w > 0 else None
+                ck('hours', o['hours'], hrs, 1e-9); ck('hours a year', o['hoursYear'], None if hrs is None else hrs * 12 if x['monthly'] else hrs, 1e-9)
+                ck('days', o['days'], None if x['days'] is None else math.floor(x['days'] + 0.5))
+                r, y = x['realReturn'], x['years']
+                if r is None or y is None: want = None
+                elif not x['monthly']: want = a * (1 + r) ** y
+                else:
+                    # month by month: each gift grows from its month to the end
+                    n_, i_ = int(math.floor(y * 12 + 0.5)), (1 + r) ** (1 / 12) - 1
+                    want = sum(a * (1 + i_) ** (n_ - 1 - j) for j in range(n_))
+                ck('what it would have grown to', o['grown'], want, 0.01)
+        elif fn == 'gvBunch':
+            if x['give'] is None or x['agi'] is None or x['other'] is None: ck('not ready', o['ready'], False)
+            else:
+                t, f, C = ref['tax'], x['filing'], ref['tax']['charity']
+                def year(g):
+                    std = t['standardDeduction'][f] + (min(g, C['nonItemizer'][f]) if x['cash'] else 0)
+                    item = x['other'] + max(0.0, g - C['floor'] * x['agi'])
+                    d = max(std, item)
+                    return stepped(max(0.0, x['agi'] - d), t['brackets'][f])[0], 'itemize' if item > std else 'standard'
+                n_ = x['years']
+                e, n0, b_ = year(x['give']), year(0), year(x['give'] * n_)
+                ck('tax, every year', o['taxEvery'], e[0] * n_); ck('tax, bunched', o['taxBunched'], b_[0] + n0[0] * (n_ - 1))
+                ck('kept by bunching', o['saved'], e[0] * n_ - b_[0] - n0[0] * (n_ - 1))
+                ck('the ways', o['ways'] == [e[1], b_[1], n0[1]], True)
+        elif fn == 'gvEnvelopes':
+            held = 0.0
+            for r, e in zip(o['rows'], x['list']):
+                if e['put'] is None: ck('open', r['left'], None); continue
+                left = e['put'] - (e['used'] or 0)
+                ck('left', r['left'], left); ck('past', r['past'], max(0.0, -left))
+                ck('full', r['full'], (min(1.0, max(0.0, left / e['put'])) if e['put'] > 0 else 0.0), 1e-12)
+                held += max(0.0, left)
+            ck('held', o['held'], held); ck('not labeled', o['free'], None if x['balance'] is None else x['balance'] - held)
+        elif fn == 'gvCredit':
+            bal, aft, frm = 0.0, [], []
+            for mo in x['months']:
+                if mo['owed'] is None: continue
+                frm.append(max(0.0, min(mo['owed'], bal)))
+                bal = bal + (mo['given'] or 0) - mo['owed']
+                if not x['ahead']: bal = min(bal, 0.0)
+                aft.append(bal)
+            ck('balance', o['balance'], bal)
+            ck('each month', len(o['after']) == len(aft) and all(abs(p_ - q_) < 1e-6 for p_, q_ in zip(o['after'], aft)), True)
+            ck('from credit', len(o['fromCredit']) == len(frm) and all(abs(p_ - q_) < 1e-6 for p_, q_ in zip(o['fromCredit'], frm)), True)
         elif fn == 'hhCompare':
             # Households together, Same question: from the definition (the questions' order and kinds read from the source list)
             QS = HH_Q
