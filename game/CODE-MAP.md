@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 173. Lines: 106,790. Top-level functions: 2494. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 173. Lines: 106,892. Top-level functions: 2494. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -163,7 +163,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 149 | `features/quizzes.js` | 438 | 20 | 5 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
 | 150 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 151 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 152 | `data/patchnotes.js` | 370 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 152 | `data/patchnotes.js` | 393 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 153 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 154 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 155 | `features/look.js` | 552 | 26 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
@@ -177,14 +177,14 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 163 | `features/enough.js` | 350 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
 | 164 | `features/ratios.js` | 278 | 6 | 2 | 0 | Ratios on Key numbers (run Not built, groups 1 to 5, Part 9) |
 | 165 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
-| 166 | `features/life.js` | 548 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
+| 166 | `features/life.js` | 549 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
 | 167 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
 | 168 | `features/guild.js` | 262 | 12 | 3 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
 | 169 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 170 | `features/book.js` | 614 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 171 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 172 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 173 | `features/built.js` | 1,461 | 4 | 13 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 173 | `features/built.js` | 1,539 | 4 | 13 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

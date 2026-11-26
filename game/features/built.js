@@ -1026,6 +1026,14 @@ const WB = [
   ["slam", "Benefits cliff map", "n", null, "Not ported. New York and federal only in the web app.", null],
   [
     "slam",
+    "LGBTQ+ money tools: care costs, ID papers, the plan check, chosen family",
+    "n",
+    null,
+    "Not ported, by choice for now. They live in the web app, where nothing is kept unless you turn on Keep this. A game profile is kept and a coach can see it.",
+    null,
+  ],
+  [
+    "slam",
     "The FIRE journey map and the retreat scenario",
     "b",
     () =>

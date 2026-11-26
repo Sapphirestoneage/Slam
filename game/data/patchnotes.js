@@ -363,14 +363,23 @@ const PATCH_NOTES = [
       "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
       "In the web app the same ratios are on Report, Overview, under Ratios.",
     ],
+  },  {
+    d: "2026-11-26",
+    t: "LGBTQ+ money tools, private by default",
+    l: [
+      "What care would cost you after your plan pays, and a check of what a health plan covers.",
+      "A name and gender marker change step by step, New York first, each fee from the office's own page.",
+      "Two jobs side by side with benefits in dollars, an emergency fund for a longer job search, and a runway without family help.",
+      "What each side costs you, in your own numbers. Growing your family, care later in life, and a chosen-family summary for a lawyer.",
+      "Nothing on these pages is kept unless you turn on Keep this. The tab shows a plain title, and Leave this page opens a weather page.",
+    ],
   },
   {
     d: "2026-11-26",
     t: "Daily challenges, the bonus hunt, guilds and App lock",
     l: [
       "After the daily question: a daily challenge. One surprise cost at your level, sized in days of your own spending, and three ways to meet it. Practice only.",
-      "The first $1,000 bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest the deposit gives up, and the fees), and your bonuses one at a time.",
-      "The credit score game: tap what weighs most in a FICO Score, and what everyday moves touch. No real score is fetched.",
+      "The first thousand-dollar bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest given up, the fees). And the credit score game, with no real score fetched.",
       "Roots and branches, proof you can keep on a done step, a book for each step from the library, and a second voice to blend into your theme.",
       "Your guild: a private group of the people in your game, with mentors who finished a track and a monthly money date. Nothing shows until each person turns it on.",
       "App lock: a PIN or your device's own lock each time the game opens. On this device only.",

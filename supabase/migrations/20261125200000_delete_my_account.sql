@@ -46,6 +46,11 @@ begin
   if to_regclass('public.live_sessions') is not null then execute 'delete from public.live_sessions where coach = $1 or client = $1' using me; end if;
   if to_regclass('public.coach_clients') is not null then execute 'delete from public.coach_clients where coach = $1 or client = $1' using me; end if;
   if to_regclass('public.live_invites') is not null then execute 'delete from public.live_invites where coach = $1' using me; end if;
+  -- Guilds (20261126120000_guilds.sql), if their tables exist: the person's invites and membership, and the guilds they
+  -- made (with every member row of those guilds).
+  if to_regclass('public.guild_invites') is not null then execute 'delete from public.guild_invites where made_by = $1 or used_by = $1' using me; end if;
+  if to_regclass('public.guild_members') is not null then execute 'delete from public.guild_members where user_id = $1' using me; end if;
+  if to_regclass('public.guilds') is not null then execute 'delete from public.guilds where made_by = $1' using me; end if;
   update admin_audit set actor_email = null where actor = me;
   update admin_audit set target_email = null where target = me;
   insert into admin_audit (actor, role, action) values (me, 'player', 'account_self_delete');
