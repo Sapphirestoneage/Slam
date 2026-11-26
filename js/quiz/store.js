@@ -5,7 +5,7 @@
 // out of every shared copy (the same rule as the letter from your calm self). settings.start.element is the element
 // the person chose by a tap on a result card; with none, the element is the top of the Money Chart.
 import { ME_ONLY } from '../exercises/calm-letter.js';
-import { qzResult, qzCard, qzFeed, qzTaps, QZ_LEVELS } from '../math/quizcore.js';
+import { qzResult, qzCard, qzFeed, qzTaps, qzBars, qzSpectrums, QZ_LEVELS } from '../math/quizcore.js';
 import { snRead, snShared } from '../math/sins.js';
 import { sinsDataOf } from './sinsdata.js';
 
@@ -48,5 +48,9 @@ export const elementNow = (start, chartTop = null) => start?.element ?? chartTop
 // All a screen shows for one skin. The card shows when every question is answered.
 export function lensNow(def, st, current = null) {
   const R = qzResult(def, st?.ans || {}, null, { confirmed: !!st?.ok }), card = R.done ? qzCard(def, R) : null;
-  return { def, st: st || { ans: {} }, R, card, feed: card ? qzFeed(def, R, current) : null, taps: qzTaps(def), mineOnly: (st?.seen ?? ME_ONLY) === ME_ONLY };
+  // bars: a percent for each trait (of one group, when def.bars names it), highest first; spectrums: where the person
+  // sits on each preference spectrum. Both only on a skin that asks for them, and only with the card.
+  const ans = st?.ans || {}, bars = card && def.bars ? qzBars(def, ans, def.bars === true ? null : def.bars).sort((a, b) => b.pct - a.pct) : null;
+  return { def, st: st || { ans: {} }, R, card, feed: card ? qzFeed(def, R, current) : null, taps: qzTaps(def), mineOnly: (st?.seen ?? ME_ONLY) === ME_ONLY,
+    bars, spectrums: card && def.spectrums ? qzSpectrums(def, ans) : null };
 }

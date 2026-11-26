@@ -14,13 +14,16 @@
 //       { id, text, trait, dir }                       a statement, scoring 'average' (dir -1 turns the scale around)
 //       { id, text, toward, away, axis? }              a statement, scoring 'sum' (a plus value adds to `toward`, a minus to `away`)
 //     ],
-//     result: { by: 'top' (the default) | 'axes' | 'rules',
+//     result: { by: 'top' (the default) | 'axes' | 'rules', group?: groupId (the card is the top of this group),
 //               axes?: [{ id, name, poles: [traitId, ...], tie?: traitId, min?: n }],  one letter of a code for each axis
 //               rules?: [{ when, result, early? }],                                     the first rule that holds names the card
 //               compose?: { lines: [axisId, ...], light: axisId, next: axisId } },      a card put together from the poles
 //     cards: { resultId: { title, lines: [2 or 3], light, next: { label, skill?, reading?, tree? }, skills?, readings?, trees? } },
 //     poles?: { traitId: { word, line, light?, next?, skills?, readings? } },           the parts of a composed card
 //     confidence?: { margin: 0.1, sources: 1 },
+//     bars?: true | groupId,                           show a percent for each trait (of one group) on the card (qzBars)
+//     spectrums?: [{ id, name, trait, left, right }],  preference spectrums, each read from one trait (qzSpectrums)
+//     where?: 'game',                                  a skin that only the game lists (Quantum collapse: the web app has its own page)
 //     core: { elements?: { traitId: { Fire: 1, Water: 0.5 } }, sheet: 'Money house', how: 'the mapping in plain words' } }
 //
 // A CONDITION (`when`) is data too: { questionId: test, ... } where every test must hold. A test is a value (the
@@ -163,12 +166,15 @@ export function qzResult(def, answers = {}, outside = null, opts = {}) {
     out.id = out.ready ? rule.result : null;
     clear = true;
   } else {
+    // result.group: the card is the top of one group (the FIRE quiz: the flavor; its other traits are the spectrums)
+    const grp = def.result && def.result.group, P = grp && S.byGroup[grp] ? S.byGroup[grp] : null;
+    if (P) { out.second = P.second; out.topTwo = [P.top, P.second].filter(Boolean); out.tie = P.tie; out.margin = P.margin; clear = !P.tie; }
     const fromOutside = S.sources.length > 0 && S.total > 0;
     out.ready = def.scoring === 'average' && S.groups.length ? S.groups.every(g => g.answered > 0) : (F.done && F.of > 0 && S.total > 0) || fromOutside;
-    out.id = out.ready ? S.top : null;
+    out.id = out.ready ? (P ? P.top : S.top) : null;
   }
   const C = def.confidence || {}, need = C.margin ?? 0.1, sources = (F.done && F.answered ? 1 : 0) + S.sources.length;
-  const level = !out.ready ? null : opts.confirmed ? 'Exact' : clear && (by !== 'top' || S.margin >= need) && sources >= (C.sources ?? 1) ? 'Close' : 'Guess';
+  const level = !out.ready ? null : opts.confirmed ? 'Exact' : clear && (by !== 'top' || out.margin >= need) && sources >= (C.sources ?? 1) ? 'Close' : 'Guess';
   out.confidence = level ? { level, word: QZ_LEVELS[level],
     why: level === 'Exact' ? 'You said this one fits.' : level === 'Close' ? 'Every question is answered and one answer stands out.' : !F.done ? 'Not every question is answered yet.' : sources < (C.sources ?? 1) ? 'One source so far. The read firms up as more evidence comes in.' : 'Two answers sit close together, so both are shown.' } : null;
   return out;
@@ -230,6 +236,43 @@ export function qzFeed(def, result, current = null) {
   return { lean, current, same: false, ask: true, line: current ? `This leans you toward ${lean}: keep ${current} or switch?` : `This leans you toward ${lean}. Make ${lean} your element?`,
     keep: current, to: lean, elements: E.scores, sheet };
 }
+// The most points each trait could get on this path: for each asked question, its best answer for that trait (a
+// statement: the top of the scale toward, the bottom away). A statement quiz ('average') is already 0 to 100.
+function qzMax(def, answers = {}) {
+  const max = {}, sc = qzScaleOf(def), lo = sc.length ? Math.min(...sc) : 0, hi = sc.length ? Math.max(...sc) : 0;
+  for (const t of def.traits || []) max[t.id] = 0;
+  for (const q of qzAsked(def, answers)) {
+    if (q.options) { for (const t of Object.keys(max)) max[t] += Math.max(0, ...q.options.map(o => (o.add || {})[t] || 0)); }
+    else if (def.scoring !== 'average') { if (q.toward in max) max[q.toward] += Math.max(0, hi); if (q.away in max) max[q.away] += Math.max(0, -lo); }
+  }
+  return max;
+}
+// A percent for each trait, on its own (a person can be high on two at once): its points as a share of the most it
+// could get on the path taken. A statement quiz gives each trait its average, 0 to 100. Answers only: scores from
+// outside are not in a percent. group: only the traits of one group. Returns [{ id, name, score, max, pct }].
+export function qzBars(def, answers = {}, group = null) {
+  const S = qzScore(def, answers), average = def.scoring === 'average', max = qzMax(def, answers);
+  return (def.traits || []).filter(t => !group || t.group === group)
+    .filter(t => (average ? S.traits.some(x => x.id === t.id) : max[t.id] > 0))
+    .map(t => ({ id: t.id, name: t.name, score: S.scores[t.id], max: average ? 100 : max[t.id], pct: average ? S.scores[t.id] : Math.round(Math.max(0, S.scores[t.id]) / max[t.id] * 100) }));
+}
+// Each preference spectrum of a skin (def.spectrums: [{ id, name, trait, left, right }]): where the person sits
+// between two words, 0 (all left) to 100 (all right), from the percent of its trait. pos is null while unanswered.
+export function qzSpectrums(def, answers = {}) {
+  const B = qzBars(def, answers);
+  return (def.spectrums || []).map(sp => {
+    const b = B.find(x => x.id === sp.trait), pos = b ? b.pct : null;
+    const lean = pos == null ? null : pos < 40 ? 'left' : pos > 60 ? 'right' : 'middle';
+    return { id: sp.id, name: sp.name, left: sp.left, right: sp.right, pos, lean, word: lean === 'left' ? sp.left : lean === 'right' ? sp.right : lean ? 'In the middle' : null };
+  });
+}
+// Quantum collapse's meter: the paths still possible are the product of the choices not yet made (every question,
+// before the first answer). share: how much of the uncertainty is gone, 0 to 1, on a log scale.
+export function qzPaths(def, answers = {}) {
+  const n = q => (q.options ? q.options.length : (def.scale || []).length) || 1, F = qzFlow(def, answers);
+  const total = (def.questions || []).reduce((t, q) => t * n(q), 1), left = F.done ? 1 : F.open.reduce((t, q) => t * n(q), 1);
+  return { total, left, share: total > 1 ? 1 - Math.log(left) / Math.log(total) : 1 };
+}
 // How many taps a quiz takes: the fewest and the most, by its `when` conditions.
 export function qzTaps(def) {
   const qs = def.questions || [];
@@ -259,7 +302,10 @@ export function qzCheck(def) {
     if (!c.light) bad.push(`card ${id}: no light side`);
     if (!(c.next && c.next.label && (c.next.skill || c.next.reading || c.next.tree))) bad.push(`card ${id}: one next step with a skill, a reading or a skill tree`);
   };
-  if (by === 'top') for (const t of traits) { if ((def.cards || {})[t]) card(t, def.cards[t]); else bad.push(`trait ${t} has no card`); }
+  const grp = def.result && def.result.group, carded = grp ? (def.traits || []).filter(t => t.group === grp).map(t => t.id) : [...traits];
+  if (grp && !(def.groups || []).some(g => g.id === grp)) bad.push(`result.group ${grp} is not a group`);
+  if (by === 'top') for (const t of carded) { if ((def.cards || {})[t]) card(t, def.cards[t]); else bad.push(`trait ${t} has no card`); }
+  for (const sp of def.spectrums || []) if (!traits.has(sp.trait) || !sp.left || !sp.right) bad.push(`spectrum ${sp.id}: needs a trait, a left word and a right word`);
   if (by === 'rules') for (const r of def.result.rules || []) { if ((def.cards || {})[r.result]) card(r.result, def.cards[r.result]); else bad.push(`rule result ${r.result} has no card`); }
   if (by === 'axes') for (const ax of def.result.axes || []) for (const p of ax.poles) {
     if (!traits.has(p)) bad.push(`axis ${ax.id}: no trait ${p}`);

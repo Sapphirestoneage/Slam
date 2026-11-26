@@ -524,6 +524,7 @@ export const NOT_IN_SHEET = {
   'settings.start': 'the self-serve journey\'s own choices (what brought you here, what matters most, a home priced, drills ticked, the last statement read): screen choices, not money inputs',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
   'settings.exercises': 'the answers of the money exercises, by exercise id (the letter from your calm self): the person\'s own words, private by default, not money inputs',
+  'settings.hard': 'the hard-moment tools (run Not built, groups 1 to 5, Part 7, js/hard.js): each tool\'s own taps and ticks, only when the person turned on Keep this; private (a coach sees one only when let in, never a partner or anything shared), not money inputs of the plan',
   'settings.recalc': 'Recalculating\'s own notes (the safe-to-fail line and the opt-in audit\'s tagged events): words and tags about the past, not money inputs of the plan',
   'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',
   'settings.presetsAdded': 'marks that the starter lines were added once',

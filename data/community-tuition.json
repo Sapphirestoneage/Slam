@@ -1,0 +1,11 @@
+{
+  "about": "Community presets for the Yeshiva tuition goal: ranges of a year of tuition for one child, by grade band. Eli fills these in. A row shows in the apps only when it has a label, a low and a high. Put where the ranges come from and the date in source and date. Then run: node tools/game_family_build.mjs",
+  "source": null,
+  "date": null,
+  "rows": [
+    { "label": "Early childhood (playgroup, pre-1A)", "low": null, "high": null },
+    { "label": "Elementary (1st to 8th grade)", "low": null, "high": null },
+    { "label": "High school (9th to 12th grade)", "low": null, "high": null },
+    { "label": "Beis medrash or seminary year", "low": null, "high": null }
+  ]
+}

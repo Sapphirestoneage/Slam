@@ -112,6 +112,18 @@
         "minWeekly": 143,
         "minWeeklyLow": 100
       }
+    },
+    "ny529": {
+      "single": 5000,
+      "joint": 10000
+    },
+    "k12From529": 20000
+  },
+  "childcare": {
+    "NY": {
+      "infant": 20459,
+      "toddler": 17476,
+      "dataYear": 2023
     }
   },
   "tax": {

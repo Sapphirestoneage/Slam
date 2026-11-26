@@ -694,6 +694,53 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def hard_check(fn, x, o, ck):
+    """Hard moments (M8H), worked out again from the definitions: the shares by hand (room size, income or equal),
+    the person leaving paying the months agreed and the people staying taking the whole rent after; untangling item by item."""
+    if fn == 'hmRoommateExit':
+        def shares(ps, way):
+            if way == 'size':
+                t = sum(p['size'] for p in ps); return [p['size'] / t for p in ps]
+            if way == 'income':
+                t = sum(p['income'] for p in ps); return [p['income'] / t for p in ps] if t > 0 else [1 / len(ps)] * len(ps)
+            return [1 / len(ps)] * len(ps)
+        ps, bway = x['people'], (x['how'] if x['billsHow'] == 'same' else 'equal')
+        stay = [p for p in ps if p['id'] != x['leaver']]
+        r0, b0 = shares(ps, x['how']), shares(ps, bway)
+        r1, b1 = shares(stay, x['how']), shares(stay, bway)
+        M = x['monthsLeft']; cov = min(M, max(0, x['cover'])); rest = M - cov
+        back = max(0.0, x['deposit'] - x['damage'])
+        total = 0.0
+        for i, p in enumerate(ps):
+            now = x['rent'] * r0[i] + x['bills'] * b0[i]
+            j = next((k for k, q in enumerate(stay) if q['id'] == p['id']), None)
+            later = 0.0 if j is None else x['rent'] * r1[j] + x['bills'] * b1[j]
+            to_end = now * cov if j is None else now * cov + later * rest
+            total += to_end
+            ck(f'person {i + 1} now', o['now'][i], now, 1e-6); ck(f'person {i + 1} later', o['later'][i], later, 1e-6)
+            ck(f'person {i + 1} to the end', o['toEnd'][i], to_end, 1e-6); ck(f'person {i + 1} deposit back', o['deposit'][i], back * r0[i], 1e-6)
+            if j is None: ck('left uncovered', o['uncovered'], now * rest, 1e-6)
+        ck('the whole lease', o['total'], (x['rent'] + x['bills']) * M, 1e-6); ck('the sum of the people', o['total'], total, 1e-6)
+    elif fn == 'hmUntangle':
+        s = x['share']; mine = {'have': 0.0, 'owe': 0.0}; theirs = {'have': 0.0, 'owe': 0.0}; op = []; op_amt = 0.0; both = []; both_amt = 0.0
+        for it in x['items']:
+            plan = None if it['plan'] in (None, 'none') else it['plan']; a = it['amount']
+            part = {'me': 1.0, 'them': 0.0, 'split': s, 'sell': s}.get(plan)
+            if a is not None and part is not None:
+                mine[it['kind']] += a * part; theirs[it['kind']] += a * (1 - part)
+            if plan is None:
+                op.append(it['id'])
+                if a is not None: op_amt += -a if it['kind'] == 'owe' else a
+            if it['kind'] == 'owe' and it['names'] == 'both' and plan != 'sell':
+                both.append(it['id'])
+                if a is not None: both_amt += a
+        for k, v in (('mine', mine), ('theirs', theirs)):
+            ck(f'{k} kept', o[k][0], v['have'], 1e-6); ck(f'{k} owed', o[k][1], v['owe'], 1e-6); ck(f'{k} net', o[k][2], v['have'] - v['owe'], 1e-6)
+        ck('still to decide', o['open'] == op, True); ck('still to decide, the amount', o['openAmount'], op_amt, 1e-6)
+        ck('still in both names', o['stillBoth'] == both, True); ck('still in both names, the amount', o['stillBothAmount'], both_amt, 1e-6)
+        a, sp = x['park']; ck('months it waits', o['park'], a / sp, 1e-9)
+
+
 def gig_check(fn, x, o, ck, law):
     """Gig and self-employed (M8G), worked out again: the floor's profit as a check that it leaves the need, the stacked
     set-aside by hand, the retirement limits from their definitions, invoice dates with the date library, apps and the split."""
@@ -768,6 +815,66 @@ def gig_check(fn, x, o, ck, law):
         ck('gap to the bank', o['gap'], sum(max(0, a['earned'] - a['fee']) - a['landed'] for a in landed) if landed else None)
         P = x['pcts']; tot = sum(P.values())
         ck('pay to you', o['owner'], x['income'] * P['owner'] if tot <= 1 + 1e-9 else None); ck('no place yet', o['left'], x['income'] * (1 - tot) if tot <= 1 + 1e-9 else None)
+
+
+def family_check(fn, x, o, ck):
+    """Family money (M8F), worked out month by month instead of by stretches and formulas."""
+    if fn == 'fmSandwich':
+        parts = []
+        for side in ('parents', 'kids'):
+            a, yrs, frm = x[side] or 0, x[side + 'Years'], x[side + 'From'] or 0
+            if a > 0:
+                start = round(frm * 12)
+                parts.append((a, start, None if not yrs else start + round(yrs * 12)))
+        runs = lambda p, m: p[1] <= m and (p[2] is None or m < p[2])
+        ck('a month at most', o['peak'], sum(p[0] for p in parts)); ck('this month', o['total'], sum(p[0] for p in parts if p[1] == 0))
+        if len(parts) == 2:
+            ends = [p[2] for p in parts]
+            fin = [e for e in ends if e is not None]
+            both = None if not fin else sum(1 for m in range(0, max(fin)) if runs(parts[0], m) and runs(parts[1], m))
+            ck('both at once', o['both'], both, 0)
+        ck('over the years', o['all'], None if any(p[2] is None for p in parts) else sum(p[0] * (p[2] - p[1]) for p in parts))
+        ck('left for your goals', o['leftAfter'], x['takeHome'] - x['spending'] - (0 if x['inSpending'] else sum(p[0] for p in parts)))
+        # the flows, summed at each month, give back what each part takes in that month
+        for m in (0, 11, 12, 35, 59, 60, 119, 120, 180, 250):
+            want = 0 if x['inSpending'] else -sum(p[0] for p in parts if runs(p, m))
+            ck(f'flows at month {m}', sum(f[1] for f in o['flows'] if f[0] <= m), want, 1e-9)
+    elif fn == 'fmBoomerang':
+        save = max(0, x['rent'] - x['payHome']) * x['savePct']
+        bal, m = x['have'], 0
+        ck('saved a month', o['saving'], save, 1e-9); ck('by the end of the stay', o['byPlan'], x['have'] + save * x['months'], 1e-6)
+        t = x['target']
+        if t:
+            reach = 0 if x['have'] >= t else None
+            while reach is None and save > 0 and m < 100000:
+                m += 1; bal += save
+                if bal >= t - 1e-9: reach = m
+            ck('months to the goal', o['reach'], reach, 0)
+            ck('months after the plan', o['extra'], None if reach is None else max(0, reach - x['months']), 0)
+            ck('a month to be there in time', o['perMonthFor'], max(0, t - x['have']) / x['months'], 1e-6)
+        ck('the household side', o['household'], None if x['homeCost'] is None else x['homeCost'] - x['payHome'], 1e-9)
+    elif fn == 'fmTuition':
+        g = (1 + x['ret']) ** (1 / 12) - 1; n = round(x['startIn'] * 12)
+        total = sum(x['yearly'] * x['kids'] * (1 + x['rise']) ** (x['startIn'] + y) for y in range(x['years']))
+        ck('all the years', o['total'], total, max(0.01, total * 1e-12))
+        grown = x['have']
+        for _ in range(n): grown *= 1 + g
+        need = max(0, total * x['share'] - grown)
+        if n == 0:
+            ck('put away a month', o['monthly'], None)
+            covered = min(total, x['have'])
+        else:
+            # the level amount a month that grows to the need: by bisection on a month-by-month balance
+            lo, hi = 0.0, need + 1
+            for _ in range(200):
+                mid = (lo + hi) / 2; b = 0.0
+                for _ in range(n): b = b * (1 + g) + mid
+                lo, hi = (mid, hi) if b < need else (lo, mid)
+            ck('put away a month', o['monthly'], 0 if need == 0 else (lo + hi) / 2, 0.01)
+            covered = min(total, max(total * x['share'], grown))
+        ck('pay as it comes', o['payGo'], (total - covered) / (x['years'] * 12), 0.01)
+        y = x['n529']; lim = y['rules']['joint'] if y['joint'] else y['rules']['single']; d = min(y['yearly'], lim)
+        ck('NY 529 deducted', o['deducted'], d, 1e-9); ck('NY 529 saved', o['saved'], None if y['rate'] is None else d * y['rate'], 1e-9)
 
 
 def quick_check(fn, x, o, ck, law):
@@ -1229,8 +1336,12 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('hmRoommateExit', 'hmUntangle'):
+            hard_check(fn, x, o, ck)
         elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):
             gig_check(fn, x, o, ck, law)
+        elif fn in ('fmSandwich', 'fmBoomerang', 'fmTuition'):
+            family_check(fn, x, o, ck)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':

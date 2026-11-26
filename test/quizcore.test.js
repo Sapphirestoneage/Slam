@@ -149,15 +149,16 @@ test('what a result changes: the element stays, or the card asks keep or switch;
 });
 
 // ---------- the skins ----------
-test('nine skins, all nine to play (the sins quiz is real since the run Money sins, Part 1); each is plain data and sound', () => {
-  assert.deepEqual(SKINS.map(s => s.id), ['letters', 'address', 'houses', 'avatars', 'sheet', 'pyramid', 'mountain', 'stars', 'sins']);
+test('fifteen skins, all to play (the sins quiz is real since the run Money sins, Part 1; six more since Part 6 of the run Finish everything partly built); each is plain data and sound', () => {
+  assert.deepEqual(SKINS.map(s => s.id), ['letters', 'address', 'houses', 'avatars', 'sheet', 'pyramid', 'mountain', 'stars', 'sins', 'scripts', 'enneagram', 'fire', 'snack', 'traits', 'collapse']);
   for (const s of SKINS) {
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, `${s.id}: data only, no functions`);
     assert.deepEqual(qzCheck(s), [], s.id);
     assert.ok(s.note && s.blurb && s.core.sheet && s.core.how, s.id);
   }
-  for (const s of real) { const t = qzTaps(s); assert.ok(t.max >= 7 && t.max <= 15, `${s.id}: ${t.max} taps`); assert.match(s.note, /game lens|Playful/); assert.match(s.note, /not a (test|diagnosis|forecast)/i); }
-  assert.equal(real.length, 9, 'no placeholder is left');
+  // short tap quizzes: 7 to 15 taps; the percent style (many: true) is 24 quick taps; Quantum collapse asks the fewest (2 to 5)
+  for (const s of real) { const t = qzTaps(s), [lo, hi] = s.many ? [16, 24] : s.id === 'collapse' ? [2, 5] : [7, 15]; assert.ok(t.max >= lo && t.max <= hi && t.min >= Math.min(lo, 2), `${s.id}: ${t.max} taps`); assert.match(s.note, /game lens|Playful/); assert.match(s.note, /not a (test|diagnosis|forecast)/i); }
+  assert.equal(real.length, 15, 'no placeholder is left');
   const sins = skinOf('sins');
   assert.equal(sins.soon, undefined); assert.equal(sins.questions.length, 15); assert.equal(sins.traits.length, 19);
   assert.deepEqual(sins.groups.map(g => g.id), ['sin', 'change']);
@@ -173,11 +174,12 @@ test('every path through every skin ends on one card', () => {
       const a = k < 6 ? all(def, k) : walk(def, n => Math.floor(r() * n)), R = qzResult(def, a), c = qzCard(def, R);
       assert.ok(R.done && R.ready, `${def.id}: ${JSON.stringify(a)} ends`);
       assert.ok(c && c.title && c.lines.length >= 2 && c.lines.length <= 3 && c.light && c.next?.label && (c.next.skill || c.next.tree || c.next.reading), `${def.id}: ${R.id} has a whole card`);
-      assert.equal(R.topTwo.length, 2); assert.ok(R.confidence && QZ_LEVELS[R.confidence.level]);
+      if (def.result?.by !== 'rules') assert.equal(R.topTwo.length, 2); assert.ok(R.confidence && QZ_LEVELS[R.confidence.level]);
       const f = qzFeed(def, R, 'Fire'); assert.ok(f.line && f.sheet?.label === def.core.sheet, def.id);
       seen.add(R.id);
     }
-    if ((def.result?.by ?? 'top') === 'top') assert.deepEqual(def.traits.map(t => t.id).filter(t => !seen.has(t)), [], `${def.id}: each result can be reached`);
+    if ((def.result?.by ?? 'top') === 'top') assert.deepEqual(def.traits.filter(t => !def.result?.group || t.group === def.result.group).map(t => t.id).filter(t => !seen.has(t)), [], `${def.id}: each result can be reached`);
+    if (def.result?.by === 'rules') assert.deepEqual(Object.keys(def.cards).filter(t => !seen.has(t)), [], `${def.id}: each first move can be reached`);
   }
   // the two code quizzes: every code has a card
   const L = skinOf('letters'); assert.equal(Object.keys(L.cards).length, 16);
@@ -287,4 +289,59 @@ test('the page draws every quiz with the one renderer, and docs/QUIZ-ENGINE.md s
   const doc = read('docs/QUIZ-ENGINE.md');
   for (const n of [1, 2, 3, 4, 5]) assert.match(doc, new RegExp(`^${n}\\. `, 'm'), `step ${n}`);
   for (const w of ['qzResult', 'outside', 'topTwo', 'Early read', 'game_quiz_build', 'QUIZ_STYLES', 'sins']) assert.ok(doc.includes(w), w);
+});
+
+// ---------- Part 6 of the run Finish everything partly built (Nov 25 2026): the missing quiz styles ----------
+const { qzBars, qzSpectrums, qzPaths } = QZ;
+const every = (def, v) => Object.fromEntries(def.questions.map(q => [q.id, v]));
+test('a percent for each trait (qzBars): points out of the most on the path, each on its own; a statement quiz is its average', () => {
+  const T2 = qzBars(T, { q1: 'x', q2: 'x' });
+  assert.deepEqual(T2.map(b => [b.id, b.score, b.max, b.pct]), [['a', 4, 4, 100], ['b', 0, 4, 0], ['c', 0, 2, 0]], 'q3 is off the path, so c can get 2 at most');
+  assert.deepEqual(qzBars(T, { q1: 'z', q3: 'y' }).map(b => [b.id, b.max]), [['a', 5], ['b', 5], ['c', 3]], 'the branch adds its own most');
+  const P = skinOf('traits'), B = qzBars(P, every(P, 5));
+  assert.equal(B.length, 8); assert.ok(B.every(b => b.pct === 67), 'two yes and one turned-around yes: (5 + 5 + 1) / 3 on a 1 to 5 scale is 67');
+  assert.ok(qzBars(P, every(P, 3)).every(b => b.pct === 50));
+  const S = skinOf('scripts'), sb = qzBars(S, every(S, 'v'));
+  assert.deepEqual(sb.map(b => b.pct), [0, 0, 0, 100]); assert.equal(qzResult(S, every(S, 'v')).id, 'vigil');
+  const two = { ...every(P, 1), p1: 5, p9: 5, p17: 1, p4: 5, p12: 5, p20: 1 };
+  assert.deepEqual(qzBars(P, two).filter(b => b.pct === 100).map(b => b.id), ['saver', 'bold'], 'two traits high at once');
+  assert.deepEqual(qzBars(T, {}), qzBars(T, {}), 'pure');
+});
+test('the FIRE quiz: Likert statements, the card is the top flavor (result.group), bars for the flavors, three spectrums', () => {
+  const F = skinOf('fire'), a = every(F, 3);
+  Object.assign(a, { f2: 5, f9: 1, f5: 5, f12: 1, f13: 5, f6: 1 });
+  const R = qzResult(F, a);
+  assert.equal(R.id, 'fat'); assert.ok(['lean', 'coast', 'barista'].includes(R.second), 'the second is a flavor too, never a preference');
+  assert.deepEqual(qzBars(F, a, 'flavor').map(b => b.id), ['lean', 'fat', 'coast', 'barista']);
+  const S = qzSpectrums(F, a);
+  assert.deepEqual(S.map(x => [x.id, x.pos, x.word]), [['earn', 100, 'Earn more'], ['hands', 0, 'Set and forget'], ['move', 50, 'In the middle']]);
+  assert.deepEqual(qzSpectrums(F, {}).map(x => x.pos), [null, null, null], 'nothing answered: no mark');
+  assert.ok(qzCheck({ ...F, result: { by: 'top', group: 'nope' } }).some(l => /not a group/.test(l)));
+  assert.ok(qzCheck({ ...F, spectrums: [{ id: 'x', trait: 'nope' }] }).some(l => /spectrum x/.test(l)));
+  const N = lensNow(F, { ans: a });
+  assert.equal(N.bars.length, 4); assert.equal(N.spectrums.length, 3); assert.equal(N.card.title, 'Fat FIRE');
+});
+test('the playful picture style, the Enneagram (nine types) and Money Scripts (four names from the research) are skins of the one engine', () => {
+  const K = skinOf('snack');
+  assert.equal(K.playful, true); assert.ok(K.questions.every(q => q.style === 'cards' && q.options.every(o => o.icon && o.label)));
+  assert.match(read('js/quiz/page.js'), /cards: \(def, q, answer, pick\)/); assert.match(read('game/features/quizzes.js'), /q\.style === "cards"/);
+  const E = skinOf('enneagram');
+  assert.equal(E.traits.length, 9); assert.deepEqual(E.traits.map(t => t.name.split(':')[0]), ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']);
+  assert.doesNotMatch(JSON.stringify(E), /Reformer|Helper|Achiever|Individualist|Investigator|Loyalist|Enthusiast|Challenger|Peacemaker/, 'no type names of a published Enneagram book');
+  const S = skinOf('scripts');
+  assert.deepEqual(S.traits.map(t => t.name), ['Money avoidance', 'Money worship', 'Money status', 'Money vigilance']); assert.match(S.note, /Klontz/);
+  for (const d of [E, S, skinOf('traits')]) { assert.ok(d.bars); assert.ok(lensNow(d, { ans: every(d, d.questions[0].options ? 'a' : 4) }).bars.length >= 4); }
+});
+test('Quantum collapse in the game: the same questions and rules as js/collapse.js, the engine\'s meter, and the measured order', async () => {
+  const C = skinOf('collapse'), { QUESTIONS } = await import('../js/journey.js');
+  assert.equal(C.where, 'game'); assert.deepEqual(C.questions, JSON.parse(JSON.stringify(COLLAPSE_QUIZ.questions))); assert.deepEqual(C.result, COLLAPSE_QUIZ.result);
+  assert.deepEqual(C.measured.map(m => m.key), QUESTIONS.map(q => q.key), 'the measured order of tools/collapse/measure.mjs, as js/journey.js asks it');
+  for (const a of [{}, { work: 'job' }, { work: 'job', press: 'none' }, { press: 'behind' }, { work: 'self', press: 'thin', cushion: '1' }]) {
+    const c = collapseOf(a), P = qzPaths(C, a);
+    assert.deepEqual([P.total, P.left, P.share], [c.total, c.left, c.share], JSON.stringify(a));
+    if (c.done) assert.equal(qzResult(C, a).id, c.move.id);
+  }
+  assert.ok(qzPaths(C, { press: 'behind' }).share === 1);
+  const page = read('js/solo/quiz.js');
+  assert.match(page, /WEB_SKINS\.map/); assert.match(page, /where !== 'game'/, 'the web app keeps its own first screen for it');
 });

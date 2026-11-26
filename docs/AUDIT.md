@@ -48,12 +48,24 @@ point and cash next to redeem, a group split in whole cents checked against each
 line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
 cash first, then investments).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 7) it also covers the hard moments (`js/math/hard.js` and
+`js/math/hardplan.js`, M8H): a roommate leaving, with each share worked out by hand (room size, income or equal), the
+person leaving paying the months agreed and the people staying taking the whole rent after, the whole lease paid and the
+deposit back by the rent shares; and untangling after a breakup, item by item (who keeps it, what is open, the debts
+still in both names), with money that waits as months of spending.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
 own tax, and the floor an hour and a job from their definitions; the set-aside with the profit stacked on a job's pay
 by hand (Social Security up to the wage base across both, Medicare, the extra 0.9%, half the self-employment tax off
 income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
 invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
+
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 8) it also covers family money (`js/math/family.js`, M8F): the
+sandwich years checked month by month (what each month takes from the flows, the months both run at once, the total
+over the years), living at home with the moving-out goal reached by stepping a balance month by month, tuition years
+summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
+529 deduction from the limit.
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
