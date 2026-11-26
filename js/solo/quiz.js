@@ -8,7 +8,7 @@ import { pack } from '../start/link.js';
 import { DEPTHS, MONEY_CHART, itemsFor, quizOf, groupOf, perceptionOf } from '../quiz.js';
 import { carryUrl } from '../solo.js';
 import { qzFlow, qzLast } from '../math/quizcore.js';
-import { SKINS, skinOf } from '../quiz/skins/index.js';
+import { WEB_SKINS, skinOf } from '../quiz/skins/index.js';
 import { lensOf, lensPatch, lensNow, elementNow, SHOWN, sinsReadNow, sinsReadOf, sinsKeyOf, SN_KEYS } from '../quiz/store.js';
 import { sinsResultCard, sinsShareOf, sinsRetakeCard, sinsGrowthPart, sinsCouplePart } from '../quiz/result.js';
 import { adultsOf } from '../registry/couples.js';
@@ -69,7 +69,7 @@ function draw(api) {
       h('p.st-small', { id: 'sent', role: 'status', style: { margin: '6px 0 0' } }, m.quizGuess && Object.keys(m.quizGuess).length >= 10 ? 'Your guess rides along in the link, so whoever opens it sees how well you read them.' : '')),
     h('div.st-row', { style: { marginTop: '10px' } }, btn('Change my answers', () => { api.remember({ quizAt: items[0].id }); api.render(); }, 'slim')));
   // ---------- the other quizzes: skins of the one engine, drawn by the one renderer ----------
-  const chartTop = Q.ready ? Q.top.name : null, element = elementNow(m, chartTop), skin = m.lens ? skinOf(m.lens) : null, open = skin && !skin.soon ? skin : null;
+  const chartTop = Q.ready ? Q.top.name : null, element = elementNow(m, chartTop), skin = m.lens ? skinOf(m.lens) : null, open = skin && !skin.soon && skin.where !== 'game' ? skin : null;
   const keep = (id, patch) => { api.remember(lensPatch(api.mine(), id, patch)); api.render(); };
   const toList = () => { api.remember({ lens: null, lensList: true }); api.render(); };
   // the money sins (Part 2): in a household of two, each adult takes it as themselves (key: whose read it is)
@@ -131,7 +131,7 @@ function draw(api) {
       // the money sins: a retake keeps the old take in the history, and the rest of the read (snRetake)
       again: () => keep(key, open.id === 'sins' ? snRetake(st, sinsReadNow(open, m, api.store.doc, new Date().toISOString().slice(0, 10), key)) : { ans: {}, go: true, ok: false, kept: null, at: null }), list: toList,
       skills: async () => { location.href = carryUrl('skills', await pack(api.store.doc)); } });
-  const list = () => listCard({ rows: SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, keyOf(def)), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
+  const list = () => listCard({ rows: WEB_SKINS.map(def => ({ def, N: def.soon ? null : lensNow(def, lensOf(m, keyOf(def)), element) })), element, elementFrom: m.element ? 'your pick' : 'from your Money Chart', open: !!m.lensList || !!open,
     onOpen: id => { api.remember({ lens: id }); api.render(); document.getElementById('ask')?.scrollIntoView?.({ block: 'center' }); }, onChart: open ? () => { api.remember({ lens: null }); api.render(); } : null });
   $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, open ? 'A short tap quiz. Go with your gut: there are no right answers, and nobody sees this but you.' : guessing ? 'Now the same ten, answered the way you think one of your people would. It is a guess: that is the point.' : other && !Q.ready ? 'Someone sent you this to compare. Ten taps, answered as yourself. Go with your gut.' : 'One statement at a time. Go with your gut: there are no right answers, and nobody sees this but you.')),

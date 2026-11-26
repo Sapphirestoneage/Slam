@@ -15,6 +15,10 @@ export const QUIZ_STYLES = {
   rows: (def, q, answer, pick) => h('div.st-quizrows.st-pulse', { role: 'group', 'aria-label': 'Tap the one closest to you' },
     q.options.map(o => h('button.st-btn.st-collapseopt', { type: 'button', 'aria-pressed': String(answer) === String(o.id) ? 'true' : 'false', onClick: () => pick(o.id) }, o.label))),
   // the taps of a statement side by side (stacked on a phone): the default for a statement
+  // a grid of picture tiles, two across (the playful "pick a snack" style): each answer is an icon and a word
+  cards: (def, q, answer, pick) => h('div.st-quizcards.st-pulse', { role: 'group', 'aria-label': 'Tap the one you like best' },
+    q.options.map(o => h('button.st-btn.st-quizcard', { type: 'button', 'aria-pressed': String(answer) === String(o.id) ? 'true' : 'false', onClick: () => pick(o.id) },
+      h('span.st-quizicon', { 'aria-hidden': 'true' }, o.icon || ''), h('span', {}, o.label)))),
   scale: (def, q, answer, pick) => h(`div.st-quizscale.st-pulse${def.scale.length === 3 ? '.three' : ''}`, { role: 'group', 'aria-label': 'How much do you agree?' },
     def.scale.map(([v, l]) => chip(l, answer === v, () => pick(v)))),
 };
@@ -48,6 +52,7 @@ export function resultCard({ N, routes, on }) {
     conf ? h('p.st-small', { style: { margin: '0 0 8px' } }, h(`span.${LEVEL_TAG[conf.level]}`, { title: conf.why }, conf.level), ` ${conf.word}. `, card.also ? (card.tie ? `A close call between this one and ${card.also.name}. Both are shown.` : `Second: ${card.also.name}.`) : '') : null,
     card.lines.map(l => h('p', { style: { margin: '0 0 6px' } }, l)),
     h('div.st-readout', {}, h('strong', {}, 'The light side'), h('div', {}, card.light)),
+    N.bars ? traitBars(N.bars) : null, N.spectrums ? spectrumRows(N.spectrums) : null,
     element,
     h('div.st-field', {}, h('div.st-flabel', {}, 'One next step'),
       sk ? h('div', {}, h('div', {}, h('strong', {}, nx.label)), h('div.st-small.st-soft', {}, `Skill: ${sk.name} (${sk.treeName}, level ${sk.level}). ${sk.what ?? ''}`)) : tree ? h('div', {}, h('strong', {}, nx.label)) : h('div', {}, nx.label),
@@ -62,6 +67,16 @@ export function resultCard({ N, routes, on }) {
       h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Me only keeps it out of every shared copy. It stays in your own save link, like your numbers.')),
     h('div.st-row', { style: { marginTop: '10px' } }, st.ok ? null : btn('That is me', on.confirm, 'slim'), btn('Take it again', on.again, 'slim'), btn('All quizzes', on.list, 'slim')));
 }
+// A percent for each trait, highest first (the engine's qzBars): each bar on its own, so two can be high at once.
+const traitBars = B => h('div.st-field', { id: 'quiz-bars' }, h('div.st-flabel', {}, 'A percent for each'),
+  h('div.st-quizbars', {}, B.map(b => h('div.st-quizbar', {}, h('span.st-quizname', {}, h('strong', {}, b.name)),
+    h('span.st-quiztrack', { role: 'img', 'aria-label': `${b.name}: ${b.pct} percent` }, h('b', { style: { width: `${Math.max(3, b.pct)}%` } })), h('span.st-quiznum', {}, `${b.pct}%`)))),
+  h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Each percent is that trait\'s points out of the most it could get on your answers.'));
+// Where the person sits on each preference spectrum (the engine's qzSpectrums): a mark between two words.
+const spectrumRows = S => h('div.st-field', { id: 'quiz-spectrums' }, h('div.st-flabel', {}, 'Your preferences'),
+  S.filter(x => x.pos != null).map(x => h('div.st-quizspec', {}, h('div.st-small', {}, h('strong', {}, `${x.name}: `), x.word),
+    h('div.st-quizspecline', { role: 'img', 'aria-label': `${x.name}: ${x.pos} of 100, from ${x.left} to ${x.right}` }, h('i', { style: { left: `${x.pos}%` } })),
+    h('div.st-quizspecends.st-small.st-soft', {}, h('span', {}, x.left), h('span', {}, x.right)))));
 // The list of skins. rows: [{ def, N }]. A placeholder shows as "Coming soon" with no button.
 export function listCard({ rows, element, elementFrom, onOpen, onChart, open = false }) {
   return h('div.st-card', { id: 'lenses' }, h('details.st-lenses', open ? { open: '' } : {}, h('summary', {}, h('strong', {}, `More quizzes (${rows.filter(r => !r.def.soon).length})`), h('span.st-small.st-soft', {}, ' Each one is a game lens, not a test.')),
