@@ -3555,6 +3555,7 @@
   },
   "idChangeNY": { "courtNyc": 65, "courtNyState": 210, "dmvLicense": 12.5, "dmvId": 5, "birthNys": 0, "birthNysCopy": 30, "ssaCard": 0, "passportCorrection": 0, "passportBook": 130, "passportExecution": 35 },
   "adoptionCredit": { "max": 17670, "refundable": 5120, "phaseStart": 265080, "phaseEnd": 305080 },
+  "estate": { "federalExclusion": 15000000, "giftAnnual": 19000, "nyExclusion": 7350000, "nyCliffShare": 1.05, "tenYears": 10, "minorAge": 21, "nycPartnerFee": 35 },
   "benefits": {
     "about": "Run Finish everything partly built, Part 10 (Benefits and health): the limits of the benefits optimizer for plan year 2027, the one being chosen at open enrollment now. 2026 limits stay in limits.",
     "planYear": 2027,

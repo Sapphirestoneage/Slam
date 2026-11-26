@@ -1429,10 +1429,34 @@ const WB = [
   [
     "who",
     "Share by email and pick what each person sees",
-    "n",
-    null,
-    "Not built. Hand-off codes copy a whole game.",
-    null,
+    "b",
+    () => WB_HAS("hhx") && WB_HAS("hxpick") && WB_HAS("hxmail") && WB_FN("hhDraft") && WB_FN("hxDraftFor"),
+    "Households together, Share by email: tap who it is for and what they see; the draft opens in your own mail app and SLAM sends nothing. An item not picked for that person is not in their draft. The web app's one-pager has the same, on the shared view.",
+    "hhx",
+  ],
+  [
+    "who",
+    "Same question: two or more people answer, and what differs becomes a talk point",
+    "b",
+    () => WB_HAS("hxans") && WB_HAS("hxpaste") && WB_FN("hhCompare") && WB_FN("hhReadCode") && WB_FN("hxDateStep"),
+    "Pass one phone round (the answers stay hidden until everyone is done), or answer on your own phone and send a short answer code. No score. The talk points also go on the guild's monthly money date.",
+    "hhx",
+  ],
+  [
+    "who",
+    "FI together: everyone's FI number and date side by side, with the gap",
+    "b",
+    () => WB_HAS("hxstep") && WB_HAS("hxgame") && WB_FN("hhFiTogether"),
+    "Each person writes their own, or uses the game's. The gap in the number and in time.",
+    "hhx",
+  ],
+  [
+    "who",
+    "A shared home for three or more, and the tax gap when only two can marry",
+    "b",
+    () => WB_HAS("hxfair") && WB_FN("hhEquity") && WB_FN("hhMarryGap") && WB_FN("hxBook") && WB_FN("esCompare"),
+    "What each person put in and pays, their part of the equity by contributions and equally, and the federal tax for each pair married next to everyone single. Each pair is Married or partners? of Estate and marriage (esCompare), with a link to it.",
+    "hhx",
   ],
   [
     "who",
@@ -1516,6 +1540,23 @@ const WB = [
       typeof BP_REF === "object",
     "Dollars a year for an HSA used as a retirement account, a dependent care FSA over the daycare years, an ESPP and commuter. Tap a large employer to fill its match, vesting and ESPP discount, each with its source. The coverage you may qualify for (Medicaid, the Essential Plan in New York, the marketplace credit) and two or three plans side by side.",
     "benefits",
+  ],
+  [
+    "plan",
+    "Estate and marriage: estate basics, what your people would receive (the step-up, the 10 years of an inherited account, the federal and New York lines), married or partners, New York first",
+    "b",
+    () =>
+      WB_HAS("estate") &&
+      WB_HAS("estab") &&
+      WB_FN("esHeirs") &&
+      WB_FN("esTenYear") &&
+      WB_FN("esCompare") &&
+      WB_FN("spousalExcess") &&
+      WB_FN("estateSheet") &&
+      typeof ES_REF !== "undefined" &&
+      typeof ES_RULES !== "undefined",
+    "One engine with the web app (heirs.html, married.html). The private summary with names for a lawyer stays in the web app (kin.html), which now has who is named on each account from Life admin.",
+    "estate",
   ],
   [
     "plan",

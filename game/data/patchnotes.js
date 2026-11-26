@@ -464,6 +464,27 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Estate and marriage",
+    l: [
+      "Menu has Estate and marriage: your estate papers, what your people would receive, and married or partners.",
+      "What your people receive: who gets what, the gain the step-up in basis wipes out, and the 10 years of an inherited IRA, with the tax three ways.",
+      "Married or partners?: two single returns or one joint one, the tax on partner health cover, the Social Security spousal and survivor benefits, and what changes in New York.",
+      "In the web app the summary for a lawyer now lists who is named on each account. Nothing is kept unless you turn it on. Bring it all to a lawyer.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Households together",
+    l: [
+      "Menu has Households together, for a couple, a polycule, housemates or a chosen family, by your own names.",
+      "Same question: everyone answers the same money questions, on one phone or each on their own. Where you differ, it becomes a talk point, never a score.",
+      "FI together: each person's FI number and date side by side, with the gap.",
+      "A shared home: what each person put in and their part of the equity, and the tax gap for each pair when only two of you can marry.",
+      "Share by email: pick what each person sees. The draft opens in your own mail app; SLAM sends nothing. The web app's one-pager has Share by email too.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Your investments, all together",
     l: [
       "Investment mix and fees now adds up every account: your stock share next to your own target or the age guide, and how far it has drifted.",

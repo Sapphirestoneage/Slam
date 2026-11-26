@@ -57,6 +57,11 @@ Since Nov 25 2026 (run Not built, groups 1 to 5, Part 7) it also covers the hard
 person leaving paying the months agreed and the people staying taking the whole rent after, the whole lease paid and the
 deposit back by the rent shares; and untangling after a breakup, item by item (who keeps it, what is open, the debts
 still in both names), with money that waits as months of spending.
+Since Nov 26 2026 (run Finish everything partly built, Part 11) it also covers estate and marriage (`js/math/estate.js`,
+M8E): each thing you leave shared by its parts by hand, the step-up as value less what was paid, each heir's rule from
+the IRS list and the 10-year line, the federal and New York estate lines and the cliff; the 10 years of an inherited
+account year by year, three ways, with the second engine's own federal tax; and married or partners (two single returns
+and the partner cover against one joint return, half the other's Social Security amount less your own).
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
@@ -108,6 +113,14 @@ Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10b) it also covers the ga
 bonus kept (the deposit's interest at each rate grown month by month, the gap after its tax, the fees), the hunt toward
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
+
+Since Nov 26 2026 (run Finish everything partly built, Part 12) it also covers Households together (`js/math/hhold.js`,
+the one engine of the web app and the game): one to six people by name with some answers, numbers and dates blank; Same
+question worked out again from its own list of the questions (same, close or further apart, the spread, the talk points
+the furthest apart first); FI together (the gap in the number and in months, who is missing); a shared home (each
+person's put in, share, part of the equity by contributions and split equally, no equity with no loan typed); and the
+federal tax gap when two of them marry, each pair on one joint return and the others single, on the second engine's own
+2026 federal tax.
 
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
 one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked

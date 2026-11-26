@@ -19,6 +19,8 @@ import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opSearchFundOf, opFamilyOf, opAgeCareOf } from '../../js/math/ownpath.js';
 import { hmUntangle, hmParkMonths } from '../../js/math/hard.js';
 import { roommateExit } from '../../js/math/hardplan.js';
+import { esHeirs, esTenYear, esCompare, ES_KINDS, ES_HEIRS } from '../../js/math/estate.js';
+import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -30,6 +32,7 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
@@ -230,6 +233,18 @@ for (let i = 0; i < N; i++) {
     const r = roommateExit(x); add('hmRoommateExit', x, { toEnd: r.rows.map(p => p.toEnd), now: r.rows.map(p => p.now), later: r.rows.map(p => p.later), deposit: r.rows.map(p => p.deposit), uncovered: r.uncovered, total: r.total }); }
   { const items = Array.from({ length: whole(1, 8) }, (_, k) => ({ id: `i${k}`, kind: pick(['have', 'owe']), amount: rnd() < 0.15 ? null : money(50, 60000), names: pick(['both', 'me', 'them']), plan: pick(['me', 'them', 'split', 'sell', null, 'none']) })), share = pick([0.5, 0.3, 0.6, 1]), U = hmUntangle(items, { share }), park = [money(1, 300000), money(500, 12000)], P = hmParkMonths({ amount: park[0], spending: park[1] });
     add('hmUntangle', { items, share, park }, { mine: [U.mine.have, U.mine.owe, U.mine.net], theirs: [U.theirs.have, U.theirs.owe, U.theirs.net], open: U.open, openAmount: U.openAmount, stillBoth: U.stillBoth, stillBothAmount: U.stillBothAmount, park: P.months }); }
+  // Estate and marriage (js/math/estate.js, M8E): who gets what, the 10 years three ways, married or partners
+  { const n = whole(1, 4), people = Array.from({ length: n }, (_, k) => ({ id: `p${k}`, name: `P${k}`, heir: pick(Object.keys(ES_HEIRS)) }));
+    const items = Array.from({ length: whole(1, 7) }, (_, k) => { const value = rnd() < 0.1 ? null : money(1000, 9000000); return { id: `i${k}`, kind: pick(Object.keys(ES_KINDS)), value, basis: rnd() < 0.3 ? null : money(100, 5000000), to: Object.fromEntries(people.filter(() => rnd() < 0.6).map(p => [p.id, pick([1, 1, 2, 3])])) }; });
+    const x = { items, people, deathYear: whole(2026, 2060), started: rnd() < 0.4 }, S = esHeirs(x, ref.estate);
+    add('esHeirs', { ...x, rules: ref.estate }, { total: S.total, assigned: S.assigned, erased: S.erased, gets: S.people.map(r => r.gets), pre: S.people.map(r => r.pretax), er: S.people.map(r => r.erased), last: S.people.map(r => r.lastYear), yearly: S.people.map(r => r.yearly), fedBase: S.estate.fedBase, ny: S.estate.ny.state, fed: S.estate.federal.state }); }
+  { const taxOf = (g, st) => federalTax({ gross: g, filingStatus: st }, ref).value;
+    const x = { balance: money(1000, 3000000), growth: pick([0, 0.02, 0.04, 0.07]), other: pick([0, money(1000, 400000)]), status: pick(['single', 'joint', 'head']), deathYear: whole(2026, 2050), started: rnd() < 0.3 }, X = esTenYear(x, taxOf);
+    add('esTenYear', x, Object.fromEntries(['first', 'even', 'last'].map(w => [w, { out: X.ways[w].out, tax: X.ways[w].tax, ready: X.ways[w].ready, rows: X.ways[w].rows.map(r => r.out) }]))); }
+  { const taxOf = (g, st) => federalTax({ gross: g, filingStatus: st }, ref).value;
+    const x = { people: [0, 1].map(() => ({ pay: pick([0, money(1000, 600000)]), pia: rnd() < 0.3 ? null : money(200, 4500) })), cover: pick([0, money(1000, 25000)]), coverBy: pick([0, 1]) };
+    const R = esCompare(x, { taxOf, spousalOf: (a, b) => spousalExcess(a, b, ref.socialSecurity) });
+    add('esCompare', x, { single: R.single, joint: R.joint, coverTax: R.coverTax, diff: R.taxDiff, spousal: R.ss ? R.ss.map(s => s.spousal) : null, survivor: R.ss ? R.ss.map(s => s.survivor) : null }); }
   // Eli's frameworks and the canon (js/math/frameworks.js, M8W): SWAN, the peak, 0% tax, the Baby Steps, the stages, 1a, step 9, the wins
   { const x = { monthly: money(800, 15000), months: pick([1, 2, 3, 6, 9, 12]), worry: pick([0, 0, 500, 2500]), cash: rnd() < 0.2 ? null : pick([0, money(1, 90000)]) }, S = fwSwan(x); add('fwSwan', x, { number: S.number, gap: S.gap, monthsHave: S.monthsHave }); }
   { const age = whole(22, 75), x = { age, worth: pick([0, money(1000, 3000000)]), saveYear: pick([0, money(1000, 90000)]), growth: pick([0, 0.02, 0.04, 0.07]), spendYear: money(12000, 200000), endAge: pick([85, 90, 95, 100]), leave: pick([0, 0, 100000]) }, P = fwPeak(x); add('fwPeak', x, { peakAge: P.peakAge, peak: P.peak, canSpend: P.canSpend }); }
@@ -348,6 +363,26 @@ for (let i = 0; i < N; i++) {
     items: Rr.items.map(x => ({ id: x.id, per100: x.per100, memYears: x.memYears, dividend: x.dividend, laterYears: x.laterYears, days: x.days })), regret: Rr.regret.map(x => x.id) });
   const subs = Array.from({ length: whole(0, 6) }, (_, k) => ({ name: `S${k}`, amt: rnd() < 0.1 ? 0 : money(1, 90) })), totalDays = rnd() < 0.15 ? null : money(1, 400);
   const P = enSubs(subs, totalDays, { wage }); add('enSubs', { subs, totalDays, wage }, P.ready ? { ready: true, total: P.total, days: P.days, rows: P.rows.map(r => ({ name: r.name, days: r.days, hoursYear: r.hoursYear })) } : { ready: false });
+}
+// Households together (run Finish everything partly built, Part 12): two to six people by name, some answers blank;
+// FI numbers and dates, some blank; a shared home with or without a loan typed; pay for the tax gap when two marry, on
+// the web's federal tax (M10).
+for (let i = 0; i < N; i++) {
+  const n = whole(1, 6), names = Array.from({ length: n }, (_, k) => `P${k}`);
+  const people = names.map(nm => ({ n: nm, a: Object.fromEntries(HH_QUESTIONS.filter(() => rnd() < 0.75).map(q => [q.id, rnd() < 0.05 ? q.opts.length : whole(0, q.opts.length - 1)])) }));
+  const K = hhCompare(people);
+  add('hhCompare', { people }, { rows: K.rows.map(r => ({ id: r.id, state: r.state, spread: r.spread })), talk: K.talk.map(r => r.id), ready: K.ready });
+  const now = '2026-11', fi = names.map(nm => ({ n: nm, fi: rnd() < 0.2 ? null : money(200000, 6000000), date: rnd() < 0.2 ? null : `${whole(2026, 2070)}-${String(whole(1, 12)).padStart(2, '0')}` }));
+  const F = hhFiTogether(fi, now);
+  add('hhFiTogether', { people: fi, now }, { numGap: F.numbers.gap, dateGap: F.dates.gap, months: F.rows.map(r => r.months), missing: F.missing });
+  const home = { value: rnd() < 0.1 ? null : money(80000, 2000000), owed: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(1000, 900000),
+    people: names.map(nm => ({ n: nm, put: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(500, 200000), monthly: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(50, 4000), months: rnd() < 0.15 ? null : whole(1, 240) })) };
+  const E = hhEquity(home);
+  add('hhEquity', home, { equity: E.equity, total: E.total, ready: E.ready, rows: E.rows.map(r => ({ paid: r.paid, share: r.share, byPaid: r.byPaid, equal: r.equal })) });
+  const pay = names.map(nm => ({ n: nm, gross: rnd() < 0.08 ? null : rnd() < 0.1 ? 0 : money(8000, 700000) }));
+  const fed = (g, st) => federalTax({ gross: g, filingStatus: st === 'joint' ? 'Married jointly' : 'Single' }, ref).value;
+  const M = hhMarryGap(pay, { compare: esCompare, taxOf: fed });
+  add('hhMarryGap', { people: pay }, { ready: M.ready, allSingle: M.allSingle ?? null, pairs: M.pairs.map(x => ({ i: x.i, j: x.j, married: x.married, gap: x.gap })) });
 }
 // Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): random households, some inputs missing (null), some
 // zero; each ratio from js/math/ratios.js, worked out again from its definition in the second engine.
