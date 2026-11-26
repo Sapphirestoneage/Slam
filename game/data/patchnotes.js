@@ -441,6 +441,16 @@ const PATCH_NOTES = [
       "Tap any era for what it is, why it matters, the money and time it takes, and a Go do it button.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Estate and marriage",
+    l: [
+      "Menu has Estate and marriage: your estate papers, what your people would receive, and married or partners.",
+      "What your people receive: who gets what, the gain the step-up in basis wipes out, and the 10 years of an inherited IRA, with the tax three ways.",
+      "Married or partners?: two single returns or one joint one, the tax on partner health cover, the Social Security spousal and survivor benefits, and what changes in New York.",
+      "In the web app the summary for a lawyer now lists who is named on each account. Nothing is kept unless you turn it on. Bring it all to a lawyer.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

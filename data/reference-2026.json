@@ -3546,5 +3546,6 @@
     "source": "Go-go, slow-go and no-go: the older suite's defaults (money-rooms-v3 data/assumptions.json: 100%, 85% from 75, 75% from 85). The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026). The CE has no 85-plus row, so the 75% is the stated convention"
   },
   "idChangeNY": { "courtNyc": 65, "courtNyState": 210, "dmvLicense": 12.5, "dmvId": 5, "birthNys": 0, "birthNysCopy": 30, "ssaCard": 0, "passportCorrection": 0, "passportBook": 130, "passportExecution": 35 },
-  "adoptionCredit": { "max": 17670, "refundable": 5120, "phaseStart": 265080, "phaseEnd": 305080 }
+  "adoptionCredit": { "max": 17670, "refundable": 5120, "phaseStart": 265080, "phaseEnd": 305080 },
+  "estate": { "federalExclusion": 15000000, "giftAnnual": 19000, "nyExclusion": 7350000, "nyCliffShare": 1.05, "tenYears": 10, "minorAge": 21, "nycPartnerFee": 35 }
 }

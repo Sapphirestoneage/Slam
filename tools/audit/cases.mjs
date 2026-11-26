@@ -19,6 +19,8 @@ import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opSearchFundOf, opFamilyOf, opAgeCareOf } from '../../js/math/ownpath.js';
 import { hmUntangle, hmParkMonths } from '../../js/math/hard.js';
 import { roommateExit } from '../../js/math/hardplan.js';
+import { esHeirs, esTenYear, esCompare, ES_KINDS, ES_HEIRS } from '../../js/math/estate.js';
+import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -204,6 +206,18 @@ for (let i = 0; i < N; i++) {
     const r = roommateExit(x); add('hmRoommateExit', x, { toEnd: r.rows.map(p => p.toEnd), now: r.rows.map(p => p.now), later: r.rows.map(p => p.later), deposit: r.rows.map(p => p.deposit), uncovered: r.uncovered, total: r.total }); }
   { const items = Array.from({ length: whole(1, 8) }, (_, k) => ({ id: `i${k}`, kind: pick(['have', 'owe']), amount: rnd() < 0.15 ? null : money(50, 60000), names: pick(['both', 'me', 'them']), plan: pick(['me', 'them', 'split', 'sell', null, 'none']) })), share = pick([0.5, 0.3, 0.6, 1]), U = hmUntangle(items, { share }), park = [money(1, 300000), money(500, 12000)], P = hmParkMonths({ amount: park[0], spending: park[1] });
     add('hmUntangle', { items, share, park }, { mine: [U.mine.have, U.mine.owe, U.mine.net], theirs: [U.theirs.have, U.theirs.owe, U.theirs.net], open: U.open, openAmount: U.openAmount, stillBoth: U.stillBoth, stillBothAmount: U.stillBothAmount, park: P.months }); }
+  // Estate and marriage (js/math/estate.js, M8E): who gets what, the 10 years three ways, married or partners
+  { const n = whole(1, 4), people = Array.from({ length: n }, (_, k) => ({ id: `p${k}`, name: `P${k}`, heir: pick(Object.keys(ES_HEIRS)) }));
+    const items = Array.from({ length: whole(1, 7) }, (_, k) => { const value = rnd() < 0.1 ? null : money(1000, 9000000); return { id: `i${k}`, kind: pick(Object.keys(ES_KINDS)), value, basis: rnd() < 0.3 ? null : money(100, 5000000), to: Object.fromEntries(people.filter(() => rnd() < 0.6).map(p => [p.id, pick([1, 1, 2, 3])])) }; });
+    const x = { items, people, deathYear: whole(2026, 2060), started: rnd() < 0.4 }, S = esHeirs(x, ref.estate);
+    add('esHeirs', { ...x, rules: ref.estate }, { total: S.total, assigned: S.assigned, erased: S.erased, gets: S.people.map(r => r.gets), pre: S.people.map(r => r.pretax), er: S.people.map(r => r.erased), last: S.people.map(r => r.lastYear), yearly: S.people.map(r => r.yearly), fedBase: S.estate.fedBase, ny: S.estate.ny.state, fed: S.estate.federal.state }); }
+  { const taxOf = (g, st) => federalTax({ gross: g, filingStatus: st }, ref).value;
+    const x = { balance: money(1000, 3000000), growth: pick([0, 0.02, 0.04, 0.07]), other: pick([0, money(1000, 400000)]), status: pick(['single', 'joint', 'head']), deathYear: whole(2026, 2050), started: rnd() < 0.3 }, X = esTenYear(x, taxOf);
+    add('esTenYear', x, Object.fromEntries(['first', 'even', 'last'].map(w => [w, { out: X.ways[w].out, tax: X.ways[w].tax, ready: X.ways[w].ready, rows: X.ways[w].rows.map(r => r.out) }]))); }
+  { const taxOf = (g, st) => federalTax({ gross: g, filingStatus: st }, ref).value;
+    const x = { people: [0, 1].map(() => ({ pay: pick([0, money(1000, 600000)]), pia: rnd() < 0.3 ? null : money(200, 4500) })), cover: pick([0, money(1000, 25000)]), coverBy: pick([0, 1]) };
+    const R = esCompare(x, { taxOf, spousalOf: (a, b) => spousalExcess(a, b, ref.socialSecurity) });
+    add('esCompare', x, { single: R.single, joint: R.joint, coverTax: R.coverTax, diff: R.taxDiff, spousal: R.ss ? R.ss.map(s => s.spousal) : null, survivor: R.ss ? R.ss.map(s => s.survivor) : null }); }
   // Eli's frameworks and the canon (js/math/frameworks.js, M8W): SWAN, the peak, 0% tax, the Baby Steps, the stages, 1a, step 9, the wins
   { const x = { monthly: money(800, 15000), months: pick([1, 2, 3, 6, 9, 12]), worry: pick([0, 0, 500, 2500]), cash: rnd() < 0.2 ? null : pick([0, money(1, 90000)]) }, S = fwSwan(x); add('fwSwan', x, { number: S.number, gap: S.gap, monthsHave: S.monthsHave }); }
   { const age = whole(22, 75), x = { age, worth: pick([0, money(1000, 3000000)]), saveYear: pick([0, money(1000, 90000)]), growth: pick([0, 0.02, 0.04, 0.07]), spendYear: money(12000, 200000), endAge: pick([85, 90, 95, 100]), leave: pick([0, 0, 100000]) }, P = fwPeak(x); add('fwPeak', x, { peakAge: P.peakAge, peak: P.peak, canSpend: P.canSpend }); }

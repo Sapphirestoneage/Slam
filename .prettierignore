@@ -23,3 +23,4 @@ game/core/hardcore.js
 game/core/frameworks.js
 game/core/family.js
 game/core/quest.js
+game/core/estate.js

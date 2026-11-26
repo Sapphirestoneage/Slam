@@ -135,8 +135,8 @@ export function hardSpecs(D) {
       run: v => hmParkMonths(v),
       waiting: 'If money arrives, put it in here to see how long it carries the household while it waits. Nothing needs deciding.',
       answer: R => ({ lead: 'Waiting in savings, it covers about', big: R.months >= 24 ? `${(R.months / 12).toFixed(1)} years` : mo(Math.round(R.months * 10) / 10), line: `${big(R.amount)} at ${big(R.spending)} a month. While it waits, the choices about it can wait too.`, small: D.facts.inheritIncome.text }),
-      more: api => [linesCard(D, T.grief.lines)] }),
-    widow: page(D, 'widow', { first: api => [pauseCard(T.widow.pause), stepsCard(api, D, T.widow.steps)].filter(Boolean), more: () => [linesCard(D, T.widow.lines)] }),
+      more: api => [linesCard(D, T.grief.lines), h('p.st-small.st-soft', {}, 'Planning your own? ', h('a', { href: 'heirs.html' }, 'What would my people receive?'), ' shows the step-up and the 10 years of an inherited account.')] }),
+    widow: page(D, 'widow', { first: api => [pauseCard(T.widow.pause), stepsCard(api, D, T.widow.steps)].filter(Boolean), more: () => [linesCard(D, T.widow.lines), h('p.st-small.st-soft', {}, 'An inherited IRA from your spouse can be treated as your own: ', h('a', { href: 'heirs.html' }, 'What would my people receive?'), ' shows the rules for each heir.')] }),
     medical: page(D, 'medical', {
       boxes: 'Your numbers, for the words (optional)',
       fields: [{ key: 'balance', label: 'The bill', picks: [500, 1000, 2500, 5000, 10000], optional: true },
