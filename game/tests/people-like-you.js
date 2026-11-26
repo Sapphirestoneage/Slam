@@ -91,7 +91,7 @@
     "people like you: the age group's SHED shares, the SCF middles, each with a source",
     P.some(p => p.id === "cover400" && p.byAge && p.text.includes("57%")) && P.every(p => p.source && p.source.name)
   );
-  const tone = h => !/mistake|failed|behind|off track|\bbad\b|\bwrong\b|—/i.test(h);
+  const tone = h => !/mistake|failed|behind|off track|\bbad\b|\bwrong\b|\u2014/i.test(h);
   chk("calm words: no verdict, no em dash", tone(ov()));
   chk(
     "Quest mode's rank is the same function",

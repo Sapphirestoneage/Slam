@@ -1858,6 +1858,65 @@ def run(cases, ref, il=None):
                     p10 = 10 ** (len(str(int(a))) - 1); lo = (int(a) // p10) * p10; hi = lo + p10
                 want = f"{short(lo)} to {short(hi)}" if v >= 0 else f"-{short(lo)} to -{short(hi)}"
             ck('the range', o['text'] == want, True)
+        elif fn == 'enJoy':
+            # by lines that have a joy tap: the weights first, then each line
+            L = [l for l in x['lines'] if l['amt'] > 0]
+            JR = [l for l in L if l['joy'] is not None]
+            w = x['wage'] if x['wage'] is not None and x['wage'] > 0 else None
+            if not JR: ck('not ready', o['ready'], False)
+            else:
+                tot = sum(l['amt'] for l in L); rt = sum(l['amt'] for l in JR); pts = sum(l['joy'] for l in JR)
+                ck('total', o['total'], tot, 0.02); ck('rated total', o['ratedTotal'], rt, 0.02)
+                ck('a dollar\'s joy', o['dollarJoy'], sum(l['joy'] * l['amt'] for l in JR) / rt, 1e-9)
+                ck('share on what is loved', o['lovedShare'], sum(l['amt'] for l in JR if l['joy'] >= 4) / rt, 1e-9)
+                by = {l['name']: l for l in L}
+                for r in o['rows']:
+                    l = by[r['name']]; hrs = l['amt'] / w if w else None
+                    ck('hours of work', r['hours'], hrs, 1e-9)
+                    if l['joy'] is None: ck('no tap, no joy share', r['joyShare'], None); continue
+                    ck('share of joy', r['joyShare'], l['joy'] / pts, 1e-12); ck('joy per $100', r['per100'], l['joy'] * 100 / l['amt'], 1e-9)
+                    ck('joy per hour', r['perHour'], l['joy'] / hrs if hrs else None, 1e-9)
+        elif fn == 'enCurve':
+            C = [c for c in x['cats'] if c['amt'] > 0]
+            P = [c for c in C if x['place'].get(c['cat']) in ('survival', 'comforts', 'luxuries', 'past')]
+            if not P: ck('not ready', o['ready'], False)
+            else:
+                tot = sum(c['amt'] for c in C); pt = sum(c['amt'] for c in P)
+                lv = [sum(c['amt'] for c in P if x['place'][c['cat']] == s_) for s_ in ('survival', 'comforts', 'luxuries', 'past')]
+                for k in range(4): ck('a step of the curve', o['levels'][k], lv[k], 0.02)
+                ck('placed', o['placedTotal'], pt, 0.02); ck('past enough', o['past'], lv[3], 0.02)
+                ck('the Enough meter', o['meter'], (pt - lv[3]) / pt, 1e-6)
+                ck('the curve\'s enough', o['share'], math.floor((1 - lv[3] / tot) * 100 + 0.5) / 100, 0.0051)
+        elif fn == 'enRich':
+            I = [i for i in x['items'] if i['name'] or i['price'] is not None]
+            yrs = max(0, x['lifeTo'] - x['age']) if x['age'] is not None and x['lifeTo'] is not None else None
+            days = lambda p: math.floor(p / x['perDay'] + 0.5)
+            by = {i['id']: i for i in I}
+            for r in o['items']:
+                i = by[r['id']]; p = i['price']; j = i['joy']
+                ck('joy per $100 of a price', r['per100'], j * 100 / p if j is not None and p else None, 1e-9)
+                my = yrs if i['kind'] == 'experience' else None
+                ck('memory years', r['memYears'], my); ck('dividend', r['dividend'], j * my if my is not None and j is not None else None, 1e-9)
+                ck('ten years later', r['laterYears'], max(0, my - 10) if my is not None else None)
+                ck('days on the FI date', r['days'], days(p) if not i['done'] and p else None)
+            ck('to do', o['plannedTotal'], sum(i['price'] or 0 for i in I if not i['done']), 0.02)
+            ck('done', o['doneTotal'], sum(i['price'] or 0 for i in I if i['done']), 0.02)
+            al = [i for i in I if not i['done'] and i['regret'] == 'alot']; at = sum(i['price'] or 0 for i in al)
+            ck('would regret a lot', o['alotTotal'], at, 0.02); ck('its days', o['alotDays'], days(at) if al and at > 0 else None)
+            rk = {'alot': 0, 'little': 1, 'no': 2}
+            order = sorted(I, key=lambda i: (rk.get(i['regret'], 3), -(i['joy'] or 0), i['price'] or 0, i['name']))
+            ck('the regret view', o['regret'] == [i['id'] for i in order], True)
+        elif fn == 'enSubs':
+            S = [s_ for s_ in x['subs'] if s_['amt'] > 0]
+            if not S or x['totalDays'] is None: ck('not ready', o['ready'], False)
+            else:
+                tot = sum(s_['amt'] for s_ in S); w = x['wage'] if x['wage'] is not None and x['wage'] > 0 else None
+                ck('total', o['total'], tot, 0.02); ck('days, all of them', o['days'], math.floor(x['totalDays'] + 0.5))
+                by = {s_['name']: s_ for s_ in S}
+                for r in o['rows']:
+                    a = by[r['name']]['amt']
+                    ck('a subscription\'s days', r['days'], math.floor(x['totalDays'] * a / tot + 0.5))
+                    ck('hours of work a year', r['hoursYear'], a * 12 / w if w else None, 1e-9)
         elif fn == 'enStepCreep':
             a, b = x['a'], x['b']; sg = b['spend'] / a['spend'] - 1; tg = b['take'] / a['take'] - 1 if a['take'] > 0 else None
             ck('creep between two looks', o['up'], sg >= 0.05 and (tg is None or tg < sg))

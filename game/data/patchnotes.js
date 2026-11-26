@@ -421,6 +421,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Joy and enough",
+    l: [
+      "Menu has Joy and enough: tap how much joy each spending line brings you, and see joy per dollar and joy per hour of work.",
+      "Place each line on the fulfillment curve (survival, comforts, luxuries, past enough) and read your Enough meter.",
+      "A rich-life list: the things you want, with a price and a joy, the memory dividends of an experience, and a regret view.",
+      "Every subscription shows the days it adds to the day work becomes optional.",
+      "In the web app the same tools are on the Budget (Joy per dollar, Subscriptions in days) and on Goals.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "You and people like you",
     l: [
       "Menu, My money: your net worth, savings rate and household pay next to published numbers for people your age.",

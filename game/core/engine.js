@@ -2948,7 +2948,8 @@ function goalSim(c, opt) {
       era = e;
     }
     if (era >= 8 && gs.every(g => g.need <= 0)) break;
-    if (s === 0 && inv <= 0 && m > lastEnd) break;
+    /* a once cost still being paid (opt.once) keeps the run going: the month after it is paid, money is left again */
+    if (s === 0 && inv <= 0 && owe <= 0 && m > lastEnd) break;
   }
   return { M, eraAt, goalAt, share, runway };
 }

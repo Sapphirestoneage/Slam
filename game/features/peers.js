@@ -185,8 +185,8 @@ function peBook(c) {
 kitScreen(
   "peers",
   "You and people like you",
-  "Your net worth, savings rate and pay next to published numbers for people your age, the next milestone and what is common at your age.",
-  "Each source is named with its date. Private: nothing here leaves this device."
+  "Your net worth, savings rate and pay next to published numbers for people your age.",
+  "Each source shows with its date. Private: nothing here leaves this device."
 );
 Object.assign(ACT, {
   peers: () => {

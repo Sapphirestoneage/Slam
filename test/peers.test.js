@@ -73,7 +73,7 @@ test('people like you: shares at your age where the table has them, each with it
   assert.match(by.average.text, /about 4\.1 times the middle \(\$33,000\)/);
   assert.equal(by.retirement.text, 'About 55% of households have a retirement account. Among them, the middle holds $106,000.');
   assert.equal(by.card.byAge, false);
-  for (const x of L) { assert.ok(x.source.name && x.source.year, x.id); assert.doesNotMatch(x.text, /should|behind|bad|good|—/i); }
+  for (const x of L) { assert.ok(x.source.name && x.source.year, x.id); assert.doesNotMatch(x.text, /should|behind|bad|good|\u2014/i); }
   assert.ok(!P.pePatterns({ data: PRI }, M).some(x => x.id === 'average'), 'no age: no age line');
 });
 
