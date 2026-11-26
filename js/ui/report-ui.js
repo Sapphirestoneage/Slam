@@ -3,6 +3,7 @@
 // every number links to its home, where it is typed.
 import { h, clear, icon } from './dom.js';
 import { simpleMathSection } from './simple-math-ui.js';
+import { ratiosSection } from './ratios-ui.js';
 import { changeLog } from '../capture.js';
 import { saferFi } from '../math/fi.js';
 import { flowWords } from '../math/flow.js';
@@ -83,6 +84,7 @@ export function overviewScreen(app, ctx) {
     S.sec('overview:metrics', { title: 'Metrics', open: true, summary: `${shown.filter(i => i.result?.value != null).length} of ${shown.length} lit` }, h('p.muted.small', { style: { margin: '0 0 8px' } }, 'Lit when the numbers behind them exist'), h('div.shelf', {}, shown.map(i => S.metricCard(ctx, i.label, i.result, i))),
       notFor.length ? h('div.not-for', {}, notFor.map(n => h('p.muted.small', { 'data-not-for': n.key }, h('strong', {}, n.label), `: not for this household. ${n.why[0].toUpperCase()}${n.why.slice(1)}.`))) : null),
     simpleMathSection(ctx), // batch 23: Your Shockingly Simple Math
+    ratiosSection(ctx), // run Not built, groups 1 to 5, Part 9: the ratios in groups, one line each
     S.sec('overview:charts', { title: 'Where the money goes', summary: 'Spending by group and the cash flow chart' }, () => h('div.report-grid', {}, donutCard(app, ctx, m), sankeyCard(ctx, m))),
     (() => { const fv = fixedVariable(ctx, m); return fv ? S.sec('overview:fixed', { title: 'Fixed and variable', summary: 'What you pay no matter what, and what moves' }, fv) : null; })()];
 }

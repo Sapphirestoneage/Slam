@@ -6,9 +6,10 @@
                credit (who taught it), quests.
    INPUT       None at load time. The functions of a strategy get the profile (c), the inputs (I), the
                result of the formula (F), and derive(c) (d).
-   OUTPUT      STRATEGIES: the list. STG_HH: the constants of the house hack.
+   OUTPUT      STRATEGIES: the list. STG_FACTS: the facts about you, one question each. STG_HH: the
+               constants of the house hack.
    DEPENDS ON  Nothing at load time. The functions call core/engine.js and features/strat.js.
-   RULES       A fit check: { id, q, hard or block, auto, no }. hard rules the strategy out. A check
+   RULES       A fit check: { id, q, hard or block, auto or fact and test, no }. hard rules the strategy out. A check
                with a block is soft: it becomes a "Not yet" roadblock of that kind. auto returns true,
                false, or null (the player taps). An input: { k, l, opts, def, typed, term, help,
                listing, opt }. The formula returns { save (spending lower a month), take (pay higher a
@@ -40,23 +41,158 @@ const STG_SHARES = ["same", "25", "50", "75", "100"];
 function stgFree(c, d) {
   return freeToSpend(c, d || derive(c)).free;
 }
+/* True when the player lives on their own (setup), so there is no one else to ask. */
+function stgAlone(c) {
+  const l = c.live || [];
+  return l.length > 0 && l.every(k => k === "On my own");
+}
 function stgWage(c) {
   return timeLedger(c, derive(c)).wage || 0;
 }
+/* THE FACTS ABOUT YOU. Each fact is one question, asked once for all the moves. A fit check with
+   fact: reads the answer here (stgFact in strat.js), so one tap answers each move that asks the same
+   thing. A fact: { q (the question), short (its name), opts ([value, label]), help, get (where the
+   profile keeps it already), set, legacy (old answers inside one move: [move id, check id]), profile
+   (setup owns it: asked only when setup has no answer), readOnly (from your numbers, never asked),
+   to (the words of a lever: what would change), path (the steps of a lever, for Next Steps) }.
+   The value "unsure" is a soft roadblock of the kind knowledge, never a No. */
+const STG_YN = [
+  ["yes", "Yes"],
+  ["no", "No"],
+];
+const STG_BAND_OF_VAULT = { none: "Under 580", fair: "580 to 669", good: "670 to 739", excellent: "740 to 799" };
+const STG_FACTS = {
+  score: {
+    q: "About what is your credit score?",
+    short: "Credit score",
+    opts: [
+      ["Under 580", "Under 580"],
+      ["580 to 669", "580 to 669"],
+      ["670 to 739", "670 to 739"],
+      ["740 to 799", "740 to 799"],
+      ["800 or more", "800 or more"],
+      ["unsure", "I don't know it"],
+    ],
+    help: "A rough band is enough. Most bank and card apps show it for free. The card vault reads the same answer.",
+    unsure: "Find your score first. Most bank and card apps show it for free.",
+    /* the card vault's answer, then the answer of setup, then "I don't know it" */
+    get: c => {
+      const v = c.x && c.x.vault && c.x.vault.score && c.x.vault.score.v;
+      if (v && STG_BAND_OF_VAULT[v]) return STG_BAND_OF_VAULT[v];
+      if (c.caught && c.caught.score) return c.caught.score;
+      return (c.x && c.x.about && c.x.about.score) || null;
+    },
+    set: (c, v) => {
+      c.caught = c.caught || {};
+      c.x.about = c.x.about || {};
+      if (c.x.vault) delete c.x.vault.score;
+      if (v === "unsure" || v == null) {
+        delete c.caught.score;
+        if (v) c.x.about.score = v;
+        else delete c.x.about.score;
+      } else {
+        c.caught.score = v;
+        delete c.x.about.score;
+      }
+    },
+    /* Before this, each move asked "about 670 or more" on its own. Those taps still say something. */
+    legacy: c => {
+      const f = id => c.x && c.x.stg && c.x.stg[id] && c.x.stg[id].fit && c.x.stg[id].fit.credit;
+      const hi = ["transfer", "consolidate", "purchase", "welcome"].map(f).filter(Boolean),
+        lo = f("househack");
+      if (hi.includes("y")) return "670 to 739";
+      if (hi.includes("n")) return lo === "y" ? "580 to 669" : lo === "n" ? "Under 580" : null;
+      return lo === "n" ? "Under 580" : null;
+    },
+    to: v => "A score of " + STG_SCORE[v] + " or more",
+    path: [
+      { t: "Set autopay for the minimum on every card and loan, so no payment is late", mins: 15 },
+      { t: "Bring each card under 30% of its limit, then under 10%", mins: 10 },
+      { t: "Get your free reports at annualcreditreport.com and dispute any error", mins: 30 },
+      { t: "Keep your oldest card open, even with no balance", mins: 5 },
+      { t: "Check your score again in 60 days and tap the new band in Moves library", mins: 5 },
+    ],
+    pathUnsure: [{ t: "Look up your credit score in your bank or card app and tap its band in Moves library", mins: 5 }],
+  },
+  home: {
+    q: "Where do you live now?",
+    short: "Home",
+    profile: true,
+    opts: [
+      ["Renting", "I rent"],
+      ["Owning", "I own"],
+      ["With family", "With family"],
+    ],
+    get: c => c.home || null,
+    set: (c, v) => (c.home = v),
+    to: (v, label) =>
+      v === "Owning" ? "If you owned your place" : v === "Renting" ? "If you rented your own place" : "If you lived with family",
+  },
+  spare: {
+    q: "Do you have a spare room you could rent out?",
+    short: "Spare room",
+    opts: STG_YN,
+    legacy: [["room", "spare"]],
+    to: v => (v === "yes" ? "If you had a spare room" : "Without a spare room"),
+  },
+  payfull: {
+    q: "Do you pay each card in full each month?",
+    short: "Cards paid in full",
+    opts: STG_YN,
+    legacy: [["welcome", "full"]],
+    to: v => (v === "yes" ? "Pay each card in full each month" : "Carry a card balance"),
+    path: [
+      { t: "Turn on autopay for the full statement balance of each card", mins: 10 },
+      { t: "Use the card only for what is already in your spending plan", mins: 5 },
+    ],
+  },
+  hdhp: {
+    q: "Is your health plan a high-deductible plan that allows an HSA?",
+    short: "HSA health plan",
+    opts: [
+      ["yes", "Yes"],
+      ["no", "No"],
+      ["unsure", "I don't know"],
+    ],
+    help: "Your benefits portal says it. Look for \"HSA-eligible\" or \"high-deductible\".",
+    unsure: "Look it up in your benefits portal first.",
+    legacy: [["hsa", "plan"]],
+    to: v => (v === "yes" ? "A health plan that allows an HSA" : "A plan with no HSA"),
+    path: [{ t: "At open enrollment, compare the high-deductible plan with an HSA against your plan now", mins: 30 }],
+    pathUnsure: [{ t: "Find out in your benefits portal if your health plan allows an HSA", mins: 10 }],
+  },
+  debt8: {
+    q: "Debt at 8% or more",
+    short: "Costly debt",
+    readOnly: true,
+    opts: [
+      ["clear", "None"],
+      ["carry", "Some"],
+    ],
+    get: c => (hiDebt(c) > 0 ? "carry" : "clear"),
+    to: v => (v === "clear" ? "Clear the debt at 8% or more" : "Carry debt at 8% or more"),
+    path: [
+      { t: "List each debt at 8% or more with its rate, the highest first", mins: 10 },
+      { t: "Put every extra dollar on the debt with the highest rate until it is gone", mins: 10 },
+    ],
+  },
+};
 /* Checks that more than one strategy uses. */
 const STG_CK = {
   mask: {
     id: "mask",
     q: "No debt at 8% or more",
     block: "mask",
-    auto: c => hiDebt(c) <= 0,
+    fact: "debt8",
+    test: v => v === "clear",
     no: "Debt at 8% or more costs more each month than this move earns. Clear it first.",
   },
   credit: min => ({
     id: "credit",
     q: "A credit score of about " + min + " or more",
     block: "credit",
-    auto: c => (stgCredit(c) == null ? null : stgCredit(c) >= min),
+    fact: "score",
+    test: v => STG_SCORE[v] >= min,
     no: "Lenders want a score of about " + min + " for this. On-time payments and lower card balances raise it.",
   }),
 };
@@ -361,10 +497,18 @@ const STRATEGIES = [
     metro: true,
     credit: "Scott Trench, Set for Life",
     fitChecks: [
-      { id: "spare", q: "I have a room I could rent out", hard: true, no: "This move needs a spare room." },
+      {
+        id: "home",
+        q: "I rent or own my place",
+        hard: true,
+        fact: "home",
+        test: v => v !== "With family",
+        no: "The room is not yours to rent out while you live with family. If you get your own place, this move opens.",
+      },
+      { id: "spare", q: "I have a room I could rent out", hard: true, fact: "spare", test: v => v === "yes", no: "This move needs a spare room." },
       { id: "share", q: "I am fine sharing my home", hard: true, no: "A roommate shares your kitchen and your quiet. That is the trade." },
       { id: "lease", q: "My lease, landlord or HOA allows it", block: "rules", no: "Check the lease or the HOA rules first. Many allow it with a written yes." },
-      { id: "house", q: "The people I live with agree", block: "people", no: "Everyone at home has to say yes first." },
+      { id: "house", q: "The people I live with agree", block: "people", auto: c => (stgAlone(c) ? true : null), no: "Everyone at home has to say yes first." },
     ],
     inputs: [
       { k: "cur", l: "Your housing cost now, a month", opts: STG_USD([1200, 1800, 2400, 3000]), def: c => stgHome(c), typed: true },
@@ -612,7 +756,7 @@ const STRATEGIES = [
     effort: 2,
     credit: "The Mad Fientist, on the HSA as a retirement account",
     fitChecks: [
-      { id: "plan", q: "My health plan is a high-deductible plan that allows an HSA", hard: true, no: "Only a high-deductible health plan allows an HSA. Check at the next open enrollment." },
+      { id: "plan", q: "My health plan is a high-deductible plan that allows an HSA", hard: true, fact: "hdhp", test: v => v === "yes", no: "Only a high-deductible health plan allows an HSA. Check at the next open enrollment." },
       STG_CK.mask,
       { id: "room", q: "Room in my free-to-spend for it", block: "money", auto: (c, I, F, d) => F.cost <= stgFree(c, d), no: "The amount is more than your free-to-spend now. A smaller amount still counts." },
     ],
@@ -751,7 +895,7 @@ const STRATEGIES = [
         },
         no: "Your normal spending does not reach the minimum in time. Spending more to get a bonus loses money.",
       },
-      { id: "full", q: "I pay each card in full each month", hard: true, no: "A welcome offer only pays when no interest is charged. Pay in full first, for a few months." },
+      { id: "full", q: "I pay each card in full each month", hard: true, fact: "payfull", test: v => v === "yes", no: "A welcome offer only pays when no interest is charged. Pay in full first, for a few months." },
     ],
     inputs: [
       {
@@ -847,7 +991,7 @@ const STRATEGIES = [
     credit: "Tim Ferriss named it geoarbitrage. Mr. Money Mustache made it a habit.",
     fitChecks: [
       { id: "work", q: "My work can move with me, or I can get work there", hard: true, no: "The move only pays if the income comes with you." },
-      { id: "people", q: "The people I live with are in", block: "people", no: "A move is a household decision. Start with one talk." },
+      { id: "people", q: "The people I live with are in", block: "people", auto: c => (stgAlone(c) ? true : null), no: "A move is a household decision. Start with one talk." },
       { id: "know", q: "I have spent time in that area", block: "knowledge", no: "Visit for a week first. Rent is one number. Daily life is the rest." },
       { id: "ready", q: "I am ready to leave here", block: "fear", no: "Leaving people and places is a real cost. Name what you would miss." },
     ],

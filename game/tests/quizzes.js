@@ -66,12 +66,16 @@
   /* ---------- each skin ---------- */
   const real = QZ_SKINS.filter(s => !s.soon);
   chk(
-    "nine skins, all nine to play (the sins quiz is real since the run Money sins, Part 1)",
-    QZ_SKINS.length === 9 && real.length === 9 && !QZ_SKINS.find(s => s.id === "sins").soon
+    "fifteen skins, all to play (the sins quiz since the run Money sins, Part 1; six more since Part 6 of the run Finish everything partly built)",
+    QZ_SKINS.length === 15 && real.length === 15 && !QZ_SKINS.find(s => s.id === "sins").soon
   );
   chk(
-    "each skin is sound (qzCheck), and takes 7 to 15 taps",
-    real.every(s => qzCheck(s).length === 0 && qzTaps(s).max >= 7 && qzTaps(s).max <= 15),
+    "each skin is sound (qzCheck), and takes 7 to 15 taps (24 quick taps for the percent style, 2 to 5 for Quantum Collapse)",
+    real.every(s => {
+      const t = qzTaps(s),
+        [lo, hi] = s.many ? [16, 24] : s.id === "collapse" ? [2, 5] : [7, 15];
+      return qzCheck(s).length === 0 && t.max >= lo && t.max <= hi;
+    }),
     real.map(s => s.id + ": " + qzCheck(s).join("; ")).join(" | ")
   );
   const walk = (def, pick) => {
@@ -95,14 +99,17 @@
       const a = k < 6 ? walk(def, n => Math.min(k, n - 1)) : walk(def, n => Math.floor(r() * n)),
         R = qzResult(def, a),
         c = qzCard(def, R);
-      if (!R.ready || !cardOk(c) || !R.confidence || R.topTwo.length !== 2) bad++;
+      if (!R.ready || !cardOk(c) || !R.confidence || (def.result?.by !== "rules" && R.topTwo.length !== 2)) bad++;
       else seen.add(R.id);
     }
     chk(def.id + ": 400 paths, each ends on one card with a top two and a confidence level", bad === 0, bad);
     if (!def.result || def.result.by !== "axes")
       chk(
         def.id + ": each result can be reached",
-        def.traits.every(t => seen.has(t.id)),
+        (def.result && def.result.by === "rules"
+          ? Object.keys(def.cards)
+          : def.traits.filter(t => !def.result || !def.result.group || t.group === def.result.group).map(t => t.id)
+        ).every(id => seen.has(id)),
         [...seen].join()
       );
   }
@@ -172,7 +179,7 @@
     chk(
       def.id + ": " + taps + " taps end on one card: title, lines, the light side, one next step, the note",
       okQ &&
-        taps === qzTaps(def).max &&
+        (taps === qzTaps(def).max || (def.result && def.result.by === "rules" && taps >= qzTaps(def).min)) &&
         !!N.card &&
         h.includes(esc(N.card.title)) &&
         h.includes("The light side") &&

@@ -506,6 +506,8 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .dklegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:4px}.dklegend i,.dklist i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .dkdonut{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.dkdonut svg{flex:none}.dkdonut .dklist{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:4px}.dkdonut .dklist .row{gap:8px}.dkdonut .dklist b{flex:none}.dkdc{fill:var(--text);font-size:13px;font-weight:700}
 .dkprog{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.dkprog i{display:block;height:100%;background:var(--good);border-radius:99px}
+/* quizzes (features/quizzes.js): the picture tiles and the spectrum line */
+.qzcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qzcard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:96px;border:2px solid var(--line);background:var(--panel2);border-radius:12px;padding:10px;font-weight:600;text-align:center;box-shadow:0 2px 0 var(--line)}.qzicon{font-size:30px;line-height:1}.qzspec{position:relative;height:8px;margin:8px 8px 4px;border-radius:99px;background:var(--panel2);border:1px solid var(--line)}.qzspec i{position:absolute;top:-6px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--sap);border:2px solid var(--panel)}
 .dkdays{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}.dkday{flex:0 0 46px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}.dkday.on{border-color:var(--sap);color:var(--text)}.dkday.mk i{font-style:normal;font-size:10.5px;color:var(--good)}
 .dkgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
 /* UX pass, items 24 to 29: sections that start closed, the parts of a donut, the money machine, ranking */
@@ -565,27 +567,30 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
-<script src="core/engine.js?v=cbeb0f24"></script>
+<script src="core/engine.js?v=d96b692c"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
+<script src="core/family.js?v=3c7f7ffa"></script>
 <script src="core/trip.js?v=0152603f"></script>
 <script src="core/quick.js?v=914d9a44"></script>
 <script src="core/gigcore.js?v=baa39c64"></script>
+<script src="core/hardcore.js?v=ae053a47"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
 <script src="core/enough.js?v=869b33d0"></script>
+<script src="core/ratios.js?v=939803ee"></script>
 <script src="data/roles.js?v=d90d4899"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
-<script src="core/quizcore.js?v=fb301cab"></script>
+<script src="core/quizcore.js?v=fbfdf85e"></script>
 <script src="core/sins.js?v=aea4807a"></script>
 <script src="core/frameworks.js?v=95d509ab"></script>
-<script src="data/quizskins.js?v=26830ea5"></script>
+<script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
 <script src="screens/ui.js?v=c4af192e"></script>
 <script src="screens/dash.js?v=2acc35d5"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=b12acade"></script>
+<script src="features/games2.js?v=c0aef9c8"></script>
 <script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
@@ -594,7 +599,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="screens/planner.js?v=f7176af6"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=6a598e0a"></script>
-<script src="core/metrics.js?v=d66cd0fe"></script>
+<script src="core/metrics.js?v=6a4cfb0a"></script>
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
@@ -677,6 +682,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/offers.js?v=7dfb9a2c"></script>
 <script src="features/career.js?v=e016b343"></script>
 <script src="features/trip.js?v=50f6617e"></script>
+<script src="features/family.js?v=342d2e99"></script>
 <script src="features/nextacct.js?v=34d838ed"></script>
 <script src="features/ledger.js?v=e80edc0b"></script>
 <script src="data/cardtemplate.js?v=43e535a3"></script>
@@ -684,21 +690,21 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/vault.js?v=7909457a"></script>
 <script src="features/element.js?v=ea52e168"></script>
 <script src="features/xray.js?v=bf512a9b"></script>
-<script src="features/transit.js?v=224541d8"></script>
-<script src="data/kidlessons.js?v=69134824"></script>
-<script src="features/kids.js?v=67bd9a89"></script>
+<script src="features/transit.js?v=8ce21a47"></script>
+<script src="data/kidlessons.js?v=bdd65180"></script>
+<script src="features/kids.js?v=ee17bb0a"></script>
 <script src="data/metros.js?v=10acde40"></script>
-<script src="data/strategies.js?v=c50b230d"></script>
-<script src="features/strat.js?v=eec13414"></script>
+<script src="data/strategies.js?v=b8975c5b"></script>
+<script src="features/strat.js?v=1e78b443"></script>
 <script src="account/roles.js?v=347ce1b8"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
 <script src="features/recalc.js?v=86b5c421"></script>
 <script src="features/audit.js?v=d893fdb8"></script>
-<script src="features/quizzes.js?v=6b4cff5a"></script>
+<script src="features/quizzes.js?v=1d5da075"></script>
 <script src="features/sins.js?v=1353b0fc"></script>
 <script src="features/rings.js?v=7012818f"></script>
-<script src="data/patchnotes.js?v=cbad4904"></script>
+<script src="data/patchnotes.js?v=0f8e226a"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -711,9 +717,11 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/rolemap.js?v=5e50a14d"></script>
 <script src="features/canon.js?v=96c55b47"></script>
 <script src="features/enough.js?v=67d96e2d"></script>
-<script src="features/book.js?v=5d48ba87"></script>
+<script src="features/ratios.js?v=d7a1b45b"></script>
+<script src="features/hard.js?v=9bf92c41"></script>
+<script src="features/book.js?v=949e161d"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=690ccda4"></script>
+<script src="features/built.js?v=efd94c23"></script>
 </body>
 </html>

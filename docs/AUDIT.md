@@ -48,12 +48,24 @@ point and cash next to redeem, a group split in whole cents checked against each
 line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
 cash first, then investments).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 7) it also covers the hard moments (`js/math/hard.js` and
+`js/math/hardplan.js`, M8H): a roommate leaving, with each share worked out by hand (room size, income or equal), the
+person leaving paying the months agreed and the people staying taking the whole rent after, the whole lease paid and the
+deposit back by the rent shares; and untangling after a breakup, item by item (who keeps it, what is open, the debts
+still in both names), with money that waits as months of spending.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
 own tax, and the floor an hour and a job from their definitions; the set-aside with the profit stacked on a job's pay
 by hand (Social Security up to the wage base across both, Medicare, the extra 0.9%, half the self-employment tax off
 income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
 invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
+
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 8) it also covers family money (`js/math/family.js`, M8F): the
+sandwich years checked month by month (what each month takes from the flows, the months both run at once, the total
+over the years), living at home with the moving-out goal reached by stepping a balance month by month, tuition years
+summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
+529 deduction from the limit.
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
@@ -72,6 +84,12 @@ and each deposit (the monthly amount × 12 ÷ the deposits, rounded up to a doll
 after the last one, with the end of a month moved to its last day); and a date the person taps (its next day, the
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
+
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
+one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked
+out again from its definition (the short-term and revolving debts sorted by type a second way, the interest month by
+month, human capital as a sum of each year's pay brought back to today, spending volatility from the months logged),
+with no number where an input is missing or there is nothing to measure.
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 3) it also covers Lifestyle creep and enough (`js/math/enough.js`,
 the one engine of the web app and the game): a made-up ledger of one to four years with months missing, refunds and

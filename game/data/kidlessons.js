@@ -1,10 +1,12 @@
 /* ============================================================================
    SLAM the Game: data/kidlessons.js
    PURPOSE     Data only. The lessons of Kids mode (features/kids.js): 20 short lessons for a student in
-               a high school personal finance class. Each lesson has one idea and two questions.
+               a high school personal finance class, and 12 daily lessons for an adult. Each lesson has one
+               idea and two questions.
    INPUT       None.
    OUTPUT      KID_LESSONS: a list of { id, t (title), idea, q: [[question, [answers], index of the
-               right answer, why]] }.
+               right answer, why]] }. ADULT_LESSONS: the daily lessons for an adult (Duolingo mode), in
+               the same shape, plus the skill each one leads to: skill, tree, lv.
    DEPENDS ON  Nothing.
    RULES       Each number in a question can be worked out from the text of the question. A lesson
                teaches an idea. It gives no advice about one product.
@@ -188,6 +190,155 @@ const KID_LESSONS = [
     q: [
       ["Which one is a sign of a scam?", ["You must act right now", "A written offer", "A phone number on a bank card"], 0, "Pressure to hurry is the oldest trick."],
       ["A message asks for your bank password to send you a prize. What do you do?", ["Send it", "Do not answer, and tell an adult", "Send half of it"], 1, "No real company asks for a password."],
+    ],
+  },
+];
+/* The daily lessons for an adult (Duolingo mode, features/kids.js): the same path as Kids mode, for the player.
+   Each lesson also names the skill it leads to: skill (the id in data/library/skills.json of the main app), tree and
+   lv (its tree and level in SKILLS). The path puts first the lessons whose tree matches the latest quiz result. */
+const ADULT_LESSONS = [
+  {
+    id: "scripts",
+    t: "Name your money script",
+    tree: "money-psychology",
+    lv: 2,
+    skill: "money-psychology-name-your-money-scripts",
+    idea: "A money script is a belief about money you picked up early, often without words. Naming yours makes it easier to choose instead of react.",
+    q: [
+      ["A belief like 'the money is always about to run out' is...", ["A money script", "A budget rule", "A tax law"], 0, "It is a belief you carry, not a fact about your account."],
+      ["What helps most with a money script?", ["Never thinking about it", "Naming it when it shows up", "Earning more"], 1, "Once you can name it, you can decide what to do next."],
+    ],
+  },
+  {
+    id: "payday",
+    t: "Pay yourself first",
+    tree: "main-path",
+    lv: 4,
+    skill: "main-path-automate-payday-contributions",
+    idea: "Pay yourself first: a transfer to savings or investing on payday, set up once, before you see the money.",
+    q: [
+      ["You take home $2,000 and set 10% to move on payday. How much moves?", ["$20", "$200", "$2,000"], 1, "10% of $2,000 is $200."],
+      ["Why on payday, and not at the end of the month?", ["Banks require it", "What is left at the end is often nothing", "It earns more interest"], 1, "Saving first makes it happen. Saving what is left leaves it to chance."],
+    ],
+  },
+  {
+    id: "cushion",
+    t: "The first cushion",
+    tree: "cash-safety-net",
+    lv: 1,
+    skill: "cash-safety-net-build-the-1k-shield",
+    idea: "A small cash cushion turns a surprise bill into an errand instead of new debt.",
+    q: [
+      ["A $400 car repair, with $500 in the cushion. What is left?", ["$100", "$900", "$400"], 0, "$500 less $400 is $100, and no card was needed."],
+      ["Where does a cushion live best?", ["In stocks", "In a savings account you can reach this week", "In a drawer at home"], 1, "Safe and reachable, so it is there when you need it."],
+    ],
+  },
+  {
+    id: "match",
+    t: "Take the free money at work",
+    tree: "main-path",
+    lv: 3,
+    skill: "main-path-capture-the-full-401-k-match",
+    idea: "Many jobs add money to your retirement plan when you do, up to a limit. Getting all of it is one of the best returns most people are ever offered.",
+    q: [
+      ["Your job adds 50 cents for each dollar you put in, up to 6% of pay. You put in 6% of $50,000. How much does the job add?", ["$1,500", "$3,000", "$6,000"], 0, "6% of $50,000 is $3,000, and half of that is $1,500."],
+      ["You put in 3% when the limit is 6%. What happens?", ["Nothing changes", "Part of the match stays with the job", "You pay a fee"], 1, "The match only follows what you put in."],
+    ],
+  },
+  {
+    id: "hours",
+    t: "Price it in hours",
+    tree: "time-capital",
+    lv: 2,
+    skill: "time-capital-compute-your-real-hourly-wage",
+    idea: "Price a buy in hours of work: the price divided by what you keep for each hour.",
+    q: [
+      ["You keep $25 an hour. A $150 jacket is how many hours?", ["4", "6", "15"], 1, "$150 divided by $25 is 6 hours."],
+      ["What makes your real hourly pay lower than the posted rate?", ["Taxes, the commute and work costs", "A raise", "Paid time off"], 0, "They take money or time that the posted rate does not count."],
+    ],
+  },
+  {
+    id: "enough",
+    t: "Write down enough",
+    tree: "money-psychology",
+    lv: 6,
+    skill: "money-psychology-write-down-enough",
+    idea: "Enough is a number and a feeling. Writing yours down keeps the finish line from moving each time you get closer.",
+    q: [
+      ["Why write down what enough is?", ["So the goal stays put", "To impress others", "To spend less on everything"], 0, "A written line is harder to nudge after each raise."],
+      ["Enough is...", ["The same for everyone", "Your own, and it can change", "Always more than you have"], 1, "It is yours, and you can come back to it."],
+    ],
+  },
+  {
+    id: "times25",
+    t: "About 25 times a year",
+    tree: "withdrawal-decumulation",
+    lv: 1,
+    skill: "withdrawal-decumulation-know-the-4-rule-honestly",
+    idea: "A common rule of thumb: about 25 times a year of spending can carry that spending for a long time. It is a starting point, not a promise.",
+    q: [
+      ["You spend $40,000 a year. 25 times that is...", ["$400,000", "$1,000,000", "$250,000"], 1, "$40,000 times 25 is $1,000,000."],
+      ["The rule of thumb is best used as...", ["A promise", "A first guess that your plan refines", "A law"], 1, "Your own numbers refine it."],
+    ],
+  },
+  {
+    id: "fees",
+    t: "The quiet cost of fees",
+    tree: "portfolio-design",
+    lv: 2,
+    skill: "portfolio-design-hunt-expense-ratios",
+    idea: "A fund's yearly fee comes out of what you have, every year. Small differences add up over decades.",
+    q: [
+      ["A 1% fee on $10,000 is how much a year?", ["$10", "$100", "$1,000"], 1, "1% of $10,000 is $100."],
+      ["Two funds hold the same things. One charges 0.05% a year, one 1%. Which keeps more for you?", ["The 0.05% fund", "The 1% fund", "They are the same"], 0, "The lower fee leaves more of your money invested."],
+    ],
+  },
+  {
+    id: "wait",
+    t: "Wait a day",
+    tree: "deals-smart-buying",
+    lv: 1,
+    skill: "deals-smart-buying-wait-24-hours",
+    idea: "For a want over a set amount, wait a day. If you still want it tomorrow, buy it gladly.",
+    q: [
+      ["What does a one-day wait do?", ["Bans the buy", "Lets the want settle so you can choose", "Lowers the price"], 1, "Many wants fade by tomorrow. The ones that stay are real."],
+      ["Where does it help most?", ["Rent", "A late-night online cart", "A bill that is due"], 1, "Needs get paid on time. The wait is for wants."],
+    ],
+  },
+  {
+    id: "debts",
+    t: "Which debt first",
+    tree: "debt-leverage",
+    lv: 1,
+    skill: "debt-leverage-inventory-every-debt",
+    idea: "Paying the highest interest rate first saves the most money. Paying the smallest balance first gives quick wins. Both beat paying only the minimums.",
+    q: [
+      ["Card A charges 24%, card B 8%. Extra money goes to which one first to save the most?", ["Card A", "Card B", "Split it evenly"], 0, "The higher rate costs more each month."],
+      ["Paying the smallest balance first is good for...", ["Saving the most interest", "Quick wins that keep you going", "Your credit limit"], 1, "A card that reaches zero feels good, and that keeps people at it."],
+    ],
+  },
+  {
+    id: "talk",
+    t: "A calm money talk",
+    tree: "money-psychology",
+    lv: 18,
+    skill: "money-psychology-make-money-discussable",
+    idea: "Money talks go better on a calm day, with one topic and a time limit.",
+    q: [
+      ["The best time for a money talk is...", ["Right after a big bill", "A calm time you both set", "Late at night"], 1, "Calm and planned works better than tense and sudden."],
+      ["How many topics fit one talk?", ["One", "Five", "As many as come up"], 0, "One topic, settled, is a good talk."],
+    ],
+  },
+  {
+    id: "values",
+    t: "Spend on what you love",
+    tree: "money-psychology",
+    lv: 14,
+    skill: "money-psychology-spend-loudly-on-values",
+    idea: "Spend freely on the few things you love, and cut hard on the things you do not care about.",
+    q: [
+      ["Which one fits this idea?", ["Cutting everything a little", "Cutting what you do not care about and keeping what you love", "Spending on what others notice"], 1, "The cut lands where it costs you no joy."],
+      ["How do you find what you love?", ["Ask what you would miss most", "Copy a friend", "Pick the most expensive"], 0, "What you would miss most is your answer."],
     ],
   },
 ];

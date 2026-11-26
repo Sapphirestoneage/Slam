@@ -4,13 +4,17 @@
                of data/strategies.js: (1) a fit check by taps, (2) the rough impact from the profile,
                (3) sharpen with an area or a real listing, (4) a scenario dial, (5) the break-even line,
                (6) the verdict and "Add to my steps". The strategies are ranked, the top 3 show on
-               Next Steps, and the menu has the full library.
+               Next Steps, and the menu has the full library. The facts about you (STG_FACTS) are
+               asked once, one question at a time, the one that sorts the most moves first. The
+               library shows what would open the most: each change of one fact and the moves it opens.
    INPUT       The profile. c.x.stg[id]: { fit: { check id: "y" or "n" }, already, dial, head, metro,
-               listing, added }. c.x["stg_" + id]: the inputs of one strategy, as { v, cf } (kit.js).
+               listing, added }. c.x.about: the answers to the facts that have no other home (the score lives
+               in c.caught.score, the home in c.home). c.x["stg_" + id]: the inputs of one strategy, as { v, cf } (kit.js).
                The open sheet (W.kind): strat (W.id, W.sec), stratlib.
-   OUTPUT      Functions: stgPmt, stgRun, stgInputs, stgCalc, stgImpact, stgVerdict, stgScore, stgRank,
+   OUTPUT      Functions: stgFact, stgFactSet, stgOpenFacts, stgLevers, stgAskCard, stgLeverCard,
+               stgAnswers, stgPmt, stgRun, stgInputs, stgCalc, stgImpact, stgVerdict, stgScore, stgRank,
                stgSheet, stgLibSheet, stgBook. Actions (ACT): strat, stratlib, stgsec, stgfit, stgalready,
-               stgdial, stghead, stgmetro, stglisting, stgtyped, stgadd. Parts of functions in other files:
+               stgdial, stghead, stgmetro, stglisting, stgtyped, stgadd, stgfact, stglever. Parts of functions in other files:
                planTabStrat (planTab in planner.js), hrsSheetStrat (hrsSheet in ui.js). Menu: "Moves
                library".
    DEPENDS ON  core/report.js, core/engine.js (goalSim, derive, fiNeed, timeLedger, freeToSpend,
@@ -18,7 +22,8 @@
                data/strategies.js.
    RULES       This file has the loop and the math helpers. A strategy is data: its checks, inputs,
                formula, dial, break-even line and verdict rules are in data/strategies.js. The impact
-               is a Guess until each input is Close or Exact. A strategy that is not a fit stays in
+               is a Guess until each input is Close or Exact. A fit check with fact: never keeps its own
+               answer: it reads the one answer of the fact. A strategy that is not a fit stays in
                the library, faded, with the reason. No red. The existing sheet "What if" keeps the
                action name "moves", so this feature uses "strat".
    ========================================================================= */
@@ -111,8 +116,106 @@ function stgCards(c, all) {
 const STG_SCORE = { "Under 580": 500, "580 to 669": 580, "670 to 739": 670, "740 to 799": 740, "800 or more": 800 };
 /* The low end of the credit band of the player, or null when the game does not know it. */
 function stgCredit(c) {
-  const s = c.caught && c.caught.score;
+  const s = stgFact(c, "score");
   return s && STG_SCORE[s] != null ? STG_SCORE[s] : null;
+}
+/* ---------- the facts about you (STG_FACTS in data/strategies.js): one answer for every move ---------- */
+/* STGF.sim: a what-if answer for a fact, only while stgLevers works out what a change would open. */
+const STGF = { sim: null };
+/* The answer to one fact: a what-if, the place the profile keeps it, the answer of this screen, an old
+   answer inside one move, or null when the game does not know it. */
+function stgFact(c, id) {
+  if (STGF.sim && Object.prototype.hasOwnProperty.call(STGF.sim, id)) return STGF.sim[id];
+  const F = STG_FACTS[id];
+  if (!F) return null;
+  let v = F.get ? F.get(c) : c.x && c.x.about ? c.x.about[id] : null;
+  if (v != null) return v;
+  if (typeof F.legacy === "function") v = F.legacy(c);
+  else if (Array.isArray(F.legacy))
+    F.legacy.forEach(([m, k]) => {
+      const a = c.x && c.x.stg && c.x.stg[m] && c.x.stg[m].fit && c.x.stg[m].fit[k];
+      if (v == null && a) v = a === "y" ? "yes" : "no";
+    });
+  return v == null ? null : v;
+}
+function stgFactSet(c, id, v) {
+  const F = STG_FACTS[id];
+  if (!F || F.readOnly) return;
+  c.x = c.x || {};
+  c.x.about = c.x.about || {};
+  if (F.set) F.set(c, v);
+  else if (v == null) delete c.x.about[id];
+  else c.x.about[id] = v;
+}
+function stgFactLabel(id, v) {
+  const o = (STG_FACTS[id].opts || []).find(x => x[0] === v);
+  return o ? o[1] : String(v);
+}
+/* The moves that ask a fact. */
+function stgFactMoves(id) {
+  return STRATEGIES.filter(S => (S.fitChecks || []).some(k => k.fact === id));
+}
+/* THE QUESTIONS LEFT: each fact the game does not know yet that a move still waits on, the one that
+   sorts the most moves first. A move that another answer already rules out does not count. */
+function stgOpenFacts(c) {
+  return Object.keys(STG_FACTS)
+    .filter(id => {
+      const F = STG_FACTS[id];
+      return !F.readOnly && stgFact(c, id) == null;
+    })
+    .map(id => ({
+      id,
+      F: STG_FACTS[id],
+      moves: stgFactMoves(id).filter(S => {
+        const v = stgVerdict(c, S).v;
+        return v !== "no" && v !== "already";
+      }),
+    }))
+    .filter(r => r.moves.length)
+    .sort((a, b) => b.moves.length - a.moves.length);
+}
+const STG_RANKV = { no: 0, notyet: 1, fits: 2, already: -1 };
+/* THE LEVERS: for each fact, the one change that opens the most moves. A move opens when its verdict
+   goes up (Not for you to Not yet, or Not yet to Fits you). For a fact in order (the score), the
+   smallest change that opens the most. Returns [{ id, v, to, now, opens: [strategy], path }]. */
+function stgLevers(c) {
+  const base = {};
+  STRATEGIES.forEach(S => (base[S.id] = stgVerdict(c, S).v));
+  const out = [];
+  Object.keys(STG_FACTS).forEach(id => {
+    const F = STG_FACTS[id],
+      now = stgFact(c, id),
+      moves = stgFactMoves(id);
+    if (!moves.length) return;
+    let best = null;
+    F.opts.forEach(([v]) => {
+      if (v === now || v === "unsure") return;
+      let opens = [];
+      STGF.sim = { [id]: v };
+      try {
+        opens = moves.filter(S => base[S.id] !== "already" && STG_RANKV[stgVerdict(c, S).v] > STG_RANKV[base[S.id]]);
+      } catch (e) {
+        report(e, "strat.js: stgLevers");
+      } finally {
+        STGF.sim = null;
+      }
+      if (opens.length && (!best || opens.length > best.opens.length)) best = { v, opens };
+    });
+    if (!best) return;
+    out.push({
+      id,
+      v: best.v,
+      to: F.to ? F.to(best.v, stgFactLabel(id, best.v)) : stgFactLabel(id, best.v),
+      now: now == null ? null : stgFactLabel(id, now),
+      opens: best.opens,
+      path: (now === "unsure" && F.pathUnsure) || F.path || null,
+    });
+  });
+  return out.sort((a, b) => b.opens.length - a.opens.length);
+}
+/* The steps of a lever are on Next Steps. */
+function stgLeverAdded(c, id) {
+  return plX(c).plan.some(p => p.a === "stratlib" && p.v === "lever:" + id && p.st !== "done" && p.st !== "na");
 }
 function stgMetro(id) {
   return METROS.metros.find(m => m.id === id) || METROS.metros[0];
@@ -232,13 +335,22 @@ function stgChecks(c, S, I, F) {
     d = derive(c);
   return (S.fitChecks || []).map(k => {
     let ok = null,
-      auto = false;
-    if (X.fit[k.id]) ok = X.fit[k.id] === "y";
+      auto = false,
+      fv = null,
+      unsure = false;
+    if (k.fact) {
+      fv = stgFact(c, k.fact);
+      unsure = fv === "unsure";
+      ok = fv == null ? null : unsure ? false : !!k.test(fv);
+    } else if (X.fit[k.id]) ok = X.fit[k.id] === "y";
     else if (k.auto) {
       ok = k.auto(c, I, F, d);
       auto = ok != null;
     }
-    return { k, ok, auto };
+    /* "I don't know it" is a soft roadblock: one thing to find out first. */
+    const block = unsure ? "knowledge" : k.block,
+      no = unsure ? STG_FACTS[k.fact].unsure || k.no : k.no;
+    return { k, ok, auto, fv, hard: !!k.hard && !unsure, block, no };
   });
 }
 /* The dial row that the player picked. With no pick: the highest row that is within reach. */
@@ -260,19 +372,20 @@ function stgVerdict(c, S, I, F) {
     out = { v: "fits", why: "", block: null, pending, masked: false };
   if (X.already || (S.already && S.already(c, I, F)))
     return Object.assign(out, { v: "already", why: S.alreadyWhy || "You said you already do this." });
-  const hard = R.find(r => r.k.hard && r.ok === false);
-  if (hard) return Object.assign(out, { v: "no", why: hard.k.no });
+  const hard = R.find(r => r.hard && r.ok === false);
+  if (hard) return Object.assign(out, { v: "no", why: hard.no, fact: hard.k.fact || null });
   const P = stgPick(c, S, I, F),
     rule = S.verdictRules ? S.verdictRules(c, I, F, P) : null;
   if (rule) return Object.assign(out, { v: "no", why: rule });
-  const soft = R.filter(r => !r.k.hard && r.ok === false);
+  const soft = R.filter(r => !r.hard && r.ok === false);
   if (soft.length) {
-    const first = soft.find(r => r.k.block === "mask") || soft[0];
+    const first = soft.find(r => r.block === "mask") || soft[0];
     return Object.assign(out, {
       v: "notyet",
-      why: first.k.no,
-      block: first.k.block,
-      masked: first.k.block === "mask",
+      why: first.no,
+      block: first.block,
+      fact: first.k.fact || null,
+      masked: first.block === "mask",
       more: soft.length - 1,
     });
   }
@@ -320,6 +433,46 @@ function stgRow(r, hot, faded) {
     v = r.V.v;
   return `<button class="rowbtn stgrow ${hot ? "pulse" : ""}" style="${faded ? "opacity:.55" : ""}" data-a="strat" data-v="${r.S.id}"><span style="min-width:0"><b>${esc(r.S.name)}</b>${r.S.risky ? ` <span class="pill">Risk</span>` : ""}<div class="tiny muted">${v === "no" || v === "already" ? esc(STG_VERDICT[v] + ": " + r.V.why) : esc(w.fi) + (v === "notyet" ? " · Not yet: " + esc(STG_BLOCK[r.V.block][0].toLowerCase()) : "")}</div></span><span class="pill ${v === "fits" ? "okp" : ""}">${v === "fits" && r.V.pending ? "Check the fit" : STG_VERDICT[v]}</span></button>`;
 }
+/* ONE QUESTION FIRST: the open fact that sorts the most moves, with its answers as taps. */
+function stgAskCard(c) {
+  const open = stgOpenFacts(c);
+  if (!open.length) return "";
+  const r = open[0],
+    n = r.moves.length;
+  return `<div class="tile stack stgask" style="gap:8px"><div class="row between" style="gap:8px"><b class="small">One question first</b><span class="tiny muted">${open.length} ${open.length === 1 ? "question" : "questions"} left</span></div><div class="small">${esc(r.F.q)}</div><div class="chips">${r.F.opts.map(([v, l]) => `<button class="chip" data-a="stgfact" data-k="${r.id}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div><div class="tiny muted">One answer sorts ${n} ${n === 1 ? "move" : "moves"}: ${esc(r.moves.map(S => S.name).join(", "))}.${r.F.help ? " " + esc(r.F.help) : ""}</div></div>`;
+}
+/* The answers so far, each one can change. */
+function stgAnswers(c) {
+  const ids = Object.keys(STG_FACTS).filter(
+    id => !STG_FACTS[id].readOnly && stgFact(c, id) != null && stgFactMoves(id).length
+  );
+  if (!ids.length) return "";
+  return `<details class="math stganswers"><summary>Your answers (${ids.length}). Change one</summary><div class="inner stack" style="gap:8px">${ids
+    .map(id => {
+      const F = STG_FACTS[id],
+        v = stgFact(c, id);
+      return F.profile
+        ? `<div class="small">${esc(F.short)}: <b>${esc(stgFactLabel(id, v))}</b> <span class="tiny muted">from your setup</span></div>`
+        : `<div class="stack" style="gap:4px"><span class="small">${esc(F.q)}</span><div class="chips">${F.opts.map(([o, l]) => `<button class="chip sm ${o === v ? "on" : ""}" data-a="stgfact" data-k="${id}" data-v="${esc(o)}">${esc(l)}</button>`).join("")}</div></div>`;
+    })
+    .join("")}</div></details>`;
+}
+/* WHAT WOULD OPEN THE MOST: each lever, with the moves it opens and the steps to get there. */
+function stgLeverCard(c, max) {
+  const L = stgLevers(c).slice(0, max || 4);
+  if (!L.length) return "";
+  return `<div class="card stack stglevers" style="gap:8px"><div class="row between"><h3>What would open the most</h3>${ib("term:stg_lever")}</div><div class="tiny muted">These moves wait on one thing. Change that one thing and they open.</div>${L.map(
+    l =>
+      `<div class="tile stack" style="gap:6px"><div class="row between" style="gap:8px"><b class="small">${esc(l.to)}</b><span class="pill">Opens ${l.opens.length}</span></div><div class="tiny muted">${l.now ? "Now: " + esc(l.now) + ". " : ""}Opens: ${esc(l.opens.map(S => S.name).join(", "))}.</div>${
+        l.path
+          ? `<details class="math"><summary>How to get there</summary><div class="inner stack" style="gap:4px">${l.path.map((q, i) => `<div class="small">${i + 1}. ${esc(q.t)}</div>`).join("")}</div></details>` +
+            (stgLeverAdded(c, l.id)
+              ? `<div class="tiny muted"><b>On your Next Steps ✓</b></div>`
+              : `<button class="ghost wide slim" data-a="stglever" data-k="${l.id}">Add these steps to Next Steps</button>`)
+          : ""
+      }</div>`
+  ).join("")}</div>`;
+}
 /* Part of planTab() in planner.js. The section "Moves to try": the top 3, the first one pulses. */
 function planTabStrat(h) {
   try {
@@ -331,7 +484,7 @@ function planTabStrat(h) {
     return h.replace(
       "<!--moveshere-->",
       () =>
-        `<div class="card stack stgcard" style="gap:8px"><div class="row between"><h3>Moves to try</h3>${ib("term:stg_move")}</div><div class="tiny muted">Bigger moves, ranked by how many days each one brings your goals closer. Each number is a Guess until you sharpen it.</div>${top.length ? top.map((r, i) => stgRow(r, i === 0, false)).join("") : `<div class="small muted">No move fits right now. The library says why for each one.</div>`}<button class="ghost wide slim" data-a="stratlib">See all moves</button></div>`
+        `<div class="card stack stgcard" style="gap:8px"><div class="row between"><h3>Moves to try</h3>${ib("term:stg_move")}</div><div class="tiny muted">Bigger moves, ranked by how many days each one brings your goals closer. Each number is a Guess until you sharpen it.</div>${stgAskCard(c)}${top.length ? top.map((r, i) => stgRow(r, i === 0, false)).join("") : `<div class="small muted">No move fits right now. The library says why for each one.</div>`}<button class="ghost wide slim" data-a="stratlib">See all moves</button></div>`
     );
   } catch (e) {
     report(e, "strat.js: planTabStrat");
@@ -345,6 +498,9 @@ function stgLibSheet() {
   return (
     head("Menu", "Moves library") +
     `<div class="small muted">Every move in the game, the best fit first. A move that does not fit stays here, faded, with the reason.</div>` +
+    stgAskCard(c) +
+    stgLeverCard(c) +
+    stgAnswers(c) +
     `<div class="chips"><button class="chip ${lever ? "" : "on"}" data-a="stratlib" data-v="">All</button>${Object.keys(
       STG_LEVER
     )
@@ -396,12 +552,19 @@ function stgSheet() {
   if (sec === 1)
     b +=
       `<div class="stack" style="gap:6px">${R.map((r, i) => {
-        const ans = X.fit[r.k.id];
-        return `<div class="tile stack" style="gap:6px"><div class="row between" style="gap:8px"><span class="small">${esc(r.k.q)}</span><span class="tiny muted" style="flex:none">${r.k.hard ? "Must have" : STG_BLOCK[r.k.block][0]}</span></div>${
-          r.auto
-            ? `<div class="row between" style="gap:8px"><span class="tiny muted">From your numbers: <b>${r.ok ? "yes" : "not yet"}</b></span><span class="row" style="gap:6px"><button class="chip sm" data-a="stgfit" data-k="${r.k.id}" data-v="y">Yes</button><button class="chip sm" data-a="stgfit" data-k="${r.k.id}" data-v="n">No</button></span></div>`
-            : `<div class="chips"><button class="chip ${ans === "y" ? "on" : i === firstOpen ? "likely" : ""}" data-a="stgfit" data-k="${r.k.id}" data-v="y">Yes</button><button class="chip ${ans === "n" ? "on" : ""}" data-a="stgfit" data-k="${r.k.id}" data-v="n">No</button></div>`
-        }${r.ok === false ? `<div class="tiny muted">${esc(r.k.no)}</div>` : ""}</div>`;
+        const ans = X.fit[r.k.id],
+          Fx = r.k.fact ? STG_FACTS[r.k.fact] : null;
+        return `<div class="tile stack" style="gap:6px"><div class="row between" style="gap:8px"><span class="small">${esc(r.k.q)}</span><span class="tiny muted" style="flex:none">${r.hard ? "Must have" : STG_BLOCK[r.block][0]}</span></div>${
+          Fx
+            ? Fx.readOnly
+              ? `<span class="tiny muted">From your numbers: <b>${r.ok ? "yes" : "not yet"}</b></span>`
+              : Fx.profile && r.fv != null
+                ? `<span class="tiny muted">From your setup: <b>${esc(stgFactLabel(r.k.fact, r.fv))}</b></span>`
+                : `<div class="chips">${Fx.opts.map(([v, l]) => `<button class="chip sm ${r.fv === v ? "on" : ""}" data-a="stgfact" data-k="${r.k.fact}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div><span class="tiny muted">One answer for every move that asks this.</span>`
+            : r.auto
+              ? `<div class="row between" style="gap:8px"><span class="tiny muted">From your numbers: <b>${r.ok ? "yes" : "not yet"}</b></span><span class="row" style="gap:6px"><button class="chip sm" data-a="stgfit" data-k="${r.k.id}" data-v="y">Yes</button><button class="chip sm" data-a="stgfit" data-k="${r.k.id}" data-v="n">No</button></span></div>`
+              : `<div class="chips"><button class="chip ${ans === "y" ? "on" : i === firstOpen ? "likely" : ""}" data-a="stgfit" data-k="${r.k.id}" data-v="y">Yes</button><button class="chip ${ans === "n" ? "on" : ""}" data-a="stgfit" data-k="${r.k.id}" data-v="n">No</button></div>`
+        }${r.ok === false ? `<div class="tiny muted">${esc(r.no)}</div>` : ""}</div>`;
       }).join("")}</div>` +
       `<button class="chip ${X.already ? "on" : ""}" data-a="stgalready">I already do this</button>`;
   /* 2. the rough impact */
@@ -548,6 +711,10 @@ kitTerms({
     "Move",
     "A bigger change to try: one that can move your goals by weeks or years. Each move has a fit check, a rough impact, and a list of steps.",
   ],
+  stg_lever: [
+    "What would open the most",
+    "Some moves wait on one fact about you: a credit score, a spare room, a debt. The game tries each change of that fact and counts the moves it would open. The biggest change is first.",
+  ],
   stg_fi: [
     "FI date",
     "The month when your invested money is enough to live on, so work becomes optional. FI is short for financial independence.",
@@ -615,7 +782,8 @@ Object.assign(ACT, {
     sheet(stgSheet);
   },
   stratlib: t => {
-    W = { kind: "stratlib", lever: (t && t.dataset && t.dataset.v) || "", o: {} };
+    const v = (t && t.dataset && t.dataset.v) || "";
+    W = { kind: "stratlib", lever: STG_LEVER[v] ? v : "", o: {} };
     sheet(stgLibSheet);
   },
   stgsec: t => {
@@ -632,6 +800,39 @@ Object.assign(ACT, {
     X.fit[t.dataset.k] = X.fit[t.dataset.k] === t.dataset.v ? null : t.dataset.v;
     W.sec = 1;
     if (!stgVerdict(c, stgOf(W.id)).pending) W.sec = 2;
+    kitRedraw();
+  },
+  /* One answer to a fact, for every move that asks it. A tap on the answer it has takes it back. */
+  stgfact: t => {
+    const c = C(),
+      id = t.dataset.k,
+      v = t.dataset.v;
+    if (!STG_FACTS[id]) return;
+    stgFactSet(c, id, stgFact(c, id) === v && !STG_FACTS[id].profile ? null : v);
+    if (W && W.kind === "strat") W.sec = stgVerdict(c, stgOf(W.id)).pending ? 1 : 2;
+    kitRedraw();
+  },
+  /* The steps of a lever go to Next Steps. */
+  stglever: t => {
+    const c = C(),
+      id = t.dataset.k,
+      l = stgLevers(c).find(x => x.id === id),
+      x = plX(c);
+    if (!l || !l.path || stgLeverAdded(c, id)) return kitRedraw();
+    l.path.forEach((q, i) =>
+      x.plan.push({
+        id: plId(),
+        t: q.t,
+        s: "To open: " + l.opens.map(S => S.name).join(", "),
+        a: "stratlib",
+        v: "lever:" + id,
+        mins: q.mins || 15,
+        when: addDays(todayISO(), i),
+        slot: "Any",
+        st: "todo",
+        made: todayISO(),
+      })
+    );
     kitRedraw();
   },
   stgalready: () => {

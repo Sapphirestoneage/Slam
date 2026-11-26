@@ -292,6 +292,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Hard moments",
+    l: [
+      "Eight calm tools: untangling after a breakup, a roommate moving out, the first 90 days after a death, when a partner has died, medical bills, saying no to lending, and a fire, flood or eviction.",
+      "Each has steps by when they are due, words to copy with your own numbers, and who can help, checked on Nov 25, 2026 on each organization's own page.",
+      "A money plan kept private, for when someone controls the money: hotlines, quiet steps, and Leave this page, which goes to a weather site at once (or press Shift three times).",
+      "Nothing is kept unless you turn on Keep this. Kept, it stays yours: a coach sees it only if you let them.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Frameworks, and your next dollar",
     l: [
       "Home starts with one line: where your next dollar goes, with the match at work included.",
@@ -311,7 +321,49 @@ const PATCH_NOTES = [
       "On the web page Which student loan plan costs least?, the stepladder: each school year's loan at its own rate, and the interest it gathers before your first payment.",
     ],
   },
-];
+  {
+    d: "2026-11-25",
+    t: "Family money",
+    l: [
+      "Menu has Family money: what goes to your parents and your kids at the same time, next to your freedom date and your first goal.",
+      "Living at home: the rent you save each month, and when it reaches your moving-out goal.",
+      "Kids and tuition: childcare (New York from a dated state source), school or yeshiva tuition, what to put away a month, and the New York 529 rules.",
+      "Yeshiva tuition is a goal type of its own. Make it a goal from Kids and tuition in one tap.",
+      "On the web: three small pages on the same math, on the shelf Family money.",
+    ],
+  },
+  {
+    d: "2026-11-25",
+    t: "Six more quizzes, and a daily lesson for you",
+    l: [
+      "New under Me, Quizzes: Money Scripts, the Enneagram on your own, the FIRE Community Quiz with your flavor and three spectrums, a picture quiz for fun, and Money Trait Percents.",
+      "Quantum Collapse: a few taps, the plans still possible shrinking with each one, and the one first move that matters.",
+      "After the daily question you get a skill and a short read that fit your latest quiz.",
+      "Daily lessons in the menu: one short lesson a day for you, like Kids mode, with the lessons that fit your quiz first.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Moves to try: one question for every move",
+    l: [
+      "Each question about you is asked once. Your credit score band answers every move that needs a score, and the card vault reads the same answer.",
+      "Next Steps and the Moves library ask one question first: the one that sorts the most moves.",
+      "The library shows what would open the most: for example, a score of 670 or more, and the moves it opens.",
+      "Each of those has How to get there, and one button puts the steps on Next Steps.",
+      "Setup answers some checks for you: if you live on your own, no one else has to agree, and the roommate move knows where you live.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Ratios on Key numbers",
+    l: [
+      "Key numbers now ends with Ratios: about twenty of them in groups, one line each, closed until you open a group.",
+      "Each line says what it means in one sentence, how sure it is (Guess, Close or Exact) and, under Show the math, its formula.",
+      "A ratio that is missing a number says which one. It never shows a 0 in its place.",
+      "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
+      "In the web app the same ratios are on Report, Overview, under Ratios.",
+    ],
+  },];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
 if (typeof globalThis !== "undefined") globalThis.PATCH_NOTES = PATCH_NOTES;

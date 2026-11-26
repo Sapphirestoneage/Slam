@@ -753,8 +753,8 @@ function knMetrics(c, d) {
       g: "earn",
       n: "Side income",
       what: "The share of what comes in that is from side gigs or your own business.",
-      num: tot > 0 ? side / tot : null,
-      val: tot > 0 ? knPct(side / tot) : "?",
+      num: raSideShare({ side, total: tot }).value /* core/ratios.js: the one function of the side income share */,
+      val: tot > 0 ? knPct(raSideShare({ side, total: tot }).value) : "?",
       st: knSt(incs),
       zone: tot > 0 ? ["No rule: it shows how much you built yourself", "none"] : null,
       bar: tot > 0 ? { p: (side / tot) * 100, marks: [] } : null,
@@ -1597,6 +1597,7 @@ function knCard(c, d) {
 /* knSheet() makes the full sheet "Key numbers". knSheetBase() is the part from this file. */
 function knSheet() {
   let h = knSheetBase();
+  if (typeof knSheetRatios === "function") h = knSheetRatios(h); /* ratios.js: the card Ratios, in groups */
   if (typeof knSheetBook === "function") h = knSheetBook(h); /* book.js: the spreadsheet of the plan */
   return h;
 }

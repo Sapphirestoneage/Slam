@@ -30,6 +30,20 @@
    "treeName": "Cash and Safety Net",
    "level": 3
   },
+  "cash-safety-net-move-to-high-yield": {
+   "name": "Move to high yield",
+   "what": "HYSA replaces 0.01% checking",
+   "tree": "cash-safety-net",
+   "treeName": "Cash and Safety Net",
+   "level": 2
+  },
+  "deals-smart-buying-apply-cost-per-use-math": {
+   "name": "Apply cost-per-use math",
+   "what": "Buy-for-life where use is high; cheap where low",
+   "tree": "deals-smart-buying",
+   "treeName": "Deals and Smart Buying",
+   "level": 15
+  },
   "deals-smart-buying-audit-subscriptions-quarterly": {
    "name": "Audit subscriptions quarterly",
    "what": "Everything recurring re-justified",
@@ -128,12 +142,26 @@
    "treeName": "Financial Ops and Tooling",
    "level": 13
   },
+  "income-career-change-jobs-strategically": {
+   "name": "Change jobs strategically",
+   "what": "External moves pay 2-3x internal raises",
+   "tree": "income-career",
+   "treeName": "Income and Career",
+   "level": 7
+  },
   "income-career-know-your-market-rate": {
    "name": "Know your market rate",
    "what": "Levels.fyi, BLS, recruiters, peers",
    "tree": "income-career",
    "treeName": "Income and Career",
    "level": 1
+  },
+  "income-career-make-the-raise-ask": {
+   "name": "Make the raise ask",
+   "what": "Documented case + market data + calm delivery",
+   "tree": "income-career",
+   "treeName": "Income and Career",
+   "level": 6
   },
   "income-career-negotiate-one-offer": {
    "name": "Negotiate one offer",
@@ -156,12 +184,33 @@
    "treeName": "Insurance and Protection",
    "level": 1
   },
+  "knowledge-finish-the-gateway-book": {
+   "name": "Finish the gateway book",
+   "what": "Simple Path to Wealth or Psychology of Money",
+   "tree": "knowledge",
+   "treeName": "Knowledge",
+   "level": 1
+  },
+  "knowledge-study-behavioral-finance": {
+   "name": "Study behavioral finance",
+   "what": "Kahneman/Thaler: why plans fail at the human layer",
+   "tree": "knowledge",
+   "treeName": "Knowledge",
+   "level": 8
+  },
   "main-path-automate-payday-contributions": {
    "name": "Automate payday contributions",
    "what": "Money invests itself before you see it",
    "tree": "main-path",
    "treeName": "Main Path",
    "level": 4
+  },
+  "main-path-build-your-contribution-waterfall": {
+   "name": "Build your contribution waterfall",
+   "what": "Personal priority order: match-HSA-IRA-401k-taxable",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 6
   },
   "main-path-buy-your-first-share": {
    "name": "Buy your first share",
@@ -170,12 +219,26 @@
    "treeName": "Main Path",
    "level": 1
   },
+  "main-path-capture-every-raise": {
+   "name": "Capture every raise",
+   "what": "Auto-raise contributions before lifestyle does",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 8
+  },
   "main-path-capture-the-full-401-k-match": {
    "name": "Capture the full 401(k) match",
    "what": "Contribute to the match threshold",
    "tree": "main-path",
    "treeName": "Main Path",
    "level": 3
+  },
+  "main-path-fill-all-sheltered-space": {
+   "name": "Fill ALL sheltered space",
+   "what": "Cash-flow engineering to max 401k+IRA+HSA",
+   "tree": "main-path",
+   "treeName": "Main Path",
+   "level": 10
   },
   "main-path-open-invest-a-roth-ira": {
    "name": "Open & invest a Roth IRA",
@@ -190,6 +253,13 @@
    "tree": "money-psychology",
    "treeName": "Money Psychology",
    "level": 3
+  },
+  "money-psychology-close-the-security-gap": {
+   "name": "Close the security gap",
+   "what": "Actual safety vs FELT safety, both written",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 12
   },
   "money-psychology-decouple-mood-from-market": {
    "name": "Decouple mood from market",
@@ -261,6 +331,13 @@
    "treeName": "Money Psychology",
    "level": 8
   },
+  "money-psychology-practice-deliberate-gratitude": {
+   "name": "Practice deliberate gratitude",
+   "what": "The evidence-backed treadmill antidote",
+   "tree": "money-psychology",
+   "treeName": "Money Psychology",
+   "level": 5
+  },
   "money-psychology-reconcile-two-money-stories": {
    "name": "Reconcile two money stories",
    "what": "Partners can state each other's script and fear",
@@ -331,6 +408,13 @@
    "treeName": "Portfolio Design",
    "level": 1
   },
+  "portfolio-design-rebalance-on-rules": {
+   "name": "Rebalance on rules",
+   "what": "Calendar or 5%-band triggers",
+   "tree": "portfolio-design",
+   "treeName": "Portfolio Design",
+   "level": 6
+  },
   "portfolio-design-run-a-one-fund-portfolio": {
    "name": "Run a one-fund portfolio",
    "what": "Target-date fund as a complete strategy",
@@ -352,6 +436,20 @@
    "treeName": "Pre-Retirement Design",
    "level": 2
   },
+  "pre-retirement-design-design-the-glide-down": {
+   "name": "Design the glide-down",
+   "what": "4-day week, consulting, seasonal, the ramp, not the cliff",
+   "tree": "pre-retirement-design",
+   "treeName": "Pre-Retirement Design",
+   "level": 6
+  },
+  "pre-retirement-design-detox-from-status": {
+   "name": "Detox from status",
+   "what": "Title loss pre-processed: who are you at parties now?",
+   "tree": "pre-retirement-design",
+   "treeName": "Pre-Retirement Design",
+   "level": 21
+  },
   "pre-retirement-design-write-the-retire-to-vision": {
    "name": "Write the retire-TO vision",
    "what": "What you're moving toward, not from",
@@ -365,6 +463,13 @@
    "tree": "side-hustles",
    "treeName": "Side Hustles",
    "level": 1
+  },
+  "side-hustles-freelance-your-day-skill": {
+   "name": "Freelance your day skill",
+   "what": "The job skill sold directly at 2x hourly",
+   "tree": "side-hustles",
+   "treeName": "Side Hustles",
+   "level": 3
   },
   "side-hustles-separate-the-money": {
    "name": "Separate the money",
@@ -449,6 +554,34 @@
    "tree": "time-capital",
    "treeName": "Time Capital",
    "level": 2
+  },
+  "time-capital-plan-in-seasons": {
+   "name": "Plan in seasons",
+   "what": "Quarterly themes instead of daily thrash",
+   "tree": "time-capital",
+   "treeName": "Time Capital",
+   "level": 13
+  },
+  "withdrawal-decumulation-bridge-the-healthcare-gap": {
+   "name": "Bridge the healthcare gap",
+   "what": "ACA + subsidies or Barista benefits to 65",
+   "tree": "withdrawal-decumulation",
+   "treeName": "Withdrawal and Decumulation",
+   "level": 11
+  },
+  "withdrawal-decumulation-compute-your-real-number": {
+   "name": "Compute your real number",
+   "what": "From tracked spending incl. health + lumpy costs",
+   "tree": "withdrawal-decumulation",
+   "treeName": "Withdrawal and Decumulation",
+   "level": 2
+  },
+  "withdrawal-decumulation-map-your-fi-stages": {
+   "name": "Map your FI stages",
+   "what": "Coast, Lean, Full, Fat, with YOUR dates",
+   "tree": "withdrawal-decumulation",
+   "treeName": "Withdrawal and Decumulation",
+   "level": 4
   }
  },
  "trees": {
@@ -545,6 +678,10 @@
   "renting-is-throwing-money-away": {
    "advice": "Renting is throwing money away: buy as soon as you can",
    "line": "Buying makes sense once the cards are gone, the job-loss fund is full and the down payment is saved. Before that, a house turns every repair into new debt."
+  },
+  "save-a-thousand-first": {
+   "advice": "Save $1,000 before anything else",
+   "line": "You already have it. Now every spare dollar goes to the debt at 8% or more: cash past little e while a card grows is paying 25% to hold about 4%."
   },
   "six-months-first": {
    "advice": "Keep six months of expenses in cash before anything else",

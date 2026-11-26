@@ -11,6 +11,14 @@ import { PYRAMID } from './pyramid.js';
 import { MOUNTAIN } from './mountain.js';
 import { STARS } from './stars.js';
 import { SINS } from './sins.js';
+import { SCRIPTS } from './scripts.js';
+import { ENNEAGRAM } from './enneagram.js';
+import { FIRE } from './fire.js';
+import { SNACK } from './snack.js';
+import { TRAITS } from './traits.js';
+import { COLLAPSE_SKIN } from './collapse.js';
 
-export const SKINS = [LETTERS, ADDRESS, HOUSES, AVATARS, SHEET, PYRAMID, MOUNTAIN, STARS, SINS];
+// A skin with where: 'game' shows only in the game (Quantum collapse: the web app asks it on its own first screen).
+export const SKINS = [LETTERS, ADDRESS, HOUSES, AVATARS, SHEET, PYRAMID, MOUNTAIN, STARS, SINS, SCRIPTS, ENNEAGRAM, FIRE, SNACK, TRAITS, COLLAPSE_SKIN];
+export const WEB_SKINS = SKINS.filter(s => s.where !== 'game');
 export const skinOf = id => SKINS.find(s => s.id === id) ?? null;
