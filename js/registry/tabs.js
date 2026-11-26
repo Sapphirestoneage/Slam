@@ -97,7 +97,7 @@ export const SCREEN_TABS = [
       { math: 'Current vs Proposed', rows: ['M76', 'M76_nw5'] },
       { report: 'Proposed' },
     ] },
-  { name: 'The future', screens: ['#/plan/goals', '#/plan/timeline', '#/plan/debt-payoff', '#/plan/transitions'],
+  { name: 'The future', screens: ['#/plan/goals', '#/plan/fire', '#/plan/timeline', '#/plan/debt-payoff', '#/plan/transitions'],
     about: 'The future: the FI date and its range, the debt-free date, and your goals. Fill in the blue boxes from the top; the dates above fill in as you go.',
     blocks: [
       { math: 'Where this stands', rows: ['M53=Months to FI', 'M9R_fiLow=Months to FI, soonest likely', 'M9R_fiHigh=Months to FI, latest likely', 'M34=Months to debt free', 'M34_rangeLow=Debt free, soonest likely', 'M34_rangeHigh=Debt free, latest likely'] },
@@ -115,7 +115,7 @@ export const SCREEN_TABS = [
   { name: 'Statements', screens: ['#/report/statements'],
     about: 'Statements: net worth, income and spending, and cash flow, as formulas off the other tabs. Nothing to type here.',
     blocks: [{ report: 'Statements' }] },
-  { name: 'One-pager', screens: ['#/report/one-pager', '#/report/overview'],
+  { name: 'One-pager', screens: ['#/report/one-pager', '#/report/overview', '#/report/plan-report'],
     about: 'One-pager: the numbers to share at the end of a session, with the program and the picture. Nothing to type here.',
     blocks: [
       { math: 'Metrics', rows: ['M27=Surplus', 'M28=Savings rate', 'M28_base=Savings rate, surplus only', 'M40=Net worth', 'M41=Liquid net worth', 'M42=Runway (months)', 'M36=Debt-to-income', 'M35=Utilization', 'M58=FI days for $100', 'M58_hours=Hours of work for $100', 'M53=Months to FI', 'M9E_netWorth=Typical net worth at your age'] },

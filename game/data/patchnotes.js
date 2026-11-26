@@ -504,6 +504,16 @@ const PATCH_NOTES = [
       "Two new tools: Invest or pay debt (one grid, your own debts marked) and Roth or traditional, by account. The web app has the same page.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Session summary, plan report and FIRE",
+    l: [
+      "The statement import now knows a Rocket Money export: its own categories sort your spending, and card payments and transfers stay out.",
+      "In the web app, the one-pager drafts a session summary: the top takeaways from what changed and the next steps, to edit before it goes out.",
+      "Plan report, from the one-pager: the one-pager, your next steps, your statements and your order of operations as one printout or PDF.",
+      "Plan, FIRE: every way to financial independence (Lean, Coast, Barista, FIRE, Chubby and Fat) with its number and date, a tap for a faster pace, and each type in plain words.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from '../../js/math/income.js';
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
+import { recapNumbers } from '../../js/math/recap.js';
 import { fiNumber, fiDate, coastFi, solveMonthlySaving, fatFiNumber, chubbyFiNumber, baristaGap, baristaFiNumber, fiStress } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
 import { fireSheetRows } from '../../js/math/firesheet.js';
@@ -522,6 +523,19 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
     { const plans = Array.from({ length: whole(1, 3) }, () => ({ premium: maybe(money(1, 1200)), deductible: maybe(money(1, 9000)), oop: maybe(money(1, 12000)), market: rnd() < 0.6 })), help = pick([null, 0, money(1, 15000)]);
       const P = bpPlans(plans, { help }); add('bpPlans', { plans, help }, { rows: P.rows.map(r => (r.ready ? { ready: true, year: r.year, typical: r.typical, heavy: r.heavy } : { ready: false })), cheapest: P.cheapest }); }
   }
+}
+// Coach and reports (run Finish everything partly built, Part 18). The FIRE dashboard's pace: the same FI date with more
+// a month, and how many months sooner. The session summary (M8R): then and now as up or down, and a date compared as
+// a calendar month (the snapshot's month plus its count against this month plus today's).
+for (let i = 0; i < N; i++) {
+  const x = { invested: rnd() < 0.2 ? 0 : money(500, 900000), monthlyInvesting: money(50, 6000), extra: pick([0, 100, 250, 500, 1000]), realReturn: pick([0.06, 0.07, 0.08]), target: money(300000, 4000000) };
+  const a = fiDate(x, { from: NOW }), b = fiDate({ ...x, monthlyInvesting: x.monthlyInvesting + x.extra }, { from: NOW });
+  add('firePace', x, { base: a.value, pace: b.value, sooner: a.value != null && b.value != null ? a.value - b.value : null });
+  const k = () => (rnd() < 0.15 ? null : rnd() < 0.3 ? -money(1, 50000) : money(1, 400000));
+  const before = { netWorth: k(), surplus: k(), debtFreeMonths: rnd() < 0.2 ? null : whole(0, 120) }, now = { netWorth: k(), surplus: k(), debtFreeMonths: rnd() < 0.2 ? null : whole(0, 120) };
+  const y = { before, now, at: '2026-11', beforeAt: pick(['2026-08', '2026-09', '2026-10', '2026-11']) };
+  const R = recapNumbers(before, now, { at: y.at, beforeAt: y.beforeAt, fiOk: false });
+  add('recapNumbers', y, { keys: R.map(t => t.key), texts: R.map(t => t.text) });
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

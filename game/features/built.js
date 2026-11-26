@@ -124,6 +124,22 @@ const WB = [
     "Read on your phone. The file is never sent anywhere.",
     "import2",
   ],
+  [
+    "in",
+    "Rocket Money export, read by its own columns",
+    "b",
+    () => WB_FN("imAppCols") && WB_FN("csvAppRows") && typeof IM_ROCKET_COLS !== "undefined",
+    "In the statement import: a Rocket Money file is known by its header row, its own categories sort the lines, card payments and transfers stay out. A Monarch file still reads as a bank file.",
+    "import2",
+  ],
+  [
+    "slam",
+    "Session summary, plan report and FIRE dashboard",
+    "n",
+    null,
+    "Not ported. In the web app: Report, One-pager (the session summary, drafted for you), the Plan report, and Plan, FIRE.",
+    null,
+  ],
   ["in", "Subscription hunt from a statement", "b", () => WB_HAS("subs"), "", "subs"],
   ["in", "Log money in, out, debt payments and moves", "b", () => WB_HAS("flow") && WB_FN("applyFlow"), "", null],
   [

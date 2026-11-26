@@ -147,7 +147,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 15 | Safety nets | Not started | |
 | 16 | Giving | Not started | |
 | 17 | Asking fewer questions | Not started | |
-| 18 | Coach and reports | Not started | |
+| 18 | Coach and reports | Done (web app: session summary, Plan report, Plan › FIRE; game: Rocket Money import. The game has no session summary, plan report or FIRE dashboard of its own) | Report › One-pager "Session summary, drafted for you" (`js/math/recap.js`, M8R; `recapOf`, `recapDraft`, `planReportScreen` in `js/ui/report-ui.js`), Report › Plan report (hidden sub-tab, print stylesheet in `css/app.css`), Plan › FIRE (`js/ui/fire-ui.js`, `fireBoardOf` in `js/math/destinations.js`, `FIRE_PACES` and `FIRE_EXPLAIN` in `js/registry/destinations.js`), the game's statement import (`imAppCols`, `IM_ROCKET_COLS` in `game/features/import.js`, `csvAppRows` in `features/games2.js`). QUESTIONS 637. |
 | 19 | Testing and math | Not started | |
 | 20 | Game feel | Not started | |
 | 21 | Spec rows marked Partly | Not started | |

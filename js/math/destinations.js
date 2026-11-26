@@ -16,14 +16,17 @@ import { DESTINATIONS, DESTINATION_WORDS, FOO_BY_DESTINATION, FOO_EXTRA } from '
 const pctWords = v => `${+(v * 100).toFixed(2)}%`;
 
 // M9G: each destination as one view: its number, its date on the plan's own path, and what it assumes, in words.
-export function destinationsOf(m, doc, { now = new Date() } = {}) {
+// extra and realReturn (run Finish everything partly built, Part 18, the FIRE dashboard's pace taps): a what-if on the
+// same path, more a month and another return; the numbers stay, only the dates move. Both default to the plan as it is.
+export function destinationsOf(m, doc, { now = new Date(), extra = 0, realReturn = null } = {}) {
   const x = m.inputs, T = fiTargets(m, doc), w = x.withdrawalRate;
-  const going = m.investing?.monthly ?? m.surplus?.value ?? null;
+  const r = realReturn ?? x.realReturn;
+  const going0 = m.investing?.monthly ?? m.surplus?.value ?? null, going = going0 == null ? null : going0 + extra;
   const spend = x.retirementSpending, base = ymOf(now);
   const common = [
     w == null ? null : `A ${pctWords(w)} withdrawal rate: each year you take out that share of what is invested.`,
-    x.realReturn == null ? null : `Growth of ${pctWords(x.realReturn)} a year after inflation.`,
-    going == null ? null : `${fmt.money(going)} going in each month, as it does today.`,
+    r == null ? null : `Growth of ${pctWords(r)} a year after inflation.`,
+    going == null ? null : extra ? `${fmt.money(going)} going in each month: today's ${fmt.money(going0)} plus ${fmt.money(extra)}.` : `${fmt.money(going)} going in each month, as it does today.`,
   ].filter(Boolean);
   const partTime = doc.assumptions?.partTimeIncome ?? null, health = baristaHealthOf(doc), jobHealth = doc.program?.destinations?.jobHealth === true;
   const extras = fatExtrasOf(doc);
@@ -38,7 +41,7 @@ export function destinationsOf(m, doc, { now = new Date() } = {}) {
   };
   return DESTINATIONS.map(key => {
     const number = T[key], v = number?.value ?? null;
-    const t = v == null ? null : monthsTo(m, v, { now });
+    const t = v == null ? null : monthsTo(m, v, { now, extra, realReturn: r });
     const months = t?.reached ? 0 : t?.value ?? null;
     return { key, short: DESTINATION_WORDS[key].short, what: DESTINATION_WORDS[key].what, number, value: v, spending: own[key].spending,
       months, reached: !!t?.reached, never: !!t?.never || (key === 'Barista FI' && !!number?.never), ym: months == null ? null : addMonths(base, months), date: t ?? null,
@@ -48,6 +51,23 @@ export function destinationsOf(m, doc, { now = new Date() } = {}) {
       assumes: [...own[key].assumes, ...common], guess: !!number?.guess,
       gap: key === 'Barista FI' ? gap : null, jobHealth: key === 'Barista FI' ? jobHealth : null, healthOpen: key === 'Barista FI' ? health == null : null };
   });
+}
+
+// The FIRE dashboard (run Finish everything partly built, Part 18): every destination at one pace, next to the plan as
+// it is, with Coast, and the share of each number already invested. Nothing new is worked out: the views are
+// destinationsOf at the pace (M9G on M53), Coast is coastReachedOf (M54).
+export function fireBoardOf(m, doc, { now = new Date(), extra = 0, realReturn = null } = {}) {
+  const base = destinationsOf(m, doc, { now });
+  const pace = extra || realReturn != null ? destinationsOf(m, doc, { now, extra, realReturn }) : base;
+  const views = pace.map(v => {
+    const b = base.find(x => x.key === v.key);
+    return { ...v, sooner: b?.months != null && v.months != null ? b.months - v.months : null, baseWhen: b?.when ?? null };
+  });
+  const coast = coastReachedOf(m, doc, { now });
+  const regular = views.find(v => v.key === 'Regular FI');
+  return { views, coast: { value: coast.coast, reached: coast.reached, invested: coast.invested, retireAge: coast.retireAge, gap: coast.coast != null && coast.invested != null && !coast.reached ? coast.coast - coast.invested : null, text: m.coastFi?.text ?? null },
+    invested: m.inputs.invested ?? null, going: (m.investing?.monthly ?? m.surplus?.value ?? null), extra, realReturn: realReturn ?? m.inputs.realReturn ?? null,
+    nearest: views.filter(v => v.months != null && !v.reached).sort((a, b) => a.months - b.months)[0] ?? null, regular: regular ?? null };
 }
 
 // What Barista closes, in months: the Regular date less the Barista date on the same path.
