@@ -366,6 +366,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "LGBTQ+ money tools, private by default",
+    l: [
+      "What care would cost you after your plan pays, and a check of what a health plan covers.",
+      "A name and gender marker change step by step, New York first, each fee from the office's own page.",
+      "Two jobs side by side with benefits in dollars, an emergency fund for a longer job search, and a runway without family help.",
+      "What each side costs you, in your own numbers. Growing your family, care later in life, and a chosen-family summary for a lawyer.",
+      "Nothing on these pages is kept unless you turn on Keep this. The tab shows a plain title, and Leave this page opens a weather page.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Quest mode",
     l: [
       "Menu has Quest mode (also on your character sheet): health, armor and six stats, each from your own numbers with its math.",

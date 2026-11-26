@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 169. Lines: 106,212. Top-level functions: 2475. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 169. Lines: 106,231. Top-level functions: 2475. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -163,7 +163,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 149 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 150 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 151 | `features/quest.js` | 781 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
-| 152 | `data/patchnotes.js` | 382 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 152 | `data/patchnotes.js` | 393 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 153 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 154 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 155 | `features/look.js` | 552 | 26 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
@@ -180,7 +180,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 166 | `features/book.js` | 613 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 167 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 168 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 169 | `features/built.js` | 1,510 | 4 | 16 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 169 | `features/built.js` | 1,518 | 4 | 16 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
