@@ -1586,7 +1586,7 @@ function knLockWord(m) {
 function knTile(m) {
   const t = knTone(m),
     lock = m.num == null;
-  return `<button class="ktile t-${t} ${m.focus ? "focus" : ""} ${lock ? "lock" : ""}" data-a="metric" data-v="${m.id}"><span class="kn">${esc(m.n)}</span><span class="kv ${m.guess || lock ? "guess" : ""}">${esc(m.val)}</span><span class="kz">${lock ? knLockWord(m) : m.guess ? "A guess so far" : esc(m.zone[0])}</span>${m.focus ? `<span class="pill okp kf">Working on it</span>` : ""}</button>`;
+  return `<button class="ktile t-${t} ${m.focus ? "focus" : ""} ${lock ? "lock" : ""}" data-a="metric" data-v="${m.id}"><span class="kn">${esc(m.n)}</span><span class="kv ${m.guess || lock ? "guess" : ""}">${lock ? "Tap to unlock" : esc(m.val)}</span><span class="kz">${lock ? knLockWord(m) : m.guess ? "A guess so far" : esc(m.zone[0])}</span>${m.focus ? `<span class="pill okp kf">Working on it</span>` : ""}</button>`;
 }
 function knCard(c, d) {
   const M = knMetrics(c, d),

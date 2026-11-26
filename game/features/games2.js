@@ -4,7 +4,7 @@
    INPUT       The open sheet (W.kind): bins, boss, cal, dq, draft, games, ghost, nwg, subs, swipe,
                tier. The taps of the player (the actions in OUTPUT).
    OUTPUT      40 functions. Parts of functions in other files: campCardGames. Actions (ACT): games,
-               tier, tierset, tieredit, tierpick, tierdone, draft, draftdeal, draftpick, draftdone,
+               tier, tierset, tieredit, tierpick, tierdone, draft, draftdeal,
                bins, binset, binsdone, cal, and 29 more.
    DEPENDS ON  core/report.js, core/engine.js, core/engine2.js, screens/ui.js, features/games.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
@@ -736,18 +736,7 @@ function tierBoard(c) {
     ""
   )}</div>${jl.love.length ? `<div class="small"><b>Protect:</b> ${jl.love.join(", ")}.</div>` : ""}${jl.cut.length ? `<div class="small"><b>First place to look for cuts:</b> ${jl.cut.join(", ")}.</div>` : ""}`;
 }
-/* card draft */
-function draftSheet() {
-  const c = C(),
-    w = W,
-    cards = draftDeal(c, w.deal),
-    pick = w.pick;
-  return (
-    head("Card draft", "Keep up to 3") +
-    `<div class="small muted">Five things people save for. Keep the ones that are yours. They go on your Someday list with a guessed price you can fix later.</div><div class="stack" style="gap:6px">${cards.map(k => `<button class="rowbtn ${pick.includes(k) ? "on" : ""}" data-a="draftpick" data-v="${k}"><span><b>${k}</b><div class="tiny muted">${GOAL_ONE[k]} Guess: ${money(goalTypical(c, k))}</div></span><span>${pick.includes(k) ? "✓ Kept" : "Keep"}</span></button>`).join("")}</div>${cards.length ? "" : `<div class="tile small">You already have all of these on your list.</div>`}<button class="ghost wide slim" data-a="draftdeal">Deal me different ones</button>` +
-    G2B("draftdone", pick.length ? "Keep " + pick.length : "None of these, for now")
-  );
-}
+/* card draft: draftSheet is in goalrank.js (keep any number, then rank) */
 /* bins */
 function binsSheet() {
   const c = C(),
@@ -1124,34 +1113,6 @@ Object.assign(ACT, {
   draftdeal: () => {
     W.deal = (W.deal || 0) + 1;
     drawSheet();
-  },
-  draftpick: t => {
-    const p = W.pick,
-      k = t.dataset.v,
-      i = p.indexOf(k);
-    if (i >= 0) p.splice(i, 1);
-    else if (p.length < 3) p.push(k);
-    drawSheet();
-  },
-  draftdone: () => {
-    const c = C(),
-      X = GX(c);
-    W.pick.forEach(k => {
-      if (!c.goals.some(g => g.k === k))
-        c.goals.push({
-          id: gid(),
-          k,
-          n: k,
-          cost: goalTypical(c, k),
-          s: false,
-          era: null,
-          fund: 0,
-          blk: null,
-          d: todayISO(),
-        });
-    });
-    X.l2.draft = true;
-    g2done();
   },
   bins: () => {
     W = { kind: "bins", res: binSum(C()).done };
