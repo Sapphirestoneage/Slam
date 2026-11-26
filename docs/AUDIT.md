@@ -71,6 +71,11 @@ over the years), living at home with the moving-out goal reached by stepping a b
 summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
 529 deduction from the limit.
 
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10a) it also covers the game's Quest mode (`js/math/quest.js`,
+M8Z): the health, armor and six stat scores from their definitions, the capacity steps from the margin, the cushion,
+the plate and a challenge, the weak spots and their room in order, the hidden costs added up and turned into days of
+spending, the SCF 2025 row for an age with the quarter of all households, and a duel against the values picked.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
 with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;
@@ -88,6 +93,11 @@ and each deposit (the monthly amount × 12 ÷ the deposits, rounded up to a doll
 after the last one, with the end of a month moved to its last day); and a date the person taps (its next day, the
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
+
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10b) it also covers the game's play math (`js/math/play.js`): a bank
+bonus kept (the deposit's interest at each rate grown month by month, the gap after its tax, the fees), the hunt toward
+$1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
+month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
 one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked

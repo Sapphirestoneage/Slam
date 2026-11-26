@@ -106,6 +106,7 @@ export const FORMATS = [
   { version: 63, shape: '72ee4b9b' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 7): M8H hard moments, app-only, and settings.hard (kept only when the person chooses)
   { version: 64, shape: 'a4e17f06' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 8): M8F family money, app-only, NY childcare, the NY 529 limits and the K-12 limit on the assumptions list
   { version: 65, shape: '3a6e1325' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 6): M8P your own path, app-only, ten NY ID papers fees and four adoption credit values on the assumptions list
+  { version: 66, shape: 'bb137bfc' }, // Nov 26 2026 (run Not built, groups 1 to 5, Part 10a): M8Z the game's Quest mode, game-only math
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

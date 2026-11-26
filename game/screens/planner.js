@@ -859,7 +859,7 @@ const MENU_GROUPS = [
     ["quick", "gig", "sign", "owed", "taxv", "cover", "mix", "study", "lever", "mult", "xray", "acwhy", "nxa"],
   ],
   ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
-  ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "lsopen", "crg", "hunt"]],
+  ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode", "lsopen", "crg", "hunt"]],
   ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag", "lock"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
   ["admin", "🛠️", "Admin", ["built", "testkit"], "admin"],
