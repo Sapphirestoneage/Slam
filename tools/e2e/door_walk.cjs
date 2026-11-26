@@ -4,7 +4,7 @@
 // The Supabase script comes from a CDN that the build machine cannot reach, and a walk must not touch the real
 // database, so a stand-in answers in its place: nobody signed in (a new visitor), or one signed-in person.
 // The walk: (1) a new visitor from the link with ?ref= at 390 x 640: the landing, all of it on the first screen,
-// one primary button; (2) Start, the taps of a person, to the answer of "Am I okay?", with the count of taps and
+// one primary button; (2) Start, the taps of a person, to the payoff reveal ("Here's where you stand"), with the count of taps and
 // the time; (3) the address still has ?ref=; (4) the offer to save opens "Create your account", and Back returns to
 // the game; (5) the same visitor again: straight to the game; (6) a signed-in person: no landing; (7) 1280 wide.
 // Exit code 1 when a check fails.
@@ -116,9 +116,10 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   await page.waitForTimeout(400);
   const secs = Math.round((Date.now() - t0) / 1000);
   const txt = await page.locator('#ov').innerText();
-  chk('the path ends on the answer to "Am I okay?"', /Am I okay\?/.test(txt) && /From your taps/.test(txt), txt.slice(0, 200));
-  chk('the answer is a Guess, with no grade', /This is a Guess/.test(txt) && /No grade/.test(txt));
-  chk('the answer offers to save by making an account', await page.locator('#ov [data-a=doorsave]').isVisible());
+  // results first (game/features/results.js): the path ends on the one payoff reveal, with the offer to keep the game
+  chk('the path ends on the payoff reveal', /Here's where you stand/.test(txt) && /Start my first win/.test(txt), txt.slice(0, 200));
+  chk('the reveal marks typical numbers as a Guess', /Guess/.test(txt) && /typical/.test(txt));
+  chk('the reveal offers to save by making an account', await page.locator('#ov [data-a=doorsave]').isVisible());
   chk('the answer: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
   console.log(`     taps from Start to the answer: ${taps} (the robot waits 0.12 s after each tap: ${secs} s in all)`);
   await shot(page, '4-answer-390');

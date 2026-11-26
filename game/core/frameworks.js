@@ -5,18 +5,19 @@
                buckets and the designed week, the net worth peak, 0% tax in early retirement, the steps
                of Your Money or Your Life and the nine as one path, the next dollar, the quick wins.
    INPUT       Plain numbers from the caller. It reads no profile and no screen.
-   OUTPUT      46 functions and constants: FW_SWAN_MONTHS, fwSwan, FW_MOUSE, fwTicks, FW_TRUST, fwTrust, fwTrustWords, 
+   OUTPUT      49 functions and constants: FW_SWAN_MONTHS, fwSwan, FW_MOUSE, fwTicks, FW_TRUST, fwTrust, fwTrustWords, 
                fwTranslate, FW_NEXT_STEP, FW_BABY, FW_BABY_RULES, FW_BABY_SOURCE, fwBabySteps, 
                FW_K25, FW_K25_SOURCE, FW_WEALTH, fwWealthStage, FW_BUCKET_YEARS, FW_BUCKET_KINDS, 
                fwBuckets, FW_WEEK, fwWeek, fwPeak, fwZeroTax, FW_YMOYL, fwYmoylPath, fwLifetime, 
                FW_MARKS, fwThreeQ, fwWall, FW_LOWER, fwLowerKind, fwFreed, FW_RAISE_UPS, 
                FW_RAISE_IDEAS, fwRaise, FW_CUSHION_MONTHS, fwStep9, FW_FOO_KIND, fwNextDollar, 
-               FW_WINS, FW_WIN_SAVES, fwWins, FW_ORDER, FW_STEP_HEAD, FW_UNLEARN
+               FW_WINS, FW_WIN_SAVES, fwWins, fwLead, fwDtiMonths, fwMonthEnd, FW_ORDER, 
+               FW_STEP_HEAD, FW_UNLEARN
    DEPENDS ON  core/withdraw.js (spendDownPayment), core/trip.js (TP_RULES).
    RULES       GENERATED FILE. Do not edit it. It is a copy of js/math/frameworks.js of the main app.
                tools/game_frameworks_build.mjs makes it. Change the source, then run the tool.
                Prettier does not format this file (.prettierignore).
-   SOURCE-HASH  61de6161ee52a8d2
+   SOURCE-HASH  2c3bcea593fdf2c6
    ========================================================================= */
 // Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4, Nov 25 2026). One file of math for the
 // web app and the game: the SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator,
@@ -336,6 +337,43 @@ function fwWins(wins = {}, yearSpend = null) {
   const month = priced.reduce((s, [id]) => s + wins[id].save, 0);
   return { done: done.length, total: FW_WINS.length, unpriced: done.length - priced.length, month, year: month * 12,
     fiDays: fwHas(yearSpend) && yearSpend > 0 ? month * 12 / (yearSpend / 365) : null };
+}
+
+// ---------- results first (run Results-first Home, Nov 26 2026) ----------
+// The lead number of the payoff reveal and of Home: the debt-free date while net worth is below zero, the FI date for
+// a player who builds toward FI (their own answers: they invest every month or turned on the freedom date), else the
+// next stop of the route. worth null: not known, so it never picks the debt-free date on its own.
+function fwLead({ worth = null, fire = false } = {}) {
+  if (fwHas(worth) && worth < 0) return 'debtfree';
+  return fire ? 'fi' : 'next';
+}
+// Debt-to-income at a target: the months until home cost plus the payments of the debts still open, over pay before
+// taxes, is at or under the target. Each debt is { pay, off } with off the month its payoff run ends (null: no end).
+// 0 when it is there now; null with no pay, or when the run never gets there (a debt with no end, or the home alone).
+function fwDtiMonths({ home = 0, gross = null, debts = [], target = 0.36 } = {}) {
+  if (!fwHas(gross) || gross <= 0) return null;
+  const at = m => (home + debts.filter(d => d.off == null || d.off > m).reduce((s, d) => s + (d.pay || 0), 0)) / gross;
+  if (at(0) <= target) return 0;
+  const offs = [...new Set(debts.filter(d => fwHas(d.off)).map(d => d.off))].sort((a, b) => a - b);
+  for (const m of offs) if (at(m) <= target) return m;
+  return null;
+}
+// Net worth to the last day of this month, day by day. days: [{ day, net }] the money in less the money out of each
+// day of the month (the cash calendar); today: the day of the month now; last: the last day of the month; extra: what
+// the planned moves add over the rest of the month, spread evenly over the days left. asIs is the line if nothing
+// planned happens, planned the line if it does. Both start at today's net worth.
+function fwMonthEnd({ worth = null, days = [], today = 1, last = 30, extra = 0 } = {}) {
+  if (!fwHas(worth)) return null;
+  const left = Math.max(0, last - today), per = left > 0 ? (extra || 0) / left : 0, net = {};
+  days.forEach(d => { net[d.day] = (net[d.day] || 0) + (d.net || 0); });
+  const out = { days: [today], asIs: [worth], planned: [worth] };
+  let a = worth, p = worth;
+  for (let k = today + 1; k <= last; k++) {
+    a += net[k] || 0;
+    p += (net[k] || 0) + per;
+    out.days.push(k); out.asIs.push(a); out.planned.push(p);
+  }
+  return Object.assign(out, { endAsIs: a, endPlanned: p });
 }
 
 // ---------- data for the Advice translator (from js/registry/foo.js and data/library/unlearn.json) ----------

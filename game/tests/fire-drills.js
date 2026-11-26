@@ -43,11 +43,11 @@
   go("home");
   const c = C();
   chk(
-    "Home offers the tour first, alone, under the main tiles",
+    "Home offers the tour first, alone, under the four cards (results.js)",
     app().includes("Take the 3-tap tour") &&
       !app().includes("Meet your character") &&
-      app().indexOf('class="quad"') > 0 &&
-      app().indexOf('class="quad"') < app().indexOf('data-a="tour"') &&
+      app().indexOf("<!--homerows-->") > 0 &&
+      app().indexOf("<!--homerows-->") < app().indexOf('data-a="tour"') &&
       app().includes('class="rowbtn homerow" data-a="tour"')
   );
   X("tour");

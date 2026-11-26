@@ -65,12 +65,13 @@
     "Home leads with what is known, under the four tiles, and it shows collapsed",
     app().includes("You already know " + K.known + " of " + K.total + " things") &&
       app().includes('class="rowbtn homerow kwstrip"') &&
-      app().indexOf('class="quad"') < app().indexOf("kwstrip") &&
+      app().indexOf("<!--homerows-->") > 0 &&
+      app().indexOf("<!--homerows-->") < app().indexOf("kwstrip") &&
       ["D", "A", "I", "T", "E"].every(l => app().includes("<b>" + l + "</b>"))
   );
   chk(
-    "the Home tile uses the same number",
-    fogPct(c, D) === K.pct && app().includes('<b class="qt">' + K.pct + "%</b>")
+    "the Your picture tile (the four boxes, now behind the four cards of results.js) uses the same number",
+    fogPct(c, D) === K.pct && homeQuad(c, D).includes('<b class="qt">' + K.pct + "%</b>")
   );
   X("know");
   chk(
