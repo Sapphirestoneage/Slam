@@ -38,35 +38,33 @@
   chk("Me has the way in", app().includes("Is my money going where I want?") && MENU.some(m => m[1] === "values"));
   X("values");
   chk(
-    "step 1: pick what matters, next is locked until one is picked",
-    W.kind === "values" && ov().includes("Pick up to three") && ov().includes("disabled") && clean(ov())
+    "step 1: rank what matters, next is locked until one is ranked",
+    W.kind === "values" && ov().includes("Tap them in order") && ov().includes("disabled") && clean(ov())
   );
   X("vltop", "Freedom and time");
   X("vltop", "Health");
-  X("vltop", "Family");
   X("vltop", "Fun");
-  chk("three at most", vlGet(C()).top.length === 3 && !vlGet(C()).top.includes("Fun"));
   X("vltop", "Family");
-  X("vltop", "Fun");
-  chk("tap one to swap it out", vlGet(C()).top.join() === "Freedom and time,Health,Fun");
+  chk("no cap: four ranked in tap order", vlGet(C()).rank.join() === "Freedom and time,Health,Fun,Family");
+  chk("the top three are the first three", vlGet(C()).top.join() === "Freedom and time,Health,Fun");
   X("vlstep", "2");
   chk(
-    "step 2: every place the money goes, two taps each",
+    "step 2: one place at a time, the values it serves, would you change this",
     ov().includes("Home") &&
-      ov().includes("None of these") &&
-      ov().includes("Want less") &&
-      ov().includes("Feels right") &&
+      ov().includes("None") &&
+      ov().includes("Would you change this?") &&
+      ov().includes("Keep it") &&
       clean(ov()),
     junk(ov())
   );
   X("vlserve", "", "Home");
-  X("vlmark", "ok", "Home");
+  X("vlmark", "keep", "Home");
   X("vlserve", "Health", "Food");
   X("vlmark", "more", "Food");
   X("vlserve", "", "Bills and subscriptions");
   X("vlmark", "less", "Bills and subscriptions");
   X("vlserve", "Fun", "Fun and everything else");
-  X("vlmark", "ok", "Fun and everything else");
+  X("vlmark", "keep", "Fun and everything else");
   const VR = vlResult(C());
   chk(
     "result by hand: 600 on health and 400 on fun out of 3,000",
@@ -75,32 +73,32 @@
       VR.pct === 33 &&
       VR.by.Health === 600 &&
       VR.by.Fun === 400 &&
-      VR.okPct === 73 &&
+      VR.change === 60 - 20 &&
       VR.less[0].k === "Bills and subscriptions" &&
       VR.more[0].k === "Food" &&
       VR.starved.join() === "Freedom and time",
-    JSON.stringify([VR.on, VR.pct, VR.okPct, VR.starved])
+    JSON.stringify([VR.on, VR.pct, VR.change, VR.starved])
   );
   X("vlstep", "3");
   chk(
-    "step 3: the number, each value, less, more, and what gets nothing yet",
+    "step 3: the number, each value, where it matches and not, one idea",
     ov().includes("33%") &&
-      ov().includes("You want less of: Bills and subscriptions") &&
-      ov().includes("You want more of: Food") &&
+      ov().includes("Where it matches") &&
+      ov().includes("Where it doesn't") &&
       ov().includes("Freedom and time") &&
-      ov().includes("none of your spending serves it yet") &&
+      ov().includes("One idea:") &&
       clean(ov()),
     junk(ov())
   );
   chk("no grade words", !/bad|wasted|wrong|failing grade|should not/i.test(ov().replace(/<[^>]+>/g, " ")));
-  X("vltop", "Health");
+  X("vlrm", "Health");
   chk(
-    "dropping a value clears what pointed at it",
-    vlGet(C()).serves.Food === undefined && vlGet(C()).top.length === 2
+    "dropping a value asks again where it pointed",
+    vlServes(vlGet(C()), "Food") === null && vlGet(C()).rank.length === 3
   );
   X("close");
   go("me");
-  chk("Me shows a prompt until it is complete again", app().includes("Three things that matter"));
+  chk("Me shows a prompt until it is complete again", app().includes("Rank what matters"));
   X("close");
   G.chars.length = n0;
   G.active = act0;

@@ -1208,13 +1208,33 @@ function moneyTabBase() {
     `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div>${typeof allocBar === "function" ? allocBar(c, ALLOC_BY_ROWS[key], null, { slim: true, end: true }) : ""}${typeof ledSortChips === "function" ? ledSortChips(c, key, rows) : ""}<div class="stack" style="margin-top:8px">${(typeof ledOrder === "function" ? ledOrder(c, key, rows) : rows.map((x, i) => ({ x, i }))).map(o => ledRow(key, o.i, o.x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
   const prow = (label, val, key) =>
     `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret">›</span></span></button>`;
+  const S =
+    typeof dkSec === "function" ? dkSec : (id, i, t, one, v, body) => body; /* dash.js: a section that starts closed */
   return `<div class="stack"><h1>Money</h1><div class="small muted">Every number the game uses lives here. Tap any line to change it. It updates everywhere at once. Faded numbers are guesses that don't count yet.</div>
- <div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div><button class="ghost slim" style="margin-top:6px" data-a="lkbrk" data-v="nw">See each account ›</button></div>
+ <!--tl:rest-->
+ ${S(
+   "have",
+   "💰",
+   "What you have and owe",
+   "Each account and each debt. Tap a line to change it.",
+   typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw),
+   `<div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div><button class="ghost slim" style="margin-top:6px" data-a="lkbrk" data-v="nw">See each account ›</button></div>
  ${sec("Cash", "cashes", c.cashes, cash, "Add an account")}
  ${sec("Investments", "invs", c.invs, c.inv, "Add an account")}
  ${sec("What you owe", "debts", c.debts, c.debt, "Add a debt")}
- ${c.debt > 0 ? `<button class="ghost wide" data-a="flow" data-v="pay">Log a debt payment</button>` : ""}
- ${sec("Money coming in each month", "incs", c.incs, c.take, "Add another source")}
+ ${c.debt > 0 ? `<button class="ghost wide" data-a="flow" data-v="pay">Log a debt payment</button>` : ""}`,
+   [
+     "Net worth: " + money(cash + c.inv) + " you have − " + money(c.debt) + " you owe = " + money(d.nw) + ".",
+     "A range means some of it is still a guess or a range you tapped.",
+   ]
+ )}
+ ${S(
+   "flow",
+   "🔁",
+   "Money in and out",
+   "What comes in and what goes out each month.",
+   money(c.take - c.spend) + " left",
+   `${sec("Money coming in each month", "incs", c.incs, c.take, "Add another source")}
  ${c.steady !== "Steady" ? `<button class="rowbtn" data-a="rowedit" data-k="low" data-v="0"><span>In a low month${c.sharp.low ? "" : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${c.sharp.low ? "" : "guess"}">${money(c.low)}</b><span class="caret">›</span></span></button>` : ""}
  <div class="card"><div class="row between"><h3>Money going out each month</h3>${tot(c.spend, c.spends)}</div>${typeof allocBar === "function" ? allocBar(c, "spend", null, { slim: true, end: true }) : ""}<div class="stack" style="margin-top:8px">${(() => {
    const ms = monthSpent(c, todayISO().slice(0, 7));
@@ -1227,20 +1247,21 @@ function moneyTabBase() {
            : "")
      )
      .join("");
- })()}${c.home === "With family" ? `<button class="rowbtn" data-a="rowedit" data-k="moveOut" data-v="0"><span>Extra it would cost to move out<div class="tiny muted">Keeps your freedom number honest</div></span><span class="row"><b>${money(c.moveOut)}</b><span class="caret">›</span></span></button>` : ""}</div><div class="tiny muted" style="margin-top:6px">Left over each month: ${money(c.take - c.spend)}</div></div>
- ${machineCard(c, d)}${typeof bossCard === "function" ? bossCard(c) : ""}${big3Card(c)}${freeCard(c, d)}${ledgerCard(c, d)}${taxCard(c, d)}${typeof yearCards === "function" ? yearCards(c, d) : ""}
+ })()}${c.home === "With family" ? `<button class="rowbtn" data-a="rowedit" data-k="moveOut" data-v="0"><span>Extra it would cost to move out<div class="tiny muted">Keeps your freedom number honest</div></span><span class="row"><b>${money(c.moveOut)}</b><span class="caret">›</span></span></button>` : ""}</div><div class="tiny muted" style="margin-top:6px">Left over each month: ${money(c.take - c.spend)}</div></div>`,
+   ["Left each month: " + money(c.take) + " in − " + money(c.spend) + " out = " + money(c.take - c.spend) + "."]
+ )}
+ ${S("machine", "⚙️", "Your money machine", "What your money earns you, against what your debts cost you.", "", machineCard(c, d) + (typeof bossCard === "function" ? bossCard(c) : ""))}
+ ${S("free", "🟢", "Free to spend", "What is left for food, fun and the rest after bills and goals.", "", freeCard(c, d))}
+ ${S(
+   "records",
+   "📒",
+   "Records and history",
+   "Statements, taxes, the year ahead and what you logged.",
+   "",
+   `${ledgerCard(c, d)}${taxCard(c, d)}${typeof yearCards === "function" ? yearCards(c, d) : ""}
  ${monthStatement(c)}
  ${statementsCard()}
  ${schedCard(c)}
- <div class="card"><div class="row between"><h3>How complete is your picture</h3><b>${lv === 0 ? "Working on Level 1" : "Level " + lv + " of 5"}</b></div><div class="lvls">${LVN.map((x, i) => `<div class="lvl ${i < lv ? "on" : i === lv ? "cur" : ""}"><b>${i < lv ? "✓" : i + 1}</b><span>${x[0]}</span></div>`).join("")}</div>${nl ? `<div class="small" style="margin-top:8px"><b>Level ${nl}: ${LVN[nl - 1][0]}.</b> ${LVN[nl - 1][1]}.</div><button class="primary go wide" style="margin-top:8px" data-a="${lv === 0 ? "sharp" : "detail"}" data-v="${lv === 0 ? sharpList(c).find(k => !isSharp(c, k)) || "take" : ""}">${lv === 0 ? "Make my numbers real" : dk.length ? "Fill in Level " + nl + " · all taps" : "Level " + nl + " is waiting on answers you said you'd find"}</button>` : `<div class="small muted" style="margin-top:8px">Levels 1 to 3 are done. Levels 4 and 5 are coming later.</div>`}</div>
- <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret">›</span></span></button>` : ""}${
-   /* cover.js: the insurance needs, with the gap in dollars, in place of the yes / no rows */
-   typeof coverRows === "function"
-     ? coverRows(c, prow)
-     : Object.keys(PROT_Q)
-         .map(k => prow(PROT_Q[k][0], c.prot[k], "prot:" + k))
-         .join("")
- }</div></div>
  <details><summary>Cash flow history (${c.moves.length})</summary><div class="inner stack">${
    c.moves.length
      ? c.moves
@@ -1252,7 +1273,24 @@ function moneyTabBase() {
          )
          .join("")
      : `<div class="small muted">Nothing logged yet.</div>`
- }</div></details>
+ }</div></details>`
+ )}
+ ${S(
+   "picture",
+   "🛡️",
+   "Your picture and protection",
+   "How complete your numbers are, and the cover that protects them.",
+   lv === 0 ? "Level 1" : "Level " + lv + " of 5",
+   `<div class="card"><div class="row between"><h3>How complete is your picture</h3><b>${lv === 0 ? "Working on Level 1" : "Level " + lv + " of 5"}</b></div><div class="lvls">${LVN.map((x, i) => `<div class="lvl ${i < lv ? "on" : i === lv ? "cur" : ""}"><b>${i < lv ? "✓" : i + 1}</b><span>${x[0]}</span></div>`).join("")}</div>${nl ? `<div class="small" style="margin-top:8px"><b>Level ${nl}: ${LVN[nl - 1][0]}.</b> ${LVN[nl - 1][1]}.</div><button class="primary go wide" style="margin-top:8px" data-a="${lv === 0 ? "sharp" : "detail"}" data-v="${lv === 0 ? sharpList(c).find(k => !isSharp(c, k)) || "take" : ""}">${lv === 0 ? "Make my numbers real" : dk.length ? "Fill in Level " + nl + " · all taps" : "Level " + nl + " is waiting on answers you said you'd find"}</button>` : `<div class="small muted" style="margin-top:8px">Levels 1 to 3 are done. Levels 4 and 5 are coming later.</div>`}</div>
+ <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret">›</span></span></button>` : ""}${
+   /* cover.js: the insurance needs, with the gap in dollars, in place of the yes / no rows */
+   typeof coverRows === "function"
+     ? coverRows(c, prow)
+     : Object.keys(PROT_Q)
+         .map(k => prow(PROT_Q[k][0], c.prot[k], "prot:" + k))
+         .join("")
+ }</div></div>`
+ )}
  ${flagBtn()}</div>`;
 }
 
@@ -5470,7 +5508,8 @@ function goalInfo(c, d, g, sim, simAll) {
   return { fit: true, at, real, placed, s, txt: at <= 0 ? "Ready now" : fmtDur(at) + " away" };
 }
 function goalsCard(c, d, sec) {
-  const gs = (c.goals || []).filter(g => !g.done),
+  const gs =
+      typeof grOrder === "function" ? grOrder(c) : (c.goals || []).filter(g => !g.done) /* goalrank.js: rank order */,
     sim = goalSim(c),
     simAll = goalSim(c, { all: true }),
     real = c.placed || G.demo,
@@ -5486,7 +5525,7 @@ function goalsCard(c, d, sec) {
     eras.push(
       `<div class="row between small"><span>${eraN(e)}</span><b class="${real ? "" : "guess"}" style="text-align:right" data-fid="e:${e}">${eraWhen(c, d, sim, e)}</b></div>`
     );
-  return `<div class="card" ${sec || ""}><div class="row between"><h3>Someday list</h3>${ib("term:goals")}</div>${gs.length ? `<div class="tiny muted">Every money choice moves these dates.</div><div class="${sec === "open" && typeof goalCardLook === "function" ? "dkgoals" : "stack"}" style="margin-top:6px">${gs.map(row).join("")}</div>` : `<div class="small muted">A trip, a home, a wedding, quitting your job. Add one and the game shows how far away it is.</div>`}<button class="${gs.length ? "ghost" : "primary"} wide" style="margin-top:8px" data-a="gadd">+ Add a goal</button>
+  return `<div class="card" ${sec || ""}><div class="row between"><h3>Someday list</h3>${ib("term:goals")}</div>${gs.length ? `<div class="tiny muted">Every money choice moves these dates.</div><div class="${sec === "open" && typeof goalCardLook === "function" ? "dkgoals" : "stack"}" style="margin-top:6px">${typeof grRows === "function" ? grRows(c, gs, row) : gs.map(row).join("")}</div>` : `<div class="small muted">A trip, a home, a wedding, quitting your job. Add one and the game shows how far away it is.</div>`}<button class="${gs.length ? "ghost" : "primary"} wide" style="margin-top:8px" data-a="gadd">+ Add a goal</button>
  ${eras.length ? `<details style="margin-top:8px"><summary>When each era arrives</summary><div class="inner stack">${eras.join("")}<div class="tiny muted">At today's pace${real ? "" : ", from guesses"}. It moves every time your numbers do.</div>${gs.some(g => g.era != null) ? `<div class="small" style="margin-top:4px">Share of your leftover money that goes to goals</div><div class="chips">${[25, 50, 75, 100].map(p => `<button class="chip ${sh === p ? "on" : ""}" data-a="gshare" data-v="${p}">${p}%</button>`).join("")}</div>` : ""}${mathBox(["Money left over each month: " + money(sim.M) + " (what comes in minus what goes out).", "It goes to your first $1,000, then debt charging 8% or more, then your full emergency fund, then investing.", "Goals you've placed take " + sh + "% of it once their era arrives. The rest keeps following the eras.", "Debt is counted at about 22% a year and investments at 7% a year after inflation. Those are long-run averages, not promises."])}</div></details>` : ""}</div>`;
 }
 function eraPick(c, d, g, act) {
@@ -5747,12 +5786,13 @@ function safeSheetBase() {
     o = w.o,
     c = C(),
     d = D,
-    r = o.amt > 0 ? safeSpend(c, d, o.amt, o.mode === "month", todayISO()) : null;
+    wait = typeof tlSafeWait === "function" ? tlSafeWait(c) : "" /* tally.js: waits for goals and bills */,
+    r = !wait && o.amt > 0 ? safeSpend(c, d, o.amt, o.mode === "month", todayISO()) : null;
   return (
     head("Before you spend", "Is it safe to spend this?") +
     `<div class="chips">${[20, 50, 100, 200, 500, 1000].map(v => `<button class="chip ${o.amt === v && w.pad !== "amt" ? "on" : ""}" data-a="safeamt" data-v="${v}">${money(v)}</button>`).join("")}<button class="chip ${w.pad === "amt" ? "on" : ""}" data-a="padopen" data-k="amt">Type an amount</button></div>${w.pad === "amt" ? `<div class="val">${money(o.amt)}</div>` + keypad("amt") + `<button class="ghost slim" data-a="padclose">Done typing</button>` : ""}
  <div class="seg" style="align-self:flex-start"><button class="${o.mode === "once" ? "on" : ""}" data-a="safemode" data-v="once">One time</button><button class="${o.mode === "month" ? "on" : ""}" data-a="safemode" data-v="month">Every month</button></div>
- ${r ? `<div class="verdict ${r.light} pop"><div class="row"><span class="lamp ${r.light}"></span><b class="tiny">${LAMP[r.light]}</b></div><h2 style="margin:6px 0">${esc(r.head)}</h2>${r.lines.map(l => `<div class="small" style="margin-top:4px">${esc(l)}</div>`).join("")}${r.alt ? `<div class="banner small" style="margin-top:8px">${esc(r.alt)}</div>` : ""}${r.real ? "" : `<div class="tiny muted" style="margin-top:8px">This leans on guesses. <button class="linkish" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make your numbers real</button> and it gets exact.</div>`}</div>${mathBox(r.math)}${o.mode === "once" ? `<button class="primary wide" data-a="safelog">I'm spending it · log it</button>` : ""}` : `<div class="small muted">Tap an amount. The answer is never just no. It tells you what the spend would move.</div>`}
+ ${wait}${r ? `<div class="verdict ${r.light} pop"><div class="row"><span class="lamp ${r.light}"></span><b class="tiny">${LAMP[r.light]}</b></div><h2 style="margin:6px 0">${esc(r.head)}</h2>${r.lines.map(l => `<div class="small" style="margin-top:4px">${esc(l)}</div>`).join("")}${r.alt ? `<div class="banner small" style="margin-top:8px">${esc(r.alt)}</div>` : ""}${r.real ? "" : `<div class="tiny muted" style="margin-top:8px">This leans on guesses. <button class="linkish" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make your numbers real</button> and it gets exact.</div>`}</div>${mathBox(r.math)}${o.mode === "once" ? `<button class="primary wide" data-a="safelog">I'm spending it · log it</button>` : ""}` : `<div class="small muted">Tap an amount. The answer is never just no. It tells you what the spend would move.</div>`}
  <button class="ghost wide" data-a="close">Close</button>`
   );
 }
@@ -5876,6 +5916,7 @@ function rateTile(c, d, sec) {
   return `<div class="tile" ${sec || ""}><div class="row between"><span class="tiny muted">What you keep</span>${ib("term:keep")}</div><div class="big ${real ? "" : "guess"}" data-fid="v:keep">${k.pct > 0 ? k.pct + "% of what comes in" : k.pct === 0 ? "Nothing yet" : Math.abs(k.pct) + "% more goes out than comes in"}</div><div class="tiny muted">${k.pct > 0 ? (f1 == null ? "" : f1 <= 0 ? "At this rate work is already optional. " : "Keep this up and work becomes optional in about " + fmtDur(f1) + ". ") + (cut > 0.5 ? "Keep 5% more and it's " + fmtDur(cut) + " sooner." : "") : "The first goal is a gap between in and out. Any gap."}${k.own !== null ? " Home costs you nothing right now. Paying your own way (about " + money(c.moveOut) + " a month) you'd keep " + (k.own > 0 ? k.own + "%" : "nothing") + ", so use this window." : ""}</div>${mathBox(["Comes in each month: " + money(c.take) + ". Goes out: " + money(c.spend) + ". Kept: " + money(c.take - c.spend) + ".", "Kept ÷ comes in = " + k.pct + "%.", "Work is optional when investments reach 25 times a year of spending (" + money(d.fi) + ")." + (c.home === "With family" ? " That counts " + money(c.moveOut) + " a month for when you pay for your own place." : ""), ssNote(c), "Investments are assumed to grow 7% a year after inflation. A long-run average, not a promise."])}</div>`;
 }
 function big3Card(c) {
+  if (typeof tlBig3Card === "function") return tlBig3Card(c); /* tally.js: share of spending */
   if (!c.spends.length) return "";
   const b = bigThree(c),
     real = isSharp(c, "spend"),
@@ -6035,6 +6076,7 @@ OPT_DESC["No, leave it out"] = "Your dates will look later. Many early-retiremen
         g = curGoal();
       g.done = todayISO();
       const got = settle(c, null);
+      if (typeof grPromote === "function") grPromote(c); /* goalrank.js: the next goal moves up */
       save();
       render();
       celebrate(
@@ -6048,6 +6090,7 @@ OPT_DESC["No, leave it out"] = "Your dates will look later. Many early-retiremen
       const c = C(),
         id = W.id;
       c.goals = c.goals.filter(x => x.id !== id);
+      if (typeof grPromote === "function") grPromote(c); /* goalrank.js: the next goal moves up */
       save();
       closeSheet();
       render();
@@ -6400,6 +6443,7 @@ function movesSheetBase() {
 }
 /* the Rich Dad picture: what pays you against what charges you */
 function machineCard(c, d) {
+  if (typeof tlMachineCard === "function") return tlMachineCard(c, d); /* tally.js: net first */
   const tl = timeLedger(c, d),
     pays = (c.inv * SWR) / 12,
     costs = tl.dy / 12,

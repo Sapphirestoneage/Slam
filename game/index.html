@@ -510,6 +510,12 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .qzcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qzcard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:96px;border:2px solid var(--line);background:var(--panel2);border-radius:12px;padding:10px;font-weight:600;text-align:center;box-shadow:0 2px 0 var(--line)}.qzicon{font-size:30px;line-height:1}.qzspec{position:relative;height:8px;margin:8px 8px 4px;border-radius:99px;background:var(--panel2);border:1px solid var(--line)}.qzspec i{position:absolute;top:-6px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--sap);border:2px solid var(--panel)}
 .dkdays{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}.dkday{flex:0 0 46px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}.dkday.on{border-color:var(--sap);color:var(--text)}.dkday.mk i{font-style:normal;font-size:10.5px;color:var(--good)}
 .dkgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+/* UX pass, items 24 to 29: sections that start closed, the parts of a donut, the money machine, ranking */
+details.dksec{padding:0}details.dksec>summary{padding:14px 12px;min-height:44px}details.dksec>summary .dksi{font-size:20px;flex:none}details.dksec>summary .dkst{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}details.dksec>summary .dksv{flex:none;font-size:15px}details.dksec>.inner{padding:0 12px 12px}details.dksec>.inner>.card{margin:0;box-shadow:none}
+.dkpart{width:100%;min-height:44px;background:none;border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--text);font:inherit;cursor:pointer;text-align:left}.dkpart:hover{border-color:var(--sap)}
+.tlmini{display:flex;flex-direction:column;gap:2px;opacity:.85}
+.rklist{display:flex;flex-direction:column;gap:6px}.rkrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--panel)}.rkrow .rkn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--sap);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}.rkrow .rkt{flex:1;min-width:0}.rkrow button.rkb{min-width:44px;min-height:44px}.rkrow.dim{opacity:.55}.rkrow[draggable=true]{cursor:grab}.rkhead{font-weight:700;margin-top:6px}
+.vlpile .chip{opacity:.7}
 .dkgoals{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:700px){.dkgoals{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tmd{display:flex;flex-direction:column;gap:12px}
 .tmdtrack{display:flex;flex-direction:column;gap:4px}
@@ -582,10 +588,11 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/frameworks.js?v=95d509ab"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=67716adf"></script>
-<script src="screens/dash.js?v=46243f0e"></script>
+<script src="screens/ui.js?v=c4af192e"></script>
+<script src="screens/dash.js?v=2acc35d5"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=0dff6807"></script>
+<script src="features/games2.js?v=c0aef9c8"></script>
+<script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=442b6691"></script>
@@ -593,7 +600,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="screens/planner.js?v=07970ef2"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=6a598e0a"></script>
-<script src="core/metrics.js?v=fc4fce16"></script>
+<script src="core/metrics.js?v=6a4cfb0a"></script>
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
@@ -604,7 +611,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/gig.js?v=582592eb"></script>
 <script src="features/know.js?v=17939dc3"></script>
 <script src="features/fair.js?v=43e98594"></script>
-<script src="features/values.js?v=f0721d79"></script>
+<script src="features/values.js?v=78adcf5c"></script>
 <script src="features/missions.js?v=b8439083"></script>
 <script src="features/connect.js?v=dbbdbbe3"></script>
 <script src="features/house.js?v=214d1ccc"></script>
@@ -702,7 +709,8 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="data/patchnotes.js?v=7dc37119"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
-<script src="features/look.js?v=cf7c8eff"></script>
+<script src="features/tally.js?v=bf86cf3e"></script>
+<script src="features/look.js?v=5c00967f"></script>
 <script src="features/spiral.js?v=16924257"></script>
 <script src="features/amounts.js?v=e5284838"></script>
 <script src="features/jobs.js?v=0484b2a7"></script>
@@ -713,8 +721,8 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/enough.js?v=67d96e2d"></script>
 <script src="features/ratios.js?v=d7a1b45b"></script>
 <script src="features/hard.js?v=9bf92c41"></script>
-<script src="features/book.js?v=d32bb8df"></script>
-<script src="features/questlog.js?v=0cdb1fe4"></script>
+<script src="features/book.js?v=4379a2d6"></script>
+<script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
 <script src="features/built.js?v=25a9cfba"></script>
 </body>
