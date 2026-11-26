@@ -270,6 +270,11 @@ const NV_INFO = {
     "Common subscriptions. Tap the ones you pay for.",
     "It adds up what they cost you.",
   ],
+  thinkaloud: [
+    "Tester drives",
+    "A think-aloud test the tester runs alone.",
+    "It counts the taps of each task and keeps Report this open.",
+  ],
   testkit: [
     "Test with a friend",
     "A script for watching someone try the game.",

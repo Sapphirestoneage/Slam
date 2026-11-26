@@ -10,6 +10,7 @@ SLAM keeps in code (not in data/reference-2026.json) are typed in again here fro
 Usage: python3 tools/audit/engine2.py <cases.json> <reference-2026.json> [report.json]
 """
 import json, math, os, sys
+import engine2game  # the game's numbers (tools/audit/game.cjs makes the cases)
 from collections import defaultdict
 
 TOL = 1.0  # dollars
@@ -1427,6 +1428,7 @@ HH_Q = [('ask', 5, 'scale'), ('cushion', 4, 'scale'), ('split', 4, 'pick'), ('ac
 
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
+    game_law = None
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
     wr, rr = ref['presets']['withdrawalRate']['default'], ref['presets']['realReturn']['default']
     for c in cases:
@@ -1801,6 +1803,9 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('gDerive', 'gDebtPlan', 'gDebtExtra', 'gTimeLedger', 'gDebtOutlook', 'gCashCal', 'gGoalSim'):
+            game_law = game_law or engine2game.Law(ref)
+            engine2game.game_check(fn, x, o, ck, game_law)
         elif fn.startswith('op') and fn in ('opTransition', 'opPapers', 'opTwoSides', 'opPackage', 'opSearchFund', 'opFamily', 'opAgeCare'):
             own_check(fn, x, o, ck, law.ref)
         elif fn in ('plBonus', 'plHunt', 'plChallenge', 'plFicoRound', 'plNextMonthly'):

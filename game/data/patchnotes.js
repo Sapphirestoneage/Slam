@@ -538,6 +538,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Testing and the math checked twice",
+    l: [
+      "Testers can run a think-aloud test on their own: a panel at the bottom of every screen shows one task at a time, counts the taps, and keeps Report this open with the screen name filled in.",
+      "Every core number of the game (your FI number, Coast FI, the debt plan, what an hour is worth, the cash calendar, the month work becomes optional) is now worked out a second time by a separate engine.",
+      "Fixed: money in the game now grows 7% a year month by month too, the same pace as a whole year. Before, the month-by-month dates grew a little faster.",
+      "Fixed: a debt has one rate everywhere. The rate you typed, or the middle of the band you tapped, counts the same in the debt plan, the heavy-debt card and what your money does while you sleep.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Game feel",
     l: [
       "Start at the finish line, in the Menu and on the life map: say what you need once work is optional and by when, and the game works back to today.",

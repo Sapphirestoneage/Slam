@@ -29,7 +29,7 @@ function sleptCalc(c) {
     hiYear = c.led
       ? (c.debts || []).filter(x => x.high && x.amt > 0).reduce((a, x) => a + (x.amt * debtRate(x).r) / 100, 0)
       : c.high === "yes"
-        ? c.debt * 0.22
+        ? (c.debt * debtRateGuess({ high: true })) / 100
         : 0;
   return {
     r,

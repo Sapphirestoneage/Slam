@@ -22,7 +22,7 @@ function sideWage(c) {
 function sideRun(c, x) {
   const months = Math.round(x.years * 12),
     net = x.hours * 4.33 * x.rate * (1 - x.tax / 100),
-    rr = R / 12,
+    rr = RM,
     A = [-x.start],
     B = [0];
   let v = -x.start;

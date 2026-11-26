@@ -5523,7 +5523,7 @@ function goalsCard(c, d, sec) {
       `<div class="row between small"><span>${eraN(e)}</span><b class="${real ? "" : "guess"}" style="text-align:right" data-fid="e:${e}">${eraWhen(c, d, sim, e)}</b></div>`
     );
   return `<div class="card" ${sec || ""}><div class="row between"><h3>Someday list</h3>${ib("term:goals")}</div>${gs.length ? `<div class="tiny muted">Every money choice moves these dates.</div><div class="${sec === "open" && typeof goalCardLook === "function" ? "dkgoals" : "stack"}" style="margin-top:6px">${typeof grRows === "function" ? grRows(c, gs, row) : gs.map(row).join("")}</div>` : `<div class="small muted">A trip, a home, a wedding, quitting your job. Add one and the game shows how far away it is.</div>`}<button class="${gs.length ? "ghost" : "primary"} wide" style="margin-top:8px" data-a="gadd">+ Add a goal</button>
- ${eras.length ? `<details style="margin-top:8px"><summary>When each era arrives</summary><div class="inner stack">${eras.join("")}<div class="tiny muted">At today's pace${real ? "" : ", from guesses"}. It moves every time your numbers do.</div>${gs.some(g => g.era != null) ? `<div class="small" style="margin-top:4px">Share of your leftover money that goes to goals</div><div class="chips">${[25, 50, 75, 100].map(p => `<button class="chip ${sh === p ? "on" : ""}" data-a="gshare" data-v="${p}">${p}%</button>`).join("")}</div>` : ""}${mathBox(["Money left over each month: " + money(sim.M) + " (what comes in minus what goes out).", "It goes to your first $1,000, then debt charging 8% or more, then your full emergency fund, then investing.", "Goals you've placed take " + sh + "% of it once their era arrives. The rest keeps following the eras.", "Debt is counted at about 22% a year and investments at 7% a year after inflation. Those are long-run averages, not promises."])}</div></details>` : ""}</div>`;
+ ${eras.length ? `<details style="margin-top:8px"><summary>When each era arrives</summary><div class="inner stack">${eras.join("")}<div class="tiny muted">At today's pace${real ? "" : ", from guesses"}. It moves every time your numbers do.</div>${gs.some(g => g.era != null) ? `<div class="small" style="margin-top:4px">Share of your leftover money that goes to goals</div><div class="chips">${[25, 50, 75, 100].map(p => `<button class="chip ${sh === p ? "on" : ""}" data-a="gshare" data-v="${p}">${p}%</button>`).join("")}</div>` : ""}${mathBox(["Money left over each month: " + money(sim.M) + " (what comes in minus what goes out).", "It goes to your first $1,000, then debt charging 8% or more, then your full emergency fund, then investing.", "Goals you've placed take " + sh + "% of it once their era arrives. The rest keeps following the eras.", "Debt is counted at its own rate (20% a year when the rate is not in yet) and investments at 7% a year after inflation. Those are long-run averages, not promises."])}</div></details>` : ""}</div>`;
 }
 function eraPick(c, d, g, act) {
   const hint = Math.max(d.era, Math.min(8, goalEraHint(g.k))),
@@ -6466,7 +6466,7 @@ function growSheet() {
   for (let y = 0; y <= n; y++) {
     pts.push(v);
     put.push(o.amt * 12 * y);
-    for (let m = 0; m < 12; m++) v = v * (1 + R / 12) + o.amt;
+    for (let m = 0; m < 12; m++) v = v * (1 + RM) + o.amt;
   }
   const mx = Math.max(1, pts[n]),
     X = i => 10 + (300 * i) / n,
