@@ -16,6 +16,7 @@ import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qc
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
 import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf } from '../../js/math/gig.js';
 import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
+import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opSearchFundOf, opFamilyOf, opAgeCareOf } from '../../js/math/ownpath.js';
 import { hmUntangle, hmParkMonths } from '../../js/math/hard.js';
 import { roommateExit } from '../../js/math/hardplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
@@ -154,6 +155,21 @@ for (let i = 0; i < N; i++) {
     add('tripSplit', { people, how, items, total }, { parts: S.parts.map(p => p.amount), total: S.total }); }
   { const kn = v => (rnd() < 0.1 ? null : v), x = { cash: kn(money(0, 30000)), debt: kn(pick([0, 0, money(100, 40000)])), invested: kn(money(0, 1500000)), coast: kn(money(10000, 600000)), fi: kn(money(200000, 2500000)), monthly: pick([null, 0, money(50, 6000)]), trip: pick([null, money(100, 15000)]) }, J = tpJourney(x);
     add('tripJourney', x, { done: J.stages.map(s => s.done), months: J.stages.map(s => s.months), after: J.stages.map(s => (s.after ? [s.after.done, s.after.months] : null)), here: J.here, fromCash: J.fromCash, shift: J.monthsOfSaving }); }
+  // Your own path (js/math/ownpath.js, M8P)
+  { const x = { covered: pick([0, money(200, 80000)]), notCovered: pick([0, money(50, 10000)]), deductible: pick([0, 500, 1500, 4000]), coinsurance: pick([0, 0.1, 0.2, 0.3, 0.5]), oopMax: pick([null, 3000, 6000, 9000]), metSoFar: pick([0, 0, 800]), help: pick([0, 0, money(100, 20000)]), saved: pick([0, money(100, 5000)]), monthly: pick([null, money(25, 2000)]) }, r = opTransitionOf(x);
+    if (r.ready) add('opTransition', x, { plan: r.planPays, yours: r.yours, left: r.save.left, months: r.save.months }); }
+  { const own = { court: pick([null, money(50, 400)]), orderCopies: pick([null, money(5, 60)]), birth: pick([null, 0, 40]), other: pick([null, money(10, 800)]) }, x = { court: pick(['nyc', 'ny', 'other']), born: pick(['nys', 'nyc', 'other']), id: pick(['license', 'id', 'none']), passport: pick(['within', 'renew', 'new', 'none']), copies: whole(0, 3), own }, r = opPapersOf(x, ref.idChangeNY);
+    add('opPapers', x, { total: r.total, dated: r.dated, toAdd: r.toAdd.length }); }
+  { const x = { quietMonthly: money(1, 3000), quietOnce: pick([0, money(10, 5000)]), outMonthly: money(1, 3000), outOnce: pick([0, money(10, 5000)]), years: pick([1, 3, 5, 10]) }, r = opTwoSidesOf(x);
+    add('opTwoSides', x, { quiet: r.quiet, out: r.out, gap: r.gap }); }
+  { const j = () => ({ pay: money(20000, 400000), health: pick([0, money(50, 1500)]), care: pick([0, money(100, 30000)]), family: pick([0, money(500, 50000)]), other: pick([0, money(100, 10000)]) }), x = { now: j(), next: j() }, r = opPackageOf(x);
+    add('opPackage', x, { now: r.now.total, next: r.next.total, gap: r.gap, match: r.payToMatch }); }
+  { const x = { age: whole(18, 70), spending: money(800, 15000), cash: pick([null, money(0, 60000)]), extraMonths: whole(0, 12) }, r = opSearchFundOf(x);
+    add('opSearchFund', x, { target: r.target, base: r.baseTarget, gap: r.gap }); }
+  { const x = { path: pick(['ivf', 'surrogacy', 'adoption', 'adoption', 'foster']), cost: money(500, 200000), insurance: pick([0, money(100, 30000)]), employer: pick([0, money(100, 25000)]), magi: pick([null, money(30000, 400000), 265080, 285080, 305080]), saved: pick([0, money(100, 20000)]), monthly: pick([null, money(50, 3000)]) }, r = opFamilyOf(x, ref.adoptionCredit);
+    add('opFamily', x, { yours: r.yours, credit: r.credit ? r.credit.credit : null, refundable: r.credit ? r.credit.refundable : null, months: r.save.months }); }
+  { const x = { monthly: money(500, 20000), years: pick([1, 2, 3, 5, 10]), covered: pick([0, money(100, 8000)]), saved: pick([0, money(1000, 500000)]), yearsUntil: pick([null, 5, 10, 20, 30]) }, r = opAgeCareOf(x);
+    add('opAgeCare', x, { need: r.need, left: r.left, perMonth: r.perMonth }); }
   // Gig and self-employed (js/math/gig.js and gigplan.js, M8G)
   { const x = { takeHome: money(1500, 15000), health: pick([0, 0, 300, 800]), retire: pick([0, 3000, 7500, 20000]), costs: pick([0, 100, 600]), hoursWeek: pick([20, 30, 40, 50]), billable: pick([0.5, 0.6, 0.7, 0.8, 0.9, 1]), weeksOff: pick([0, 2, 4, 6, 12]), unitHours: pick([null, 1, 2, 8]), filingStatus: pick(STATUS), place: pick([null, 'ny', 'nyc']) }, r = gigRate(x, ref);
     add('gigRate', x, { profit: r.profit, hourly: r.hourly, unit: r.unit, need: r.need.year }); }
