@@ -224,7 +224,8 @@ export function snPushEvidence(def, push = []) {
   return push.map(p => ({ source: 'you', kind: 'push', d: p.d, add: p.said === 'yes' ? { [p.trait]: P } : p.said === 'no' ? { [p.trait]: -P } : { [p.to]: P },
     why: p.said === 'yes' ? `You said ${name(p.trait)} fits` : p.said === 'no' ? `You said ${name(p.trait)} does not fit` : `You said ${name(p.to)} fits better than ${name(p.trait)}` }));
 }
-// THE record of the push-backs, for the judge that keeps a record and can be challenged (not built yet; it reads this).
+// THE record of the push-backs, for the judge that keeps a record and can be challenged (the game's Quest mode reads it
+// through qsFromPush of js/math/quest.js).
 export function snJudgeLog(def, sn = {}) {
   const name = id => ((def.traits || []).find(t => t.id === id) || {}).name || id;
   return (sn.push || []).map(p => ({ at: p.at, d: p.d, trait: p.trait, name: name(p.trait), said: p.said, to: p.to, toName: p.to ? name(p.to) : null }));

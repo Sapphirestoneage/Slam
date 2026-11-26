@@ -22,3 +22,4 @@ game/core/gigcore.js
 game/core/hardcore.js
 game/core/frameworks.js
 game/core/family.js
+game/core/quest.js

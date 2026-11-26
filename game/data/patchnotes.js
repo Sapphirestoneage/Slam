@@ -332,6 +332,17 @@ const PATCH_NOTES = [
       "On the web: three small pages on the same math, on the shelf Family money.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Quest mode",
+    l: [
+      "Menu has Quest mode (also on your character sheet): health, armor and six stats, each from your own numbers with its math.",
+      "How much you can take on right now, the weak spots of your plan, and the three moves that stop them.",
+      "Hidden costs your life charges you, and where you think you rank next to where you are.",
+      "Opponents that test your values, a judge that keeps a record you can challenge, and questions answered from your plan.",
+      "Path packs through the skills, and graduating: pick your finish line and read your story so far.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

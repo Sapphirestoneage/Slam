@@ -67,6 +67,11 @@ over the years), living at home with the moving-out goal reached by stepping a b
 summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
 529 deduction from the limit.
 
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10a) it also covers the game's Quest mode (`js/math/quest.js`,
+M8Z): the health, armor and six stat scores from their definitions, the capacity steps from the margin, the cushion,
+the plate and a challenge, the weak spots and their room in order, the hidden costs added up and turned into days of
+spending, the SCF 2025 row for an age with the quarter of all households, and a duel against the values picked.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
 with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;
