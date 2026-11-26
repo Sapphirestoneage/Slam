@@ -311,9 +311,14 @@ igAdd({
     return {
       big: z.all ? "Work on: " + low : null,
       cap: z.all ? "That is your thinnest of the three. One small step this month is enough. " + igI("ig_gilbert") : "",
-      html: z.all
-        ? igRows(["Purpose", "People", "Structure"].map(k => [k, z.sc[k] + " of 6", k === low]))
-        : `<div class="small">Nine quick taps about life after work.</div>`,
+      html:
+        (z.all
+          ? igRows(["Purpose", "People", "Structure"].map(k => [k, z.sc[k] + " of 6", k === low]))
+          : `<div class="small">Nine quick taps about life after work.</div>`) +
+        /* exercises.js: three prompts for the side that is not money (Why journal, Little p purpose, after work) */
+        (typeof ACT !== "undefined" && ACT.exercises
+          ? `<button class="ghost wide slim" data-a="exercises" data-v="why-journal">Three prompts for life after work</button>`
+          : ""),
       quiz: q,
       math: z.all
         ? [
