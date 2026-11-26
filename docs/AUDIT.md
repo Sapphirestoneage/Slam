@@ -80,6 +80,12 @@ Since Nov 26 2026 (run Finish everything partly built, Part 9) it also covers co
 M8N): the SCF 2025 middle for an age looked up again in the data file, below, about or above it by the 10% rule, the
 quarter and the 90th of all households, the pay next to the Census middle, and the gap to the BEA saving rate.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 13) it also covers investing (`js/math/invest.js`, M8I):
+the household mix added up dollar by dollar with the age guide from its words, the share inside the three kinds of a
+three-fund mix, the drift, employer stock and the biggest one company, each fee as value x rate with the account and
+advisor fees and the loads, the invest or pay debt square stepped month by month and year by year, and Roth or
+traditional from what each way keeps of a dollar.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10a) it also covers the game's Quest mode (`js/math/quest.js`,
 M8Z): the health, armor and six stat scores from their definitions, the capacity steps from the margin, the cushion,
 the plate and a challenge, the weak spots and their room in order, the hidden costs added up and turned into days of
