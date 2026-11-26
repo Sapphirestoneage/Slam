@@ -399,6 +399,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Daily challenges, the bonus hunt, guilds and App lock",
+    l: [
+      "After the daily question: a daily challenge. One surprise cost at your level, sized in days of your own spending, and three ways to meet it. Practice only.",
+      "The first thousand-dollar bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest given up, the fees). And the credit score game, with no real score fetched.",
+      "Roots and branches, proof you can keep on a done step, a book for each step from the library, and a second voice to blend into your theme.",
+      "Your guild: a private group of the people in your game, with mentors who finished a track and a monthly money date. Nothing shows until each person turns it on.",
+      "App lock: a PIN or your device's own lock each time the game opens. On this device only.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Money exercises",
     l: [
       "Ten short pieces of writing about you and money, in one place: a letter to money, your earliest money memory, your money autobiography and more.",

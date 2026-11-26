@@ -34,6 +34,7 @@ import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
 import * as RA from '../../js/math/ratios.js';
+import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -337,6 +338,23 @@ for (let i = 0; i < N; i++) {
     windfall: v(RA.raWindfall({ amount: x.wind, toTax: x.toTax, toFun: x.toFun, toCash: x.toCash, toDebt: x.toDebt, invested: x.toInv })),
     confidence: (() => { const r = RA.raConfidence({ rating: x.rating, good: x.good, of: x.of }); return r.value == null ? null : [r.value, r.read]; })(),
   });
+}
+// The game's play math (run Not built, groups 1 to 5, Part 10b): a bank bonus with its deposit, months, rates, fees and
+// tax (some missing); a hunt of a few bonuses; a daily challenge on random cash, spending and card rates; a round of
+// the credit score game; the next monthly date. The second engine works each out again from its definition.
+for (let i = 0; i < N; i++) {
+  const maybe = (v, p = 0.1) => (rnd() < p ? null : v);
+  const bon = () => ({ bonus: maybe(pick([100, 200, 300, 400, 500, 900])), deposit: rnd() < 0.2 ? 0 : money(100, 30000), months: maybe(pick([2, 3, 4, 6, 12])), hysaRate: maybe(pick([0, 0.01, 0.035, 0.045]), 0.15), bankRate: pick([0, 0, 0.001, 0.01]), fees: pick([0, 0, 5, 25, 60]), taxRate: maybe(pick([0.1, 0.12, 0.22, 0.32]), 0.3), state: pick(['planned', 'open', 'paid', 'odd']) });
+  const b = bon();
+  add('plBonus', b, plBonus(b));
+  const list = Array.from({ length: whole(0, 5) }, bon);
+  add('plHunt', { list }, plHunt(list));
+  const ch = { cost: maybe(money(10, 20000)), cash: maybe(rnd() < 0.1 ? 0 : money(10, 60000)), spendMonth: maybe(money(800, 12000)), cardApr: maybe(pick([0, 0.18, 0.24, 0.29]), 0.3) };
+  add('plChallenge', ch, plChallenge(ch));
+  const ids = ['pay', 'owed', 'length', 'new', 'mix'], order = ids.slice().sort(() => rnd() - 0.5);
+  add('plFicoRound', { order }, plFicoRound(order));
+  const t = `${whole(2025, 2028)}-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 28)).padStart(2, '0')}`, day = whole(1, 28), after = rnd() < 0.5;
+  add('plNextMonthly', { t, day, after }, { d: plNextMonthly(t, day, after) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

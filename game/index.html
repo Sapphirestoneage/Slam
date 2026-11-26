@@ -566,6 +566,10 @@ details.mng>summary{min-height:48px;padding:8px 12px}
 details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{content:"Close"}
 .mngh{display:flex;align-items:center;gap:10px;min-width:0}.mnico{font-size:20px;width:26px;text-align:center;flex:none}
 .mnrows{padding:0 10px 10px;gap:8px}
+.lkcover{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}.lkcover[hidden]{display:none}
+.lkin{max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+.lkdots{font-size:22px;letter-spacing:8px;text-align:center}.lkpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lkkey{min-height:52px;min-width:44px;font-size:20px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.25)}.lkkey:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -579,6 +583,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
 <script src="account/door.js?v=29500834"></script>
+<script src="account/lock.js?v=1a52a1d9"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
@@ -595,6 +600,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/quest.js?v=405ce1b4"></script>
 <script src="core/trip.js?v=0152603f"></script>
 <script src="core/quick.js?v=914d9a44"></script>
+<script src="core/play.js?v=708ae829"></script>
 <script src="core/gigcore.js?v=baa39c64"></script>
 <script src="core/hardcore.js?v=ae053a47"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
@@ -609,16 +615,16 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/frameworks.js?v=29cc8402"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=c4af192e"></script>
+<script src="screens/ui.js?v=015736d4"></script>
 <script src="screens/dash.js?v=fe4d3586"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=c0aef9c8"></script>
+<script src="features/games2.js?v=462fb773"></script>
 <script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
-<script src="screens/profiles.js?v=442b6691"></script>
+<script src="screens/profiles.js?v=d0f900aa"></script>
 <script src="screens/smart.js?v=96e07bbd"></script>
-<script src="screens/planner.js?v=9fe6aa7b"></script>
+<script src="screens/planner.js?v=faa57f9c"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=cfcddd02"></script>
 <script src="core/metrics.js?v=6a4cfb0a"></script>
@@ -727,7 +733,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/sins.js?v=b2462a2d"></script>
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=4d933cb6"></script>
-<script src="data/patchnotes.js?v=f4d36a26"></script>
+<script src="data/patchnotes.js?v=d360ada5"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -743,10 +749,14 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/exercises.js?v=6f57d65f"></script>
 <script src="features/ratios.js?v=d7a1b45b"></script>
 <script src="features/hard.js?v=9bf92c41"></script>
+<script src="features/life.js?v=a2f569dc"></script>
+<script src="features/hunt.js?v=8116f378"></script>
+<script src="features/guild.js?v=8029feae"></script>
+<script src="features/lockset.js?v=ded305f7"></script>
 <script src="features/results.js?v=b1d7cc30"></script>
-<script src="features/book.js?v=35a47630"></script>
+<script src="features/book.js?v=a32459ba"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=bf125ab0"></script>
+<script src="features/built.js?v=99ef839c"></script>
 </body>
 </html>

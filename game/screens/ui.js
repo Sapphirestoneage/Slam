@@ -270,7 +270,7 @@ const THEMES = {
 };
 const LK = () => thUse(G.look, "sapphire"),
   VC = () => thUse(G.voice, LK());
-const VO = () => THEMES[VC()];
+const VO = () => (typeof tbVO === "function" && tbVO()) || THEMES[VC()]; /* life.js: a blend of two voices */
 const V = (k, plain) => VO()[k] || plain;
 /* themed word with the plain one right next to it, so nothing gets confusing */
 const VT = (k, plain) =>
@@ -300,7 +300,7 @@ function themeCard() {
     offIds = Object.keys(THEMES).filter(t => adOk(THEMES[t]) && adThemeOff(t));
   return `<div class="card"><div class="row between"><h3>Theme</h3><span class="tiny muted">${THEMES[lk].n}${vc !== lk ? " look, " + THEMES[vc].n + " voice" : ""}</span></div><div class="small muted">Changes how the game looks and talks. Your numbers and your steps stay exactly the same, and the plain word always sits next to the themed one.</div>
  <div class="stack" style="margin-top:8px">${ids.map(t => `<button class="rowbtn ${lk === t && vc === t ? "sel" : ""}" data-a="theme" data-v="${t}"><span><b>${THEMES[t].n}</b><div class="tiny muted">${THEMES[t].tag}</div></span><span class="swatch" style="background:linear-gradient(135deg,${THEMES[t].sw[0]},${THEMES[t].sw[1]})"></span></button>`).join("")}</div>${offIds.length ? `<details style="margin-top:10px"><summary>More themes</summary><div class="inner stack"><div class="tiny muted">Off by default for you. Tap to add one to your list. You can take it back out any time.</div>${offIds.map(t => `<button class="ghost wide" data-a="thshow" data-v="${t}">Show ${esc(THEMES[t].n)} in my list</button>`).join("")}</div></details>` : ""}
- <details style="margin-top:10px" ${lk !== vc ? "open" : ""}><summary>Blend two themes</summary><div class="inner stack">${q("Looks like", `<div class="chips">${ids.map(t => `<button class="chip ${lk === t ? "on" : ""}" data-a="look" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`)}${q("Talks like", `<div class="chips">${ids.map(t => `<button class="chip ${vc === t ? "on" : ""}" data-a="voice" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`, "Example: Night Coven colors with Tabletop Quest words.")}</div></details>
+ <details style="margin-top:10px" ${lk !== vc || G.voice2 ? "open" : ""}><summary>Blend two themes</summary><div class="inner stack">${q("Looks like", `<div class="chips">${ids.map(t => `<button class="chip ${lk === t ? "on" : ""}" data-a="look" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`)}${q("Talks like", `<div class="chips">${ids.map(t => `<button class="chip ${vc === t ? "on" : ""}" data-a="voice" data-v="${t}">${THEMES[t].n}</button>`).join("")}</div>`, "Example: Night Coven colors with Tabletop Quest words.")}${typeof tbBlendPart === "function" ? tbBlendPart(ids) : "" /* life.js: a second voice */}</div></details>
  <div class="row between" style="margin-top:10px"><span class="small">Show my freedom date<div class="tiny muted">Retirement math, for the FIRE crowd. Off by default.</div></span><div class="seg"><button class="${G.fire ? "on" : ""}" data-a="fire" data-v="1">On</button><button class="${G.fire ? "" : "on"}" data-a="fire" data-v="0">Off</button></div></div></div>`;
 }
 /* The theme picker as a sheet (the Theme button in the top bar, and the row of the money read). */
@@ -1555,7 +1555,9 @@ function skillSheetBase(id) {
  <div class="tile"><div class="tiny muted">How you know it's done</div><div class="small">${esc(s[2])}</div></div>
  ${me ? `<div class="row between small"><span>${EFFT[me.eff]} · ${esc(me.tag)}</span><span>Efficiency <b>${me.score}</b> ${ib("term:eff")}</span></div>` : ""}
  ${wordsBox(s[0] + " " + s[1] + " " + s[2] + " " + s[3])}
- <div class="row wrap">${done ? `<span class="pill buff">Done</span>${c.skills[id] ? `<button class="ghost" data-a="skillundo" data-v="${id}">Undo</button>` : ""}` : `<button class="primary go" data-a="skilldone" data-v="${id}">I did this</button><button class="ghost" data-a="savelater" data-v="${id}">${saved ? "Remove from my list" : "Save for later"}</button><button class="ghost" data-a="park" data-v="${id}">Not yet</button><button class="ghost" data-a="already" data-v="${id}">Already done</button><button class="ghost" data-a="na" data-v="${id}">Doesn't apply to me</button>`}</div>`
+ ${typeof gdMentorPart === "function" ? gdMentorPart(c, id) : "" /* guild.js: a mentor who finished this track */}${typeof bcStepPart === "function" ? bcStepPart(c, id) : "" /* life.js: a book for this step */}
+ <div class="row wrap">${done ? `<span class="pill buff">Done</span>${c.skills[id] ? `<button class="ghost" data-a="skillundo" data-v="${id}">Undo</button>` : ""}` : `<button class="primary go" data-a="skilldone" data-v="${id}">I did this</button><button class="ghost" data-a="savelater" data-v="${id}">${saved ? "Remove from my list" : "Save for later"}</button><button class="ghost" data-a="park" data-v="${id}">Not yet</button><button class="ghost" data-a="already" data-v="${id}">Already done</button><button class="ghost" data-a="na" data-v="${id}">Doesn't apply to me</button>`}</div>` +
+      (typeof pfStepPart === "function" ? pfStepPart(c, id, done) : "") /* life.js: the proof of a done step */
     );
   });
 }
@@ -1787,6 +1789,7 @@ function finishSetupBase() {
       gamer: G.gamer,
       look: G.look,
       voice: G.voice,
+      voice2: G.voice2,
     });
   } else if (w.add) {
     G.chars.push(o);
@@ -3456,7 +3459,7 @@ const ACT = {
     render();
   },
   reset: () => {
-    G = Object.assign(fresh(), { look: G.look, voice: G.voice, plain: G.plain });
+    G = Object.assign(fresh(), { look: G.look, voice: G.voice, voice2: G.voice2, plain: G.plain });
     save();
     MP = { r: null, t: null };
     go("home");
@@ -4309,16 +4312,18 @@ const BTN_T = {
 const stepThemed = id => {
   if (id && id.includes(":")) {
     const p = id.split(":"),
-      T = typeof SKILL_T !== "undefined" && SKILL_T[VC()];
+      T =
+        typeof SKILL_T !== "undefined" &&
+        (typeof tbPick === "function" ? tbPick(SKILL_T) : SKILL_T[VC()]); /* life.js: a blend */
     return T && T[p[0]] ? T[p[0]][+p[1]] || null : null;
   }
-  return (STEP_T[VC()] || {})[id] || null;
+  return ((typeof tbPick === "function" ? tbPick(STEP_T) : STEP_T[VC()]) || {})[id] || null; /* life.js: a blend */
 };
 const stepHTML = (id, plain) => {
   const t = stepThemed(id);
   return t ? `${esc(t)}<div class="tiny muted" style="font-weight:400">${esc(plain)}</div>` : esc(plain);
 };
-const BT = (k, plain) => (BTN_T[VC()] || {})[k] || plain;
+const BT = (k, plain) => ((typeof tbPick === "function" ? tbPick(BTN_T) : BTN_T[VC()]) || {})[k] || plain;
 let PH = null,
   PMORE = null;
 const flowSign = m =>
