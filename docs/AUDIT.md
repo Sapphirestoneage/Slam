@@ -55,6 +55,12 @@ by hand (Social Security up to the wage base across both, Medicare, the extra 0.
 income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
 invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 8) it also covers family money (`js/math/family.js`, M8F): the
+sandwich years checked month by month (what each month takes from the flows, the months both run at once, the total
+over the years), living at home with the moving-out goal reached by stepping a balance month by month, tuition years
+summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
+529 deduction from the limit.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
 with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;
@@ -108,6 +114,14 @@ Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (t
 withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:
 the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a
 working year month by month; SLAM and the sheet use one factor for the year.
+
+Added Nov 25 2026 (student loans, run "Finish everything partly built", Part 5): a private refinance at the person's
+own rate (`refiOf`: the payment by the annuity formula, the total as payment × months, and the difference from the
+federal plan that pays least with its tax), and the stepladder (`stepladderOf`): each school year's loan at its own
+rate (the table, the graduate and PLUS add-ons, or the person's own rate), the interest before payments start, the
+payment on each rung and what it pays in all. For the total the second engine steps only until the waiting interest is
+paid, then uses the annuity formula for the rest. The federal plans themselves (M9S, IBR and RAP) are not worked out a
+second time yet.
 
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the

@@ -29,6 +29,7 @@
    ========================================================================= */
 const BOOK_PARTS = [
   spiralBook,
+  amountsBook,
   taxvBook,
   oddsBook,
   coverBook,
@@ -54,6 +55,7 @@ const BOOK_PARTS = [
   offerBook,
   careerBook,
   tripBook,
+  slBook,
   nxaBook,
   frontBook,
   quotaBook,

@@ -27,11 +27,11 @@
    ========================================================================= */
 const SP_ROUNDS = [
   { L: "", n: "About you", one: "Before the five questions", icon: "👋", pages: [0] },
-  { L: "D", icon: "💳", pages: [4] },
-  { L: "A", icon: "🏦", pages: [5, 7] },
-  { L: "I", icon: "💵", pages: [1] },
+  { L: "D", icon: "💳", pages: [9, 4, 10] },
+  { L: "A", icon: "🏦", pages: [5, 11, 7] },
+  { L: "I", icon: "💵", pages: [1, 12] },
   { L: "T", icon: "🧾", pages: [8] },
-  { L: "E", icon: "🛒", pages: [2, 3, 6] },
+  { L: "E", icon: "🛒", pages: [2, 3, 13, 6] },
 ];
 SP_ROUNDS.forEach(r => {
   const a = typeof KW_AREAS !== "undefined" ? KW_AREAS.find(x => x[0] === r.L) : null;
@@ -56,6 +56,11 @@ function spUpSoon() {
   if (typeof setTimeout === "function") setTimeout(spUp, 0);
 }
 const spOn = w => !!(w && w.kind === "setup" && w.mode !== "edit");
+/* The last page of round R that this player sees (a page with nothing to ask is passed over, smart.js smSkip). */
+function spLastPage(w, R) {
+  const live = R.pages.filter(p => !(typeof smSkip === "function" && smSkip(w, p)));
+  return live.length ? live[live.length - 1] : R.pages[R.pages.length - 1];
+}
 function spRoundOf(step) {
   const i = SP_ROUNDS.findIndex(r => r.pages.includes(step));
   return i < 0 ? 0 : i;
@@ -72,6 +77,7 @@ function spPreview(w) {
   o.placed = false;
   o.confEra = null;
   if (typeof smTaxApply === "function") smTaxApply(o);
+  if (typeof amApply === "function") amApply(o); /* amounts.js: the amounts of the rounds become rows */
   applyTypical(o);
   return { c: o, d: derive(o) };
 }
@@ -317,9 +323,10 @@ function spLetterNo(r) {
 function spTop(w, step, done) {
   const r = spRoundOf(step),
     R = SP_ROUNDS[r],
-    at = SM_ORDER.indexOf(step),
-    n = SM_ORDER.length,
-    fill = done ? (SM_ORDER.indexOf(R.pages[R.pages.length - 1]) + 1) / n : at / n;
+    L = typeof smLive === "function" ? smLive(w) : SM_ORDER,
+    at = L.indexOf(step),
+    n = L.length,
+    fill = done ? (L.indexOf(spLastPage(w, R)) + 1) / n : at / n;
   return (
     head("Getting started · page " + (at + 1) + " of " + n, "") +
     `<div class="spmeter" role="progressbar" aria-label="Setup" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(fill * 100)}"><i style="width:${Math.max(3, Math.round(fill * 100))}%"></i></div>` +
@@ -335,6 +342,7 @@ function spChecklist(w, r) {
     s = typeof smState === "function" ? smState(w) : { open: null },
     out = [];
   R.pages.forEach(p => {
+    if (typeof amChecklist === "function" && amChecklist(w, p, out)) return; /* amounts.js: pages 9 to 13 */
     if (p === 4) {
       const ks = (o.debtKinds || []).concat(o.mort ? ["Mortgage"] : []);
       out.push({
@@ -357,7 +365,7 @@ function spChecklist(w, r) {
           p,
           v: smAns(w, q)
             ? Array.isArray(v)
-              ? v.join(", ")
+              ? v.map(x => (q.lab && q.lab[x]) || x).join(", ")
               : v || "Skipped"
             : q.opt && spPassed(w, p)
               ? "Skipped"
@@ -385,7 +393,7 @@ function spHead(w) {
 function spNextLabel(w) {
   if (!spOn(w)) return null;
   const R = SP_ROUNDS[spRoundOf(w.step)];
-  return R.L && R.pages[R.pages.length - 1] === w.step ? "See my " + R.n.toLowerCase() + " number" : "Next";
+  return R.L && spLastPage(w, R) === w.step ? "See my " + R.n.toLowerCase() + " number" : "Next";
 }
 /* Part of smStepOn() in smart.js and ACT.wnext in ui.js. At the end of a letter round, opens the number of the
    round in place of the next page. Returns true when it did. */
@@ -393,7 +401,7 @@ function spRoundEnd(w) {
   if (!spOn(w)) return false;
   const r = spRoundOf(w.step),
     R = SP_ROUNDS[r];
-  if (!R.L || R.pages[R.pages.length - 1] !== w.step) return false;
+  if (!R.L || spLastPage(w, R) !== w.step) return false;
   try {
     const P = spPreview(w),
       ds = spDest(spRoute(P.c, P.d));

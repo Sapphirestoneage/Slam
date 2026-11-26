@@ -105,7 +105,7 @@ function slPlans(s) {
     old = s.first === SL_FIRST[0],
     made = s.pslf === "yes" ? s.made || 0 : 0,
     left = Math.max(1, R.pslf - made),
-    size = 1 + (s.mar ? 1 : 0) + (s.dep || 0);
+    size = s.size > 0 ? s.size : 1 + (s.mar ? 1 : 0) + (s.dep || 0);
   const tier = R.tiered.filter(t => s.bal >= t[0]).pop()[1],
     stdY = newOnly ? tier : R.stdYears,
     std = slLevel(s.bal, apr, stdY * 12),
@@ -204,6 +204,119 @@ function slPlans(s) {
           : "IBR and RAP forgive what is left at the end. From 2026 on, that forgiven amount is taxed as income. Public service forgiveness is not.",
   };
 }
+/* Run "Finish everything partly built", Part 5 (Nov 25 2026). PSLF in one card, from the rows of slPlans:
+   the payments counted, the payments and years left, and what the PSLF row that pays least in all forgives.
+   The same rule as pslfOf in js/math/studentloan.js. */
+function slPslf(P, s) {
+  const rows = P.rows.filter(r => r.pslf);
+  if (s.pslf !== "yes" && s.pslf !== "idk") return null;
+  if (!rows.length) return null;
+  const row = rows.reduce((a, r) => (r.paid < a.paid ? r : a), rows[0]);
+  return {
+    counted: s.pslf === "yes" ? s.made || 0 : null,
+    left: P.left,
+    years: P.left / 12,
+    forgiven: row.forgiven,
+    paid: row.paid,
+    row,
+  };
+}
+const SL_REFI_RATES = [4, 5, 6, 7, 8];
+const SL_REFI_YEARS = [5, 7, 10, 15, 20];
+/* A private refinance at the player's own rate (a tap, no default, no lender), next to the federal plans.
+   A level payment over its years. The game has no tax engine, so the federal side is what is paid. The
+   same rule as refiOf in js/math/studentloan.js. */
+function slRefi(P, bal, rate, years) {
+  if (!(rate > 0) || !(years > 0) || !(bal > 0)) return null;
+  const n = years * 12,
+    pay = slLevel(bal, rate / 100, n),
+    r = slRepay(bal, rate / 100, pay, n, false),
+    fed = P.rows.reduce((a, x) => (x.paid < a.paid ? x : a), P.rows[0]),
+    pslf = P.rows.filter(x => x.pslf).reduce((a, x) => (!a || x.paid < a.paid ? x : a), null),
+    idr = P.rows.filter(x => x.id !== "standard"),
+    low = idr.length ? idr.reduce((a, x) => (x.pay < a.pay ? x : a), idr[0]) : null,
+    most = P.rows.filter(x => x.forgiven > 0.5).reduce((a, x) => (!a || x.forgiven > a.forgiven ? x : a), null);
+  const gives = [
+    pslf
+      ? "Public service forgiveness: " +
+        money(Math.round(pslf.forgiven)) +
+        " forgiven tax-free after " +
+        P.left +
+        " more payments. A private loan has none."
+      : most
+        ? "Forgiveness: " +
+          most.name +
+          " forgives " +
+          money(Math.round(most.forgiven)) +
+          " at the end. A private loan has none."
+        : "Forgiveness: none of the federal plans forgives anything on your numbers.",
+    low
+      ? "A payment set by your income: " +
+        low.name +
+        " asks " +
+        money(Math.round(low.pay)) +
+        " a month now and goes down if your pay does. A private payment stays the same."
+      : null,
+    "The federal pauses and the discharge if you die or become totally and permanently disabled.",
+    "It cannot be undone. A private loan never turns back into a federal one.",
+  ].filter(Boolean);
+  return { pay, paid: r.paid, interest: r.paid - bal, months: r.months, fed, diff: r.paid - fed.paid, gives };
+}
+/* The spreadsheet of the plan: the household size, the PSLF card and the refinance, as rows. */
+function slBook(c) {
+  const s = slGet(c),
+    D0 = slFromDebts(c),
+    rows = [];
+  if (s.who !== "federal") return { title: "Student loans", rows };
+  const bal = D0 ? D0.bal : s.bal,
+    apr = D0 && D0.known ? D0.apr : s.apr;
+  if (!(bal > 0) || apr == null) return { title: "Student loans", rows };
+  const gross = (typeof knNet === "function" ? knNet(c).gross : (c.take || 0) / 0.8) * 12,
+    P = slPlans({
+      bal,
+      apr,
+      agi: gross,
+      first: s.first,
+      mar: s.mar,
+      dep: s.dep,
+      pslf: s.pslf,
+      made: s.made,
+      size: s.size,
+    }),
+    K = slPslf(P, s),
+    F = slRefi(P, bal, s.refi, s.refiY);
+  rows.push({
+    id: "sl_size",
+    label: "Household size the income plans use",
+    v: P.size,
+    note: s.size > 0 ? "The size you tapped" : "You, a spouse and the people you support",
+  });
+  rows.push({ id: "sl_bal", label: "Federal student loans", v: Math.round(bal) });
+  if (K) {
+    rows.push({ id: "sl_made", label: "PSLF payments counted", v: K.counted || 0 });
+    rows.push({ id: "sl_left", label: "PSLF payments to go", v: K.left, f: "=" + SL_REF.pslf + "-{sl_made}" });
+    rows.push({ id: "sl_years", label: "PSLF years left", v: K.years, f: "={sl_left}/12" });
+    rows.push({
+      id: "sl_forgiven",
+      label: "PSLF forgiven, tax-free",
+      v: Math.round(K.forgiven),
+      note: "A month-by-month walk of " + K.row.name,
+    });
+  }
+  if (F) {
+    const n = s.refiY * 12;
+    rows.push({ id: "sl_refi", label: "Private refinance rate (your tap)", v: s.refi / 100 });
+    rows.push({ id: "sl_refiy", label: "Private refinance years", v: s.refiY });
+    rows.push({
+      id: "sl_refipay",
+      label: "Private refinance a month",
+      v: F.pay,
+      f: "=PMT({sl_refi}/12,{sl_refiy}*12,-{sl_bal})",
+    });
+    rows.push({ id: "sl_refipaid", label: "Private refinance in all", v: F.pay * n, f: "={sl_refipay}*{sl_refiy}*12" });
+  }
+  return { title: "Student loans", rows };
+}
 function slGet(c) {
   return Object.assign(
     {
@@ -217,6 +330,9 @@ function slGet(c) {
       dep: null,
       pslf: null,
       made: null,
+      size: null,
+      refi: null,
+      refiY: null,
     },
     (c.x && c.x.sl) || {}
   );
@@ -403,16 +519,48 @@ function slSheet() {
   if (incG) gs.push("your pay before taxes");
   if (s.aprG && !(D0 && D0.known)) gs.push("the rate");
   if (s.firstG) gs.push("when you first borrowed");
-  const P = slPlans({ bal, apr, agi: gross, first: s.first, mar: s.mar, dep: s.dep, pslf: s.pslf, made: s.made }),
-    yrs = n => (n % 12 === 0 ? n / 12 + (n === 12 ? " year" : " years") : (n / 12).toFixed(1) + " years");
+  const P = slPlans({
+      bal,
+      apr,
+      agi: gross,
+      first: s.first,
+      mar: s.mar,
+      dep: s.dep,
+      pslf: s.pslf,
+      made: s.made,
+      size: s.size,
+    }),
+    yrs = n => (n % 12 === 0 ? n / 12 + (n === 12 ? " year" : " years") : (n / 12).toFixed(1) + " years"),
+    K = slPslf(P, s),
+    F = slRefi(P, bal, s.refi, s.refiY),
+    low = P.rows.reduce((a, r) => (r.pay < a.pay ? r : a), P.rows[0]),
+    least = P.rows.reduce((a, r) => (r.paid < a.paid ? r : a), P.rows[0]),
+    g = gs.length > 0;
   return (
     head("Student loans", "Your plans, side by side") +
+    dkCaption("Each federal plan on your balance and your pay") +
     `<div class="small muted">${money(bal)} of federal student loans at ${apr}% a year. Your pay before taxes is about ${money(Math.round(gross))} a year. A household of ${P.size}.</div>` +
-    `<div class="stack" style="gap:6px">${P.rows.map(r => `<div class="tile stack slrow" style="gap:4px"><div class="row between" style="gap:8px"><b>${r.name}</b>${gs.length ? `<span class="pill">Guess</span>` : ""}</div><div class="tiny muted">${r.one}</div><div class="row between" style="gap:8px"><span class="small">Each month</span><b class="${gs.length ? "guess" : ""}">${money(Math.round(r.pay))}</b></div><div class="row between" style="gap:8px"><span class="small">For</span><b>${yrs(r.months)}</b></div><div class="row between" style="gap:8px"><span class="small">Paid in all</span><b>${money(Math.round(r.paid))}</b></div><div class="small">${r.paidOff ? "Paid off. Nothing forgiven." : "Then " + money(Math.round(r.forgiven)) + " is forgiven" + (r.pslf ? ", tax-free." : ", and taxed as income that year.")}</div>${r.note ? `<div class="tiny muted">${r.note}</div>` : ""}</div>`).join("")}</div>` +
+    dkStatRow([
+      dkTile("Household", String(P.size), {
+        sub: s.size > 0 ? "the size you tapped" : "you, a spouse, the people you support",
+      }),
+      dkTile("Lowest a month", money(Math.round(low.pay)), { sub: low.name, guess: g }),
+      dkTile("Least paid in all", money(Math.round(least.paid)), { sub: least.name, guess: g }),
+      K
+        ? dkTile("Forgiven, tax-free", money(Math.round(K.forgiven)), {
+            sub: "after " + K.left + " more payments",
+            guess: g,
+          })
+        : dkTile("Plans compared", String(P.rows.length), { sub: "open to your loans" }),
+    ]) +
+    `<div class="stack" style="gap:6px">${P.rows.map(r => dkCard(r.name, `<div class="tiny muted">${r.one}</div><div class="row between" style="gap:8px"><span class="small">Each month</span><b class="${g ? "guess" : ""}">${money(Math.round(r.pay))}</b></div><div class="row between" style="gap:8px"><span class="small">For</span><b>${yrs(r.months)}</b></div><div class="row between" style="gap:8px"><span class="small">Paid in all</span><b>${money(Math.round(r.paid))}</b></div><div class="small">${r.paidOff ? "Paid off. Nothing forgiven." : "Then " + money(Math.round(r.forgiven)) + " is forgiven" + (r.pslf ? ", tax-free." : ", and taxed as income that year.")}</div>${r.note ? `<div class="tiny muted">${r.note}</div>` : ""}`, { cls: "slrow", right: g ? dkPill("Guess") : "" })).join("")}</div>` +
     `<div class="tile small">${P.words}</div><div class="tile small">The lowest payment is not always the cheapest plan. Look at what is paid in all, and remember the tax on a forgiven balance. The game does not pick one for you here.</div>` +
-    (gs.length
+    (g
       ? `<div class="tile small">Some of this rests on a guess (${gs.join(", ")}), so read the payments as rough.</div>`
       : "") +
+    slSizeCard(s, P) +
+    slPslfCardHtml(K, s) +
+    slRefiCardHtml(F, s, P) +
     `<div class="tile small askwhy"><b>How fresh are these rules:</b> checked on Nov 6, 2026. The SAVE plan ended in March 2026. PAYE and ICR close in June 2028 and are not shown. One RAP rule, how the balance drops when a payment is small, is read from the law's wording and has not been confirmed with a worked example. Check studentaid.gov or your loan servicer before you choose.</div>` +
     mathBox([
       "Standard: a level payment that clears the balance in the plan's years.",
@@ -420,8 +568,67 @@ function slSheet() {
       "RAP: 1% to 10% of your whole income, by income band, less $50 a month for each person you support, never under $10.",
       "Income is your pay before taxes, held where it is today. A raise raises these payments.",
       "Federal loans charge simple interest: unpaid interest waits beside the balance and is not added to it.",
+      "A private refinance: a level payment at the rate you tapped over the years you tapped.",
     ]) +
     `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="slback">Change an answer</button><button class="ghost" style="flex:1" data-a="debtplan">My debt plan</button></div>`
+  );
+}
+/* Part of slSheet(). The household size the income plans use, with a tap for the size on the loan papers. */
+function slSizeCard(s, P) {
+  return dkCard(
+    "Your household",
+    `<div class="small">${P.size} ${P.size === 1 ? "person" : "people"}. ${s.size > 0 ? "The size you tapped." : "You, a spouse and the people you support."} IBR sets its payment on it.</div>` +
+      slChips("size", [1, 2, 3, 4, 5, 6], s.size, v => (v === 6 ? "6 or more" : String(v))) +
+      `<div class="tiny muted">Tap the household size on your income-driven plan papers if it is different. Tap it again to go back.</div>`,
+    { cap: "Household size on your loan papers" }
+  );
+}
+/* Part of slSheet(). PSLF: the payments counted, the payments and years left, what is forgiven. */
+function slPslfCardHtml(K, s) {
+  if (!K)
+    return s.pslf === "no"
+      ? dkCard(
+          "Public service forgiveness (PSLF)",
+          `<div class="small">PSLF needs a government or nonprofit employer. If that changes, tap Change an answer.</div>`
+        )
+      : "";
+  return dkCard(
+    "Public service forgiveness (PSLF)",
+    dkStatRow([
+      dkTile("Payments counted", K.counted == null ? "Not told" : String(K.counted)),
+      dkTile("Payments to go", String(K.left)),
+      dkTile("Years left", "about " + K.years.toFixed(1).replace(/\.0$/, "")),
+      dkTile("Forgiven", money(Math.round(K.forgiven)), { sub: "tax-free" }),
+    ]) +
+      dkProgress(((K.counted || 0) / SL_REF.pslf) * 100, {
+        text: (K.counted || 0) + " of " + SL_REF.pslf + " payments",
+      }) +
+      `<div class="small">On ${K.row.name.replace(" with public service forgiveness", "")}: ${money(Math.round(K.paid))} paid, then ${money(Math.round(K.forgiven))} forgiven, tax-free.${s.pslf === "idk" ? " This assumes your employer counts." : ""}</div>` +
+      `<div class="tiny muted">The PSLF Help Tool on studentaid.gov says if your employer counts. A rule from July 1, 2026 lets the Department drop some employers. A federal court set it aside in July 2026, and the case was still going in August 2026. Checked on Nov 25, 2026.</div>`
+  );
+}
+/* Part of slSheet(). A private refinance rate next to the federal plans, and what it gives up. */
+function slRefiCardHtml(F, s, P) {
+  const body =
+    `<div class="small">A private lender pays off your federal loans and you owe the lender instead. Tap the rate a lender offers you. There is no default rate.</div>` +
+    `<div class="tiny muted">The private rate</div>` +
+    slChips("refi", SL_REFI_RATES, s.refi, v => v + "%") +
+    `<div class="tiny muted">Over how many years</div>` +
+    slChips("refiy", SL_REFI_YEARS, s.refiY, v => v + " years");
+  if (!F) return dkCard("Refinance with a private lender", body);
+  return dkCard(
+    "Refinance with a private lender",
+    body +
+      dkStatRow([
+        dkTile("Private a month", money(Math.round(F.pay))),
+        dkTile("Private in all", money(Math.round(F.paid)), { sub: money(Math.round(F.interest)) + " of interest" }),
+        dkTile(F.diff > 0 ? "More in all" : "Less in all", money(Math.round(Math.abs(F.diff))), {
+          sub: "than " + F.fed.name,
+        }),
+      ]) +
+      `<div class="stack" style="gap:4px"><b class="small">What you give up</b>${F.gives.map(x => `<div class="small">${x}</div>`).join("")}</div>` +
+      `<div class="tiny muted">From the Consumer Financial Protection Bureau, read on Nov 25, 2026.</div>`,
+    { right: dkPill("Guess") }
   );
 }
 Object.assign(ACT, {
@@ -486,6 +693,12 @@ Object.assign(ACT, {
     } else if (k === "made") {
       s.made = +v;
       w.i++;
+    } else if (k === "size") {
+      s.size = s.size === +v ? null : +v;
+    } else if (k === "refi") {
+      s.refi = s.refi === +v ? null : +v;
+    } else if (k === "refiy") {
+      s.refiY = s.refiY === +v ? null : +v;
     } else return;
     if (!G.demo) {
       c.x = c.x || {};

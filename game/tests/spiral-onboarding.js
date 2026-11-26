@@ -26,13 +26,16 @@
   X("setn", "31", "age");
   h = ov();
   chk(
-    "after age, round 1 is D: Debts",
-    W.step === 4 && h.includes("Question 1 of 5") && h.includes("<b>Debts</b>: What you owe"),
+    "after age, round 1 is D: Debts, and it starts with the cards (amounts.js)",
+    W.step === 9 && h.includes("Question 1 of 5") && h.includes("<b>Debts</b>: What you owe"),
     W.step
   );
+  N();
+  chk("then the other kinds of debt", W.step === 4, W.step);
   X("tog", "Credit card balance", "debtKinds");
   X("tog", "Student loans", "debtKinds");
-  chk("the last page of a round names its number", ov().includes("See my debts number"));
+  N();
+  chk("the last page of a round names its number", W.step === 10 && ov().includes("See my debts number"), W.step);
   N();
   h = ov();
   chk(
@@ -64,6 +67,8 @@
   X("tog", "Checking", "accts");
   X("tog", "IRA or Roth IRA", "accts");
   N();
+  chk("A asks each account next (amounts.js)", W.step === 11, W.step);
+  N();
   chk("A has a second page: your cushion", W.step === 7 && /A \$1,000 surprise bill/.test(ov()));
   X("set", "No", "can1k");
   chk("the checklist shows the answer as a line above", ov().includes("✓ <b>A $1,000 surprise:</b> No"));
@@ -87,6 +92,8 @@
   X("tog", "Help from family", "incKinds");
   X("smdone", null, "incKinds");
   X("set", "Changes month to month", "steady");
+  chk("I asks each source of money next (amounts.js)", W.step === 12, W.step);
+  N();
   h = ov();
   chk("I ends on money coming in", W.sp && W.sp.r === 3 && /\$1,500 a month/.test(h), W.sp);
   chk("the I line links it to what you owe", h.includes("months of what comes in"));
@@ -111,9 +118,13 @@
   X("set", "I rent", "homeQ");
   X("tog", "Roommates", "live");
   X("smdone", null, "live");
+  chk("roommates: how many (amounts.js)", ov().includes("How many roommates?"));
+  X("set", "2", "roommateQ");
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");
   X("set", "No one", "share");
+  chk("E asks spending group by group (amounts.js)", W.step === 13, W.step);
+  N();
   chk("E has a last page with two optional taps", W.step === 6, W.step);
   N();
   h = ov();
@@ -143,7 +154,7 @@
   X("set", "No cost", "homeQ");
   chk("the change is kept", W.o.homeQ === "No cost");
   X("smdone", null, "live");
-  for (let i = 0; i < 4 && W.kind === "setup" && !W.sp; i++) N();
+  for (let i = 0; i < 6 && W.kind === "setup" && !W.sp; i++) N();
   chk("the round shows its number again, recalculated", W.sp && W.sp.r === 5, W.sp);
   X("spnext");
   X("spgo");

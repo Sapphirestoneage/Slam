@@ -55,7 +55,8 @@ const SM = {
       },
       "Between jobs": {
         first: ["Unemployment or benefits", "Side gigs", "Help from family"],
-        hide: ["A main job", "A second job"],
+        dim: ["A main job"] /* a part-time job while looking stays one tap away (UX pass, test profile 1) */,
+        hide: ["A second job"],
         why: "you're between jobs",
       },
       "Self-employed": {
@@ -167,7 +168,21 @@ const SM_Q = {
       o: ["Student", "First job", "A few jobs or gigs", "Established", "Between jobs", "Self-employed", "Retired"],
       h: "Tap the closest one. You'll see what it means.",
     },
-    { k: "incKinds", l: "Where does your money come from?", s: "Money comes from", o: INC_KINDS, m: 1 },
+    {
+      k: "incKinds",
+      l: "What money comes in?",
+      s: "Money comes from",
+      o: INC_KINDS,
+      m: 1,
+      lab: {
+        "A main job": "Job",
+        "Unemployment or benefits": "Unemployment",
+        "Help from family": "Allowance or family help",
+        "Side gigs": "Side gig",
+        "Other income": "Other",
+      },
+      h: "Tap all that fit. How much and how often come next, one at a time.",
+    },
     {
       k: "steady",
       l: "Is your money about the same each month, or does it move around?",
@@ -264,9 +279,14 @@ const PF_R = {
 };
 const pfSort = ks => ks.slice().sort((a, b) => (INC_W[b] || 0) - (INC_W[a] || 0));
 /* THE ORDER OF THE PAGES: the five rounds D, A, I, T, E (features/spiral.js). About you comes first.
-   D: what you owe (4). A: where your money lives (5), your cushion (7). I: your work (1). T: what comes off
-   the top (8). E: your home (2), your people (3), the last two (6). */
-const SM_ORDER = [0, 4, 5, 7, 1, 8, 2, 3, 6];
+   D: your credit cards (9), what you owe (4), each debt (10). A: where your money lives (5), each account (11),
+   your cushion (7). I: your work (1), each source of money (12). T: what comes off the top (8). E: your home (2),
+   your people (3), spending group by group (13), the last two (6). Pages 9 to 13 are in features/amounts.js.
+   A page with skip(w) true is passed over (for example the amounts in "Change my answers"). */
+const SM_ORDER = [0, 9, 4, 10, 5, 11, 7, 1, 12, 8, 2, 3, 13, 6];
+const smSkip = (w, p) => !!(w && SETUP[p] && SETUP[p].skip && SETUP[p].skip(w));
+/* The pages this player sees, in order (for "page 2 of 11"). The page open now always counts. */
+const smLive = w => SM_ORDER.filter(p => p === (w && w.step) || !smSkip(w, p));
 /* T: the taxes round. A question about the match only for a player with a job. */
 SM_Q[8] = [
   {
@@ -293,6 +313,8 @@ SM_Q[8] = [
 const SM_TAXACCT = ["Retirement plan at work", "IRA or Roth IRA", "HSA"];
 function smQs(w, i) {
   if (i === 0) return [];
+  if (i === 2 && typeof amHouseQs === "function")
+    return amHouseQs(w, SM_Q[2]); /* amounts.js: how many roommates, kids */
   if (i === 7) return SM_Q[0];
   if (i === 8)
     return SM_Q[8].filter(
@@ -303,24 +325,25 @@ function smQs(w, i) {
   return SM_Q[i];
 }
 /* The page after page i, or null after the last page. */
-function smNextPage(i) {
-  const k = SM_ORDER.indexOf(i);
-  return k >= 0 && k < SM_ORDER.length - 1 ? SM_ORDER[k + 1] : null;
+function smNextPage(i, w) {
+  for (let k = SM_ORDER.indexOf(i) + 1; k > 0 && k < SM_ORDER.length; k++)
+    if (!smSkip(w, SM_ORDER[k])) return SM_ORDER[k];
+  return null;
 }
-function smPrevPage(i) {
-  const k = SM_ORDER.indexOf(i);
-  return k > 0 ? SM_ORDER[k - 1] : null;
+function smPrevPage(i, w) {
+  for (let k = SM_ORDER.indexOf(i) - 1; k >= 0; k--) if (!smSkip(w, SM_ORDER[k])) return SM_ORDER[k];
+  return null;
 }
-const smIsLast = w => w.step === SM_ORDER[SM_ORDER.length - 1];
+const smIsLast = w => smNextPage(w.step, w) == null;
 /* Go to the next page. Between two rounds, spiral.js shows the number of the round first. */
 function smStepOn(w) {
   if (typeof spRoundEnd === "function" && spRoundEnd(w)) return; /* spiral.js: the round just ended */
-  const n = smNextPage(w.step);
+  const n = smNextPage(w.step, w);
   if (n != null) w.step = n;
   if (typeof spUpSoon === "function") spUpSoon(); /* spiral.js: the new page starts at its top */
 }
 function smStepBack(w) {
-  const n = smPrevPage(w.step);
+  const n = smPrevPage(w.step, w);
   if (n != null) w.step = n;
 }
 /* Part of finishSetup() in ui.js. The answers of the taxes round go to the profile, then the work keys go. */
@@ -422,7 +445,7 @@ function smChips(w, q) {
     od = smOrder(q.k, q.o, o, s.all[q.k]),
     none = multi ? !(cur || []).length : !cur,
     top = od.r.first.find(v => od.list.includes(v));
-  return `<div class="chips">${od.list.map(v => `<button class="chip ${sel(v) ? "on" : ""} ${none && v === top ? "likely" : ""} ${od.r.dim.includes(v) && !sel(v) ? "dim" : ""}" data-a="${multi ? "tog" : "set"}" data-k="${q.k}" data-v="${esc(v)}">${esc(v)}</button>`).join("")}${od.hid.length ? `<button class="chip more" data-a="small" data-k="${q.k}">Show ${od.hid.length} more</button>` : ""}${q.opt ? `<button class="chip more" data-a="smskip" data-k="${q.k}">Skip</button>` : ""}</div>${od.moved && od.r.why && none ? `<div class="tiny muted">Most likely first, because ${od.r.why}.${od.hid.length ? " The rest are one tap away." : ""}</div>` : ""}`;
+  return `<div class="chips">${od.list.map(v => `<button class="chip ${sel(v) ? "on" : ""} ${none && v === top ? "likely" : ""} ${od.r.dim.includes(v) && !sel(v) ? "dim" : ""}" data-a="${multi ? "tog" : "set"}" data-k="${q.k}" data-v="${esc(v)}">${esc((q.lab && q.lab[v]) || v)}</button>`).join("")}${od.hid.length ? `<button class="chip more" data-a="small" data-k="${q.k}">Show ${od.hid.length} more</button>` : ""}${q.opt ? `<button class="chip more" data-a="smskip" data-k="${q.k}">Skip</button>` : ""}</div>${od.moved && od.r.why && none ? `<div class="tiny muted">Most likely first, because ${od.r.why}.${od.hid.length ? " The rest are one tap away." : ""}</div>` : ""}`;
 }
 const smAns = (w, q) => {
   const s = smState(w),
@@ -535,8 +558,12 @@ SETUP[4].b = w =>
   smList(
     w,
     "debtKinds",
-    DEBT_KINDS.map(d => d[0]).concat("Mortgage"),
-    "Tap every kind you have. No amounts. If you have none, just tap Next.",
+    DEBT_KINDS.map(d => d[0])
+      .filter(k => !(typeof spOn === "function" && spOn(w) && k === "Credit card balance")) /* asked on page 9 */
+      .concat("Mortgage"),
+    typeof spOn === "function" && spOn(w)
+      ? "Besides credit cards, tap every other kind you have. How much comes next, one at a time. If none, just tap Next."
+      : "Tap every kind you have. No amounts. If you have none, just tap Next.",
     (v, lk, dm) => {
       const m = v === "Mortgage",
         on = m ? !!w.o.mort : w.o.debtKinds.includes(v);
@@ -545,6 +572,8 @@ SETUP[4].b = w =>
   );
 SETUP[5].b = w =>
   smList(w, "accts", ACCT_KINDS, "Tap every kind of account you have. If none, just tap Next.", (v, lk, dm) => {
+    if (typeof amAcctRow === "function" && amAcctRow(w, v) != null)
+      return amAcctRow(w, v); /* amounts.js: IRA, Roth IRA */
     const on = w.o.accts.includes(v);
     return `<button class="rowbtn ${on ? "sel" : ""} ${dm && !on ? "dim" : ""}" data-a="tog" data-k="accts" data-v="${esc(v)}"><span>${esc(v)}${lk && !on ? ` <span class="pill info">Likely</span>` : ""}${ACCT_HELP[v] ? `<div class="tiny muted">${ACCT_HELP[v]}</div>` : ""}</span><b>${on ? "Yes" : ""}</b></button>`;
   });

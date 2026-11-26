@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 162. Lines: 98,105. Top-level functions: 2309. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 163. Lines: 99,608. Top-level functions: 2347. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -25,7 +25,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 11 | `data/market.js` | 179 | 0 | 0 | 0 | Data only. US market history by calendar year, for the retirement odds (features/odds.js) |
 | 12 | `core/withdraw.js` | 357 | 16 | 7 | 0 | The ways to take money out: the list of families and variants, the rule of each one for a year of spending, how the money is held, when the money come... |
 | 13 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
-| 14 | `core/engine.js` | 3,904 | 124 | 0 | 0 | The engine: the data model of one profile and all the math |
+| 14 | `core/engine.js` | 3,928 | 126 | 0 | 0 | The engine: the data model of one profile and all the math |
 | 15 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
 | 16 | `core/homebuy.js` | 206 | 9 | 0 | 0 | Home buying and renting: the bank's payment (principal and interest), the true cost of owning line by line, the true cost of renting, the year owning ... |
 | 17 | `core/career.js` | 278 | 19 | 1 | 0 | Career and education: what a course or degree costs and pays back (the payback years, the lifetime value, the move for the FI date), the presets, two ... |
@@ -43,14 +43,14 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 29 | `core/frameworks.js` | 345 | 21 | 3 | 0 | The math of Eli's frameworks and the canon: the SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator, the Baby Steps, t... |
 | 30 | `data/quizskins.js` | 6,160 | 0 | 0 | 0 | Data only. The quiz skins of the one quiz engine (letters, address, houses, avatars, sheet, pyramid, mountain, stars, sins), and the skills, skill tre... |
 | 31 | `account/gate.js` | 83 | 8 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
-| 32 | `screens/ui.js` | 6,649 | 217 | 136 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
+| 32 | `screens/ui.js` | 6,652 | 217 | 136 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
 | 33 | `screens/dash.js` | 388 | 27 | 2 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
 | 34 | `features/games.js` | 673 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
 | 35 | `features/games2.js` | 1,466 | 40 | 19 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 36 | `features/year.js` | 783 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
 | 37 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
 | 38 | `screens/profiles.js` | 136 | 6 | 4 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
-| 39 | `screens/smart.js` | 781 | 21 | 5 | 0 | The setup questions change with each answer |
+| 39 | `screens/smart.js` | 810 | 21 | 5 | 0 | The setup questions change with each answer |
 | 40 | `screens/planner.js` | 1,428 | 61 | 19 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 41 | `account/cloud.js` | 568 | 23 | 0 | 0 | The game saves itself to the account of the player |
 | 42 | `screens/ux.js` | 899 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
@@ -73,13 +73,13 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 59 | `features/lever.js` | 565 | 15 | 6 | 0 | Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each with a price in dollars a year on the numbers of the player |
 | 60 | `features/mult.js` | 426 | 13 | 8 | 0 | The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses, buying ahead, a tax-favored account, a health savings account) ha... |
 | 61 | `data/askwords.js` | 97 | 0 | 0 | 0 | The words of "one small question at a time": for each money area, the question, what it means, why the game asks, and where to look (ASK); and the pla... |
-| 62 | `features/ask.js` | 369 | 9 | 4 | 0 | One small question at a time, for "Make your numbers real" |
+| 62 | `features/ask.js` | 377 | 9 | 4 | 0 | One small question at a time, for "Make your numbers real" |
 | 63 | `features/alloc.js` | 236 | 9 | 2 | 0 | Keep the first guess for each money area, and show how much of the guess is placed in real lines and how much is not placed yet |
 | 64 | `features/session.js` | 167 | 3 | 3 | 0 | Make a first coaching session fast |
 | 65 | `features/ask2.js` | 389 | 9 | 4 | 0 | The same pattern as ask.js for three more places: the details of one debt, the questions of Key numbers, and the questions about the job match and the... |
 | 66 | `features/sign.js` | 250 | 5 | 2 | 0 | Before you sign. The true cost of a new loan, asked one small question at a time, then shown in the terms of the player |
 | 67 | `features/owed.js` | 128 | 4 | 2 | 0 | What each debt costs you: the interest in dollars, and the same amount as months of living costs |
-| 68 | `features/study.js` | 508 | 13 | 4 | 0 | Student loan plans, side by side |
+| 68 | `features/study.js` | 721 | 19 | 4 | 0 | Student loan plans, side by side |
 | 69 | `features/together.js` | 215 | 7 | 3 | 0 | The Money Chart for more than two persons: the player, their person, up to four more persons who answer the same 10 statements on this phone, and othe... |
 | 70 | `features/people.js` | 319 | 7 | 3 | 0 | Your people, one layer at a time |
 | 71 | `features/fold.js` | 65 | 4 | 1 | 0 | One list on Next Steps. The mission board and the older card "Ready to plan" showed the same steps |
@@ -126,7 +126,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 112 | `features/okay.js` | 189 | 9 | 4 | 0 | The question "Am I okay?" and its first answer |
 | 113 | `features/quota.js` | 234 | 11 | 4 | 0 | Extras for people who love spreadsheets |
 | 114 | `data/takeout2026.js` | 122 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
-| 115 | `features/takeout.js` | 1,001 | 21 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has, and a fifth tab, "Compare the ways" (features/ways.js) |
+| 115 | `features/takeout.js` | 1,006 | 21 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has, and a fifth tab, "Compare the ways" (features/ways.js) |
 | 116 | `features/ways.js` | 536 | 21 | 2 | 0 | Compare the ways. The same plan (the money, the spending, the stop age, Social Security) through each way to take money out: the 4% rule and its setti... |
 | 117 | `features/ages.js` | 187 | 7 | 0 | 0 | Two ages, for each person. (1) Work optional: the age when the invested money is enough to live on (the freedom date of the plan) |
 | 118 | `features/stress.js` | 282 | 6 | 1 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
@@ -137,7 +137,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 123 | `features/offers.js` | 265 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
 | 124 | `features/career.js` | 542 | 11 | 1 | 0 | Career and education. Five tabs on one screen: (1) Pays back: what a course or a degree costs with the time it takes, the raise after tax, the payback... |
 | 125 | `features/trip.js` | 483 | 9 | 2 | 0 | Trips and the journey. Four tabs on one screen: (1) The trip: flights, lodging a night, the days away, food a day, the card's fee on other currencies,... |
-| 126 | `features/family.js` | 512 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
+| 126 | `features/family.js` | 515 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
 | 127 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
 | 128 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
 | 129 | `data/cardtemplate.js` | 307 | 8 | 0 | 0 | The template of one card of the card library |
@@ -159,21 +159,22 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 145 | `features/quizzes.js` | 322 | 14 | 4 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
 | 146 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 147 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 148 | `data/patchnotes.js` | 319 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 148 | `data/patchnotes.js` | 329 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 149 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 150 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
-| 151 | `features/look.js` | 529 | 24 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
-| 152 | `features/spiral.js` | 695 | 32 | 8 | 0 | Setup as a spiral of five rounds, in the order of the letters D, A, I, T, E (features/know.js: Debts, Assets, Income, Taxes, Expenses) |
-| 153 | `features/jobs.js` | 557 | 25 | 7 | 0 | The Job of Existing (run JOE-1) |
-| 154 | `features/goalwire.js` | 588 | 16 | 2 | 0 | The Job of Existing, feature 4: a goal, its account and its automatic deposit, in one move of three taps |
-| 155 | `features/careq.js` | 384 | 14 | 2 | 0 | The Job of Existing, feature 5: the quests of the Health Care Admin and the Insurance Coordinator |
-| 156 | `features/rolemap.js` | 385 | 13 | 3 | 0 | The Job of Existing (run JOE-1), feature 6: the household role map, "Who carries what" |
-| 157 | `features/canon.js` | 961 | 12 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
-| 158 | `features/enough.js` | 350 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
-| 159 | `features/book.js` | 608 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 160 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 161 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 162 | `features/built.js` | 1,406 | 4 | 11 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 151 | `features/look.js` | 552 | 26 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
+| 152 | `features/spiral.js` | 703 | 33 | 8 | 0 | Setup as a spiral of five rounds, in the order of the letters D, A, I, T, E (features/know.js: Debts, Assets, Income, Taxes, Expenses) |
+| 153 | `features/amounts.js` | 1,175 | 27 | 5 | 0 | The amounts inside the setup rounds (UX pass, phase 4) |
+| 154 | `features/jobs.js` | 557 | 25 | 7 | 0 | The Job of Existing (run JOE-1) |
+| 155 | `features/goalwire.js` | 588 | 16 | 2 | 0 | The Job of Existing, feature 4: a goal, its account and its automatic deposit, in one move of three taps |
+| 156 | `features/careq.js` | 384 | 14 | 2 | 0 | The Job of Existing, feature 5: the quests of the Health Care Admin and the Insurance Coordinator |
+| 157 | `features/rolemap.js` | 385 | 13 | 3 | 0 | The Job of Existing (run JOE-1), feature 6: the household role map, "Who carries what" |
+| 158 | `features/canon.js` | 961 | 12 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
+| 159 | `features/enough.js` | 350 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
+| 160 | `features/book.js` | 610 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 161 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 162 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 163 | `features/built.js` | 1,406 | 4 | 12 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -191,7 +192,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 860 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 868 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
