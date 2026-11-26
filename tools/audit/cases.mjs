@@ -32,10 +32,12 @@ import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwSt
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
+import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
 import * as RA from '../../js/math/ratios.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
+const priorsNw = JSON.parse(readFileSync(new URL('../../data/priors-2026.json', import.meta.url))).rows.filter(r => r.field === 'netWorth');
 const il = JSON.parse(readFileSync(new URL('../../data/sources/israel-2026.json', import.meta.url)));
 let s = Number(seedArg) >>> 0;
 const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -117,6 +119,19 @@ for (let i = 0; i < N; i++) {
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
     const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
     add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
+  // Quest mode (js/math/quest.js, M8Z): the stats, capacity, the weak spots, hidden costs, the rank and a duel
+  { const T = { take: true, spend: true, cash: true, debt: true, inv: true }, x = { take: money(800, 25000), spend: money(600, 20000), cash: pick([0, money(50, 90000)]), hiDebt: pick([0, 0, money(100, 60000)]), inv: pick([0, money(100, 900000)]), nw: money(1, 900000) * pick([1, 1, -1]), fi: money(100000, 4000000), coast: money(10000, 1500000), target: pick([1, 3, 6, 9]), protDone: whole(0, 4), protMax: 4, sharp: whole(0, 5), sharpOf: 5, streak: whole(0, 30), real: T }, r = qsStats(x);
+    add('qsStats', x, { health: r.health.score, armor: r.armor.score, stats: Object.fromEntries(r.stats.map(t => [t.id, t.score])) }); }
+  { const x = { take: money(800, 25000), spend: money(600, 26000), cushionMonths: pick([null, 0.2, 0.9, 2, 6]), plate: pick([null, 'light', 'normal', 'full']), felt: pick([null, null, 'less', 'more']) }, r = qsCapacity(x);
+    add('qsCapacity', x, { slots: r.slots }); }
+  { const x = { take: money(800, 25000), spend: money(600, 22000), cash: pick([0, money(50, 90000)]), hiDebt: pick([0, money(100, 60000)]), incomes: pick([null, 1, 2]), protDone: whole(0, 4), protMax: 4, lowGap: pick([0, 0, money(50, 3000)]) }, r = qsFails(x);
+    add('qsFails', x, { order: r.spots.map(t => t.id), rooms: r.spots.map(t => t.room) }); }
+  { const items = Array.from({ length: whole(1, 5) }, (_, k) => ({ id: `h${k}`, name: `H${k}`, year: pick([null, 0, money(5, 20000)]) })), x = { items, spend: pick([null, money(500, 15000)]) }, r = qsHidden(items, x.spend);
+    add('qsHidden', x, { total: r.total, days: r.days, ids: r.rows.map(t => t.id) }); }
+  { const x = { guess: pick(['below', 'near', 'above']), nw: money(1, 3000000) * pick([1, 1, 1, -1]), age: whole(18, 90), rows: priorsNw }, r = qsRank(x);
+    add('qsRank', { ...x, rows: undefined }, { where: r.where, quarter: r.quarter, median: r.median }); }
+  { const V = ['Freedom and time', 'Security', 'Family', 'Fun', 'Home', 'Giving', 'Learning', 'Friends and community', 'Adventure and travel'], o = pick(QS_OPPONENTS), x = { opp: o.id, choice: pick(['yes', 'half', 'no']), values: V.filter(() => rnd() < 0.35) }, r = qsDuel(o, x.choice, x.values);
+    add('qsDuel', { ...x, pull: o.pull, test: o.test }, { beaten: r.beaten }); }
   // Family money (js/math/family.js, M8F): the sandwich years, living at home, tuition and the NY 529
   { const yrs = () => pick([null, 0, 1, 3, 5, 10]), x = { parents: pick([0, money(50, 3000)]), kids: pick([0, money(50, 4000)]), parentsYears: yrs(), kidsYears: yrs(), parentsFrom: pick([0, 0, 2]), kidsFrom: pick([0, 0, 1, 5]), inSpending: rnd() < 0.2, takeHome: money(1500, 20000), spending: money(1000, 15000) }, r = fmSandwich(x);
     add('fmSandwich', x, { peak: r.peak, total: r.total, both: r.both, all: r.all, leftAfter: r.leftAfter, flows: r.flows.map(f => [f.at, f.monthly]) }); }
