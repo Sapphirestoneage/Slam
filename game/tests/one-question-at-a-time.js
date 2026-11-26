@@ -88,7 +88,9 @@
   delete c.x.none;
   c.debts = [
     R({ k: "Credit card balance", amt: 2500, high: true, was: 2500 }),
-    R({ k: "Car loan", amt: 9000, high: false, was: 9000 }),
+    /* a range chip of setup (Close, $8,500 to $9,500): it could move less than the card's guess, so the questions
+       come in the order of the list (fewer.js ranks them by what they could move) */
+    { k: "Car loan", amt: 9000, high: false, was: 9000, s: true, cf: 2, rg: [8500, 9500, 9000] },
   ];
   syncAll(c);
   X("sharp", "debt");

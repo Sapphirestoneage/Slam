@@ -83,6 +83,7 @@ const BOOK_PARTS = [
   qvBook,
   peBook,
   ivBook,
+  fewerBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */
 function bookSections(c) {

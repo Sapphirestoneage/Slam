@@ -146,7 +146,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 14 | Taxes and self-employed | Not started | |
 | 15 | Safety nets | Not started | |
 | 16 | Giving | Not started | |
-| 17 | Asking fewer questions | Not started | |
+| 17 | Asking fewer questions | Done (one small question at a time: still partly for goals, the money log and the gig screens, QUESTIONS 635) | One ranking for both apps, `js/math/askrank.js` (M8Y; copied to `game/core/askrank.js` by `tools/game_askrank_build.mjs`, a test fails when the copy is old; Ask me next in `js/math/nextbest.js` sorts with it). The cost of not knowing in dollars on each Guess or Close number, the stopping rule at 80% (AskStopShare). Game (`features/fewer.js`): setup's spending groups biggest first with "You can stop here", Make your numbers real ranked with a stop, the reveal's It depends on by dollars, Close numbers ranked, the count of setup's taps on the reveal. Web: Ask me next says when the rest can wait. New player's taps to the reveal: 60 before, 55 after. |
 | 18 | Coach and reports | Not started | |
 | 19 | Testing and math | Not started | |
 | 20 | Game feel | Not started | |

@@ -80,6 +80,12 @@ Since Nov 26 2026 (run Finish everything partly built, Part 9) it also covers co
 M8N): the SCF 2025 middle for an age looked up again in the data file, below, about or above it by the 10% rule, the
 quarter and the 90th of all households, the pay next to the Census middle, and the gap to the BEA saving rate.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 17) it also covers asking fewer questions
+(`js/math/askrank.js`, M8Y): your money a year from now (net worth + 12 x what is left) at both ends of a blank and the
+swing between them, the one ranking checked pair by pair (a higher score first; within the 2% near tie the preferred
+kind, then the order), and the stopping rule worked out again (ask until 80% of the open dollars is covered; a question
+with no number yet is always asked).
+
 Since Nov 26 2026 (run Finish everything partly built, Part 13) it also covers investing (`js/math/invest.js`, M8I):
 the household mix added up dollar by dollar with the age guide from its words, the share inside the three kinds of a
 three-fund mix, the drift, employer stock and the biggest one company, each fee as value x rate with the account and

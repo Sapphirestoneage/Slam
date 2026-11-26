@@ -12,6 +12,7 @@
 import { LEVELS, WEIGHTS, PACE, PACE_WORDS, SESSIONS } from './program.js';
 import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
 import { HB_RULES, HB_SOURCE } from '../math/homebuy.js';
+import { AR_RULES, AR_SOURCE } from '../math/askrank.js';
 import { CR_VEST, CR_VEST_SOURCE, CR_RULES } from '../math/career.js';
 import { TP_RULES, TP_RULES_SOURCE } from '../math/trip.js';
 import { IV_RULES, IV_SOURCES, IV_GUIDE_SOURCE, ivGuide } from '../math/invest.js';
@@ -49,6 +50,7 @@ export const RULES = {
   certaintyWeightFi: 3, certaintyWeightDebtFree: 3, certaintyWeightSurplus: 2, certaintyWeightEf: 1, certaintyWeightNetWorth: 1, certaintyWeightFoo: 1,
   certaintyOpenMonths: 600,
   askSecondsNumber: 15, askSecondsLookup: 60, askSecondsBuild: 600,
+  askStopShare: AR_RULES.stopShare, // run Part 17 (M8Y, js/math/askrank.js): stop asking once the questions asked cover this share of what could move
   materialHours: 2, materialFloor: 100, // batch 15: a task is worth doing when its dollars a year beat these hours at the real hourly wage (never under $100)
   debtFirst: 1, // batch 11: while heavy debt is carried the surplus goes to it first (1 on, 0 off); js/math/metrics.js debtRuleOf
   // Batch 12 (QUESTIONS 196, Eli Nov 5): freed money follows the FOO. After heavy debt the surplus and the freed payments
@@ -338,6 +340,7 @@ export const ASSUMPTIONS = [
   { id: 'rules.askSecondsNumber', name: 'AskSecondsNumber', label: 'Ask me next: seconds to check a number the client already gave', unit: 'number', get: () => RULES.askSecondsNumber, source: RULE('js/math/nextbest.js, M9Q; docs/engines/next-best.md (a question cost per field: a tap 4 seconds, a number 15, a lookup is homework), batch 43'), date: '2026-11-06' },
   { id: 'rules.askSecondsLookup', name: 'AskSecondsLookup', label: 'Ask me next: seconds to read a number off an app or a statement (an APR, a spending total)', unit: 'number', get: () => RULES.askSecondsLookup, source: RULE('js/math/nextbest.js, M9Q; docs/engines/next-best.md (a question cost per field: a tap 4 seconds, a number 15, a lookup is homework), batch 43'), date: '2026-11-06' },
   { id: 'rules.askSecondsBuild', name: 'AskSecondsBuild', label: 'Ask me next: seconds to build spending from the lines on Budget', unit: 'number', get: () => RULES.askSecondsBuild, source: RULE('js/math/nextbest.js, M9Q; docs/engines/next-best.md (a question cost per field: a tap 4 seconds, a number 15, a lookup is homework), batch 43'), date: '2026-11-06' },
+  { id: 'rules.askStopShare', name: 'AskStopShare', label: 'Asking fewer questions: stop once the questions asked cover this share of what the open blanks could move (the 80/20 rule)', unit: 'pct', get: () => RULES.askStopShare, source: `${AR_SOURCE}; js/math/askrank.js`, date: '2026-11-26' },
   { id: 'rules.rangeMinMonths', name: 'RangeMinMonths', label: 'Ranges: a date range narrower than this many months is not shown', unit: 'number', get: () => RULES.rangeMinMonths, source: RULE('js/math/ranges.js, M9R; docs/engines/ranges.md (Rough: balances 10%, spending 20%, income 10% W-2 or 30% variable; Know it 2% for balances, 0 for fixed facts), tuned to keep Gut wider than Rough (batch 41)'), date: '2026-11-06' },
   { id: 'rules.fiRangeMaxYears', name: 'FiRangeMaxYears', label: 'FI date range: widest shown, years (wider shows the one step that narrows it)', unit: 'number', get: () => RULES.fiRangeMaxYears, source: RULE('js/math/picture.js fiWordsOf; batch 15 item 7 (QUESTIONS: confirm 5)'), date: '2026-11-06' },
   // Batch 29 (the true cost of debt and the student loan decision, js/math/truecost.js and studentloan.js).

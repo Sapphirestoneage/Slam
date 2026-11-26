@@ -494,6 +494,16 @@ const PATCH_NOTES = [
       "Two new tools: Invest or pay debt (one grid, your own debts marked) and Roth or traditional, by account. The web app has the same page.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Fewer questions",
+    l: [
+      "Every guess now shows what not knowing it could move your money a year from now, in dollars.",
+      "Setup asks the spending that matters most first. When the rest would move your plan only a little, it says so and you can stop there with one tap.",
+      "Make your numbers real asks the biggest blanks first and offers to stop when the rest move little. Close numbers sorts the same way.",
+      "Here's where you stand ranks what your date depends on by dollars, and says how many taps your setup took.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

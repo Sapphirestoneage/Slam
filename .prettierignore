@@ -27,3 +27,4 @@ game/core/estate.js
 game/core/peers.js
 game/core/benefitsplan.js
 game/core/invest.js
+game/core/askrank.js

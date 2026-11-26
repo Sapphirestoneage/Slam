@@ -1733,6 +1733,7 @@ function finishSetup() {
   /* planner.js, step 1 of 2: clear a question that waited, and make the note for the celebration. */
   const pl = typeof finishSetupPlanStart === "function" ? finishSetupPlanStart() : null;
   const door = !!(W && W.door); /* okay.js: the setup came from the front door */
+  if (typeof finishSetupTaps === "function") finishSetupTaps(); /* fewer.js: keep the count of setup's taps */
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
   if (typeof finishSetupTax === "function") finishSetupTax(); /* smart.js: the answers of the taxes round */
   if (typeof finishSetupAm === "function") finishSetupAm(); /* amounts.js: the amounts of the rounds become rows */
