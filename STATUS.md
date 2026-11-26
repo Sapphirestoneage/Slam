@@ -145,7 +145,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 13 | Investing | Not started | |
 | 14 | Taxes and self-employed | Not started | |
 | 15 | Safety nets | Not started | |
-| 16 | Giving | Not started | |
+| 16 | Giving | Done (not yet: volunteer hours toward maaser; the 35% limit on itemizing in the 37% bracket, said on the page; QUESTIONS 634) | One engine, `js/math/giving.js` (M8V; copied to `game/core/giving.js` by `tools/game_giving_build.mjs`, a test fails when the copy is stale). Web app: `giving.html` "Giving: what it costs and how to plan it" (on one.html's More to explore): your giving rate on the base you pick and the share it comes to (maaser commonly 10%), one gift in hours, days on the FI date and what it could have grown to, bunching on the 2026 federal rules, envelopes inside one account, the maaser credit. Game: Menu › My money › Giving (the new look), also from the key number Giving. The community maaser and the FOO giving step use the same functions. |
 | 17 | Asking fewer questions | Not started | |
 | 18 | Coach and reports | Not started | |
 | 19 | Testing and math | Not started | |
