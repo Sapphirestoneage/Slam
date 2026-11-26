@@ -11,6 +11,9 @@ import { nextMoves } from '../math/moves.js';
 import { homeworkList } from '../homework.js';
 import * as S from './staples.js';
 import { auditSection } from './audit-ui.js';
+import { statementsScreen } from './statements-ui.js';
+import { saveFile, saveWords } from './save-file.js';
+import { fooScreen } from './foo-ui.js';
 import { cardPlanNote } from './cards-ui.js';
 import { sheetButtons } from './sheet-ui.js';
 import { soWhat } from '../sowhat.js';
@@ -22,7 +25,8 @@ import { fiTargets, ladder, agenda } from '../plan.js';
 import { pictureOf, unlockOf, confidenceOf, fiWordsOf } from '../math/picture.js';
 import { rangeLine } from './range-ui.js';
 import { rangeWordsOf } from '../math/ranges.js';
-import { homeworkAll } from '../program.js';
+import { homeworkAll, sessionOf } from '../program.js';
+import { sessionRecap, recapText } from '../math/recap.js';
 import { closedMonths, monthName, ymOf, monthsBetween, addMonths } from '../month.js';
 import { money, pct } from '../format.js';
 import { keyNumbers } from '../math/metrics.js';
@@ -30,7 +34,7 @@ import { whyText } from '../whynow.js';
 import { identityLine } from './identity-ui.js';
 import { adultsOf } from '../registry/couples.js';
 import { overviewNotFor } from '../gates.js';
-import { PRIVATE_LINE, ownLineHidden, emailDraft } from '../privacy.js';
+import { PRIVATE_LINE, ownLineHidden, emailDraft, seenOf, shareSees } from '../privacy.js';
 
 export const RUI = { liquid: false, tab: 'Savings' };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -285,8 +289,82 @@ export function shareByEmail(ctx, anchor) {
   draw();
   S.popover(anchor, box, { width: 460 });
 }
+// Batch 8 (C15): inside the artifact the page cannot print, so a printable copy goes to the download door (open it, then
+// print or save as PDF); on the site it prints as it is. The One-pager's Export PDF and the Plan report both use it.
+const canPrintHere = () => { try { return window.self === window.top; } catch { return false; } }; // a framed page cannot print
+async function printOrSave(selector, file, title, what) {
+  if (canPrintHere()) { window.print(); return; }
+  const page = document.querySelector(selector);
+  const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}\nbody{padding:24px;background:#fff}.btn,.caret,.icon-btn,textarea,.no-print{display:none}</style></head><body><div class="${page?.className ?? ''}">${page?.innerHTML ?? ''}</div><script>window.onload=()=>setTimeout(()=>window.print(),300)</script></body></html>`;
+  const r = await saveFile(new Blob([html], { type: 'text/html' }), file);
+  S.toast(saveWords(r, what) ?? 'Saved: open the file and print or save it as a PDF.');
+}
+
+// ---------- The plan report (run Finish everything partly built, Part 18) ----------
+// One printout (the browser saves it as a PDF): the one-pager, the next steps, the statements and the FOO, in that
+// order, each from its own screen in the shared view, so private rows read as neutral words and every total still counts
+// them. A guess keeps its Guess or Rough tag. No PDF library: the page and the print stylesheet (css/app.css).
+export function planReportScreen(app, ctx) {
+  const sc = S.shareCtx(ctx), doc = sc.store.doc;
+  const one = onePagerScreen(app, ctx)[1];
+  const D = recapDraft(ctx);
+  const part = (id, title, ...kids) => h(`section.report-part.report-${id}`, {}, h('h2.report-part-title', {}, title), ...kids);
+  const steps = D.recap.steps.length ? h('div.card', {}, h('ol.op-moves-list', {}, D.recap.steps.map(t => h('li', {}, t)))) : h('p.muted', {}, 'No next steps yet. They come from the next moves and the to-dos.');
+  const takeaways = D.recap.takeaways.length ? h('div.card', { style: { marginTop: '12px' } }, h('h3', {}, 'Top takeaways'), h('ol.op-list', {}, D.recap.takeaways.map(t => h('li', {}, t.text)))) : null;
+  const name = doc.client.name || 'Client';
+  return [head('Plan report', 'The one-pager, the next steps, the statements and the FOO, as one printout',
+      S.button('Back to the One-pager', { iconName: 'left', onClick: () => app.go('#/report/one-pager') }),
+      S.button('Print or save as PDF', { kind: 'primary', iconName: 'printer', onClick: () => printOrSave('.plan-report', `${name.replace(/\s+/g, '-').toLowerCase()}-plan-report.html`, `${name}: plan report`, 'The plan report'), tip: canPrintHere() ? 'Print, or pick Save as PDF in the print box' : 'Saves a printable copy; open it and save as PDF' })),
+    h('div.plan-report', {},
+      h('p.muted.small.report-note', {}, `${name}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}. A number marked Guess or Rough is still an estimate. Rows kept private show as neutral words; every total still counts them.`),
+      part('one-pager', 'One-pager', one),
+      part('steps', 'Next steps', steps, takeaways),
+      part('statements', 'Statements', ...statementsScreen(app, sc).slice(1)),
+      part('foo', 'FOO, the order of operations', ...fooScreen(app, sc, { flags: app.flags }).slice(1)),
+      h('p.disclaimer', {}, 'Coach, not a licensed financial advisor.'))];
+}
+
+// ---------- The auto session summary (run Finish everything partly built, Part 18; M8R) ----------
+// What this session changed, from the shared view (private rows never show, not even by name), the key numbers then
+// (the last snapshot before the session started) and now, the next moves and the client's to-dos. js/math/recap.js
+// drafts it (M8R); the coach edits the text on the One-pager, and Send summary sends what the box holds.
+const RECAP_SKIP = new Set(['settings', 'session', 'snapshots', 'usage']);
+export function recapOf(ctx) {
+  if (!ctx.shared) ctx = S.shareCtx(ctx);
+  const doc = ctx.store.doc, s = sessionOf(doc), snaps = (doc.snapshots || []).filter(x => x.metrics);
+  const since = s.startedAt || snaps.at(-1)?.at || null;
+  const beforeSnap = since ? [...snaps].reverse().find(x => x.at < since) ?? null : null;
+  const recOf = id => doc.records.find(r => r.id === id) ?? null;
+  const changes = (doc.history || []).filter(e => (!since || e.at >= since) && !RECAP_SKIP.has(e.part) && !['coachNote', 'privateNote', 'notes'].includes(e.field)).map(e => {
+    const op = String(e.op || '').split(':').at(-1), r = e.id ? recOf(e.id) ?? e.was ?? null : null;
+    const open = r && !r.folded && shareSees(seenOf(r));
+    return { op, rowId: e.id ?? null, kind: e.kind ?? r?.kind ?? null, part: e.part ?? null, name: open ? r.name || r.type || null : null };
+  }).filter(c => c.rowId || c.part);
+  const P = summaryParts(ctx), gate = fiGate(ctx);
+  const recap = sessionRecap({ before: beforeSnap?.metrics ?? null, now: keyNumbers(ctx.metrics()), changes, moves: P.moves, todo: homeworkItems(ctx).filter(x => x.owner !== 'coach').map(x => x.label) },
+    { at: ymOf(ctx.now()), beforeAt: beforeSnap ? ymOf(new Date(beforeSnap.at)) : null, fiOk: gate.unlocked });
+  const key = s.startedAt || since || 'first';
+  return { recap, key, text: recapText(recap, { title: P.title, next: P.next, notes: P.notes }) };
+}
+// The text Send summary sends: the coach's edit when it is for this session, else the draft.
+export function recapDraft(ctx) {
+  const R = recapOf(ctx), own = sessionOf(ctx.store.doc).recap;
+  return { ...R, edited: !!(own?.text && own.for === R.key), value: own?.text && own.for === R.key ? own.text : R.text };
+}
+function recapCard(ctx) {
+  const D = recapDraft(ctx);
+  const ta = h('textarea.notes-box.recap-box', { 'aria-label': 'The session summary', 'data-focus': 'op:recap', style: { minHeight: '260px' } }, D.value);
+  ta.onchange = () => ctx.store.setIn('session', ['recap'], ta.value.trim() && ta.value !== D.text ? { text: ta.value, for: D.key, at: new Date(ctx.now()).toISOString() } : undefined, 'Session summary');
+  const n = D.recap.takeaways.length, k = D.recap.steps.length;
+  return h('div.no-print.recap-wrap', {}, S.sec('one-pager:recap', { title: 'Session summary, drafted for you', level: 'h3', open: true, summary: `${n} ${n === 1 ? 'takeaway' : 'takeaways'}, ${k} next ${k === 1 ? 'step' : 'steps'}${D.edited ? ', edited' : ''}` },
+    h('div.stack', { style: { gap: '8px', marginTop: '8px' } },
+      h('p.muted.small', { style: { margin: 0 } }, D.recap.firstSession ? 'From this first session: the numbers as they are today, what was added, and the next steps. Edit anything, then Send summary sends this text.' : 'From this session: what moved since the last one, what was added or changed, and the next steps. Edit anything, then Send summary sends this text.'),
+      ta,
+      D.edited ? h('div.row-line', {}, S.button('Draft it again from the session', { iconName: 'undo', onClick: () => ctx.store.setIn('session', ['recap'], undefined, 'Session summary'), tip: 'Puts back the draft from what the session changed. Undo brings your edit back' })) : null)));
+}
 export function sendSummary(ctx, anchor) {
-  const text = summaryText(ctx);
+  const text = recapDraft(ctx).value;
   const fallback = () => {
     const ta = h('textarea.notes-box', { readonly: true, style: { minHeight: '260px' } }, text);
     S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, 'Copy this and paste it into an email'), ta), { width: 460 });
@@ -309,19 +387,10 @@ export function onePagerScreen(app, ctx) {
   };
   const hw = homeworkItems(ctx);
   const goals = ctx.visible(r => r.kind === 'milestone');
-  const canPrint = (() => { try { return window.self === window.top; } catch { return false; } })(); // a framed page cannot print
-  // Batch 8 (C15): inside the artifact the page cannot print, so Export PDF hands a printable copy of the one-pager to
-  // the download door (open it, then print or save as PDF); on the site it prints as before.
-  const exportPdf = async () => {
-    if (canPrint) { window.print(); return; }
-    const page = document.querySelector('.one-pager');
-    const css = [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${doc.client.name || 'Client'}: one-pager</title><style>${css}\nbody{padding:24px;background:#fff}.btn,.caret,.icon-btn,textarea{display:none}</style></head><body><div class="one-pager">${page?.innerHTML ?? ''}</div><script>window.onload=()=>setTimeout(()=>window.print(),300)</script></body></html>`;
-    const r = await saveFile(new Blob([html], { type: 'text/html' }), `${(doc.client.name || 'client').replace(/\s+/g, '-').toLowerCase()}-one-pager.html`);
-    S.toast(saveWords(r, 'The one-pager') ?? 'Saved: open the file and print or save it as a PDF.');
-  };
+  const exportPdf = () => printOrSave('.one-pager', `${(doc.client.name || 'client').replace(/\s+/g, '-').toLowerCase()}-one-pager.html`, `${doc.client.name || 'Client'}: one-pager`, 'The one-pager');
   return [head('One-pager', 'Session summary, ready to send',
-    S.button('Export PDF', { iconName: 'printer', onClick: exportPdf, tip: canPrint ? 'Print, or save as PDF' : 'Saves a printable copy; open it and save as PDF' }),
+    S.button('Export PDF', { iconName: 'printer', onClick: exportPdf, tip: canPrintHere() ? 'Print, or save as PDF' : 'Saves a printable copy; open it and save as PDF' }),
+    S.button('Plan report', { iconName: 'printer', onClick: () => app.go('#/report/plan-report'), tip: 'The one-pager, the statements, the FOO and the next steps, as one printout or PDF' }), // run Finish everything partly built, Part 18
     sheetButtons(app, { choice: false }), // batch 28: What the files hold is on Coach tools › Data (the header stays slim)
     S.button('Share by email', { iconName: 'mail', onClick: e => shareByEmail(ctx, e.currentTarget), tip: 'Pick what each person sees; a draft you send yourself' }), // run Finish everything partly built, Part 12
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
@@ -329,6 +398,7 @@ export function onePagerScreen(app, ctx) {
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),
     doc.records.some(r => r.folded) ? h('p.private-line.muted.small.no-print', { title: 'Rows kept between a person and the coach show here as neutral words (Other income, Other spending). Every total still counts them' }, icon('eye-off'), `${PRIVATE_LINE}: shown as neutral words`) : null,
     identityLine(ctx), // batch 25 (Phase 4): who they are with money, one line, and the wording it leads with
+    recapCard(ctx), // run Finish everything partly built, Part 18: the auto session summary, editable before Send summary
     movesBlock(app, ctx), // batch 12 (item 6): Your next 3 moves, then the tiles
     cardPlanNote(ctx, { link: false }), // the card plan's one sentence, the same call cards.html makes
     S.summaryStrip(ctx, [

@@ -1467,6 +1467,33 @@ def run(cases, ref, il=None):
         elif fn == 'fiDate':
             n = months_to(x['invested'], x['monthlyInvesting'], x['realReturn'], x['target'])
             ck('never', o['never'], n is None); ck('months', o['months'], n, 0)
+        elif fn == 'firePace':
+            a = months_to(x['invested'], x['monthlyInvesting'], x['realReturn'], x['target'])
+            b = months_to(x['invested'], x['monthlyInvesting'] + x['extra'], x['realReturn'], x['target'])
+            ck('pace base', o['base'], a, 0); ck('pace date', o['pace'], b, 0)
+            ck('pace sooner', o['sooner'], None if a is None or b is None else a - b, 0)
+            if a is not None and b is not None: ck('more a month is never later', b <= a, True)
+        elif fn == 'recapNumbers':
+            B, N = x['before'], x['now']
+            def m_of(ym): yy, mm = ym.split('-'); return int(yy) * 12 + int(mm) - 1
+            keys = []
+            for k in ('netWorth', 'surplus'):
+                if N[k] is None: continue
+                if B[k] is not None and abs(N[k] - B[k]) < 0.5: continue
+                keys.append('num:' + k)
+            if N['debtFreeMonths'] is not None:
+                if B['debtFreeMonths'] is None: keys.append('date:debtFreeMonths')
+                else:
+                    gap = (m_of(x['beforeAt']) + B['debtFreeMonths']) - (m_of(x['at']) + N['debtFreeMonths'])
+                    if gap != 0:
+                        keys.append('date:debtFreeMonths')
+                        t = [s for s in o['texts'] if s.startswith('Debt free') or s.startswith('Recalculating')]
+                        ck('recap date words', bool(t) and (t[0].startswith('Recalculating') if gap < 0 else f'{gap} month' in t[0]), True)
+            ck('recap keys', o['keys'] == keys, True)
+            for k in ('netWorth', 'surplus'):
+                if N[k] is not None and B[k] is not None and ('num:' + k) in keys:
+                    d = N[k] - B[k]; t = [s for s in o['texts'] if s.startswith('Net worth' if k == 'netWorth' else 'Monthly surplus')][0]
+                    ck('recap up or down', ('up ' if d > 0 else 'down ') in t, True)
         elif fn == 'coastFi':
             ck('Coast FI', o['coast'], x['fiNumber'] / (1 + x['realReturn']) ** max(0, x['retireAge'] - x['age']))
         elif fn == 'fatFi':

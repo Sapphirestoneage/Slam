@@ -268,7 +268,9 @@ function csvRows(text) {
     return o.map(s => s.trim());
   };
   const H = split(lines[0]).map(h => h.toLowerCase()),
-    fi = re => H.findIndex(h => re.test(h)),
+    A = typeof imAppCols === "function" ? imAppCols(H) : null; /* import.js: Rocket Money's own columns */
+  if (A) return csvAppRows(lines, split, A);
+  const fi = re => H.findIndex(h => re.test(h)),
     di = fi(/date/),
     ni = fi(/desc|merchant|name|payee|memo/),
     ai = fi(/^amount|amount$|amt/),
@@ -292,6 +294,29 @@ function csvRows(text) {
     else if (ai >= 0) a = num(f[ai]);
     if (!a) return;
     out.push({ m: dt.getFullYear() * 12 + dt.getMonth(), n: f[ni] || "", a });
+  });
+  return out;
+}
+/* The rows of a known app export (the columns from imAppCols in import.js). Money out is negative here, as in a bank
+   file, so a file that writes spending as positive is turned around. A row the app marks as ignored is left out. */
+function csvAppRows(lines, split, A) {
+  const out = [];
+  lines.slice(1).forEach(l => {
+    const f = split(l),
+      iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(f[A.di] || ""),
+      dt = iso ? new Date(+iso[1], +iso[2] - 1, +iso[3]) : new Date(f[A.di]);
+    if (isNaN(dt)) return;
+    if (A.ig >= 0 && String(f[A.ig] || "").trim()) return;
+    const v = parseFloat(String(f[A.ai] || "").replace(/[^0-9.-]/g, ""));
+    if (!v || isNaN(v)) return;
+    const n = A.ni.map(i => (i >= 0 ? String(f[i] || "").trim() : "")).find(x => x) || "";
+    out.push({
+      m: dt.getFullYear() * 12 + dt.getMonth(),
+      n,
+      a: A.flip ? -v : v,
+      app: A.app,
+      cat: A.ci >= 0 ? f[A.ci] : "",
+    });
   });
   return out;
 }

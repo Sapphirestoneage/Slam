@@ -99,6 +99,11 @@ three-fund mix, the drift, employer stock and the biggest one company, each fee 
 advisor fees and the loads, the invest or pay debt square stepped month by month and year by year, and Roth or
 traditional from what each way keeps of a dollar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 18) it also covers coach and reports: the FIRE dashboard's
+pace (the FI date with more a month, worked out again in closed form, and how many months sooner; more a month is never
+later), and the auto session summary (M8R, `js/math/recap.js`): which numbers moved (a change under 50 cents is no
+change), up or down, and a date compared as a calendar month, with Recalculating when it is later.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10a) it also covers the game's Quest mode (`js/math/quest.js`,
 M8Z): the health, armor and six stat scores from their definitions, the capacity steps from the margin, the cushion,
 the plate and a challenge, the weak spots and their room in order, the hidden costs added up and turned into days of
