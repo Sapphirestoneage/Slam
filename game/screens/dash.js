@@ -8,7 +8,8 @@
    INPUT       Numbers that the math of a feature returns. The views never calculate a money result.
                The open sheet (W): the dial keeps its state in TMD by id.
    OUTPUT      dkCard, dkStatRow, dkTile, dkSpark, dkBars, dkArea, dkDonut, dkProgress, dkDayStrip, dkPill,
-               dkCaption, dkMonth, timeMoneyDial, tmdSet, tmdText, tmdDebtSpec, tmdGoalSpec, goalFwd,
+               dkCaption, dkMonth, dkSlices (the slices of a donut), dkSec (a section
+               that starts closed), timeMoneyDial, tmdSet, tmdText, tmdDebtSpec, tmdGoalSpec, goalFwd,
                goalExtraFor. Actions (ACT): tmdmark. A listener for the input event of a dial track.
    DEPENDS ON  screens/ui.js (money, esc), features/debts.js (dbPlan, dbExtraFor: called by a dial at run
                time), core/engine.js (todayISO, parseISO).
@@ -96,22 +97,57 @@ function dkArea(vals, o) {
   return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Over time")}">${lo < 0 && (!o.fit || hi > 0) ? `<line x1="0" x2="${W}" y1="${base}" y2="${base}" style="stroke:var(--line);stroke-width:1"/>` : ""}${o.faint && o.faint.length > 1 ? `<path d="${path(o.faint)}" style="fill:none;stroke:var(--muted);stroke-width:${o.dots ? "2.5;stroke-linecap:round;stroke-dasharray:0.5 5" : "1.5;stroke-dasharray:4 4"}"/>` : ""}<path d="${fill}" style="fill:var(--sap);opacity:.22"/><path d="${path(vals)}" style="fill:none;stroke:var(--sap);stroke-width:2.5"/></svg>${o.labels ? `<div class="row between tiny muted"><span>${esc(o.labels[0])}</span><span>${esc(o.labels[1])}</span></div>` : ""}`;
 }
 /* A donut with a legend list. parts: [{ l, v }]. o: { center, sub } */
-function dkDonut(parts, o) {
-  o = o || {};
+/* THE SLICES OF A DONUT (UX pass, item 25): each part gets at least min of the ring (a share, 0.04 = 4%), so
+   no part is too small to see or tap. The big parts give up the room. Returns [{ p, frac, len }], frac adds up to 1. */
+function dkSlices(parts, min) {
   const P = parts.filter(p => p.v > 0),
     tot = P.reduce((t, p) => t + p.v, 0);
-  if (!tot) return "";
+  if (!tot) return [];
+  min = Math.min(min == null ? 0.04 : min, 1 / P.length);
+  const raw = P.map(p => p.v / tot),
+    small = raw.map(f => f < min),
+    room = 1 - small.filter(Boolean).length * min,
+    bigTot = raw.reduce((t, f, i) => t + (small[i] ? 0 : f), 0);
+  return P.map((p, i) => ({ p, share: raw[i], frac: small[i] ? min : bigTot > 0 ? (raw[i] / bigTot) * room : min }));
+}
+/* A donut with its legend. o: { label, center, act (the action of a tapped part: p => [action, v, k]), amt } */
+function dkDonut(parts, o) {
+  o = o || {};
+  const S = dkSlices(parts, o.min);
+  if (!S.length) return "";
   const R = 42,
     C2 = 2 * Math.PI * R;
   let off = 0;
-  const segs = P.map((p, i) => {
-    const len = (p.v / tot) * C2,
-      s = `<circle r="${R}" cx="55" cy="55" style="fill:none;stroke:${DK_COLORS[i % DK_COLORS.length]};stroke-width:14" stroke-dasharray="${len.toFixed(2)} ${(C2 - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 55 55)"/>`;
+  const segs = S.map((s, i) => {
+    const len = s.frac * C2,
+      g = `<circle r="${R}" cx="55" cy="55" style="fill:none;stroke:${DK_COLORS[i % DK_COLORS.length]};stroke-width:14" stroke-dasharray="${Math.max(0, len - 0.8).toFixed(2)} ${(C2 - Math.max(0, len - 0.8)).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 55 55)"><title>${esc(s.p.l)}</title></circle>`;
     off += len;
-    return s;
+    return g;
   }).join("");
-  return `<div class="dkdonut"><svg viewBox="0 0 110 110" width="110" height="110" role="img" aria-label="${esc(o.label || "The mix")}">${segs}${o.center ? `<text x="55" y="58" text-anchor="middle" class="dkdc">${esc(o.center)}</text>` : ""}</svg><div class="dklist">${P.map((p, i) => `<div class="row between small"><span><i style="background:${DK_COLORS[i % DK_COLORS.length]}"></i>${esc(p.l)}</span><b>${Math.round((p.v / tot) * 100)}%</b></div>`).join("")}</div></div>`;
+  const line = (s, i) => {
+    const a = o.act ? o.act(s.p) : null,
+      inner = `<span><i style="background:${DK_COLORS[i % DK_COLORS.length]}"></i>${esc(s.p.l)}</span><b>${o.amt ? money(s.p.v) + " · " : ""}${Math.round(s.share * 100)}%${a ? ' <span class="caret">›</span>' : ""}</b>`;
+    return a
+      ? `<button class="row between small dkpart" data-a="${a[0]}" data-v="${esc(a[1] == null ? "" : a[1])}" data-k="${esc(a[2] == null ? "" : a[2])}">${inner}</button>`
+      : `<div class="row between small">${inner}</div>`;
+  };
+  return `<div class="dkdonut"><svg viewBox="0 0 110 110" width="110" height="110" role="img" aria-label="${esc(o.label || "The mix")}">${segs}${o.center ? `<text x="55" y="58" text-anchor="middle" class="dkdc">${esc(o.center)}</text>` : ""}</svg><div class="dklist">${S.map(line).join("")}</div></div>`;
 }
+/* A section that starts closed (UX pass, item 24): an icon, the name, its number on the right, one line on
+   what it means, then the body and "Show the math". Its open state lives in DK_OPEN, so a redraw keeps it. */
+const DK_OPEN = {};
+function dkSec(id, icon, title, one, val, body, math) {
+  return `<details class="card dksec" data-sec="${esc(id)}" ${DK_OPEN[id] ? "open" : ""}><summary><span class="dksi" aria-hidden="true">${icon}</span><span class="dkst"><b>${esc(title)}</b><span class="tiny muted">${esc(one)}</span></span>${val ? `<b class="dksv">${val}</b>` : ""}</summary><div class="inner stack">${body}${math && math.length ? mathBox(math) : ""}</div></details>`;
+}
+if (typeof document !== "undefined" && document.addEventListener)
+  document.addEventListener(
+    "toggle",
+    e => {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains("dksec") && t.dataset.sec) DK_OPEN[t.dataset.sec] = t.open;
+    },
+    true
+  );
 function dkProgress(pct, o) {
   o = o || {};
   const p = Math.max(0, Math.min(100, pct || 0));

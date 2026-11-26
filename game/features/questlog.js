@@ -279,7 +279,23 @@ function questNext(c) {
   return null;
 }
 /* THE CONTINUE CARD: the last unfinished screen, or the next part. { label, progress, a, v } or null. */
+/* A new player (no profile yet) who left setup mid-round: the saved spot on the device, or null. */
+function questSetupSpot() {
+  try {
+    if (!G.demo || typeof localStorage === "undefined") return null;
+    const S = JSON.parse(localStorage.getItem(QUEST_SPOT_KEY) || "null");
+    if (!S || !S.w || S.w.kind !== "setup" || !S.d || daysBetween(S.d, todayISO()) > 7) return null;
+    const R =
+      typeof spRoundOf === "function" && typeof SP_ROUNDS !== "undefined" ? SP_ROUNDS[spRoundOf(S.w.step)] : null;
+    return { label: "Getting started" + (R && R.n ? ": " + R.n : ""), progress: "Your setup, at the page you left" };
+  } catch (e) {
+    report(e, "questlog.js: questSetupSpot");
+    return null;
+  }
+}
 function questContinue(c) {
+  const sp = questSetupSpot();
+  if (sp) return { label: sp.label, progress: sp.progress, a: "start", v: "", from: "last" };
   const lo = c.x && c.x.lastOpen;
   if (lo && questIsWork(c, lo.kind) && !questFinished(c, lo.kind, lo.v))
     return {

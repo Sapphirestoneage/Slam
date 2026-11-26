@@ -396,15 +396,9 @@ function dbSheetLook(h) {
 function moneyTabLook(h) {
   const c = C(),
     m = lkMoney(c, D),
-    g = !m.real;
-  const look =
-    dkStatRow([
-      dkTile("Net worth", m.nwTxt, { guess: g, spark: m.hist.length > 2 ? m.hist : null, act: "lkbrk", v: "nw" }),
-      dkTile("Cash", money(m.cash), { guess: g, act: "lkbrk", v: "cash" }),
-      dkTile("Invested", money(m.inv), { guess: g, act: "lkbrk", v: "inv" }),
-      dkTile("You owe", money(m.debt), { guess: g, act: "lkbrk", v: "debt" }),
-    ]) +
-    `<div class="dkgrid">` +
+    g = !m.real,
+    S = typeof dkSec === "function" ? dkSec : (id, i, t, one, v, body) => body;
+  const charts =
     (m.hist.length > 2
       ? dkCard(
           "Net worth over time",
@@ -413,8 +407,7 @@ function moneyTabLook(h) {
       : dkCard("In and out each month", dkBars([{ l: "Planned", v: [m.take, m.spend] }], ["Comes in", "Goes out"]), {
           cap: "From your monthly numbers. Log money moves to see real months.",
         })) +
-    (m.mix.length ? dkCard("What you have", dkDonut(m.mix, { label: "Cash and investments" })) : "") +
-    (m.where.length ? dkCard("Where it goes", dkDonut(m.where, { label: "Money going out each month" })) : "") +
+    (m.mix.length ? dkCard("What you have", dkDonut(m.mix, { label: "Cash and investments", amt: true })) : "") +
     (m.logged
       ? dkCard(
           "In and out by month",
@@ -424,13 +417,46 @@ function moneyTabLook(h) {
           ),
           { cap: "From what you logged" }
         )
-      : "") +
-    `</div>`;
+      : "");
+  /* UX pass, item 24: the four key tiles first, then the big three and where it goes, open. The rest is closed. */
+  const look =
+    dkStatRow([
+      dkTile("Net worth", m.nwTxt, { guess: g, spark: m.hist.length > 2 ? m.hist : null, act: "lkbrk", v: "nw" }),
+      dkTile("Cash", money(m.cash), { guess: g, act: "lkbrk", v: "cash" }),
+      dkTile("Invested", money(m.inv), { guess: g, act: "lkbrk", v: "inv" }),
+      dkTile("You owe", money(m.debt), { guess: g, act: "lkbrk", v: "debt" }),
+    ]) +
+    `<div class="dkgrid">` +
+    (typeof tlBig3Card === "function" ? tlBig3Card(c) : "") +
+    (typeof tlWhereCard === "function" ? tlWhereCard(c) : "") +
+    `</div>` +
+    S(
+      "charts",
+      "📈",
+      "Charts",
+      "Net worth over time, what you have, in and out by month.",
+      "",
+      `<div class="dkgrid">${charts}</div>`
+    ) +
+    "<!--tl:mid-->";
   const i = h.indexOf('<div class="tabdesc">'),
     j = i >= 0 ? h.indexOf("</div>", h.indexOf("</div>", i) + 6) : -1;
-  return j > 0
-    ? h.slice(0, j + 6) + look + h.slice(j + 6)
-    : h.replace('<div class="card next">', look + '<div class="card next">');
+  h =
+    j > 0
+      ? h.slice(0, j + 6) + look + h.slice(j + 6)
+      : h.replace('<div class="card next">', look + '<div class="card next">');
+  /* the Key numbers card, the spending plan rows and the other rows between the top and the sections fold too */
+  const p = h.indexOf("<!--tl:mid-->"),
+    q = h.indexOf("<!--tl:rest-->");
+  if (p >= 0 && q > p) {
+    const mid = h.slice(p + 13, q);
+    if (mid.replace(/\s/g, ""))
+      h =
+        h.slice(0, p) +
+        S("keys", "📊", "Key numbers and plans", "Your ratios, your spending plan and famous money ideas.", "", mid) +
+        h.slice(q);
+  }
+  return h;
 }
 /* Part of moneyTabBase() in ui.js: the order of one list. */
 function ledOrder(c, key, rows) {
