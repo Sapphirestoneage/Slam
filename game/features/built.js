@@ -1086,7 +1086,14 @@ const WB = [
     "A dollar later in Quick math covers a monthly habit. A trip is on Trips and the journey: line by line, points or cash, and a group split, on the one engine with the web page.",
     "trips",
   ],
-  ["slam", "Benefits cliff map", "n", null, "Not ported. New York and federal only in the web app.", null],
+  [
+    "slam",
+    "Benefits cliff map",
+    "p",
+    () => WB_FN("bpHealthCliff") && WB_FN("bpCoverage"),
+    "The health part is in the game: on Benefits and health, Coverage, what a raise does to your health coverage, from the web app's own chain. Food help, the EITC and child care stay in the web app (New York and federal). Other states wait for their dated rules.",
+    "benefits",
+  ],
   [
     "slam",
     "LGBTQ+ money tools: care costs, ID papers, the plan check, chosen family",
@@ -1490,6 +1497,25 @@ const WB = [
       WB_FN("joyHomeLine"),
     "A joy tap on each spending line, with its share of your joy, joy per dollar and joy per hour of work. Each line placed on survival, comforts, luxuries or past enough, and the Enough meter from that. Your rich-life list with prices, joy, memory dividends and a regret view. Every subscription as the days it adds to the day work becomes optional.",
     "joy",
+  ],
+  [
+    "see",
+    "Benefits and health: what your benefits are worth, your employer's numbers, the coverage you may qualify for, plans side by side",
+    "b",
+    () =>
+      WB_HAS("benefits") &&
+      WB_HAS("bhemp") &&
+      WB_HAS("bhplanset") &&
+      WB_FN("bpHsa") &&
+      WB_FN("bpDcfsa") &&
+      WB_FN("bpEspp") &&
+      WB_FN("bpCommuter") &&
+      WB_FN("bpEligible") &&
+      WB_FN("bpPlans") &&
+      WB_FN("bpEmployer") &&
+      typeof BP_REF === "object",
+    "Dollars a year for an HSA used as a retirement account, a dependent care FSA over the daycare years, an ESPP and commuter. Tap a large employer to fill its match, vesting and ESPP discount, each with its source. The coverage you may qualify for (Medicaid, the Essential Plan in New York, the marketplace credit) and two or three plans side by side.",
+    "benefits",
   ],
   [
     "plan",

@@ -32,6 +32,7 @@ import { ageOf } from './metrics.js';
 import { lenderKind } from './lender.js';
 import { myShare } from './spending.js';
 import { extraAdults } from '../registry/couples.js';
+import { bpRules, bpFpl, bpApplicable, bpBenchmark, bpCoverage } from './benefitsplan.js';
 
 export const CLIFF_STATUS = ['Getting it', 'Might qualify', 'Not on it'];
 export const CLIFF_PROGRAMS = [
@@ -50,8 +51,10 @@ const num = x => (x === null || x === undefined || x === '' || Number.isNaN(Numb
 const bySize = (list, each, size) => (size <= list.length ? list[size - 1] : list.at(-1) + (each ?? 0) * (size - list.length));
 const k = v => fmt.money(Math.round(v / 100) * 100); // a line in a year, to the nearest $100 (it is never more exact than that)
 
-// The poverty guideline a year for a household of this size (HHS 2026, the 48 states and DC).
-export const fplOf = (ref, size) => ref.studentLoans.poverty.base + ref.studentLoans.poverty.perPerson * Math.max(0, size - 1);
+// The poverty guideline a year for a household of this size (HHS 2026, the 48 states and DC). Run of Nov 26 2026, Part
+// 10: the health chain is the one engine js/math/benefitsplan.js (bpFpl, bpApplicable, bpBenchmark, bpCoverage), which
+// the game uses too; these names stay for the callers of this file.
+export const fplOf = (ref, size) => bpFpl(bpRules(ref), size);
 
 // The household as the lines read it: who is in it, what it makes a year, and its shelter costs a month.
 export function cliffHousehold(doc, ref, { now = new Date(), m } = {}) {
@@ -98,6 +101,9 @@ export function snapLine(H, ref) {
     if (H.care || H.elderly) return { multiple: S.nyCareMultiple, monthly: f * S.nyCareMultiple, why: 'New York: 200% of the line with child care paid out of pocket or someone 60 or older at home' };
     if (H.earned > 0) return { multiple: S.nyEarnedMultiple, monthly: f * S.nyEarnedMultiple, why: 'New York: 150% of the line for a household with earnings' };
   }
+  // Run of Nov 26 2026, Part 10: a state added one at a time, only with its own dated rule (ref.cliff.snap.states).
+  const st = S.states?.[H.state];
+  if (st) return { multiple: st.multiple, monthly: f * st.multiple, netTest: st.netTest, why: `${H.state}: ${Math.round(st.multiple * 100)}% of the line (${st.period})${st.netTest ? '' : ', with no net income test'}` };
   return { multiple: S.baseMultiple, monthly: bySize(S.gross, S.grossEach, H.size), why: H.state === 'NY' ? 'New York: the federal 130% line with no earnings' : 'The federal 130% line (many states lift it; the state\'s own page has its line)' };
 }
 // The SNAP benefit a month at a gross and earned income a year.
@@ -111,41 +117,17 @@ export function snapBenefit(H, ref, { gross = H.gross, earned = H.earned } = {})
   const excess = H.elderly ? excessAll : Math.min(excessAll, S.shelterCap);
   const net = Math.max(0, adj - excess);
   const netLine = bySize(S.net, S.netEach, H.size);
-  const eligible = g <= line.monthly + 1e-9 && (H.state === 'NY' || net <= netLine + 1e-9);
+  const eligible = g <= line.monthly + 1e-9 && (H.state === 'NY' || line.netTest === false || net <= netLine + 1e-9);
   let monthly = Math.max(0, Math.floor(bySize(S.maxAllotment, S.allotmentEach, H.size) - Math.ceil(S.benefitShare * net)));
   if (eligible && H.size <= S.minimumUpTo) monthly = Math.max(monthly, S.minimum);
   if (!eligible) monthly = 0;
   return { eligible, monthly, gross: g, net, adj, shelter, utilities, excess, line, netLine };
 }
 
-// ---------- Health coverage: one chain ----------
-// The marketplace share of income a household pays at this multiple of the line (the IRS table, a straight line inside
-// each band). Null over the 400% line: no help there.
-export function applicablePct(ratio, ref) {
-  const A = ref.cliff.aca;
-  if (ratio > A.cliffMultiple + 1e-9) return null;
-  let from = 0;
-  for (const [upTo, a, b] of A.applicable) {
-    if (ratio < upTo || upTo === A.cliffMultiple) return a + (b - a) * Math.min(1, Math.max(0, (ratio - from) / (upTo - from)));
-    from = upTo;
-  }
-  return A.applicable.at(-1)[2];
-}
-// The benchmark plan a year for the adults (the state's second-lowest silver plan for a 40-year-old; New York prices
-// every age the same).
-export const benchmarkOf = (H, ref) => (ref.cliff.aca.benchmark40[H.state] ?? ref.cliff.aca.benchmarkUs) * 12 * H.adults;
-// What the adults pay a year for health coverage at this MAGI, and on what.
-export function healthAt(H, ref, magi) {
-  const f = fplOf(ref, H.size), ratio = magi / f, bench = benchmarkOf(H, ref);
-  const expanded = !ref.cliff.medicaid.nonExpansion.includes(H.state);
-  if (expanded && ratio <= ref.cliff.medicaid.adultMultiple + 1e-9) return { on: 'medicaid', cost: 0, help: bench, ratio, bench };
-  if (H.state === 'NY' && ratio <= ref.cliff.ny.essentialMultiple + 1e-9) return { on: 'essential', cost: ref.cliff.ny.essentialPremium * 12 * H.adults, help: bench, ratio, bench };
-  if (ratio < ref.cliff.aca.floorMultiple) return { on: 'gap', cost: bench, help: 0, ratio, bench };
-  const pct = applicablePct(ratio, ref);
-  if (pct === null) return { on: 'full', cost: bench, help: 0, ratio, bench, pct: null };
-  const cost = Math.min(bench, pct * magi);
-  return { on: 'aca', cost, help: bench - cost, ratio, bench, pct };
-}
+// ---------- Health coverage: one chain (js/math/benefitsplan.js) ----------
+export const applicablePct = (ratio, ref) => bpApplicable(ratio, bpRules(ref));
+export const benchmarkOf = (H, ref) => bpBenchmark(H, bpRules(ref));
+export const healthAt = (H, ref, magi) => bpCoverage(H, bpRules(ref), magi);
 // New York's children's coverage: what it costs a month for all the children at this MAGI (null over 400%: full price,
 // not priced here).
 export function kidsAt(H, ref, magi) {

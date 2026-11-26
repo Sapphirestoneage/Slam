@@ -24,4 +24,5 @@ game/core/frameworks.js
 game/core/family.js
 game/core/quest.js
 game/core/peers.js
+game/core/benefitsplan.js
 game/core/invest.js
