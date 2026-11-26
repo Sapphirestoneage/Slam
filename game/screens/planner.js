@@ -819,6 +819,7 @@ const MENU_GROUPS = [
       "ledger",
       "vault",
       "values",
+      "giving",
       "csp",
       "audit",
       "fork",

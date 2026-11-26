@@ -33,6 +33,7 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { gvRate, gvTarget, gvGift, gvBunch, gvEnvelopes, gvCredit } from '../../js/math/giving.js';
 import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
@@ -41,6 +42,7 @@ import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } 
 import { ivMix, ivFees, ivHeatCell, ivRoth, ivGuide } from '../../js/math/invest.js'; // investing (run Finish everything partly built, Part 13, M8I)
 import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
 import * as RA from '../../js/math/ratios.js';
+import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -375,6 +377,24 @@ for (let i = 0; i < N; i++) {
   const subs = Array.from({ length: whole(0, 6) }, (_, k) => ({ name: `S${k}`, amt: rnd() < 0.1 ? 0 : money(1, 90) })), totalDays = rnd() < 0.15 ? null : money(1, 400);
   const P = enSubs(subs, totalDays, { wage }); add('enSubs', { subs, totalDays, wage }, P.ready ? { ready: true, total: P.total, days: P.days, rows: P.rows.map(r => ({ name: r.name, days: r.days, hoursYear: r.hoursYear })) } : { ready: false });
 }
+// Giving (run Finish everything partly built, Part 16): the rate and the target on each base, some inputs blank; one
+// gift once or every month; bunching 2 or 3 years on the 2026 federal rows (std, brackets, the charitable rules);
+// envelopes in one account; the maaser credit with and without giving ahead counting.
+const GV_T = { std: ref.tax.standardDeduction, brackets: ref.tax.brackets, charity: ref.tax.charity };
+for (let i = 0; i < N; i++) {
+  const b = { base: pick(['gross', 'net', 'after']), gross: rnd() < 0.15 ? null : money(1500, 40000), takeHome: rnd() < 0.15 ? null : money(1000, 30000), costs: rnd() < 0.2 ? null : rnd() < 0.2 ? 0 : money(10, 3000) };
+  const given = rnd() < 0.15 ? null : rnd() < 0.1 ? 0 : money(5, 5000), pct = rnd() < 0.4 ? null : pick([0.01, 0.02, 0.05, 0.1, 0.2, 0.15]);
+  const Rr = gvRate({ given, ...b }); add('gvRate', { given, ...b }, { ready: Rr.ready, of: Rr.of, rate: Rr.rate });
+  const Tt = gvTarget({ pct, given, ...b }); add('gvTarget', { pct, given, ...b }, { ready: Tt.ready, value: Tt.value ?? null, gap: Tt.gap ?? null, share: Tt.share });
+  const g = { amount: rnd() < 0.1 ? null : money(5, 20000), monthly: rnd() < 0.5, wage: rnd() < 0.2 ? null : between(8, 150), days: rnd() < 0.2 ? null : between(-5, 900), realReturn: rnd() < 0.15 ? null : pick([0, 0.03, 0.05, 0.07]), years: rnd() < 0.15 ? null : between(0, 40) };
+  const Gg = gvGift(g); add('gvGift', g, Gg.ready ? { ready: true, hours: Gg.hours, days: Gg.days, grown: Gg.grown, hoursYear: Gg.hoursYear } : { ready: false });
+  const k = { give: rnd() < 0.08 ? null : money(100, 80000), agi: rnd() < 0.08 ? null : money(15000, 1500000), other: rnd() < 0.08 ? null : rnd() < 0.2 ? 0 : money(500, 90000), filing: pick(['single', 'joint', 'head']), years: pick([2, 3]), cash: rnd() < 0.7 };
+  const Kb = gvBunch(k, GV_T); add('gvBunch', k, Kb.ready ? { ready: true, taxEvery: Kb.taxEvery, taxBunched: Kb.taxBunched, saved: Kb.saved, ways: [Kb.every[0].way, Kb.bunched[0].way, Kb.bunched[1].way] } : { ready: false });
+  const env = { balance: rnd() < 0.2 ? null : money(0 + 1, 20000), list: Array.from({ length: whole(0, 5) }, (_, j) => ({ id: `e${j}`, name: `E${j}`, put: rnd() < 0.2 ? null : rnd() < 0.1 ? 0 : money(10, 3000), used: rnd() < 0.3 ? null : rnd() < 0.2 ? 0 : money(1, 3500) })) };
+  const Ee = gvEnvelopes(env); add('gvEnvelopes', env, { held: Ee.held, free: Ee.free, rows: Ee.rows.map(r => ({ left: r.left, full: r.full, past: r.past })) });
+  const owedEach = money(10, 3000), cr = { months: Array.from({ length: whole(0, 14) }, (_, j) => ({ m: `2026-${String((j % 12) + 1).padStart(2, '0')}`, owed: rnd() < 0.1 ? null : owedEach, given: rnd() < 0.25 ? null : rnd() < 0.15 ? 0 : money(1, owedEach * 3) })), ahead: rnd() < 0.6 };
+  const Cc = gvCredit(cr); add('gvCredit', cr, { balance: Cc.balance, after: Cc.rows.map(r => r.after), fromCredit: Cc.rows.map(r => r.fromCredit) });
+}
 // Households together (run Finish everything partly built, Part 12): two to six people by name, some answers blank;
 // FI numbers and dates, some blank; a shared home with or without a loan typed; pay for the tax gap when two marry, on
 // the web's federal tax (M10).
@@ -536,6 +556,20 @@ for (let i = 0; i < N; i++) {
   const y = { before, now, at: '2026-11', beforeAt: pick(['2026-08', '2026-09', '2026-10', '2026-11']) };
   const R = recapNumbers(before, now, { at: y.at, beforeAt: y.beforeAt, fiOk: false });
   add('recapNumbers', y, { keys: R.map(t => t.key), texts: R.map(t => t.text) });
+}
+// Safety nets (run Finish everything partly built, Part 15): a life change on random taps (some left to the start
+// pick), with or without pay, a weekly wage and rent; the run of the cash, the tripwires, Plan B and the levels.
+{ const rules = { dbl: ref.limits.leave.NY.dbl, pfl: ref.limits.leave.NY.pfl };
+  for (let i = 0; i < N; i++) {
+    const kind = pick(['medical', 'move', 'breakup', 'baby']), taps = {};
+    for (const [k, , opts] of NT_TAPS[kind]) if (rnd() < 0.8) taps[k] = pick(opts)[0];
+    const base = { pay: rnd() < 0.1 ? null : money(800, 12000), weekly: rnd() < 0.5 ? null : money(200, 5000), housing: rnd() < 0.2 ? null : money(300, 5000) };
+    const E = ntEvent(kind, taps, base, rules), x = { kind, taps, base, cash: money(1, 80000), burn: money(500, 12000), income: rnd() < 0.2 ? 0 : money(500, 15000), basics: money(300, 6000), planBurn: money(300, 9000), max: 60 };
+    const args = { cash: x.cash, burn: x.burn, income: x.income, flows: E.flows, max: x.max }, R = ntRun(args), T = ntTrips(R, x.basics), B = ntPlanB(args, x.planBurn);
+    x.levels = [x.burn, rnd() < 0.2 ? null : money(300, 12000), money(300, 9000), money(200, 6000)];
+    const L = ntDegrade({ cash: x.cash, income: x.income, levels: x.levels.map((burn, j) => ({ id: String(j), burn })) });
+    add('ntRun', x, { once: E.once, needs: E.needs, runway: R.runway, lowest: R.lowest, lowestK: R.lowestK, end: R.end, steady: R.steady, trips: T.map(t => [t.level, t.k, t.now]), planB: B.run.runway, more: B.more, levels: L.map(l => [l.burn, l.months, l.lasts]) });
+  }
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

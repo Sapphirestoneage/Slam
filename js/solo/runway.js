@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Standalone: "How long would my money last?" Two numbers in, one answer out: the months your cash covers if the pay
 // stopped, and what stretches them. The two numbers are the whole plan's questions 2 and 3, so they carry straight in.
-import { boot, h, btn, chip, money, numBox, stepLine, carryCard, foot } from './shell.js';
+import { boot, h, btn, chip, money, numBox, stepLine, carryCard, foot, gameWords } from './shell.js';
 import { answer, onFile } from '../journey.js';
 import { runwayOf, CUTS, STILL_IN } from '../solo.js';
 import { HAPPENS } from '../extras.js';
@@ -24,6 +24,18 @@ function draw(api) {
       !R.covered && cut > 0 && R.extraMonths > 0.05 ? h('p.st-readout', { role: 'status' }, `Trimming ${Math.round(cut * 100)}% (${money(Math.round(spending * cut))} a month) stretches it by about ${R.extraMonths >= 1 ? `${R.extraMonths.toFixed(1)} months` : `${Math.round(R.extraMonths * 30)} days`}.`) : null,
       h('details.st-fold', {}, h('summary', {}, 'What actually happens when a job ends'), h('ol.st-steps', {}, HAPPENS.find(x => x.id === 'lostJob').steps.map(t => h('li', {}, t)))));
   };
+  // Part 15: Zombie mode, with game words on (the game's switch, or this page's own tap). One playful line and the days.
+  const zombie = () => {
+    const on = gameWords(api), R = runwayOf({ cash, spending, stillIn, cut });
+    const seg = h('div.st-field', {}, h('div.st-flabel', {}, 'Game words'), h('div.st-chips', {}, [['Off', false], ['On', true]].map(([w, v]) => chip(w, on === v, () => { api.remember({ gamer: v }); api.render(); }))),
+      h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Starts the way Game words is set in SLAM the Game on this device.'));
+    if (!on) return h('div.st-card', { id: 'zombie' }, seg);
+    if (!R.ready) return h('div.st-card', { id: 'zombie' }, h('div.st-eyebrow', {}, 'Zombie mode'), h('p', { style: { margin: '0 0 8px' } }, 'Two numbers above and you find out how long you would last.'), seg);
+    return h('div.st-card', { id: 'zombie' }, h('div.st-eyebrow', {}, 'Zombie mode'), h('h2', { style: { margin: '0 0 6px' } }, 'How long you\'d last'),
+      h('div.st-big', {}, R.covered ? 'You outlast them' : `${R.days.toLocaleString('en-US')} ${R.days === 1 ? 'day' : 'days'}`),
+      h('p', { style: { fontWeight: 700 } }, R.covered ? 'What still comes in covers what goes out. The zombies get bored and leave.' : `If the zombies shut every office in town tomorrow, your cash holds the fort for ${R.days.toLocaleString('en-US')} days. Each ${money(1000)} more adds about ${Math.round(R.perThousand)}.`),
+      seg);
+  };
   let card = result(), carry = null;
   const setNum = (key, v, typing) => { if (key === 'cash') { const t = cash || 0, c = cashNow.checking ?? 0; answer(api.store, 'cash', v == null ? { checking: 0, savings: 0 } : t > 0 ? { checking: Math.round(v * c / t), savings: v - Math.round(v * c / t) } : { checking: 0, savings: v }); } else answer(api.store, 'spending', { gut: v ?? 0 });
     if (typing) { const fresh = (() => { const c2 = onFile(api.store.doc, 'cash'), s2 = onFile(api.store.doc, 'spending'); return runwayOf({ cash: (c2.checking ?? 0) + (c2.savings ?? 0), spending: s2.gut ?? null, stillIn, cut }); })(); api.save(); soft(fresh); } else api.render(); };
@@ -45,7 +57,7 @@ function draw(api) {
   const keep = document.activeElement?.id;
   $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'If the pay stopped tomorrow, how many months are covered? Looking at it once, calmly, is the whole exercise.')),
-    inputs, card, carry].filter(Boolean));
+    inputs, card, zombie(), carry].filter(Boolean));
   if (cash == null) inputs.querySelector('.st-box .in')?.classList.add('st-pulse'); else if (!(spending > 0)) inputs.querySelectorAll('.st-box .in')[1]?.classList.add('st-pulse');
   if (keep && document.activeElement?.id !== keep) { /* focus left with the redraw: that is fine, the box was left */ }
 }

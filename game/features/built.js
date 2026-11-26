@@ -993,6 +993,14 @@ const WB = [
     "transit",
   ],
   [
+    "plan",
+    "Safety nets: medical leave, a move, a breakup and a new baby, each with its tripwires and Plan B",
+    "b",
+    () => WB_HAS("ntkind") && WB_FN("ntEvent") && WB_FN("ntLevels"),
+    "Inside Break in case of emergency, on My Goals: tap what is happening. How long the cash lasts, the lowest point, three tripwires, Plan B. The Dip tab of the layoff has How long at each level (full life, DRAFTT, FAT, food and housing only) with the Rule of 5.",
+    "transit",
+  ],
+  [
     "who",
     "Kids mode: short daily money lessons for a kid",
     "b",
@@ -1440,6 +1448,14 @@ const WB = [
     () => WB_HAS("peers") && WB_FN("peNetWorth") && WB_FN("pePatterns") && typeof PE_PRIORS !== "undefined",
     "Menu, You and people like you (private): net worth next to the middle household of your age (SCF 2025), savings rate next to the country's (BEA, Sept 2026), household pay next to the middle household's (Census 2025), the next milestone of the journey, and people like you lines (SHED and SCF), each with its source. Not yet: savings rate and income percentiles by age (no dated table reachable). Quest mode's rank reads the same function. Also peers.html on the web.",
     "peers",
+  ],
+  [
+    "see",
+    "Giving: rate, a gift in time, bunching, envelopes, maaser credit",
+    "b",
+    () => WB_HAS("giving") && WB_FN("gvBunch") && WB_FN("gvCredit") && typeof GV_TAX !== "undefined",
+    "Menu, Giving: your giving rate on the base you pick (gross, take-home, after work costs) and the share it comes to (maaser commonly 10%, your own tap), one gift in hours of work, days on your free date and what it could have grown to, bunching two or three years of giving into one on the 2026 federal rules (the $1,000 / $2,000 deduction without itemizing, the 0.5% floor), envelopes inside one account that fill and empty, and a running maaser count where giving ahead counts by your own rule. Not yet: volunteer hours toward maaser, the 35% limit in the 37% bracket. Also giving.html on the web.",
+    "giving",
   ],
   [
     "feel",

@@ -126,6 +126,14 @@ bonus kept (the deposit's interest at each rate grown month by month, the gap af
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 16) it also covers Giving (`js/math/giving.js`, the one
+engine of the web app and the game): the giving rate and the target on each base (gross, take-home, after work costs)
+with some inputs blank; one gift once or every month (hours at the wage, each month's gift grown to the FI date one
+month at a time); bunching two or three years on the 2026 federal rows, each year the larger of the standard deduction
+plus the cash-gift deduction for people who do not itemize and the itemized deductions above the 0.5% floor, through the
+second engine's own brackets; envelopes in one account (left, the bar, what is not labeled); and the maaser credit month
+by month, with and without giving ahead counting.
+
 Since Nov 26 2026 (run Finish everything partly built, Part 12) it also covers Households together (`js/math/hhold.js`,
 the one engine of the web app and the game): one to six people by name with some answers, numbers and dates blank; Same
 question worked out again from its own list of the questions (same, close or further apart, the spread, the talk points
@@ -162,6 +170,11 @@ that counts, the years until the youngest turns 13, the total), the ESPP (the ca
 commuter, the health chain at any income, state and size (Medicaid, the Essential Plan, the marketplace credit from the
 IRS table, the gap, full price), and plans side by side (premiums after the credit, the typical and heavy year, the
 least of each).
+Since Nov 26 2026 (run Finish everything partly built, Part 15) it also covers Safety nets (`js/math/safetynet.js`,
+M8U, the one engine of ladder.html and the game): medical leave, a move, a breakup and a new baby on random taps (some
+left to the start pick), worked a second way in weeks (each change as an amount a month between two weeks, NY state
+disability and NY Paid Family Leave from the dated rules), the cash run month by month (the runway, the lowest point
+and its month, what is left, the steady month), the three tripwires, Plan B and the months at each level of spending.
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
 (`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
 plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own

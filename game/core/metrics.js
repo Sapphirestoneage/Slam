@@ -693,7 +693,7 @@ function knMetrics(c, d) {
         "Giving: " + money(v) + " a month",
         take > 0 ? money(v) + " ÷ " + money(take) + " = " + knPct(v / take) : null,
       ],
-      go: ["Open calendars and giving", "cals", ""],
+      go: ["Open your giving", "giving", ""],
     });
   }
   /* ---------- earning ---------- */

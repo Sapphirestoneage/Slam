@@ -7,13 +7,15 @@
                asset at its risk, (4) quick income, sorted by the time to the first dollar, (5) slots
                and cards: the few things to run at one time, then the advantages the player has.
    INPUT       The profile: c.x.tr (the answers, as { v, cf }), c.x.trx (the taps: tripwires, cards,
-               quick income, advantages). The open sheet (W.kind): transit, with W.tab.
+               quick income, advantages). The open sheet (W.kind): transit, with W.tab and W.ev (what
+               is happening: layoff, or a change of features/nets.js).
    OUTPUT      Functions: trCalc, trTrips, trSheet, trBook. Actions (ACT): transit, trtab, trtrip,
                trcard, trquick, tradv. Parts of functions in other files: goalsTabTransit (goalsTab in
                ux.js). Menu: "Break in case of emergency".
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, features/drills.js (ldOf, fdBase),
                features/kit.js.
-   USES LATER  features/hard.js (trHardRow: the row Other hard moments), behind a typeof test.
+   USES LATER  features/hard.js (trHardRow: the row Other hard moments), features/nets.js (ntKindRow,
+               ntBody, ntLevels: the other life changes and the levels), behind a typeof test.
    RULES       The player sees plain labels. With the gamer switch, each slot shows its game word next
                to the plain word (Economic / Money, Military / Time, Diplomatic / People, Wildcard /
                Flex). Unemployment pay has no typical value: the amount is different in each state, so
@@ -206,9 +208,20 @@ function trSheet() {
     gs = T.st === "Guess",
     M = v => money(Math.round(v)),
     ask = (k, label, opts, fb, o) => kitAsk(c, "tr", k, label, opts, fb, o || {});
+  const ev = w.ev || "layoff",
+    kinds =
+      typeof ntKindRow === "function" ? ntKindRow(ev) : ""; /* nets.js: medical leave, a move, a breakup, a new baby */
+  if (ev !== "layoff" && typeof ntBody === "function")
+    return (
+      head("My Goals", "Break in case of emergency") +
+      `<div class="small muted">A life change as a number: how long the cash lasts, the tripwires, Plan B.</div>` +
+      kinds +
+      ntBody(c, ev)
+    );
   const top =
     head("My Goals", "Break in case of emergency") +
     `<div class="small muted">A layoff, from the last paycheck to the next job. This turns the fear into a number.</div>` +
+    kinds +
     `<div class="grid2">${kitTile("Your cash lasts", T.runway == null ? "The whole time" : trMo(T.runway), T.runway == null ? "money in covers the costs" : "at a gap of " + M(T.gap) + " a month", T.st, "tr_gap")}${kitTile(T.covered ? "Left after " + T.months + " months" : "Short after " + T.months + " months", M(T.covered ? Math.max(0, T.left) : T.short), "the dip costs " + M(T.dip), T.st, "tr_dip")}</div>` +
     (gs ? `<div class="tiny muted">Some numbers are typical values, so this is a Guess. Tap yours below.</div>` : "") +
     kitTabs("trtab", tab, [
@@ -256,8 +269,9 @@ function trSheet() {
           (T.gap > 0
             ? "It lasts " + M(T.cash) + " ÷ " + M(T.gap) + " = " + trMo(T.runway) + "."
             : "The gap is $0, so the cash is not used."),
-      ]);
-  else if (tab === "trip") {
+      ]) +
+      (typeof ntLevels === "function" ? ntLevels(c, T) : "");
+  /* nets.js: How long at each level, the Rule of 5 */ else if (tab === "trip") {
     const R = trTrips(c, T);
     body =
       `<div class="small muted">Decide now what you will do at each cash level. A choice made on a calm day is easier to keep on a hard one.</div>` +

@@ -69,7 +69,7 @@ test('M8R: 10 takeaways and 5 steps at most, the numbers first, each step once',
   assert.match(text, /^Sam: session summary\n\nTop 10 takeaways:\n1\. Net worth today: \$1\./);
   assert.match(text, /Your next 5 steps:\n1\. Pay the card/);
   assert.match(text, /Strengths: Shows up\n\nNext session: 2026-12-10\n\nCoach, not a licensed financial advisor\.$/);
-  assert.ok(!text.includes('—'));
+  assert.ok(!text.includes('\u2014'));
 });
 
 test('the One-pager draft: from the shared view, private rows never by name, and the coach\'s edit is what Send summary sends', () => {
@@ -120,7 +120,7 @@ test('fireBoardOf: every FIRE type at a pace; the numbers stay, only the dates m
 test('the FIRE type explainer names every destination and Coast in plain words; the paces are taps', () => {
   assert.deepEqual(FIRE_EXPLAIN.map(x => x.key).filter(k => k !== 'Coast').sort(), [...DESTINATIONS].sort());
   assert.ok(FIRE_EXPLAIN.some(x => x.key === 'Coast'));
-  for (const x of FIRE_EXPLAIN) { assert.ok(x.what && x.fits && x.asks, x.key); assert.doesNotMatch(`${x.what} ${x.fits} ${x.asks}`, /—|should|must|bad|wrong/i); }
+  for (const x of FIRE_EXPLAIN) { assert.ok(x.what && x.fits && x.asks, x.key); assert.doesNotMatch(`${x.what} ${x.fits} ${x.asks}`, /\u2014|should|must|bad|wrong/i); }
   assert.equal(FIRE_PACES[0], 0);
 });
 
