@@ -27,6 +27,7 @@ import { institutionsCard } from './ui/institutions-ui.js';
 import { metrics as metricsOf } from './math/metrics.js';
 import { personLabels, modeOf, MODES, viewsOf, bothScreen, offersBoth, bothPreviewOn, bothLabel, validPerson, multiAdult, manyAdults, adultsOf } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
+import { exercisesScreen, EX_ROUTE } from './ui/exercises-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
 import { goalsScreen, timelineScreen, payoffScreen, nextYearScreen, scenariosScreen } from './ui/plan-ui.js';
@@ -49,6 +50,11 @@ const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1
 const center = (...kids) => h('div.card', {}, h('div.empty.center', {}, ...kids));
 const listEmpty = (one, plural, why) => h('div.list', {}, h('div.empty', {}, h('span.title', {}, `No ${plural} yet`),
   S.button(`Add ${one}`, { iconName: 'plus', disabled: true, why })));
+
+// The way to the money exercises, at the end of About you.
+const exercisesLink = app => h('div.card.ex-link', {}, h('div.row-line', { style: { gap: '10px' } },
+  h('div.stack', { style: { gap: '2px', flex: 1 } }, h('strong', {}, 'Money exercises'), h('span.muted.small', {}, 'Short writing about you and money, and three prompts for life after work. Private to you unless you share it.')),
+  S.button('Open the exercises', { iconName: 'right', onClick: () => app.go(EX_ROUTE) })));
 
 // Words: Home (no client).
 export function noClient(app) {
@@ -238,7 +244,9 @@ export const SCREENS = {
   'home/review': (app, ctx) => (app.hasClient ? reviewScreen(app, ctx) : [head('Review'), noClient(app)]),
 
   // About you is the first stop: its answers decide what shows everywhere.
-  'home/profile': (app, ctx) => (app.hasClient ? [head('About you', MM.profile.sub), ...MM.profile.body(app, ctx)] : [head('About you'), noClient(app)]),
+  'home/profile': (app, ctx) => (app.hasClient ? [head('About you', MM.profile.sub), ...MM.profile.body(app, ctx), exercisesLink(app)] : [head('About you'), noClient(app)]),
+  // The money exercises (Part 7 of the run Finish everything partly built): reached from About you, the letter and Find.
+  'home/exercises': (app, ctx) => (app.hasClient ? exercisesScreen(app, ctx) : [head('Money exercises'), noClient(app)]),
 
   'net-worth/assets': tabPage('net-worth', 'assets'),
   'net-worth/debt': tabPage('net-worth', 'debt'),

@@ -410,6 +410,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Money exercises",
+    l: [
+      "Ten short pieces of writing about you and money, in one place: a letter to money, your earliest money memory, your money autobiography and more.",
+      "Each one opens with a short prompt and a few lines to tap, so you never start from an empty page. Type, or speak where your browser can turn speech into words.",
+      "Three prompts for life after work: a Why journal, Little p purpose and who you are after work. Ready for retirement, apart from the money opens them.",
+      "Your words are yours: Me only, unless you share one with your coach. The letter from your calm self is the first card.",
+      "In the Menu, under Money exercises. In the web app: About you, then Open the exercises.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Joy and enough",
     l: [
       "Menu has Joy and enough: tap how much joy each spending line brings you, and see joy per dollar and joy per hour of work.",
