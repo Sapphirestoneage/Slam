@@ -328,8 +328,9 @@ function roughSheet() {
               `<div class="row between small numrow"><span><b>${esc(r.n)}</b><div class="tiny muted">${money(r.lo)} to ${money(r.hi)}</div></span><span class="row"><button class="ghost slim" data-a="hl" data-v="${r.k}">Play again</button><button class="ghost slim" data-a="rsolid" data-v="${r.k}">It's right</button></span></div>`
           )
           .join("")
-      : `<div class="small muted">Nothing left to make exact. Every number here is one you stand behind.</div>`) +
-    `<button class="primary wide" data-a="close">Done</button>`
+      : `<div class="small muted">Nothing left to make exact. Every number here is one you stand behind.</div>` +
+        (typeof rcpNextRow === "function" ? rcpNextRow() : "")) +
+    `<button class="${rs.length ? "primary" : "ghost"} wide" data-a="close">Done</button>`
   );
 }
 /* bonfires */

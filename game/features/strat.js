@@ -546,6 +546,14 @@ function stgSheet() {
     head(STG_LEVER[S.lever] + " move", esc(S.name)) +
     `<div class="small muted">${esc(S.one)}</div>` +
     `<div class="tile row between" style="gap:8px"><span style="min-width:0"><span class="pill ${V.v === "fits" ? "okp" : ""}" data-fid="stg:v">${STG_VERDICT[V.v]}</span>${V.v === "notyet" ? ` <span class="pill">${STG_BLOCK[V.block][0]}</span>` : ""}<div class="small ${gs ? "guess" : ""}" style="margin-top:4px"><b>${esc(words.fi)}</b></div>${words.goal ? `<div class="tiny muted">${esc(words.goal)}</div>` : ""}</span>${kitPill(I._st)}</div>`;
+  /* Krug self-test (run Results-first Home, item 5): a move that fits can go on your steps from the top, in one tap.
+     The fit check below stays; its taps are optional for this button. */
+  if (V.v === "fits" && sec !== 6 && !stgAdded(c, S))
+    b +=
+      `<button class="primary wide go" data-a="stgadd">Add to my steps</button>` +
+      (V.pending
+        ? `<div class="tiny muted">Optional: ${V.pending} fit ${V.pending === 1 ? "tap" : "taps"} below make the date surer.</div>`
+        : "");
   /* 1. the fit check */
   const firstOpen = R.findIndex(r => r.ok == null);
   b += stgSecHead(1, sec === 1, V.pending ? V.pending + (V.pending === 1 ? " tap left" : " taps left") : "Done");
@@ -653,7 +661,10 @@ function stgSheet() {
       (V.v === "no" || V.v === "already"
         ? ""
         : has
-          ? `<div class="tile small"><b>On your Next Steps ✓</b> ${S.quests.length} ${S.quests.length === 1 ? "step" : "steps"} from this move.</div><button class="ghost wide" data-a="tab" data-v="plan">Go to Next Steps</button>`
+          ? `<div class="tile small"><b>On your Next Steps ✓</b> ${S.quests.length} ${S.quests.length === 1 ? "step" : "steps"} from this move.</div><button class="ghost wide" data-a="tab" data-v="plan">Go to Next Steps</button>` +
+            (typeof rcpNextRow === "function"
+              ? rcpNextRow()
+              : "") /* receipt.js: the next win, so this is no dead end */
           : `<button class="primary wide go" data-a="stgadd">Add to my steps</button><div class="tiny muted">${S.quests.map(q => q.t).join(". ")}.</div>`);
   }
   return b + `<button class="ghost wide slim" data-a="stratlib">All moves</button>`;

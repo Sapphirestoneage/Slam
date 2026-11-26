@@ -189,6 +189,22 @@ const WB = [
   ],
   [
     "see",
+    "A receipt after each move: what moved, the next unlock, the next action",
+    "b",
+    () => WB_FN("rcpData") && WB_FN("rcpDiff") && WB_FN("celebrateReceipt") && WB_FN("rcpNextRow"),
+    "Each finished move and logged transaction shows the net worth change, the days closer to FI or debt-free, any key number that moved, then the steps to unlock the next era and the next action with its tap count. A later date says Recalculating route.",
+    null,
+  ],
+  [
+    "see",
+    "Your life map from age 15",
+    "b",
+    () => WB_FN("ltMap") && WB_FN("ltHeadStart") && WB_FN("mapTabTree") && WB_HAS("ltnode"),
+    "The ten eras as one map from age 15 to FI. You launch in at your age and era, with starting bonuses from your answers and the head start of money already invested. Tap an era: what, why, the money and time, its steps and Go do it.",
+    null,
+  ],
+  [
+    "see",
     "Copy your numbers out, and the plan as a spreadsheet that comes back in",
     "b",
     () =>

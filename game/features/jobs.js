@@ -339,7 +339,7 @@ function jobSheet() {
     mv = w.moved;
   const moved =
     (w.win
-      ? `<div class="levelup pop jbwin"><div class="eyebrow">A money win</div><div class="medal">+1</div><h2>${esc(w.win.title)}</h2>${w.win.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}<div class="tiny muted" style="margin-top:6px">You can undo it any time, below.</div></div>`
+      ? `<div class="levelup pop jbwin"><div class="eyebrow">A money win</div><div class="medal">+1</div><h2>${esc(w.win.title)}</h2>${w.win.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}<div class="tiny muted" style="margin-top:6px">You can undo it any time, below.</div></div>${typeof rcpInline === "function" ? rcpInline() : ""}`
       : "") + (mv && !w.win ? `<div class="banner small jbmoved" data-fid="jb:moved">${esc(mv.text)}</div>` : "");
   const first = tasks.slice(0, 3),
     rest = tasks.slice(3);

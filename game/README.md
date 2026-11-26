@@ -20,7 +20,7 @@ This folder is the only copy of the game. An older copy inside Claude is retired
 
 ## 1. The six facts you must know first
 
-1. **The game uses classic scripts.** `index.html` loads 156 script files in a fixed order (155 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+1. **The game uses classic scripts.** `index.html` loads 176 script files in a fixed order (175 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
 2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
 3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
 4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
@@ -107,6 +107,7 @@ These files stay in `game/` because the browser or the tools look for them there
 | The questions inside the rounds: count first, then one at a time (cards, other debts, accounts with a breadcrumb, each source of money, spending group by group), "I know it" in the same spot, how many roommates and kids (UX pass, phase 4) | `features/amounts.js`, `screens/smart.js` (the order of the pages), `core/engine.js` (`hhSize`, `typSpend`) |
 | Quest mode (run Not built, groups 1 to 5, Part 10a): the character sheet with health, armor and six stats, capacity, how this plan fails, hidden costs, where you rank, opponents, the judge, ask the game, path packs, graduating and your story | `features/quest.js`, `core/quest.js` (a copy of `js/math/quest.js` with the SCF rows, made by `tools/game_quest_build.mjs`; do not edit it) |
 | Results first (run Results-first Home, items 1 and 2): the payoff reveal "Here's where you stand" at the end of setup (the lead number, five result cards, Start my first win), Home as four cards in a priority grid (Your next win, By the end of this month, You are here, the metric tiles), the Home button on every screen | `features/results.js`, `features/spiral.js` (`spPlanSheet`), `screens/ux.js` (`homeQuadTop`), `core/frameworks.js` (`fwLead`, `fwDtiMonths`, `fwMonthEnd`) |
+| Receipts and the life map (run Results-first Home, items 3 and 4): one receipt after each finished move and logged transaction (what moved, the next unlock, the next action with its tap count; "Recalculating route" for a later date), and the life map of the ten eras from age 15 on the big picture (launch in at your age, starting bonuses, the head start, a sheet for each era) | `features/receipt.js`, `features/lifemap.js`, `screens/ui.js` (`celebrateBase`, `mapTab`, the click handler) |
 | List of built features, shown in the game | `features/built.js` |
 | Generated map of all files | `CODE-MAP.md` |
 | Known weak code | `KNOWN-WEAK.md` |

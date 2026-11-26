@@ -137,7 +137,7 @@ function imSheet() {
   if (w.done)
     return (
       head("My Money", "Filled in") +
-      `<div class="tile stack" style="gap:4px">${w.done.map(x => `<div class="row between small"><span>${esc(x[0])}</span><span><span class="tiny muted">${money(x[1])} → </span><b>${money(x[2])}</b></span></div>`).join("")}</div><div class="small muted">These now read Close everywhere in the game. Cash spending isn't in a statement, so add to any line that runs on cash.</div><button class="primary wide" data-a="close">Done</button><button class="ghost wide slim" data-a="imundo">Undo, put my old numbers back</button>`
+      `<div class="tile stack" style="gap:4px">${w.done.map(x => `<div class="row between small"><span>${esc(x[0])}</span><span><span class="tiny muted">${money(x[1])} → </span><b>${money(x[2])}</b></span></div>`).join("")}</div><div class="small muted">These now read Close everywhere in the game. Cash spending isn't in a statement, so add to any line that runs on cash.</div>${typeof rcpInline === "function" ? rcpInline() : ""}<button class="ghost wide" data-a="close">Done</button><button class="ghost wide slim" data-a="imundo">Undo, put my old numbers back</button>`
     );
   if (!w.rows || !w.rows.length)
     return (

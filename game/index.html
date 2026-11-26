@@ -552,7 +552,22 @@ button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.
 .rskey{display:flex;gap:14px;flex-wrap:wrap}.rsk{display:inline-block;width:18px;height:0;border-top:3px solid var(--sap);margin-right:6px;vertical-align:middle}.rsk.dot{border-top:3px dotted var(--muted)}
 .hq.rs.less2>.homerow{display:none!important}.hq.rs.less2>.homerow.rskeep{display:flex!important}
 .rshome{flex:none;min-height:44px;min-width:44px;font-weight:700}@media (max-width:480px){.rshw{display:none}.nvhead>.row{gap:4px!important}.nvhead .rshome{min-width:40px;padding-left:8px;padding-right:8px}}
-@media (max-width:700px){.rsgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.rsgrid{grid-template-columns:minmax(0,1fr)}.rsgrid>.rstiles{order:2}.rsgrid>.rsmonth{order:3}.rsgrid>.rsroute{order:4}}
+/* Krug self-test (run Results-first Home, item 5): on a phone the numbers come right after Your next win, so "how close am I to FI" needs no scroll past the chart */
+/* the life map (features/lifemap.js): the ten eras from age 15, done bright, the one being unlocked pulsing, later fogged */
+.ltcard{display:flex;flex-direction:column;gap:8px;min-width:0}.ltruler{position:relative;height:8px;border-radius:99px;background:var(--line);margin-top:4px}.ltruler i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--good)}.ltruler b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--sap);border:2px solid var(--text)}
+.ltscroll{overflow-x:auto;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch;padding:4px 2px 8px;scroll-snap-type:x proximity}.ltrow{display:flex;gap:8px;width:max-content}
+button.ltcol{display:flex;flex-direction:column;gap:4px;width:150px;min-height:150px;text-align:left;font-weight:400;scroll-snap-align:start;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.ltcol.done,.ltcol.here{border-color:var(--good)}.ltcol.here{box-shadow:0 0 0 2px var(--good)}.ltcol.current{border-color:var(--sap)}.ltcol.later{opacity:.45;border-style:dashed}
+.ltdots{display:flex;flex-wrap:wrap;gap:3px}.ltdots i{width:10px;height:10px;border-radius:50%;border:1px solid var(--muted)}.ltdots i.on{background:var(--good);border-color:var(--good)}
+.ltbon{color:var(--good)}.ltview{margin-top:auto;color:var(--sap)}
+@media (prefers-reduced-motion:no-preference){.ltcol.current{animation:pulse 1.6s ease-in-out infinite}}
+/* action receipts and cliffhangers (features/receipt.js): what moved, the next unlock, the next action */
+.rcp{display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;margin:0 0 10px}.rcplines{display:flex;flex-direction:column;gap:4px}
+.rcpl{font-weight:700;font-variant-numeric:tabular-nums;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2)}.rcpl.up{border-color:var(--good)}.rcpl.re{border-color:var(--warn)}
+.rcpteaser,.rcpnext{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;text-align:left;width:100%}
+.levelup .rcpnext,.rcp .rcpnext{border-color:var(--sap)}
+@media (prefers-reduced-motion:no-preference){.rcpl{animation:rcpin .45s ease-out both;animation-delay:calc(var(--i,0) * 120ms)}@keyframes rcpin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
 .hqtop{display:flex;flex-direction:column;gap:10px}.ledsort{margin-top:6px}.ledsort .chip{padding:6px 12px;font-size:13.5px}
 /* UX pass, phase 2: the tab bar and the menu stay on every screen, also over a sheet, and the menu in groups */
 nav.tabs{z-index:30}
@@ -615,9 +630,9 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/frameworks.js?v=29cc8402"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=015736d4"></script>
+<script src="screens/ui.js?v=adb500c2"></script>
 <script src="screens/dash.js?v=fe4d3586"></script>
-<script src="features/games.js?v=f3991fbd"></script>
+<script src="features/games.js?v=2c23c7f4"></script>
 <script src="features/games2.js?v=462fb773"></script>
 <script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
@@ -629,7 +644,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="screens/ux.js?v=cfcddd02"></script>
 <script src="core/metrics.js?v=6a4cfb0a"></script>
 <script src="features/debts.js?v=1018cceb"></script>
-<script src="features/import.js?v=b3dfd30e"></script>
+<script src="features/import.js?v=9979bcf9"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=937f3bb0"></script>
 <script src="features/reveal.js?v=eff3bca3"></script>
@@ -723,7 +738,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/kids.js?v=ee17bb0a"></script>
 <script src="data/metros.js?v=10acde40"></script>
 <script src="data/strategies.js?v=b8975c5b"></script>
-<script src="features/strat.js?v=1e78b443"></script>
+<script src="features/strat.js?v=41660a27"></script>
 <script src="account/roles.js?v=347ce1b8"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
@@ -733,16 +748,16 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/sins.js?v=b2462a2d"></script>
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=d086f205"></script>
-<script src="data/patchnotes.js?v=ba82e5df"></script>
+<script src="data/patchnotes.js?v=cdc0cb3b"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
 <script src="features/look.js?v=5c00967f"></script>
 <script src="features/spiral.js?v=bc4070ec"></script>
 <script src="features/amounts.js?v=e5284838"></script>
-<script src="features/jobs.js?v=0484b2a7"></script>
-<script src="features/goalwire.js?v=637af823"></script>
-<script src="features/careq.js?v=03516e5a"></script>
+<script src="features/jobs.js?v=391cc056"></script>
+<script src="features/goalwire.js?v=112636c4"></script>
+<script src="features/careq.js?v=d4b04ebb"></script>
 <script src="features/rolemap.js?v=5e50a14d"></script>
 <script src="features/canon.js?v=f2a5a93c"></script>
 <script src="features/enough.js?v=8c38fb32"></script>
@@ -754,10 +769,12 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/hunt.js?v=8116f378"></script>
 <script src="features/guild.js?v=c9cd6bb1"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
-<script src="features/results.js?v=b1d7cc30"></script>
-<script src="features/book.js?v=6b4294dd"></script>
+<script src="features/results.js?v=6c9c7632"></script>
+<script src="features/receipt.js?v=3a74ca0e"></script>
+<script src="features/lifemap.js?v=ab031863"></script>
+<script src="features/book.js?v=76bd04e8"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=ab2fe4f8"></script>
+<script src="features/built.js?v=15a7c27e"></script>
 </body>
 </html>
