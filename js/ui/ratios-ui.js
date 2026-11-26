@@ -25,7 +25,7 @@ export function valueWords(l) {
   const r = l.r;
   if (r.value == null) return r.needs.length ? `Needs ${r.needs.join(' and ')}` : r.none;
   if (l.id === 'mix') return `${r.value} of 3 kinds`;
-  if (l.id === 'selfins' && r.value < 0) return `${money(-r.value)} to go first`;
+  if (l.id === 'selfins' && r.value < 0) return `${money(-r.value)} to fill your fund first`;
   if (l.id === 'equity' && r.shareOfNetWorth != null) return `${money(r.value)}, ${pct(r.shareOfNetWorth)} of net worth`;
   if (l.id === 'discretionary' && r.share != null) return `${money(r.value)} a month, ${pct(r.share)} of take-home`;
   if (l.id === 'confidence') return `You: ${r.parts[0][1]} of ${r.parts[1][1]}${r.numbers != null ? ` · numbers: ${r.parts[2][1]} of ${r.parts[3][1]}` : ''}`;

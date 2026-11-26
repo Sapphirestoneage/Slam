@@ -460,7 +460,7 @@ if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] =
     "Quick math",
     "quick",
     "act",
-    "A car, a home, an hour of your work: the rule's line on your pay",
+    "A car, a home, a savings rate, a warranty: quick answers on your pay",
   ]);
 }
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();
