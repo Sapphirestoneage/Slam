@@ -124,3 +124,85 @@ test('the game\'s copy of js/math/gig.js is current', () => {
   const r = spawnSync(process.execPath, [fileURLToPath(new URL('../tools/game_gig_build.mjs', import.meta.url)), '--check'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
+
+// ---- Run Finish everything partly built, Part 14 (Taxes and self-employed) ----
+const SH = ref.tax.safeHarbor;
+test('safe harbor: the smaller of 90% of this year and 100% (110%) of last year, less withholding, a quarter at each date', () => {
+  assert.equal(G.gigSafeHarborOf({}).ready, false, 'empty is not zero');
+  const due = ['2026-04-15', '2026-06-15', '2026-09-15', '2027-01-15'];
+  // By hand: this year 12,000, last year 9,000 with AGI under the line: 100% of 9,000 = 9,000 < 90% of 12,000 = 10,800.
+  const A = G.gigSafeHarborOf({ thisYear: 12000, lastYear: 9000, lastAgiOver: false, withheld: 3000, paid: 2000, due, today: '2026-11-26', rule: SH });
+  assert.equal(A.which, 'prior'); assert.equal(A.required, 9000); assert.equal(A.need, 6000); assert.equal(A.each, 1500);
+  assert.deepEqual(A.dates.map(d => d.by), [1500, 3000, 4500, 6000]); assert.deepEqual(A.dates.map(d => d.passed), [true, true, true, false]);
+  assert.equal(A.byNow, 4500); assert.equal(A.catchUp, 2500); assert.equal(A.next.date, '2027-01-15'); assert.equal(A.toNext, 4000);
+  assert.equal(A.fullYear, 7000, 'to owe nothing: 12,000 - 3,000 - 2,000');
+  // AGI over the line: 110% of 9,000 = 9,900; not sure: the higher share too.
+  near(G.gigSafeHarborOf({ thisYear: 12000, lastYear: 9000, lastAgiOver: true, due, rule: SH }).required, 9900, 1e-9);
+  const unsure = G.gigSafeHarborOf({ thisYear: 12000, lastYear: 9000, due, rule: SH });
+  near(unsure.required, 9900, 1e-9); assert.equal(unsure.agiSure, false);
+  // This year lower: 90% of 8,000 = 7,200 wins.
+  const B = G.gigSafeHarborOf({ thisYear: 8000, lastYear: 9000, lastAgiOver: false, due, rule: SH });
+  assert.equal(B.which, 'current'); near(B.required, 7200, 1e-9);
+  // No last year typed: this year's test only.
+  near(G.gigSafeHarborOf({ thisYear: 8000, due, rule: SH }).required, 7200, 1e-9);
+  // A 12-month year with $0 tax: none needed. A short year: the prior test does not apply.
+  const Z = G.gigSafeHarborOf({ thisYear: 8000, lastYear: 0, due, rule: SH }); assert.equal(Z.none, 'zero'); assert.equal(Z.need, 0);
+  assert.equal(G.gigSafeHarborOf({ thisYear: 8000, lastYear: 0, lastFull: false, due, rule: SH }).none, null);
+  // Under $1,000 due after withholding: none needed.
+  assert.equal(G.gigSafeHarborOf({ thisYear: 5900, lastYear: 9000, withheld: 5000, due, rule: SH }).none, 'small');
+  assert.equal(G.gigSafeHarborOf({ thisYear: 6000, lastYear: 9000, withheld: 5000, due, rule: SH }).none, null, 'exactly $1,000 is not under it');
+});
+
+test('the safe harbor rules are dated IRS rules, and the page\'s words match them', () => {
+  assert.deepEqual([SH.current, SH.prior, SH.priorHigh, SH.highAgi, SH.highAgiSeparate, SH.owe], [0.9, 1, 1.1, 150000, 75000, 1000]);
+  assert.match(SH.source, /Form 1040-ES/); assert.match(SH.source, /Nov 26 2026/);
+  const view = read('js/solo/gig.js');
+  assert.match(view, /AGI over \$150,000\?/); assert.match(view, /90% of this year\\'s tax or 100% of last year\\'s \(110% when last year\\'s AGI was over \$150,000\)/);
+  assert.match(read('game/core/gigcore.js'), /const GIG_SAFE_HARBOR = \{"current":0\.9,"prior":1,"priorHigh":1\.1,"highAgi":150000/);
+});
+
+test('the Tax Command Center: the set-aside with the safe harbor on this year\'s federal tax', () => {
+  const R = P.gigTaxCenter({ profit: 30000, wages: 50000, earned: 25000, set: 3000, paid: 2000, lastYear: 9000, lastAgiOver: false, today: '2026-11-26', year: 2026 }, ref);
+  const hh = householdTax([{ id: 'job', taxType: 'W-2', gross: 50000, pretax: 0 }, { id: 'gig', taxType: '1099', gross: 30000 }], { filingStatus: 'Single', place: null }, ref);
+  near(R.federal, hh.rows.job.federal + hh.rows.gig.federal + hh.rows.gig.fica, 1e-6, 'this year\'s federal tax');
+  near(R.withheld, hh.rows.job.federal, 1e-9, 'a job\'s withholding taken as its own income tax');
+  assert.equal(R.withheldGuess, true);
+  near(R.soFar.set, 5000, 1e-9, 'set aside and paid both count toward what is owed so far');
+  assert.equal(R.harbor.which, 'prior'); near(R.harbor.need, 9000 - R.withheld, 1e-6);
+  assert.deepEqual(R.harbor.dates.map(d => d.date), ['2026-04-15', '2026-06-15', '2026-09-15', '2027-01-15']);
+  const typed = P.gigTaxCenter({ profit: 30000, wages: 50000, withheld: 6000, lastYear: 9000, lastAgiOver: false, today: '2026-11-26', year: 2026 }, ref);
+  assert.equal(typed.harbor.withheld, 6000); assert.equal(typed.withheldGuess, false);
+  assert.equal(P.gigTaxCenter({}, ref).ready, false);
+});
+
+test('Pricing your power: a gig\'s pay an hour next to the floor an hour', () => {
+  assert.equal(G.gigVsFloorOf({ floor: 40 }).ready, false, 'no gig pay yet');
+  const V = G.gigVsFloorOf({ floor: 40, pay: 30, month: 6000 });
+  assert.equal(V.gap, -10); assert.equal(V.share, 0.75); assert.equal(V.atOrAbove, false); assert.equal(V.hoursMonth, 200); assert.equal(V.floorHoursMonth, 150);
+  assert.equal(G.gigVsFloorOf({ floor: 40, pay: 40 }).atOrAbove, true);
+  const R = P.gigPricing({ takeHome: 4000, hoursWeek: 40, billable: 0.7, weeksOff: 4, gigPay: 28 }, ref), F = P.gigRate({ takeHome: 4000, hoursWeek: 40, billable: 0.7, weeksOff: 4 }, ref);
+  near(R.vs.floor, F.hourly, 1e-9, 'the same floor as the floor page'); near(R.vs.hoursMonth, F.month / 28, 1e-9);
+});
+
+test('Platform P&L: payout timing from the platform\'s own page or the person\'s taps, and what can still be on its way', () => {
+  const pf = ref.platforms;
+  for (const k of ['Uber', 'DoorDash', 'Upwork']) assert.ok(pf[k].own && pf[k].own.url && /^2026-11-\d\d$/.test(pf[k].own.read) && pf[k].own.says, `${k}: its own page, dated`);
+  for (const k of ['OnlyFans', 'Fansly', 'Patreon', 'Etsy', 'Other']) assert.equal(pf[k].own, undefined, `${k}: not from its own page, so it waits for taps`);
+  // DoorDash, a week: earned 700, nothing fee, 500 landed. Own page: weekly + 3 days. On its way at most 700 x min(1, 10/7) = 700.
+  const A = G.gigPayoutsOf({ apps: [{ name: 'DoorDash', earned: 700, landed: 500 }], stretchDays: 7 }, pf);
+  assert.equal(A.rows[0].from, 'page'); assert.equal(A.rows[0].holdDays, 3); assert.equal(A.rows[0].window, 10); assert.equal(A.rows[0].onWayMax, 700); assert.equal(A.rows[0].state, 'onway');
+  // A month: 3,000 earned, 2,200 landed: on its way at most 3,000 x 10/30 = 1,000, so the 800 gap reads as on its way.
+  const M = G.gigPayoutsOf({ apps: [{ name: 'DoorDash', earned: 3000, landed: 2200 }], stretchDays: 30 }, pf);
+  assert.equal(M.rows[0].onWayMax, 1000); assert.equal(M.rows[0].state, 'onway');
+  const M2 = G.gigPayoutsOf({ apps: [{ name: 'DoorDash', earned: 3000, landed: 1500 }], stretchDays: 30 }, pf);
+  assert.equal(M2.rows[0].state, 'short', 'more than can be on its way');
+  // Etsy has no own-page timing: it waits for taps; the taps then lead.
+  const E = G.gigPayoutsOf({ apps: [{ name: 'Etsy', earned: 600, fee: 57, landed: 400 }], stretchDays: 30 }, pf);
+  assert.equal(E.rows[0].window, null); assert.deepEqual(E.untimed, ['Etsy']); assert.equal(E.onWayMax, null);
+  const T = G.gigPayoutsOf({ apps: [{ name: 'Etsy', earned: 600, fee: 57, landed: 400, payout: 'week', hold: 3 }], stretchDays: 30 }, pf);
+  assert.equal(T.rows[0].from, 'yours'); near(T.rows[0].onWayMax, 543 * 10 / 30, 1e-9); assert.equal(T.rows[0].state, 'onway');
+  near(T.feeShare, 57 / 600, 1e-12);
+  // The base stays gigAppsOf.
+  const base = G.gigAppsOf({ apps: [{ name: 'Etsy', earned: 600, fee: 57, landed: 400 }] });
+  assert.equal(T.all, base.all); assert.equal(T.gap, base.gap);
+});

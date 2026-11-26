@@ -13,6 +13,8 @@ import { creepRowsOf, enoughOf } from './enough.js';
 import { confidenceOf } from './program.js';
 import { scorecardOf } from './math/scorecard.js';
 import { CONFIDENCE } from './registry/joy.js';
+import { benefitOf } from './math/socialsecurity.js';
+import { RULES } from './registry/assumptions.js';
 
 const ADVANTAGED = new Set(['401(k)', '403(b)', '457', 'TSP', 'Roth IRA', 'Traditional IRA', 'Rollover IRA', 'SEP', 'Solo 401(k)', 'HSA', '529']);
 const word = lv => (lv == null ? null : lv >= LEVELS.Actual ? 'Exact' : lv >= LEVELS.Estimate ? 'Close' : 'Guess');
@@ -76,6 +78,12 @@ export function ratiosOf(doc, ref, m, { now = new Date() } = {}) {
     human: R.raHumanCapital({ grossYear, age: x.age, retireAge: x.retireAge, realReturn: x.realReturn, financial: x.cash == null || x.invested == null ? null : x.cash + x.invested, levels: L(['income', 'account', 'age']) }),
     shelter: R.raTaxShelter({ advantaged: inv.length ? sumOf(inv.filter(a => ADVANTAGED.has(a.type)), a => a.value) : x.invested === 0 ? 0 : null, invested: inv.length ? sumOf(inv, a => a.value) : x.invested === 0 ? 0 : null, levels: L(['account']) }),
     longevity: R.raLongevity({ invested: x.invested, spendYear, age: x.age, retireAge: x.retireAge, planAge: doc.assumptions?.lifeExpectancy ?? ref.defaults?.lifeExpectancy ?? null, levels: L(['account', 'spending', 'age']) }),
+    // Part 14: the same Social Security estimate as Key numbers (journey.js, benefitOf), over the pay it is built from.
+    ssreplace: (() => {
+      const g = x.income?.[0]?.gross ?? null, b = doc.profile?.birthYear;
+      const ss = b == null || g == null ? null : benefitOf({ key: 'Me', bornIndex: b * 12 + ((doc.profile.birthMonth ?? 7) - 1), stopAge: doc.assumptions?.fiAge ?? x.retireAge, gross: g }, ref.socialSecurity, { wageBase: ref.tax.socialSecurityWageBase, widths: { Gut: RULES.rangeIncomeGut, Estimate: RULES.rangeIncomeEstimate } });
+      return R.raSsReplace({ ssYear: ss && ss.source !== 'none' ? ss.own * 12 : null, grossYear: g, claimAge: ss?.claimMonths ? Math.floor(ss.claimMonths / 12) : null, levels: ['Guess', ...L(['income'])] });
+    })(),
     confidence: R.raConfidence({ rating: conf.value, min: CONFIDENCE.min, max: CONFIDENCE.max, good: sc.okCount, of: sc.rated }),
   };
   // A household that rents or lives with family (About you) has no home of its own: the three home lines are left out,

@@ -93,7 +93,7 @@ test('financial confidence: the rating next to the numbers, in kind words only',
 });
 
 test('every line has a group, a formula and a sentence; a rule of thumb names its source and date', () => {
-  assert.equal(R.RA_LINES.length, 25);
+  assert.equal(R.RA_LINES.length, 26);
   const groups = new Set(R.RA_GROUPS.map(g => g[0]));
   for (const l of R.RA_LINES) {
     assert.ok(groups.has(l.g) && l.f && l.s, l.id);
@@ -118,4 +118,11 @@ test('the coach app reads the household it already has (the demo client)', () =>
 test('the game reads a current copy of js/math/ratios.js', () => {
   const hash = createHash('sha256').update(read('js/math/ratios.js')).digest('hex').slice(0, 16);
   assert.match(read('game/core/ratios.js'), new RegExp(`SOURCE-HASH  ${hash}`), 'js/math/ratios.js changed: run node tools/game_ratios_build.mjs, then the game steps (prettier, stamp, code map)');
+});
+
+test('Social Security replacement (run Finish everything partly built, Part 14): the estimate a year over pay before taxes', () => {
+  assert.deepEqual(R.raSsReplace({ grossYear: 60000 }).needs, ['a Social Security estimate']);
+  assert.equal(R.raSsReplace({ ssYear: 20000, grossYear: 0 }).none, 'No pay coming in to compare with');
+  const r = R.raSsReplace({ ssYear: 24000, grossYear: 60000, claimAge: 67, levels: ['Guess', 'Exact'] });
+  assert.equal(r.value, 0.4); assert.equal(r.level, 'Guess'); assert.equal(r.gap, 36000); assert.match(r.parts[0][0], /claimed at 67/);
 });
