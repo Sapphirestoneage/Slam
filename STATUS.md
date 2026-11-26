@@ -141,7 +141,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 9 | Comparing with peers | Not started | |
 | 10 | Benefits and health | Not started | |
 | 11 | Estate and marriage | Not started | |
-| 12 | Households | Not started | |
+| 12 | Households | Done | One engine (`js/math/hhold.js`, M8K; game copy `game/core/hhold.js` by `tools/game_hhold_build.mjs`). Game: Menu › Households together (`features/hhold.js`, also a row on Our household): Same question (one phone, answers hidden until everyone is done, or two phones by an answer code; talk points, never a score; the talk points join the guild's monthly money date), FI together (each person's number and date or the game's own, the gap), a shared home for any number of people (contributions, the equity by contributions and equally; the monthly part from Sharing costs fairly), the federal tax gap for each pair when only two can marry (the game's 2026 tables), Share by email (picks per person, a mailto draft). Web app: One-pager › Share by email (the summary from the shared view through `js/privacy.js` `emailDraft`, picks per person, a draft the person sends). Not in the web app: Same question, FI together and the shared home (game only). Domestic partnership next to marriage: a named place (`hxPartnerLink`) until Part 11 lands. Questions: QUESTIONS 630. |
 | 13 | Investing | Not started | |
 | 14 | Taxes and self-employed | Not started | |
 | 15 | Safety nets | Not started | |

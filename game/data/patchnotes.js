@@ -441,6 +441,17 @@ const PATCH_NOTES = [
       "Tap any era for what it is, why it matters, the money and time it takes, and a Go do it button.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Households together",
+    l: [
+      "Menu has Households together, for a couple, a polycule, housemates or a chosen family, by your own names.",
+      "Same question: everyone answers the same money questions, on one phone or each on their own. Where you differ, it becomes a talk point, never a score.",
+      "FI together: each person's FI number and date side by side, with the gap.",
+      "A shared home: what each person put in and their part of the equity, and the tax gap for each pair when only two of you can marry.",
+      "Share by email: pick what each person sees. The draft opens in your own mail app; SLAM sends nothing. The web app's one-pager has Share by email too.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

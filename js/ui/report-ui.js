@@ -28,8 +28,9 @@ import { money, pct } from '../format.js';
 import { keyNumbers } from '../math/metrics.js';
 import { whyText } from '../whynow.js';
 import { identityLine } from './identity-ui.js';
+import { adultsOf } from '../registry/couples.js';
 import { overviewNotFor } from '../gates.js';
-import { PRIVATE_LINE, ownLineHidden } from '../privacy.js';
+import { PRIVATE_LINE, ownLineHidden, emailDraft } from '../privacy.js';
 
 export const RUI = { liquid: false, tab: 'Savings' };
 const head = (title, sub, ...right) => h('div.page-head', {}, h('div', {}, h('h1', {}, title), sub ? h('p', {}, sub) : null), h('div.row-line', {}, ...right));
@@ -197,7 +198,9 @@ function fixedVariable(ctx, m) {
 
 // ---------- One-pager ----------
 export function homeworkItems(ctx) { return homeworkAll(ctx.store.doc, ctx.visible(() => true)).filter(x => x.status !== 'Confirmed'); }
-export function summaryText(ctx) {
+// The summary in parts (run Finish everything partly built, Part 12): Send summary joins them into one text, and Share
+// by email turns them into items so each person gets only what is picked for them. Always the shared view.
+export function summaryParts(ctx) {
   if (!ctx.shared) ctx = S.shareCtx(ctx); // batch 28: a summary leaves the session, so private rows read as neutral words
   const m = ctx.metrics();
   const doc = ctx.store.doc;
@@ -205,25 +208,82 @@ export function summaryText(ctx) {
   const gate = fiGate(ctx);
   const fiWords = gate.unlocked && m.monthsToFi.value != null ? fiWordsOf(m, null, { now: ctx.now() }) : null; // locked by the program: no date yet
   const fiRange = fiWords && !fiWords.past ? rangeWordsOf('fi', ctx.ranges?.()?.fi, { now: ctx.now() }) : null; // batch 41: the same range as the screens (M9R)
-  const line = (k, v) => (v == null || v === '' ? null : `${k}: ${v}`);
   const hw = homeworkItems(ctx);
+  const nums = [
+    ['netWorth', 'Net worth', m.netWorth.value == null ? null : money(m.netWorth.value)],
+    ['surplus', 'Monthly surplus', m.surplus.value == null ? null : money(m.surplus.value)],
+    ['savingsRate', 'Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)],
+    ['debtFree', 'Debt free', m.debtRule?.heavy && m.debtPlan?.months != null ? `${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ' (the surplus goes to heavy debt first)' : ''}` : null], // batch 11
+    ['fi', 'FI date', fiWords == null ? null : `${fiWords.past ? 'reached' : fiWords.text}${fiRange ? ` (could be ${fiRange.low}${fiRange.high ? ` to ${fiRange.high}` : ' or later'})` : ''}`],
+  ].filter(x => x[2] != null && x[2] !== '');
+  return {
+    title: `${doc.client.name || 'Client'}: session summary, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+    nums,
+    moves: nextMoves(doc, ctx.ref, { now: ctx.now() }).map(x => x.text), // batch 12 (item 6)
+    todo: hw.map(x => `${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
+    notes: [['Strengths', op.strengths], ['Struggles', op.struggles], ['Do more', op.doMore], ['Do less', op.doLess]].filter(x => x[1]),
+    next: doc.session.next || null,
+  };
+}
+export function summaryText(ctx) {
+  const P = summaryParts(ctx);
+  const note = k => { const x = P.notes.find(n => n[0] === k); return x ? `${k === 'Strengths' ? '\n' : ''}${k}: ${x[1]}` : null; };
   return [
-    `${doc.client.name || 'Client'}: session summary, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+    P.title,
     '',
-    line('Net worth', m.netWorth.value == null ? null : money(m.netWorth.value)),
-    line('Monthly surplus', m.surplus.value == null ? null : money(m.surplus.value)),
-    line('Savings rate', m.savingsRate.value == null ? null : pct(m.savingsRate.value)),
-    line('Debt free', m.debtRule?.heavy && m.debtPlan?.months != null ? `${monthName(addMonths(ymOf(ctx.now()), m.debtPlan.months), 'short')}${m.debtRule.on ? ' (the surplus goes to heavy debt first)' : ''}` : null), // batch 11
-    line('FI date', fiWords == null ? null : `${fiWords.past ? 'reached' : fiWords.text}${fiRange ? ` (could be ${fiRange.low}${fiRange.high ? ` to ${fiRange.high}` : ' or later'})` : ''}`),
+    ...P.nums.map(x => `${x[1]}: ${x[2]}`),
     '',
-    ...(mv => (mv.length ? ['Your next moves:', ...mv.map((x, i) => `${i + 1}. ${x.text}`), ''] : []))(nextMoves(doc, ctx.ref, { now: ctx.now() })), // batch 12 (item 6)
-    hw.length ? 'To do:' : null, ...hw.map(x => `- ${x.label}${x.where ? ` (look on: ${x.where})` : ''}`),
-    op.strengths ? `\nStrengths: ${op.strengths}` : null, op.struggles ? `Struggles: ${op.struggles}` : null,
-    op.doMore ? `Do more: ${op.doMore}` : null, op.doLess ? `Do less: ${op.doLess}` : null,
-    doc.session.next ? `\nNext session: ${doc.session.next}` : null,
+    ...(P.moves.length ? ['Your next moves:', ...P.moves.map((t, i) => `${i + 1}. ${t}`), ''] : []),
+    P.todo.length ? 'To do:' : null, ...P.todo.map(t => `- ${t}`),
+    note('Strengths'), note('Struggles'), note('Do more'), note('Do less'),
+    P.next ? `\nNext session: ${P.next}` : null,
     '',
     'Coach, not a licensed financial advisor.',
   ].filter(x => x !== null).join('\n');
+}
+// Share by email: the summary as items (each number on its own, the moves, the to-dos, the notes, the next session).
+// Every item is from the shared view, so each says it is for everyone; js/privacy.js emailDraft keeps the rule.
+export function summaryItems(ctx) {
+  const P = summaryParts(ctx);
+  return [
+    ...P.nums.map(x => ({ id: x[0], label: x[1], lines: [x[2]], seen: 'Everyone' })),
+    P.moves.length ? { id: 'moves', label: 'Your next moves', lines: P.moves, seen: 'Everyone' } : null,
+    P.todo.length ? { id: 'todo', label: 'To do', lines: P.todo, seen: 'Everyone' } : null,
+    P.notes.length ? { id: 'notes', label: 'Strengths, struggles, do more, do less', lines: P.notes.map(n => `${n[0]}: ${n[1]}`), seen: 'Everyone' } : null,
+    P.next ? { id: 'next', label: 'Next session', lines: [P.next], seen: 'Everyone' } : null,
+  ].filter(Boolean);
+}
+// What each person sees, until it is changed on screen: every number and the next moves; the to-dos and the notes for the
+// client alone. Kept on the screen only (not saved), so a draft never goes out with yesterday's picks by surprise.
+export const shareDefaultPicks = (items, who) => Object.fromEntries(items.filter(it => who === 'Me' || !['todo', 'notes'].includes(it.id)).map(it => [it.id, true]));
+const SHARE_PICKS = new Map();
+export function shareByEmail(ctx, anchor) {
+  const doc = ctx.store.doc, items = summaryItems(ctx);
+  const people = [...adultsOf(doc).map(a => ({ id: a.id, name: a.name })), { id: 'other', name: 'Someone else' }];
+  let who = (people.find(x => x.id === 'Partner') ?? people[0]).id; // a partner first, when there is one
+  const to = {};
+  const picksOf = id => { if (!SHARE_PICKS.has(id)) SHARE_PICKS.set(id, shareDefaultPicks(items, id)); return SHARE_PICKS.get(id); };
+  const box = h('div.stack', { style: { gap: '10px' } });
+  const draw = () => {
+    const p = people.find(x => x.id === who), picks = picksOf(who);
+    const D = emailDraft(items, picks, { to: to[who] || '', who: p.id === 'other' ? '' : p.name });
+    const addr = h('input', { type: 'email', placeholder: 'name@example.com', 'aria-label': `${p.name}'s email`, value: to[who] || '' });
+    addr.onchange = () => { to[who] = addr.value.trim(); draw(); };
+    const preview = h('textarea.notes-box', { readonly: true, 'aria-label': 'The draft', style: { minHeight: '160px' } }, D.body);
+    const open = h('a.btn.primary', { href: D.mailto, role: 'button' }, icon('mail'), 'Open the email draft');
+    clear(box).append(
+      h('strong', {}, 'Share by email'),
+      h('p.muted.small', {}, 'Pick what each person sees. The draft opens in your own mail app, and you send it. SLAM sends nothing. Private rows read as neutral words.'),
+      S.labelled('Who is it for?', S.toggle(people.map(x => [x.id, x.name]), who, v => { if (v) { who = v; draw(); } }, { label: 'Who is it for?' })),
+      S.labelled('Their email', h('label.field', {}, addr), { note: 'Optional: you can add it in your mail app.' }),
+      h('div.stack', { style: { gap: '4px' } }, h('span.label', {}, `What ${p.name === 'Someone else' ? 'they' : p.name} sees`),
+        items.map(it => S.checkbox(it.label, picks[it.id] === true, on => { if (on) picks[it.id] = true; else delete picks[it.id]; draw(); }))),
+      S.labelled('The draft', preview),
+      h('div.row-line', { style: { gap: '8px', flexWrap: 'wrap' } }, open,
+        S.button('Copy the text', { onClick: () => { try { navigator.clipboard.writeText(D.body).then(() => S.toast('Copied. Paste it into an email.')); } catch { preview.select(); } } })));
+  };
+  draw();
+  S.popover(anchor, box, { width: 460 });
 }
 export function sendSummary(ctx, anchor) {
   const text = summaryText(ctx);
@@ -263,6 +323,7 @@ export function onePagerScreen(app, ctx) {
   return [head('One-pager', 'Session summary, ready to send',
     S.button('Export PDF', { iconName: 'printer', onClick: exportPdf, tip: canPrint ? 'Print, or save as PDF' : 'Saves a printable copy; open it and save as PDF' }),
     sheetButtons(app, { choice: false }), // batch 28: What the files hold is on Coach tools › Data (the header stays slim)
+    S.button('Share by email', { iconName: 'mail', onClick: e => shareByEmail(ctx, e.currentTarget), tip: 'Pick what each person sees; a draft you send yourself' }), // run Finish everything partly built, Part 12
     S.button('Send summary', { kind: 'primary', iconName: 'mail', onClick: e => sendSummary(ctx, e.currentTarget) })),
   h('div.card.one-pager', {},
     h('h2', {}, `${doc.client.name || 'Client'}, ${new Date(ctx.now()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`),

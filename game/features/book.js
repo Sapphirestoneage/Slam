@@ -48,6 +48,7 @@ const BOOK_PARTS = [
   wireBook,
   careBook,
   rmBook,
+  hxBook,
   rcBook,
   mauBook,
   cstBook,

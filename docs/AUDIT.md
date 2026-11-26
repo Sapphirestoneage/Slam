@@ -99,6 +99,14 @@ bonus kept (the deposit's interest at each rate grown month by month, the gap af
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 12) it also covers Households together (`js/math/hhold.js`,
+the one engine of the web app and the game): one to six people by name with some answers, numbers and dates blank; Same
+question worked out again from its own list of the questions (same, close or further apart, the spread, the talk points
+the furthest apart first); FI together (the gap in the number and in months, who is missing); a shared home (each
+person's put in, share, part of the equity by contributions and split equally, no equity with no loan typed); and the
+federal tax gap when two of them marry, each pair on one joint return and the others single, on the second engine's own
+2026 federal tax.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
 one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked
 out again from its definition (the short-term and revolving debts sorted by type a second way, the interest month by
