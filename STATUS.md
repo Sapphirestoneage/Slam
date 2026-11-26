@@ -148,7 +148,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 16 | Giving | Not started | |
 | 17 | Asking fewer questions | Not started | |
 | 18 | Coach and reports | Not started | |
-| 19 | Testing and math | Not started | |
+| 19 | Testing and math | Done (the retirement odds, knMetrics' own lines, the sims and the era gates are not in the second engine yet; why in docs/AUDIT.md) | Think-aloud test mode, the tester drives: Admin menu › Tester drives, or the game's address with `?think=1` (`?think=0` off). A panel pinned at the bottom of every screen: one task at a time (Eli's three by default), a tap counter for each, Report this open with the screen name filled in; reports go to the Report inbox (no new table), the results in the dashboard look, copy as text (`game/features/thinkaloud.js`). Second engine: the game's own math (`tools/audit/game.cjs`, `tools/audit/engine2game.py`): derive(), fiNeed and the Social Security estimate, dbPlan and dbExtraFor, timeLedger, debtOutlook, cashCal, goalSim and freeAt. Two mistakes found and fixed in the game: money grew 7%/12 a month (7.23% a year) in the month-by-month runs, now one month `RM`; a debt had two rates (two band tables, a typed rate ignored, two guesses), now one `debtRate()`. QUESTIONS 637. |
 | 20 | Game feel | Not started | |
 | 21 | Spec rows marked Partly | Not started | |
 

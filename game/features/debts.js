@@ -14,17 +14,18 @@
                by balance (the owner, 2026-11-05).
    SOURCE      The plan math is from the main app (js/math/debt.js, payoffPlan).
    ========================================================================= */
-const DB_MID = { "Under 8%": 5, "8% to 15%": 11.5, "15% to 25%": 20, "Over 25%": 28, "No interest": 0 };
 const DB_ORD = [
   ["avalanche", "Highest rate first", "Costs the least"],
   ["snowball", "Smallest first", "Quickest first win"],
   ["hassle", "Most annoying first", "Clears your head"],
 ];
 function dbRate(x) {
-  /* x.ratecf: only a live session sets it (account/liveland.js). 0: a rate that was heard, a Guess. 2: confirmed out loud, Close. */
-  if (x.rate != null && isFinite(+x.rate)) return { v: +x.rate, cf: x.ratecf != null ? +x.ratecf : 3 };
-  if (x.apr && DB_MID[x.apr] != null) return { v: DB_MID[x.apr], cf: x.apr === "No interest" ? 3 : 2 };
-  return { v: x.high ? 20 : 5, cf: 0 };
+  /* the one rate of a debt: debtRate() in core/engine.js. Here it gets its level.
+     x.ratecf: only a live session sets it (account/liveland.js). 0: a rate that was heard, a Guess. 2: confirmed out loud, Close. */
+  const r = debtRate(x);
+  if (r.typed) return { v: r.r, cf: x.ratecf != null ? +x.ratecf : 3 };
+  if (r.real) return { v: r.r, cf: x.apr === "No interest" ? 3 : 2 };
+  return { v: r.r, cf: 0 };
 }
 function dbEst(x) {
   const r = dbRate(x).v / 100 / 12,

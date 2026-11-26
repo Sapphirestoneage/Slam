@@ -879,7 +879,7 @@ const MENU_GROUPS = [
   ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode", "lsopen", "crg", "hunt"]],
   ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag", "lock"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
-  ["admin", "🛠️", "Admin", ["built", "testkit"], "admin"],
+  ["admin", "🛠️", "Admin", ["built", "testkit", "thinkaloud"], "admin"],
 ];
 /* The rows a player may see: no add-on row that is off, no row of a role the account does not have. */
 function menuItems(r) {

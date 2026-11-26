@@ -538,6 +538,12 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
     add('ntRun', x, { once: E.once, needs: E.needs, runway: R.runway, lowest: R.lowest, lowestK: R.lowestK, end: R.end, steady: R.steady, trips: T.map(t => [t.level, t.k, t.now]), planB: B.run.runway, more: B.more, levels: L.map(l => [l.burn, l.months, l.lasts]) });
   }
 }
+// the game's own numbers (derive, the debt planner, the time ledger, the cash calendar, goalSim and freeAt): its scripts
+// run in a process of their own (one global scope, as in the browser), on cases made from the same seed
+{ const { spawnSync } = await import('node:child_process');
+  const r = spawnSync(process.execPath, [new URL('./game.cjs', import.meta.url).pathname, String(Math.max(20, Math.round(N * 0.6))), String(seedArg)], { encoding: 'utf8', maxBuffer: 1 << 28 });
+  if (r.status !== 0) { console.error(r.stderr); process.exit(1); }
+  for (const c of JSON.parse(r.stdout)) cases.push(c); }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;
 console.log(`${cases.length} cases written to ${out}`, JSON.stringify(count));

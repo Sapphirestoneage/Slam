@@ -13,7 +13,7 @@
 function kidRun(c, x) {
   const H = 18 + x.when,
     months = Math.round(H * 12),
-    rr = R / 12,
+    rr = RM,
     A = [0],
     B = [0];
   let v = 0,

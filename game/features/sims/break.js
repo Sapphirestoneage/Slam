@@ -15,7 +15,7 @@ function breakRun(c, x) {
     months = Math.round(H * 12),
     lost = (c.take || 0) * x.months + x.cost,
     after = ((c.take || 0) * (100 - x.back)) / 100,
-    rr = R / 12,
+    rr = RM,
     A = [0],
     B = [0];
   let v = 0;

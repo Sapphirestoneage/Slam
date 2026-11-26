@@ -116,7 +116,17 @@
     Q.J.stages.map(s => [s.id, s.done])
   );
   chk("the trip takes you back under the first $1k", Q.J.back.includes("First $1k"), Q.J.back);
-  chk("the freedom date moves later by the trip, in days", Q.J.fiDays > 0 && /days later/.test(h), Q.J.fiDays);
+  /* The freedom date is a whole month (goalSim). Since money grows 7% a year month by month (RM, Nov 26 2026), this
+     $1,318 trip lands in the same month, so the tile says "No change"; a bigger trip moves it a month or more. */
+  chk(
+    "the freedom date with the trip: never sooner, and the tile says it in days",
+    Q.J.fiDays >= 0 && (Q.J.fiDays > 0 ? /days later/.test(h) : /No change/.test(h)),
+    Q.J.fiDays
+  );
+  chk("a $10,000 trip moves the freedom date later", freeAt(C(), { once: 10000 }) > freeAt(C()), [
+    freeAt(C()),
+    freeAt(C(), { once: 10000 }),
+  ]);
   chk("the journey uses one visual from the kit", /dkdays/.test(h) && /dkprog/.test(h) && clean(h), junk(h));
   /* another currency stays out of the plan */
   X("tpset", "EUR", "trip|cur", { t: "s" });

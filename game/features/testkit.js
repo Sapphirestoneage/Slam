@@ -308,6 +308,7 @@ Object.assign(ACT, {
 function tkChipSafe() {
   try {
     tkChip();
+    if (typeof taDockSafe === "function") taDockSafe(); /* thinkaloud.js: the panel of the tester-drives test */
   } catch (e) {
     report(e, "testkit.js: tkChipSafe");
   }
