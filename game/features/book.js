@@ -29,6 +29,8 @@
    ========================================================================= */
 const BOOK_PARTS = [
   spiralBook,
+  tallyBook,
+  vlBook,
   amountsBook,
   taxvBook,
   oddsBook,
