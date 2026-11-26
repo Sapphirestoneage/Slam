@@ -34,12 +34,13 @@ import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRi
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
+import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
 import * as RA from '../../js/math/ratios.js';
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
-const priorsNw = JSON.parse(readFileSync(new URL('../../data/priors-2026.json', import.meta.url))).rows.filter(r => r.field === 'netWorth');
+const priorsAll = JSON.parse(readFileSync(new URL('../../data/priors-2026.json', import.meta.url))), priorsNw = priorsAll.rows.filter(r => r.field === 'netWorth');
 const il = JSON.parse(readFileSync(new URL('../../data/sources/israel-2026.json', import.meta.url)));
 let s = Number(seedArg) >>> 0;
 const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -134,6 +135,13 @@ for (let i = 0; i < N; i++) {
     add('qsRank', { ...x, rows: undefined }, { where: r.where, quarter: r.quarter, median: r.median }); }
   { const V = ['Freedom and time', 'Security', 'Family', 'Fun', 'Home', 'Giving', 'Learning', 'Friends and community', 'Adventure and travel'], o = pick(QS_OPPONENTS), x = { opp: o.id, choice: pick(['yes', 'half', 'no']), values: V.filter(() => rnd() < 0.35) }, r = qsDuel(o, x.choice, x.values);
     add('qsDuel', { ...x, pull: o.pull, test: o.test }, { beaten: r.beaten }); }
+  // Comparing with peers (js/math/peers.js, M8N): net worth at an age, pay and the savings rate next to the published rows
+  { const x = { nw: money(1, 4000000) * pick([1, 1, 1, -1]), age: whole(18, 95) }, r = peNetWorth({ ...x, rows: priorsNw });
+    add('peNetWorth', x, { where: r.where, quarter: r.quarter, median: r.median, top10: r.top10, ratio: r.ratio }); }
+  { const x = { gross: money(5000, 600000) }, r = peIncome({ ...x, data: priorsAll });
+    add('peIncome', x, { where: r.where, ratio: r.ratio, middle: r.middle }); }
+  { const x = { rate: pick([-0.3, 0, 0.05, 0.2, 0.55]) * rnd() * 2 }, r = peSaving({ ...x, data: priorsAll });
+    add('peSaving', x, { gap: r.gap, country: r.country }); }
   // Family money (js/math/family.js, M8F): the sandwich years, living at home, tuition and the NY 529
   { const yrs = () => pick([null, 0, 1, 3, 5, 10]), x = { parents: pick([0, money(50, 3000)]), kids: pick([0, money(50, 4000)]), parentsYears: yrs(), kidsYears: yrs(), parentsFrom: pick([0, 0, 2]), kidsFrom: pick([0, 0, 1, 5]), inSpending: rnd() < 0.2, takeHome: money(1500, 20000), spending: money(1000, 15000) }, r = fmSandwich(x);
     add('fmSandwich', x, { peak: r.peak, total: r.total, both: r.both, all: r.all, leftAfter: r.leftAfter, flows: r.flows.map(f => [f.at, f.monthly]) }); }

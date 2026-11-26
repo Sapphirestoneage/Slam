@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The game, first half (run "Not built, groups 1 to 5", Part 10a, Nov 26 2026; M8Z). ONE engine for the game's quest
-// screens: pure, and with no import on purpose, so tools/game_quest_build.mjs copies it word for word into
+// screens: pure, with one import only (js/math/peers.js, the rank), so tools/game_quest_build.mjs copies it word for word into
 // game/core/quest.js. Every name starts with qs or QS_ because the game has one global scope. Empty is not zero: a
 // missing input gives null (or ready: false), never a number from a guess of 0.
 //
@@ -19,10 +19,12 @@
 //   qsGraduate     the win state (your finish line among the journey's stages), and qsStory (your story from the
 //                  history of snapshots; the money read only when you turned on "Show my read")
 
+import { PE_RULES, PE_WORDS, peNetWorth } from './peers.js'; // the game loads core/peers.js before core/quest.js
+
 // SLAM's own rules (Eli to confirm, QUESTIONS): the cushion counts full at 6 months and steady at 3, the margin full at
 // 50% saved and thin under 10%, rhythm full at 12 check-ins in a row, capacity steps at a 5% and a 15% margin,
 // "about the middle" within 10% of the median, three moves, and a judge's record of the last 60 entries.
-export const QS_RULES = { cushionFull: 6, cushionOk: 3, marginFull: 0.5, marginLow: 0.1, rhythmFull: 12, capLow: 0.05, capMid: 0.15, capMax: 3, nearShare: 0.1, moves: 3, judgeKeep: 60 };
+export const QS_RULES = { cushionFull: 6, cushionOk: 3, marginFull: 0.5, marginLow: 0.1, rhythmFull: 12, capLow: 0.05, capMid: 0.15, capMax: 3, nearShare: PE_RULES.near, moves: 3, judgeKeep: 60 };
 export const QS_SOURCES = {
   rules: "SLAM's own rules of the quest screens (run Not built, groups 1 to 5, Part 10a, Nov 26 2026); Eli to confirm",
   rank: 'Federal Reserve Board, Survey of Consumer Finances 2025 (released Oct 9 2026): family net worth by age of head, Table 2, and the net worth percentiles, Table A.2 (data/priors-2026.json)',
@@ -166,22 +168,14 @@ export function qsHidden(items = [], spend = null) {
 
 // ---------- where you think you rank, next to where you are ----------
 export const QS_RANK_GUESS = [['below', 'Below the middle'], ['near', 'About the middle'], ['above', 'Above the middle']];
-// x: { guess, nw, age, rows (the netWorth rows of the priors data) }.
+// x: { guess, nw, age, rows (the netWorth rows of the priors data) }. The rank itself is peNetWorth (js/math/peers.js),
+// the one function the peers screen of both apps reads too (run Finish everything partly built, Part 9).
 export function qsRank(x = {}, money = qsMoney0) {
-  const rows = (x.rows || []).filter(r => r.field === 'netWorth'), age = qsNum(x.age), nw = qsNum(x.nw);
-  const band = age === null ? null : rows.find(r => r.ages && (r.ages[0] == null || age >= r.ages[0]) && (r.ages[1] == null || age <= r.ages[1]));
-  const all = rows.find(r => r.band === 'all ages' && r.p25 != null && r.p75 != null) || null;
-  if (!band || nw === null) return { ready: false, guess: x.guess || null, band: band || null };
-  const m = band.median, near = QS_RULES.nearShare;
-  const where = nw < m * (1 - near) ? 'below' : nw > m * (1 + near) ? 'above' : 'near';
-  const quarter = !all ? null : nw < all.p25 ? 1 : nw < all.median ? 2 : nw < all.p75 ? 3 : 4;
-  const word = { below: 'below the middle', near: 'about the middle', above: 'above the middle' };
+  const P = peNetWorth({ nw: x.nw, age: x.age, rows: x.rows, near: QS_RULES.nearShare }, money);
   const guess = QS_RANK_GUESS.some(g => g[0] === x.guess) ? x.guess : null;
-  const line = `The middle of ${band.who} has ${money(m)} of net worth. Yours is ${money(nw)}: ${word[where]}.`;
-  const vs = guess === null ? null : guess === where ? 'Your guess matches.' : `You guessed ${word[guess]}; the numbers say ${word[where]}.`;
-  return { ready: true, guess, where, match: guess === null ? null : guess === where, band, median: m, all, quarter, line, vs,
-    math: [`SCF 2025, ${band.who}: median ${money(m)}`, `About the middle: within ${qsPct(near)} of it (${money(m * (1 - near))} to ${money(m * (1 + near))})`,
-      all ? `All households: 25th ${money(all.p25)}, middle ${money(all.median)}, 75th ${money(all.p75)}` : null].filter(Boolean) };
+  if (!P.ready) return { ready: false, guess: x.guess || null, band: P.band || null };
+  const vs = guess === null ? null : guess === P.where ? 'Your guess matches.' : `You guessed ${PE_WORDS[guess]}; the numbers say ${PE_WORDS[P.where]}.`;
+  return { ready: true, guess, where: P.where, match: guess === null ? null : guess === P.where, band: P.band, median: P.median, all: P.all, quarter: P.quarter, line: P.line, vs, math: P.math.slice(0, 3) };
 }
 
 // ---------- opponents that test your values ----------
