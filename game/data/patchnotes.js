@@ -343,6 +343,17 @@ const PATCH_NOTES = [
     ],
   },
   {
+    d: "2026-11-26",
+    t: "Moves to try: one question for every move",
+    l: [
+      "Each question about you is asked once. Your credit score band answers every move that needs a score, and the card vault reads the same answer.",
+      "Next Steps and the Moves library ask one question first: the one that sorts the most moves.",
+      "The library shows what would open the most: for example, a score of 670 or more, and the moves it opens.",
+      "Each of those has How to get there, and one button puts the steps on Next Steps.",
+      "Setup answers some checks for you: if you live on your own, no one else has to agree, and the roommate move knows where you live.",
+    ],
+  },
+  {
     d: "2026-11-25",
     t: "LGBTQ+ money tools, private by default",
     l: [

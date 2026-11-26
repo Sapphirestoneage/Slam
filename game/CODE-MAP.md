@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 165. Lines: 103,656. Top-level functions: 2383. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 165. Lines: 104,012. Top-level functions: 2394. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -150,8 +150,8 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 136 | `data/kidlessons.js` | 345 | 0 | 0 | 0 | Data only. The lessons of Kids mode (features/kids.js): 20 short lessons for a student in a high school personal finance class, and 12 daily lessons f... |
 | 137 | `features/kids.js` | 264 | 11 | 5 | 0 | Kids mode: "Help your kid stress less about money" |
 | 138 | `data/metros.js` | 327 | 0 | 0 | 0 | Data only. Rough housing numbers for 29 US areas and one typical US metro, for the moves that need an area (features/strat.js) |
-| 139 | `data/strategies.js` | 993 | 4 | 4 | 0 | The strategies of "Moves to try" (features/strat.js) |
-| 140 | `features/strat.js` | 699 | 29 | 9 | 0 | The Strategy Engine: "Moves to try" |
+| 139 | `data/strategies.js` | 1,137 | 5 | 4 | 0 | The strategies of "Moves to try" (features/strat.js) |
+| 140 | `features/strat.js` | 900 | 39 | 11 | 0 | The Strategy Engine: "Moves to try" |
 | 141 | `account/roles.js` | 128 | 9 | 0 | 0 | Roles and hats. One login has up to three hats: Player (the game), Coach (coach.html) and Admin (admin.html) |
 | 142 | `features/stars.js` | 755 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
 | 143 | `features/exletter.js` | 162 | 5 | 0 | 0 | One exercise: Letter from your calm self |
@@ -160,7 +160,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 146 | `features/quizzes.js` | 438 | 20 | 5 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
 | 147 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 148 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 149 | `data/patchnotes.js` | 360 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 149 | `data/patchnotes.js` | 371 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 150 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 151 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 152 | `features/look.js` | 552 | 26 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
@@ -194,7 +194,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 878 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 880 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
@@ -247,3 +247,4 @@ These names occur one time in the game source. A function can stay only when a c
 | `igYears` | `features/ideas.js` | Keep this function until the owner confirms that no add-on calls it. |
 | `offDays` | `features/year.js` | Keep this function: it reads the off days from each calendar, and an add-on can call it. |
 | `oxyRows` | `features/ideasz.js` | Keep this function: tests/t_ideas.js examines it, and an add-on can call it. |
+| `stgCredit` | `features/strat.js` | NO REASON GIVEN. Examine this function. |
