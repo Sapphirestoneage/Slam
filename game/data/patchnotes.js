@@ -474,12 +474,24 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Households together",
+    l: [
+      "Menu has Households together, for a couple, a polycule, housemates or a chosen family, by your own names.",
+      "Same question: everyone answers the same money questions, on one phone or each on their own. Where you differ, it becomes a talk point, never a score.",
+      "FI together: each person's FI number and date side by side, with the gap.",
+      "A shared home: what each person put in and their part of the equity, and the tax gap for each pair when only two of you can marry.",
+      "Share by email: pick what each person sees. The draft opens in your own mail app; SLAM sends nothing. The web app's one-pager has Share by email too.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Safety nets",
     l: [
       "Break in case of emergency, on My Goals, now has four more life changes next to the layoff: medical leave, a move, a breakup and a new baby.",
       "Each one shows how long your cash lasts, the lowest point, three tripwires where you decide now what you would do, and a Plan B.",
       "The layoff's Dip tab shows how long you last at each level of spending, from full life down to food and housing only, with the Rule of 5 beside it.",
-      "In the web app the same changes are on If the pay stopped. Your plan also gets a calm note when it counts on a tax rule with an end date. And with Game words on, How long would my money last? has a zombie mode.",
+      "In the web app the same changes are on If the pay stopped, and your plan gets a calm note when it counts on a tax rule with an end date.",
+      "With Game words on, How long would my money last? has a zombie mode.",
     ],
   },
 ];

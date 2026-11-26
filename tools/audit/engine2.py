@@ -1316,6 +1316,12 @@ def play_check(fn, x, o, ck):
         ck('the date', o['d'] == cur.isoformat(), True)
 
 
+# Households together, Same question (run Finish everything partly built, Part 12): each question's id, its number of
+# options and whether they have an order ('scale') or not ('pick'), written out here a second time.
+HH_Q = [('ask', 5, 'scale'), ('cushion', 4, 'scale'), ('split', 4, 'pick'), ('accounts', 3, 'scale'), ('stop', 5, 'scale'),
+        ('debt', 3, 'scale'), ('family', 3, 'scale'), ('invest', 3, 'scale'), ('talk', 4, 'scale'), ('big', 5, 'scale')]
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -2105,6 +2111,59 @@ def run(cases, ref, il=None):
                         if r[j] < best[j] - 1e-9: best = r
                     want = best[0]
                 ck('least ' + k, o['cheapest'][k], want)
+        elif fn == 'hhCompare':
+            # Households together, Same question: from the definition (the questions' order and kinds read from the source list)
+            QS = HH_Q
+            ppl = [p for p in x['people'] if str(p['n']).strip()]
+            want, talk = [], []
+            for order, (qid, nopt, kind) in enumerate(QS):
+                ix = [p['a'][qid] for p in ppl if isinstance(p['a'].get(qid), int) and 0 <= p['a'][qid] < nopt]
+                if len(ix) < 2: want.append((qid, 'open', None)); continue
+                sp = max(ix) - min(ix)
+                st = 'same' if sp == 0 else ('apart' if kind == 'pick' or sp > 1 else 'near')
+                spv = (0 if sp == 0 else nopt) if kind == 'pick' else sp
+                want.append((qid, st, spv))
+                if st in ('near', 'apart'): talk.append((-spv, order, qid))
+            for r, w in zip(o['rows'], want):
+                ck('the state of a question', r['state'] == w[1], True); ck('its spread', r['spread'], w[2], 0)
+            ck('the talk points in order', o['talk'] == [t[2] for t in sorted(talk)], True)
+            ck('ready', o['ready'], len(ppl) >= 2 and any(w[1] != 'open' for w in want))
+        elif fn == 'hhFiTogether':
+            def ym(sv):
+                y, m = sv.split('-'); return int(y) * 12 + int(m)
+            P = x['people']; nums = [p['fi'] for p in P if p['fi'] is not None and p['fi'] > 0]; ds = [ym(p['date']) for p in P if p['date']]
+            ck('the gap in the number', o['numGap'], max(nums) - min(nums) if len(nums) >= 2 else None)
+            ck('the gap in time', o['dateGap'], max(ds) - min(ds) if len(ds) >= 2 else None, 0)
+            ck('months from now', o['months'] == [ym(p['date']) - ym(x['now']) if p['date'] else None for p in P], True)
+            ck('who is missing', o['missing'] == [p['n'] for p in P if p['fi'] is None or p['date'] is None], True)
+        elif fn == 'hhEquity':
+            nz = lambda v_: v_ if v_ is not None and v_ >= 0 else None
+            paid = [(nz(p['put']) or 0) + (nz(p['monthly']) or 0) * (nz(p['months']) or 0) for p in x['people']]
+            tot = sum(paid); eq = x['value'] - x['owed'] if x['value'] is not None and x['owed'] is not None else None
+            ck('equity', o['equity'], eq); ck('everyone, put in', o['total'], tot)
+            ck('ready', o['ready'], eq is not None and tot > 0 and len(paid) >= 2)
+            for r, pd in zip(o['rows'], paid):
+                ck('put in, all of it', r['paid'], pd)
+                sh = pd / tot if tot > 0 else None
+                ck('share', r['share'], sh, 1e-9)
+                ck('part by contributions', r['byPaid'], eq * sh if eq is not None and sh is not None else None)
+                ck('part split equally', r['equal'], eq / len(paid) if eq is not None else None)
+        elif fn == 'hhMarryGap':
+            P = x['people']
+            if len(P) < 2 or any(p['gross'] is None for p in P): ck('not ready', o['ready'], False)
+            else:
+                one = [law.federal(p['gross'], 0, 'Single')[0] for p in P]; alls = sum(one)
+                ck('everyone single', o['allSingle'], alls)
+                pairs = []
+                for i in range(len(P)):
+                    for j in range(i + 1, len(P)):
+                        mar = law.federal(P[i]['gross'] + P[j]['gross'], 0, 'Married jointly')[0] + alls - one[i] - one[j]
+                        pairs.append((mar - alls, i, j, mar))
+                by = {(w[1], w[2]): w for w in pairs}
+                ck('every pair once', sorted((r['i'], r['j']) for r in o['pairs']) == sorted(by), True)
+                ck('the lowest tax first', all(o['pairs'][k]['gap'] <= o['pairs'][k + 1]['gap'] + 1e-6 for k in range(len(o['pairs']) - 1)), True)
+                for r in o['pairs']:
+                    w = by[(r['i'], r['j'])]; ck('married', r['married'], w[3]); ck('the gap', r['gap'], w[0])
         elif fn == 'enStepCreep':
             a, b = x['a'], x['b']; sg = b['spend'] / a['spend'] - 1; tg = b['take'] / a['take'] - 1 if a['take'] > 0 else None
             ck('creep between two looks', o['up'], sg >= 0.05 and (tg is None or tg < sg))

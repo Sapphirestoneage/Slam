@@ -122,8 +122,10 @@ function gdDateSteps() {
         ? M.map(m => m.name + " finished " + m.tracks.map(trackN).join(", "))
         : ["No one has offered yet. When someone finishes a whole track, they can offer to be asked."],
     },
+    /* hhold.js: the talk points of Same question, when there are any */
+    typeof hxDateStep === "function" ? hxDateStep() : null,
     { t: "Set the next one, and end with something nice", l: ["The next date is the same day next month."] },
-  ];
+  ].filter(Boolean);
 }
 /* Part of profSheet() in profiles.js: the row of the guild. */
 function profSheetGuild(h) {
