@@ -301,6 +301,17 @@ const PATCH_NOTES = [
       "On the web: five small pages (sleep-at-night cash, trust this advice, the net worth peak, 0% tax, every dollar earned), and the Baby Steps and the Advice translator on the FOO.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Family money",
+    l: [
+      "Menu has Family money: what goes to your parents and your kids at the same time, next to your freedom date and your first goal.",
+      "Living at home: the rent you save each month, and when it reaches your moving-out goal.",
+      "Kids and tuition: childcare (New York from a dated state source), school or yeshiva tuition, what to put away a month, and the New York 529 rules.",
+      "Yeshiva tuition is a goal type of its own. Make it a goal from Kids and tuition in one tap.",
+      "On the web: three small pages on the same math, on the shelf Family money.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

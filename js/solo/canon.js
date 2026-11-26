@@ -9,6 +9,7 @@ import { money } from './shell.js';
 import { QUICK_SPECS } from './quick.js'; // the quick calculators (run Not built, groups 1 to 5, Part 2), drawn the same way
 import { GIG_SPECS } from './gig.js'; // working for yourself (run Not built, groups 1 to 5, Part 5), drawn the same way
 import { FW_SPECS } from './canonfw.js'; // Eli's frameworks and the canon (run Not built, groups 1 to 5, Part 4), drawn the same way
+import { FAMILY_SPECS } from './family.js'; // family money (run Not built, groups 1 to 5, Part 8), drawn the same way
 import { workYearsOf, coastOf, COAST_AGES, dollarLaterOf, carFitsOf, CAR_RATES, expectedWorthOf, realWageOf, splitOf, homeFitsOf } from '../solo.js';
 
 const pct = (v, d = 0) => `${+(v * 100).toFixed(d)}%`, yrs = v => (v == null ? 'more than 70 years' : `${v < 10 ? v.toFixed(1) : Math.round(v)} years`), big = v => money(Math.round(v));
@@ -92,6 +93,6 @@ const SPECS = {
       fold: [['Whose rule this is, and what it leaves out', 'The 28/36 rule is the starting point conventional lenders use. Many approve above 36%, and some loan types draw the lines elsewhere, so a lender may offer you more.', 'What a lender will lend and what fits your life are different numbers. This one ignores what you want left over each month. The whole plan answers that one.']] }),
   },
 };
-const id = document.documentElement.dataset.tool, ALL = { ...SPECS, ...QUICK_SPECS, ...GIG_SPECS, ...FW_SPECS };
+const id = document.documentElement.dataset.tool, ALL = { ...SPECS, ...QUICK_SPECS, ...GIG_SPECS, ...FW_SPECS, ...FAMILY_SPECS };
 if (ALL[id]) calcPage(id, ALL[id]);
 export { SPECS };

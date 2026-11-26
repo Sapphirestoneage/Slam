@@ -464,6 +464,19 @@ const WB = [
   ],
   [
     "plan",
+    "Family money: parents and kids at once, living at home, kids and tuition",
+    "b",
+    () =>
+      WB_HAS("family") &&
+      WB_FN("fmSandwich") &&
+      WB_FN("famSand") &&
+      WB_FN("famKids") &&
+      GOAL_K.some(g => g[0] === "Yeshiva tuition"),
+    "One engine with the web pages (sandwich, boomerang and tuition .html): money to parents and kids at once next to the freedom date and your first goal; the rent saved living at home next to the time to a moving-out goal; childcare (New York from the State Comptroller, Feb 2025), school or yeshiva tuition, what to put away a month, the New York 529 deduction and the K-12 rule. Yeshiva tuition is a goal type; its community presets wait for Eli.",
+    "family",
+  ],
+  [
+    "plan",
     "Which account next, up to each limit",
     "b",
     () => WB_HAS("nxa") && WB_FN("nxaCalc") && WB_FN("nxaRows"),

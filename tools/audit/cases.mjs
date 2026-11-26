@@ -27,6 +27,7 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
+import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -111,6 +112,14 @@ for (let i = 0; i < N; i++) {
       rent: money(500, 7000), rentIns: pick([0, 12, 25]), rentGrowthPct: pick([0, 2, 3, 3.5, 4, 6]), homeGrowthPct: pick([-1, 0, 2, 3, 5]), closingPct: pick([0, 2, 3, 5]), sellingPct: pick([0, 5, 6, 8]), retPct: pick([0, 4, 6, 7, 9]) };
     const r = hbRun({ ...x, stay: 30 }), b = hbBreakeven(x);
     add('homeBuy', x, { pmt: r.pmt, first: r.first, rent1: r.firstRent.total, pmiMonths: r.pmiMonths, ahead: r.byYear.map(y => y.ahead), ownOut: r.byYear.map(y => y.ownOut), rentOut: r.byYear.map(y => y.rentOut), year: b.year, never: b.never, ratio: hbPriceToRent(x.price, x.rent), five: hbFivePercent(x.price, x.rent).line, rentLess: hbFivePercent(x.price, x.rent).rentLess }); }
+  // Family money (js/math/family.js, M8F): the sandwich years, living at home, tuition and the NY 529
+  { const yrs = () => pick([null, 0, 1, 3, 5, 10]), x = { parents: pick([0, money(50, 3000)]), kids: pick([0, money(50, 4000)]), parentsYears: yrs(), kidsYears: yrs(), parentsFrom: pick([0, 0, 2]), kidsFrom: pick([0, 0, 1, 5]), inSpending: rnd() < 0.2, takeHome: money(1500, 20000), spending: money(1000, 15000) }, r = fmSandwich(x);
+    add('fmSandwich', x, { peak: r.peak, total: r.total, both: r.both, all: r.all, leftAfter: r.leftAfter, flows: r.flows.map(f => [f.at, f.monthly]) }); }
+  { const x = { rent: money(400, 6000), payHome: pick([0, 0, money(50, 2000)]), savePct: pick([1, 0.75, 0.5, 0.25]), months: pick([6, 12, 18, 24, 36]), target: pick([null, money(1000, 80000)]), have: pick([0, money(100, 20000)]), homeCost: pick([null, 0, money(50, 800)]) }, r = fmBoomerang(x);
+    add('fmBoomerang', x, { saving: r.saving, byPlan: r.byPlan, reach: r.reach, extra: r.extra, perMonthFor: r.perMonthFor, household: r.household }); }
+  { const x = { yearly: money(1000, 90000), kids: whole(1, 6), years: pick([1, 2, 4, 9, 13]), startIn: pick([0, 1, 3, 5, 10, 15]), rise: pick([0, 0.01, 0.03]), have: pick([0, money(500, 50000)]), ret: pick([0, 0.03, 0.05, 0.07]), share: pick([0, 0.5, 1]) }, r = fmTuition(x);
+    const L = ref.limits.ny529, y = { yearly: money(100, 30000), joint: rnd() < 0.5, rate: pick([null, 0.04, 0.0685]), rules: L }, p = fm529(y);
+    add('fmTuition', { ...x, n529: y }, { total: r.total, monthly: r.monthly, payGo: r.payGo, deducted: p.deducted, saved: p.saved }); }
   // The quick calculators (js/math/quick.js and quickplan.js, M8Q)
   { const x = { balance: money(100, 200000), fromRate: pick([0, 0.0001, 0.001, 0.005, 0.01, 0.02]), toRate: pick([0.03, 0.035, 0.04, 0.045, 0.05]), monthly: pick([0, 0, 100, 250, 1000]), years: pick([1, 3, 5, 10]) }, r = qcHysa(x); add('qcHysa', x, { yearGain: r.yearGain, endFrom: r.endFrom, endTo: r.endTo }); }
   { const x = { amount: money(1000, 500000), months: pick([1, 3, 6, 12, 24]), ret: pick([0.03, 0.06, 0.0914, 0.12]), cashRate: pick([0, 0.02, 0.04, 0.05]) }, r = qcDca(x); add('qcDca', x, { lump: r.lump, spread: r.spread, waiting: r.averageWaiting }); }
