@@ -6,6 +6,9 @@
 export const COMMUNITY_LINES = ['Yom tov (food, clothes, guests, travel)', 'Pesach (food, cleaning, travel)'];
 export const KOSHER_NOTE = 'Kosher groceries often cost more than the usual starter guess. Use your real number.';
 export const TUITION_GOAL = 'Future tuition';
+// Run Not built, groups 1 to 5, Part 8: yeshiva or day school tuition as a goal type of its own, with a date. Its
+// community presets (tuition ranges by grade band) are Eli's to fill in: data/community-tuition.json.
+export const YESHIVA_GOAL = 'Yeshiva tuition';
 export const MAASER_DEFAULT = 0.1;
 
 // Lines to add when the setting goes on: only the ones not there yet. Amounts stay blank.
@@ -25,7 +28,7 @@ export function maaserOf({ basis = 'Take-home', pct = null, grossAnnual = null, 
 // Batch 15, item 10: the communities a client can pick on About you › Your community and calendar. One today (its
 // switch is doc.session.community, the same one Coach tools › Session shows); a new community is one more entry here.
 export const COMMUNITIES = [
-  { id: 'jewish', label: 'Jewish community', key: 'community', adds: ['Yom tov and Pesach as yearly costs', 'A kosher groceries note', 'Future tuition as a goal', 'Maaser on the Budget'] },
+  { id: 'jewish', label: 'Jewish community', key: 'community', adds: ['Yom tov and Pesach as yearly costs', 'A kosher groceries note', 'Future tuition and Yeshiva tuition as goals', 'Maaser on the Budget'] },
 ];
 // Turn a community's presets on or off. On adds its yearly lines (blank amounts) once; off keeps what was added.
 export function setCommunityOn(store, on) {

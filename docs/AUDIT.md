@@ -65,6 +65,12 @@ by hand (Social Security up to the wage base across both, Medicare, the extra 0.
 income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
 invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 8) it also covers family money (`js/math/family.js`, M8F): the
+sandwich years checked month by month (what each month takes from the flows, the months both run at once, the total
+over the years), living at home with the moving-out goal reached by stepping a balance month by month, tuition years
+summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
+529 deduction from the limit.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 2) it also covers the quick calculators (`js/math/quick.js` and
 `js/math/quickplan.js`, M8Q): a HYSA balance stepped month by month where SLAM uses the closed form; lump sum or spread
 with every piece carried to the end by itself; the warranty, cost per use and Return on Hassle from their definitions;
