@@ -8,7 +8,7 @@
                bins, binset, binsdone, cal, and 29 more.
    DEPENDS ON  core/report.js, core/engine.js, core/engine2.js, screens/ui.js, features/games.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/year.js, screens/smart.js, features/import.js.
+               page loads: features/year.js, screens/smart.js, features/import.js, features/quizzes.js.
    RULES       Taps only. Each game has a plain form. No random rewards. No text that blames the player.
    ========================================================================= */
 /* ---------- pure logic ---------- */
@@ -1002,6 +1002,9 @@ function dqSheet() {
       .join(
         ""
       )}</div>${st && st.ok ? `<div class="tile small"><b>${st.tries === 1 ? "First try." : "Got it in " + st.tries + "."}</b> ${esc(q.why)}</div><button class="ghost wide slim" data-a="dailyshare">${w.shared ? "Copied. Paste it anywhere" : "Share (no numbers)"}</button>` : (w.tried || []).length ? `<div class="tiny muted">Not that one. Try another.</div>` : ""}` +
+    (st && st.ok && typeof qzDailyPart === "function"
+      ? qzDailyPart(c)
+      : "") /* quizzes.js: the route by the quiz result */ +
     G2B("dailyok", st && st.ok ? "Done for today" : "Skip for today")
   );
 }

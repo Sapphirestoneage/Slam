@@ -496,3 +496,14 @@ button.st-hubcard { width: 100%; text-align: left; font: inherit; cursor: pointe
 .hb-years th, .hb-years td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--line, rgba(0, 0, 0, .12)); vertical-align: bottom; }
 .hb-years th:first-child { text-align: left; }
 .hb-years thead th { font-weight: 600; white-space: normal; }
+/* Quizzes, Part 6 of the run Finish everything partly built: the picture tiles, a percent for each trait, the spectrums */
+.st-quizcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.st-quizcard { flex-direction: column; justify-content: center; gap: 6px; min-height: 96px; height: auto; white-space: normal; text-align: center; padding: 10px; }
+.st-quizcard[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.st-quizicon { font-size: 2rem; line-height: 1; }
+#quiz-bars .st-quizbar { grid-template-columns: minmax(84px, 38%) minmax(0, 1fr) 44px; }
+#quiz-bars .st-quizname strong { font-size: .95rem; overflow-wrap: anywhere; }
+.st-quizspec { margin: 8px 0 10px; }
+.st-quizspecline { position: relative; height: 10px; margin: 8px 6px 4px; border-radius: 999px; border: 2px solid var(--primary); background: var(--card); }
+.st-quizspecline i { position: absolute; top: -7px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card); }
+.st-quizspecends { display: flex; justify-content: space-between; gap: 8px; }

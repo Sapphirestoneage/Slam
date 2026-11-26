@@ -311,6 +311,16 @@ const PATCH_NOTES = [
       "On the web page Which student loan plan costs least?, the stepladder: each school year's loan at its own rate, and the interest it gathers before your first payment.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Six more quizzes, and a daily lesson for you",
+    l: [
+      "New under Me, Quizzes: Money Scripts, the Enneagram on your own, the FIRE Community Quiz with your flavor and three spectrums, a picture quiz for fun, and Money Trait Percents.",
+      "Quantum Collapse: a few taps, the plans still possible shrinking with each one, and the one first move that matters.",
+      "After the daily question you get a skill and a short read that fit your latest quiz.",
+      "Daily lessons in the menu: one short lesson a day for you, like Kids mode, with the lessons that fit your quiz first.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
