@@ -694,6 +694,60 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def own_check(fn, x, o, ck, ref):
+    """Your own path (M8P), worked out again from the definitions: the deductible, coinsurance and out-of-pocket max
+    one dollar at a time, the fees step by step, the two sides and the two jobs added up, the Rule of 5 plus the added
+    months, the adoption credit's straight-line phase-out, and care by the year."""
+    def save(need, saved, monthly):
+        left = max(0.0, need - saved)
+        months = 0 if left <= 0 else (math.ceil(left / monthly - 1e-9) if monthly else None)
+        return left, months
+    if fn == 'opTransition':
+        c = x['covered']; paid = x['metSoFar']; you = 0.0
+        if c > 0:
+            ded = max(0.0, x['deductible'] - paid); steps = 100; per = c / steps
+            for _ in range(steps):  # each slice of the bill: from the deductible first, then the share, until the max
+                d = min(per, ded); ded -= d; part = d + (per - d) * x['coinsurance']
+                cap = math.inf if x['oopMax'] is None else max(0.0, x['oopMax'] - paid - you)
+                you += min(part, cap)
+        before = you + x['notCovered']; yours = before - min(x['help'], before)
+        left, months = save(yours, x['saved'], x['monthly'])
+        ck('the plan pays', o['plan'], c - you, 0.01); ck('yours', o['yours'], yours, 0.01); ck('left', o['left'], left, 0.01); ck('months', o['months'], months, 0)
+    elif fn == 'opPapers':
+        F, own, tot, dated, add = ref['idChangeNY'], x['own'], 0.0, 0.0, 0
+        def step(v, d):
+            nonlocal tot, dated, add
+            if v is None: add += 1; return
+            tot += v; dated += v if d else 0
+        step({'nyc': F['courtNyc'], 'ny': F['courtNyState']}.get(x['court'], own['court']), x['court'] != 'other')
+        step(own['orderCopies'], False)
+        step(F['birthNys'] + x['copies'] * F['birthNysCopy'] if x['born'] == 'nys' else own['birth'], x['born'] == 'nys')
+        step(F['ssaCard'], True)
+        if x['id'] != 'none': step(F['dmvLicense'] if x['id'] == 'license' else F['dmvId'], True)
+        if x['passport'] != 'none': step({'within': F['passportCorrection'], 'renew': F['passportBook'], 'new': F['passportBook'] + F['passportExecution']}[x['passport']], True)
+        if own['other']: step(own['other'], False)
+        ck('total', o['total'], tot, 0.001); ck('from the offices', o['dated'], dated, 0.001); ck('steps to add', o['toAdd'], add, 0)
+    elif fn == 'opTwoSides':
+        q = x['quietMonthly'] * 12 * x['years'] + x['quietOnce']; w = x['outMonthly'] * 12 * x['years'] + x['outOnce']
+        ck('quiet', o['quiet'], q); ck('out', o['out'], w); ck('apart', o['gap'], abs(q - w))
+    elif fn == 'opPackage':
+        tot = lambda j: j['pay'] + j['health'] * 12 + j['care'] + j['family'] + j['other']
+        a, b = tot(x['now']), tot(x['next'])
+        ck('now', o['now'], a); ck('new', o['next'], b); ck('gap', o['gap'], a - b); ck('pay to match', o['match'], x['next']['pay'] + a - b if a > b else None)
+    elif fn == 'opSearchFund':
+        base = x['age'] / 5 * x['spending']; target = base + x['extraMonths'] * x['spending']
+        ck('usual target', o['base'], base); ck('with the longer search', o['target'], target); ck('to go', o['gap'], None if x['cash'] is None else max(0.0, target - x['cash']))
+    elif fn == 'opFamily':
+        R = ref['adoptionCredit']; paid = min(x['cost'], x['insurance'] + x['employer']); yours = x['cost'] - paid
+        credit = refund = None
+        if x['path'] == 'adoption':
+            m = x['magi']; share = 1.0 if m is None or m <= R['phaseStart'] else 0.0 if m >= R['phaseEnd'] else (R['phaseEnd'] - m) / (R['phaseEnd'] - R['phaseStart'])
+            credit = min(max(0.0, x['cost'] - x['employer']), R['max']) * share; refund = min(credit, R['refundable'])
+        ck('yours', o['yours'], yours); ck('adoption credit', o['credit'], credit, 0.01); ck('refundable part', o['refundable'], refund, 0.01)
+        ck('months', o['months'], save(yours, x['saved'], x['monthly'])[1], 0)
+    elif fn == 'opAgeCare':
+        need = max(0.0, x['monthly'] - x['covered']) * 12 * x['years']; left = max(0.0, need - x['saved'])
+        ck('need', o['need'], need); ck('left', o['left'], left); ck('a month', o['perMonth'], left / (x['yearsUntil'] * 12) if x['yearsUntil'] else None, 0.01)
 def hard_check(fn, x, o, ck):
     """Hard moments (M8H), worked out again from the definitions: the shares by hand (room size, income or equal),
     the person leaving paying the months agreed and the people staying taking the whole rent after; untangling item by item."""
@@ -1401,6 +1455,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn.startswith('op') and fn in ('opTransition', 'opPapers', 'opTwoSides', 'opPackage', 'opSearchFund', 'opFamily', 'opAgeCare'):
+            own_check(fn, x, o, ck, law.ref)
         elif fn == 'ratios':
             ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):

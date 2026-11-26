@@ -8,6 +8,7 @@
 // page: one tap (or Shift three times) and the page is gone, replaced by a weather site, and off the Back button.
 import { h, btn, chip, money, numBox, copyLink } from './shell.js';
 import { calcPage } from './calc.js';
+import { quickExit, exitButton, keepCard } from './keepthis.js';
 import { hmUntangle, hmChecklist, hmFill, hmParkMonths, HM_PLANS, HM_SPLIT } from '../math/hard.js';
 import { roommateExit } from '../math/hardplan.js';
 import { SINS } from '../quiz/skins/sins.js';
@@ -18,27 +19,7 @@ const opt = (list, f = String) => list.map(v => [f(v), v]);
 const mo = v => `${v} ${v === 1 ? 'month' : 'months'}`;
 const dateWords = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
-// ---------- Leave this page (the quick exit) ----------
-// The GOV.UK Design System's Exit this page pattern: one button, always in the same place, and Shift pressed three
-// times. The page is blanked at once, then replaced by a neutral site with location.replace, so Back does not return to
-// it. What it cannot do (clear the browser's history) is said on the page in plain words.
-export function quickExit(D) {
-  try { document.body.replaceChildren(); document.title = 'Weather'; } catch { /* the page is leaving anyway */ }
-  location.replace(D.exit.to);
-}
-let exitWired = false;
-function exitButton(D) {
-  const top = $('top'); if (!top || top.querySelector('.st-exit')) return;
-  const b = h('button.st-btn.st-exit', { type: 'button', id: 'exit', title: D.exit.keys, onClick: () => quickExit(D) }, D.exit.label);
-  top.append(b);
-  if (exitWired) return; exitWired = true;
-  let n = 0, at = 0;
-  addEventListener('keydown', e => {
-    if (e.key !== 'Shift' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) { n = 0; return; }
-    const now = Date.now(); n = now - at > 5000 ? 1 : n + 1; at = now;
-    if (n >= 3) quickExit(D);
-  });
-}
+// Leave this page and Keep this are shared with Your own path (run Not built, Part 6): js/solo/keepthis.js.
 
 // ---------- the shared cards ----------
 const sourceLine = (x, D) => h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Source: ', h('a', { href: x.url, target: '_blank', rel: 'noopener' }, x.source), `. Checked ${dateWords(x.checked ?? D.checked)}.`);
@@ -76,18 +57,6 @@ function scriptsCard(D, scripts, values, { title = 'Words to use' } = {}) {
 function pauseCard(which) {
   const f = SINS.read.fix[which]; if (!f) return null;
   return h('div.st-card', { id: 'pause' }, h('div.st-eyebrow', {}, 'First'), h('h2', { style: { margin: '2px 0 6px' } }, f.name), h('p', { style: { margin: 0 } }, f.how));
-}
-// Keep this: off by default. On: saved in this browser and in the link. Off again: the kept copy is taken away.
-function keepCard(api) {
-  const M = api.mine(), on = M.keep === true;
-  const change = patch => { api.remember(patch); api.render(); };
-  return h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Keep this?'),
-    h('div.st-field', {}, h('div.st-flabel', {}, 'Keep this on this device and in my link'),
-      h('div.st-chips', {}, chip('Off', !on, () => change({ keep: false, coach: false })), chip('On', on, () => change({ keep: true }))),
-      h('div.st-small.st-soft', { style: { marginTop: '4px' } }, on ? 'Kept in this browser and in your link. Anyone who opens this device or the link can read it. Turn it off to take it away again.' : 'Off: nothing on this page is saved anywhere. Close the page and it is gone.')),
-    on ? h('div.st-field', {}, h('div.st-flabel', {}, 'Let my coach see this'), h('div.st-chips', {}, chip('Off', M.coach !== true, () => change({ coach: false })), chip('On', M.coach === true, () => change({ coach: true }))),
-      h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Off: kept for you alone. A partner\'s view and anything shared never show it.')) : null,
-    on ? h('div.st-row', {}, copyLink(api)) : null);
 }
 // Each page: private, with Leave this page, and Keep this in place of the link card.
 const page = (D, tool, spec) => ({ private: true, eyebrow: 'A hard moment', title: D.tools[tool].title, why: D.tools[tool].why, fields: [], keep: keepCard, drawn: () => exitButton(D), ...spec });
@@ -198,6 +167,7 @@ const medScripts = (api, D) => scriptsCard(D, D.tools.medical.scripts, { balance
 const noScripts = (api, D) => scriptsCard(D, D.tools.sayno.scripts, { asked: mval(api, 'sayno', 'asked'), gift: mval(api, 'sayno', 'gift') });
 
 export const HARD_SHELF = [['untangle', 'Untangling what you shared'], ['roomexit', 'A roommate is moving out'], ['grief', 'After a death: the first 90 days'], ['widow', 'When your partner has died'], ['medical', 'Medical bills: words to use'], ['sayno', 'Saying no to lending money'], ['crisis', 'After a fire, a flood or an eviction'], ['safety', 'A money plan, kept private']];
+export { quickExit };
 export const HARD_PAGES = { untangle: 'untangle.html', roomexit: 'roomexit.html', grief: 'grief.html', widow: 'widowed.html', medical: 'medicalbills.html', sayno: 'sayno.html', crisis: 'crisis.html', safety: 'safety.html' };
 
 const tool = typeof document !== 'undefined' ? document.documentElement.dataset.hard : null;
