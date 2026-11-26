@@ -1430,8 +1430,8 @@ const WB = [
     "who",
     "A shared home for three or more, and the tax gap when only two can marry",
     "b",
-    () => WB_HAS("hxfair") && WB_FN("hhEquity") && WB_FN("hhMarryGap") && WB_FN("hxBook"),
-    "What each person put in and pays, their part of the equity by contributions and equally, and the federal tax for each pair married next to everyone single. Domestic partnership next to marriage waits for Estate and marriage.",
+    () => WB_HAS("hxfair") && WB_FN("hhEquity") && WB_FN("hhMarryGap") && WB_FN("hxBook") && WB_FN("esCompare"),
+    "What each person put in and pays, their part of the equity by contributions and equally, and the federal tax for each pair married next to everyone single. Each pair is Married or partners? of Estate and marriage (esCompare), with a link to it.",
     "hhx",
   ],
   [
@@ -1516,6 +1516,23 @@ const WB = [
       typeof BP_REF === "object",
     "Dollars a year for an HSA used as a retirement account, a dependent care FSA over the daycare years, an ESPP and commuter. Tap a large employer to fill its match, vesting and ESPP discount, each with its source. The coverage you may qualify for (Medicaid, the Essential Plan in New York, the marketplace credit) and two or three plans side by side.",
     "benefits",
+  ],
+  [
+    "plan",
+    "Estate and marriage: estate basics, what your people would receive (the step-up, the 10 years of an inherited account, the federal and New York lines), married or partners, New York first",
+    "b",
+    () =>
+      WB_HAS("estate") &&
+      WB_HAS("estab") &&
+      WB_FN("esHeirs") &&
+      WB_FN("esTenYear") &&
+      WB_FN("esCompare") &&
+      WB_FN("spousalExcess") &&
+      WB_FN("estateSheet") &&
+      typeof ES_REF !== "undefined" &&
+      typeof ES_RULES !== "undefined",
+    "One engine with the web app (heirs.html, married.html). The private summary with names for a lawyer stays in the web app (kin.html), which now has who is named on each account from Life admin.",
+    "estate",
   ],
   [
     "plan",

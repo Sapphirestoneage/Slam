@@ -57,6 +57,11 @@ Since Nov 25 2026 (run Not built, groups 1 to 5, Part 7) it also covers the hard
 person leaving paying the months agreed and the people staying taking the whole rent after, the whole lease paid and the
 deposit back by the rent shares; and untangling after a breakup, item by item (who keeps it, what is open, the debts
 still in both names), with money that waits as months of spending.
+Since Nov 26 2026 (run Finish everything partly built, Part 11) it also covers estate and marriage (`js/math/estate.js`,
+M8E): each thing you leave shared by its parts by hand, the step-up as value less what was paid, each heir's rule from
+the IRS list and the 10-year line, the federal and New York estate lines and the cliff; the 10 years of an inherited
+account year by year, three ways, with the second engine's own federal tax; and married or partners (two single returns
+and the partner cover against one joint return, half the other's Social Security amount less your own).
 
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's

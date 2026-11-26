@@ -795,6 +795,65 @@ def hard_check(fn, x, o, ck):
         a, sp = x['park']; ck('months it waits', o['park'], a / sp, 1e-9)
 
 
+
+def estate_check(fn, x, o, ck, law):
+    """Estate and marriage (M8E), worked out again from the definitions: each thing's parts by hand, the step-up as
+    value less what was paid, the heir's rule from the IRS list, the two estate lines; the 10 years year by year with
+    this engine's own federal tax; married or partners from the single and joint tables and half the other's amount."""
+    if fn == 'esHeirs':
+        R = x['rules']; ids = [p['id'] for p in x['people']]
+        gets = {i: 0.0 for i in ids}; pre = {i: 0.0 for i in ids}; er = {i: 0.0 for i in ids}; roth = {i: 0.0 for i in ids}
+        heir = {p['id']: p['heir'] for p in x['people']}
+        total = 0.0; unassigned = 0.0; spouse = 0.0
+        for it in x['items']:
+            v = it['value']
+            if v is None: continue
+            total += v
+            parts = {k: w for k, w in it['to'].items() if w > 0 and k in gets}
+            t = sum(parts.values())
+            if not t: unassigned += v; continue
+            for k, w in parts.items():
+                a = v * w / t; gets[k] += a
+                if it['kind'] in ('taxable', 'home') and it['basis'] is not None: er[k] += max(0.0, v - it['basis']) * w / t
+                if it['kind'] == 'pretax': pre[k] += a
+                if it['kind'] == 'roth': roth[k] += a
+                if heir[k] == 'spouse': spouse += a
+        ck('everything', o['total'], total, 1e-6); ck('given to someone', o['assigned'], total - unassigned, 1e-6); ck('step-up, all', o['erased'], sum(er.values()), 1e-6)
+        for n, i in enumerate(ids):
+            ck(f'person {n} gets', o['gets'][n], gets[i], 1e-6); ck(f'person {n} traditional', o['pre'][n], pre[i], 1e-6); ck(f'person {n} step-up', o['er'][n], er[i], 1e-6)
+            ten = heir[i] not in ('spouse', 'close', 'disabled', 'child') and pre[i] + roth[i] > 0
+            ck(f'person {n} last year', o['last'][n], x['deathYear'] + R['tenYears'] if ten else None)
+            ck(f'person {n} yearly', o['yearly'][n], bool(ten and x['started'] and pre[i] > 0))
+        base = total - spouse; ck('federal base', o['fedBase'], base, 1e-6)
+        ck('federal line', o['fed'] == ('over' if base > R['federalExclusion'] else 'under'), True)
+        ny = R['nyExclusion']; ck('New York line', o['ny'] == ('over' if total > ny * R['nyCliffShare'] else 'cliff' if total > ny else 'under'), True)
+    elif fn == 'esTenYear':
+        tax = lambda g: law.federal(g, 0, x['status'])[0]
+        base = tax(x['other'])
+        for w in ('first', 'even', 'last'):
+            b = x['balance']; outs = []
+            for k in range(1, 11):
+                b *= 1 + x['growth']
+                out = (b if k == 1 else 0.0) if w == 'first' else (b if k == 10 else 0.0) if w == 'last' else b / (11 - k)
+                b -= out; outs.append(out)
+            t = sum(tax(x['other'] + q) - base for q in outs if q > 0)
+            ck(f'{w}: out', o[w]['out'], sum(outs), 1e-4); ck(f'{w}: tax', o[w]['tax'], t, 1e-4)
+            ck(f'{w}: each year', all(abs(a - b) < 1e-6 for a, b in zip(o[w]['rows'], outs)), True)
+            ck(f'{w}: open', o[w]['ready'], not (w == 'last' and x['started']))
+    elif fn == 'esCompare':
+        p = x['people']; tax = lambda g, s: law.federal(g, 0, s)[0]
+        single = [tax(q['pay'], 'single') for q in p]
+        by = x['coverBy']; cov = tax(p[by]['pay'] + x['cover'], 'single') - single[by] if x['cover'] > 0 else 0.0
+        joint = tax(p[0]['pay'] + p[1]['pay'], 'joint')
+        ck('single 1', o['single'][0], single[0], 1e-6); ck('single 2', o['single'][1], single[1], 1e-6); ck('joint', o['joint'], joint, 1e-6)
+        ck('cover tax', o['coverTax'], cov, 1e-6); ck('difference', o['diff'], single[0] + single[1] + cov - joint, 1e-6)
+        if p[0]['pia'] is not None and p[1]['pia'] is not None:
+            for i in (0, 1):
+                ck(f'spousal {i}', o['spousal'][i], max(0.0, 0.5 * p[1 - i]['pia'] - p[i]['pia']), 1e-6)
+                ck(f'survivor {i}', o['survivor'][i], max(p[0]['pia'], p[1]['pia']), 1e-6)
+        else:
+            ck('no Social Security', o['spousal'], None)
+
 def gig_check(fn, x, o, ck, law):
     """Gig and self-employed (M8G), worked out again: the floor's profit as a check that it leaves the need, the stacked
     set-aside by hand, the retirement limits from their definitions, invoice dates with the date library, apps and the split."""
@@ -1620,6 +1679,8 @@ def run(cases, ref, il=None):
             ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):
             hard_check(fn, x, o, ck)
+        elif fn in ('esHeirs', 'esTenYear', 'esCompare'):
+            estate_check(fn, x, o, ck, law)
         elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):
             gig_check(fn, x, o, ck, law)
         elif fn in ('fmSandwich', 'fmBoomerang', 'fmTuition'):

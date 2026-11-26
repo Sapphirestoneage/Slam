@@ -10,6 +10,7 @@ import vm from 'node:vm';
 import * as HH from '../js/math/hhold.js';
 import { HH_QUESTIONS, hhCompare, hhCode, hhReadCode, hhFiTogether, hhMonthsBetween, hhEquity, hhMarryGap, hhDraft, hhCanLeave } from '../js/math/hhold.js';
 import { federalTax } from '../js/math/income.js';
+import { esCompare } from '../js/math/estate.js';
 import { emailDraft, shareSees, SEEN } from '../js/privacy.js';
 import { importFile, Store } from '../js/records.js';
 import { createCtx } from '../js/ui/staples.js';
@@ -17,6 +18,7 @@ import { summaryItems, summaryText, shareDefaultPicks } from '../js/ui/report-ui
 
 const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url)));
 const fed = (g, st) => federalTax({ gross: g, filingStatus: st === 'joint' ? 'Married jointly' : 'Single' }, ref).value;
+const ENG = { compare: esCompare, taxOf: fed };
 
 // ---------- 1. Same question ----------
 test('every question has a talk point, two or more options, and an id of its own', () => {
@@ -101,9 +103,9 @@ test('a shared home: contributions, the share of each, the equity by contributio
   assert.deepEqual(blank.rows[1].blank, ['put', 'months']);
   assert.equal(blank.ready, false);
 });
-test('when only two can marry: each pair next to everyone single, on the app\'s own tax function', () => {
+test('when only two can marry: each pair next to everyone single, on esCompare (Married or partners?) and the app\'s own tax', () => {
   const P = [{ n: 'Rin', gross: 180000 }, { n: 'Sol', gross: 30000 }, { n: 'Tay', gross: 170000 }];
-  const M = hhMarryGap(P, fed);
+  const M = hhMarryGap(P, ENG);
   assert.ok(M.ready);
   assert.equal(M.pairs.length, 3);
   const allSingle = P.reduce((s, p) => s + fed(p.gross, 'single'), 0);
@@ -114,9 +116,12 @@ test('when only two can marry: each pair next to everyone single, on the app\'s 
   }
   assert.ok(M.pairs[0].gap <= M.pairs[1].gap && M.pairs[1].gap <= M.pairs[2].gap, 'the lowest tax first');
   assert.ok(M.pairs.find(x => x.names.includes('Rin') && x.names.includes('Sol')).gap < 0, 'a high and a low pay: a marriage bonus');
-  assert.equal(hhMarryGap([{ n: 'A', gross: 1 }, { n: 'B', gross: null }], fed).ready, false);
-  assert.deepEqual(hhMarryGap([{ n: 'A', gross: 1 }, { n: 'B', gross: null }], fed).missing, ['B']);
-  assert.equal(hhMarryGap(P, fed, [0, 2]).pairs.length, 1);
+  assert.equal(hhMarryGap([{ n: 'A', gross: 1 }, { n: 'B', gross: null }], ENG).ready, false);
+  assert.deepEqual(hhMarryGap([{ n: 'A', gross: 1 }, { n: 'B', gross: null }], ENG).missing, ['B']);
+  assert.equal(hhMarryGap(P, ENG, [0, 2]).pairs.length, 1);
+  const C = esCompare({ people: [{ pay: 180000 }, { pay: 30000 }] }, { taxOf: fed });
+  assert.equal(M.pairs.find(x => x.i === 0 && x.j === 1).gap, -C.taxDiff, 'the gap of a pair is esCompare\'s, turned round');
+  assert.equal(hhMarryGap(P, { taxOf: fed }).ready, false, 'no compare: no number of its own');
 });
 
 // ---------- 4. Share by email ----------
@@ -180,6 +185,6 @@ test('the game\'s copy gives the same answers', () => {
   assert.deepEqual(j(box.out.hhCompare(P)), j(hhCompare(P)));
   const E = { value: 3e5, owed: 1e5, people: [{ n: 'A', put: 1e4, monthly: 800, months: 12 }, { n: 'B', put: 0, monthly: 800, months: 12 }] };
   assert.deepEqual(j(box.out.hhEquity(E)), j(hhEquity(E)));
-  assert.deepEqual(j(box.out.hhMarryGap([{ n: 'A', gross: 9e4 }, { n: 'B', gross: 4e4 }], fed)), j(hhMarryGap([{ n: 'A', gross: 9e4 }, { n: 'B', gross: 4e4 }], fed)));
+  assert.deepEqual(j(box.out.hhMarryGap([{ n: 'A', gross: 9e4 }, { n: 'B', gross: 4e4 }], ENG)), j(hhMarryGap([{ n: 'A', gross: 9e4 }, { n: 'B', gross: 4e4 }], ENG)));
   assert.equal(box.out.hhDraft({ items: ITEMS, picks: { month: true } }).body, hhDraft({ items: ITEMS, picks: { month: true } }).body);
 });

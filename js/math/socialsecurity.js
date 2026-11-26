@@ -45,6 +45,12 @@ export function claimFactor(claimMonths, fraMonths, ss) {
   return 1 - Math.min(m, 36) * ss.earlyFirst36 - Math.max(0, m - 36) * ss.earlyBeyond;
 }
 
+// The spousal top-up at full retirement age: half the partner's PIA, less your own PIA, never below zero (SSA,
+// spousal). One function: householdBenefits below and Married or partners? (js/math/estate.js, M8E) use it.
+export function spousalExcess(ownPia, otherPia, ss) {
+  return Math.max(0, ss.spousalShare * (otherPia ?? 0) - (ownPia ?? 0));
+}
+
 // A spouse's benefit, as a share of half the partner's PIA, by the age it starts: 25/36 of 1% a month for the first
 // 36 months early, 5/12 of 1% beyond; nothing more for waiting past full retirement age.
 export function spousalFactor(startMonths, fraMonths, ss) {
@@ -104,7 +110,7 @@ export function householdBenefits(people, ss, { wageBase, widths, trustCut = fal
   // of your claim and the partner's (a spouse's benefit needs the worker to have filed).
   if (list.length === 2) for (const [a, b] of [[list[0], list[1]], [list[1], list[0]]]) {
     if (a.source === 'none' && a.fraMonths == null) continue;
-    const excess = Math.max(0, ss.spousalShare * (b.pia ?? 0) - (a.pia ?? 0));
+    const excess = spousalExcess(a.pia, b.pia, ss);
     if (!excess || b.claimIndex == null || a.claimIndex == null) { a.spousal = 0; a.spousalIndex = null; continue; }
     a.spousalIndex = Math.max(a.claimIndex, b.claimIndex);
     a.spousal = excess * spousalFactor(a.claimMonths + (a.spousalIndex - a.claimIndex), a.fraMonths, ss);

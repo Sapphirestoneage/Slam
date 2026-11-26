@@ -10,8 +10,8 @@
                email is a draft the person sends.
    INPUT       The game: G.hhx (the answers of this sheet), G.chars, G.fair (the people of Sharing
                costs fairly), G.hh.sample (the made-up household of Our household). derive(c), freeAt(c)
-               (the game's FI number and date), taxvInputs(c) (pay before tax), retireTax (the 2026
-               federal tables). The open sheet (W.kind): hhx.
+               (the game's FI number and date), taxvInputs(c) (pay before tax), esCompare and esTaxOf
+               (Married or partners?, on the 2026 federal tables). The open sheet (W.kind): hhx.
    OUTPUT      Math: hxS, hxPeople, hxSq, hxFi, hxHome, hxMarry, hxItems, hxDraftFor, hxBook,
                hxDateStep, hxRead. Views: hhxSheet, hxSqCard, hxFiCard, hxHomeCard, hxMarryCard,
                hxMailCard, hxAmt, hxPerson, hxPartnerLink, hxSheetRow. Actions (ACT): hhx, hxsample, hxed, hxwho, hxans, hxshow,
@@ -22,7 +22,8 @@
                head, mathBox, save, drawSheet, freeAt, keypad), screens/dash.js (dkCaption, dkStatRow,
                dkTile, dkSec, dkDonut, dkProgress, dkPill, dkCard), features/fair.js (frPpl, frState,
                frCalc, frDefaultTotal), features/house.js (hsGet, hsPeople, hsSum, HS_SAMPLE),
-               features/taxview.js (taxvInputs, TAXV_PAY), features/retire.js (retireTax),
+               features/taxview.js (taxvInputs, TAXV_PAY), core/estate.js (esCompare), features/estate.js
+               (esTaxOf, the action estate),
                features/kit.js (kitMenu, kitScreen, kitTerms).
    RULES       The math is in core/hhold.js. The views show what it returns. No score and no right
                answer: a difference is a talk point. People by their own names. Nothing is sent: the
@@ -153,12 +154,14 @@ function hxHome() {
     people: hxPeople().map(p => Object.assign({ n: p.n }, S.home.ppl[p.n] || {})),
   });
 }
-/* The federal tax a year from the game's 2026 tables (the retirement engine), single or joint. */
-const hxTax = (gross, status) => retireTax(gross, 0, status === "joint" ? "joint" : "single", "", 40).federal;
+/* Each pair on esCompare of Estate and marriage (core/estate.js), with its tax function esTaxOf (the game's
+   2026 federal tables of the retirement engine): married next to not married is worked out once. */
 function hxMarry() {
   const S = hxS(),
     P = hxPeople().map(p => ({ n: p.n, gross: S.gross[p.n] == null ? null : S.gross[p.n] }));
-  return typeof retireTax === "function" ? hhMarryGap(P, hxTax) : { ready: false, pairs: [], missing: [] };
+  return typeof esCompare === "function" && typeof esTaxOf === "function"
+    ? hhMarryGap(P, { compare: esCompare, taxOf: esTaxOf })
+    : { ready: false, pairs: [], missing: [] };
 }
 
 /* ---------- 4. Share by email ---------- */
@@ -498,13 +501,12 @@ function hxHomeCard() {
     ]
   );
 }
-/* The named place for Estate and marriage (run Finish everything partly built, Part 11): domestic partnership
-   next to marriage. It opens that screen once it is in the game. */
+/* Estate and marriage (run Part 11), the tab Married or partners?: two single returns next to one joint, job
+   health cover for a partner as taxable pay, the Social Security spousal top-up. */
 function hxPartnerLink() {
-  const k = ["dpvm", "marriage", "estate"].find(a => typeof ACT !== "undefined" && typeof ACT[a] === "function");
-  return k
-    ? `<button class="ghost wide slim" data-a="${k}">Domestic partnership next to marriage</button>`
-    : `<div class="tiny muted">Domestic partnership next to marriage (benefits, Social Security, New York first) comes with Estate and marriage.</div>`;
+  return typeof ACT !== "undefined" && typeof ACT.estate === "function"
+    ? `<button class="ghost wide slim" data-a="estate" data-v="married">Married or partners? Health cover and Social Security too</button>`
+    : "";
 }
 function hxMarryCard() {
   const S = hxS(),
@@ -529,7 +531,7 @@ function hxMarryCard() {
     ? `<div class="stack" style="gap:6px">${M.pairs
         .map(
           x =>
-            `<div class="tile small">If <b>${esc(x.names[0])}</b> and <b>${esc(x.names[1])}</b> marry: federal tax ${money(x.married)} a year, next to ${money(M.allSingle)} with everyone single. <b>${hxGapWords(x.gap)}</b>.</div>`
+            `<div class="tile small">If <b>${esc(x.names[0])}</b> and <b>${esc(x.names[1])}</b> marry: federal tax ${money(x.married)} a year, next to ${money(M.allSingle)} with everyone single. <b>${hxGapWords(x.gap).replace(/^a/, "A")}</b>.</div>`
         )
         .join("")}</div>`
     : `<div class="tile small">Tap everyone's pay first.</div>`;

@@ -6,7 +6,8 @@
 //   2. FI together: each person's own FI number and date, side by side, with the gap in money and in time.
 //   3. A shared home: each person's contributions (what they put in at the start, and each month) and their part of
 //      the equity, by contributions and equally, side by side. The tax gap when only two of the people can marry:
-//      the federal tax with two of them married filing jointly next to everyone filing single, for each pair.
+//      the federal tax with two of them married filing jointly next to everyone filing single, for each pair, on
+//      esCompare of js/math/estate.js (Married or partners?), so married next to not married is worked out once.
 //   4. Share by email: a draft the person sends themselves. Each recipient gets only the items picked for them, and an
 //      item that is not for everyone (js/privacy.js: Me and my coach, Coach only) never goes into any draft.
 // Pure, and with no import on purpose: tools/game_hhold_build.mjs copies this file word for word into
@@ -125,19 +126,24 @@ export function hhEquity({ value = null, owed = null, people = [] } = {}) {
   return { rows, total, value: v, owed: o, equity, ready: equity != null && total > 0 && rows.length >= 2 };
 }
 // The federal tax gap when two of the people marry and file jointly. people: [{ n, gross: pay before tax a year }].
-// tax(gross, status): the app's own federal tax function ('single' or 'joint'), so this file has no tax table of its own.
-// For each pair (or only the pair asked for): everyone filing single, next to the pair filing jointly and the others
-// single. gap > 0: married costs more a year (a marriage penalty); gap < 0: it costs less (a marriage bonus).
-export function hhMarryGap(people, tax, pair = null) {
+// One calculation of married next to not married, reused: compare is esCompare of js/math/estate.js (Married or
+// partners?, run Part 11; the game's copy is game/core/estate.js), and taxOf(gross, status) is the app's own federal
+// tax ('single' or 'joint'), so this file has no tax table of its own. For each pair (or only the pair asked for):
+// everyone filing single, next to the pair on one joint return and the others single. The others' tax is the same both
+// ways, so the gap of a pair is esCompare's taxDiff turned round. gap > 0: married costs more a year (a marriage
+// penalty); gap < 0: it costs less (a marriage bonus).
+export function hhMarryGap(people, { compare, taxOf } = {}, pair = null) {
   const P = (people || []).filter(p => p && String(p.n || '').trim());
   const ok = P.filter(p => typeof p.gross === 'number' && Number.isFinite(p.gross) && p.gross >= 0);
-  if (ok.length < 2 || ok.length !== P.length || typeof tax !== 'function') return { ready: false, pairs: [], missing: P.filter(p => !ok.includes(p)).map(p => p.n) };
-  const single = P.map(p => tax(p.gross, 'single')), allSingle = single.reduce((s, t) => s + t, 0);
+  if (ok.length < 2 || ok.length !== P.length || typeof taxOf !== 'function' || typeof compare !== 'function') return { ready: false, pairs: [], missing: P.filter(p => !ok.includes(p)).map(p => p.n) };
+  const single = P.map(p => taxOf(p.gross, 'single')), allSingle = single.reduce((s, t) => s + t, 0);
   const pairs = [];
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     if (pair && !(pair[0] === i && pair[1] === j)) continue;
-    const joint = tax(P[i].gross + P[j].gross, 'joint'), married = joint + allSingle - single[i] - single[j];
-    pairs.push({ i, j, names: [P[i].n, P[j].n], joint, apart: single[i] + single[j], married, gap: married - allSingle });
+    const C = compare({ people: [{ name: P[i].n, pay: P[i].gross }, { name: P[j].n, pay: P[j].gross }] }, { taxOf });
+    if (!C || !C.ready) continue;
+    const gap = -C.taxDiff;
+    pairs.push({ i, j, names: [P[i].n, P[j].n], joint: C.joint, apart: C.apart, married: allSingle + gap, gap });
   }
   pairs.sort((a, b) => a.gap - b.gap || a.i - b.i || a.j - b.j);
   return { ready: true, single, allSingle, pairs, missing: [] };

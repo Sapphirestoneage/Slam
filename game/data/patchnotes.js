@@ -464,6 +464,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Estate and marriage",
+    l: [
+      "Menu has Estate and marriage: your estate papers, what your people would receive, and married or partners.",
+      "What your people receive: who gets what, the gain the step-up in basis wipes out, and the 10 years of an inherited IRA, with the tax three ways.",
+      "Married or partners?: two single returns or one joint one, the tax on partner health cover, the Social Security spousal and survivor benefits, and what changes in New York.",
+      "In the web app the summary for a lawyer now lists who is named on each account. Nothing is kept unless you turn it on. Bring it all to a lawyer.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Households together",
     l: [
       "Menu has Households together, for a couple, a polycule, housemates or a chosen family, by your own names.",

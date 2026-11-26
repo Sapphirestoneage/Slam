@@ -167,7 +167,11 @@
     Math.abs(ab.gap - (t(215000, "joint") + t(30000, "single") - all)) < 0.01
   );
   h = ov();
-  chk("the named place for domestic partnership", h.includes("Domestic partnership next to marriage"));
+  chk("the link to Married or partners? of Estate and marriage", h.includes('data-a="estate" data-v="married"'));
+  chk(
+    "each pair is esCompare's own number",
+    Math.abs(ab.gap + esCompare({ people: [{ pay: 170000 }, { pay: 45000 }] }, { taxOf: esTaxOf }).taxDiff) < 1e-9
+  );
 
   /* 5. share by email */
   X("hxmto", "1");
