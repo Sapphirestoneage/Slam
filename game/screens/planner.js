@@ -808,6 +808,7 @@ const MENU_GROUPS = [
     "My money",
     [
       "quest",
+      "peers",
       "since",
       "okay",
       "elem",

@@ -1355,6 +1355,14 @@ const WB = [
     "qmode",
   ],
   [
+    "see",
+    "Comparing with peers: you and people like you",
+    "p",
+    () => WB_HAS("peers") && WB_FN("peNetWorth") && WB_FN("pePatterns") && typeof PE_PRIORS !== "undefined",
+    "Menu, You and people like you (private): net worth next to the middle household of your age (SCF 2025), savings rate next to the country's (BEA, Sept 2026), household pay next to the middle household's (Census 2025), the next milestone of the journey, and people like you lines (SHED and SCF), each with its source. Not yet: savings rate and income percentiles by age (no dated table reachable). Quest mode's rank reads the same function. Also peers.html on the web.",
+    "peers",
+  ],
+  [
     "feel",
     "Hidden costs your life charges you",
     "b",

@@ -16,7 +16,8 @@
                (W.kind): qmode, with W.tab.
    OUTPUT      Math of the feature: qgSt, qgNums, qgStats, qgCap, qgFails, qgHidden, qgRank, qgCalls,
                qgJudge, qgAsk, qgSkills, qgPacks, qgGrad, qvBook. Views: qvSheet and one body for each
-               part. Parts of functions in other files: rvSheetQuest (rvSheet in reveal.js). Named
+               part. Parts of functions in other files: rvSheetQuest (rvSheet in reveal.js). Where you rank links to
+               You and people like you (features/peers.js); qsRank is peNetWorth of core/peers.js. Named
                parts for later callers (Home is being rebuilt by another run): qgHomeLine. Actions
                (ACT): qmode, qxtab, qxset, qxjudge, qxduel, qxprice. Menu: "Quest mode".
    DEPENDS ON  core/quest.js (the one engine, a copy of js/math/quest.js of the web app, with QS_PRIORS),
@@ -502,7 +503,8 @@ function qvRankBody(c) {
       }`,
       { cap: "A rank is not a verdict: it shows where you start from." }
     ) +
-    mathBox(R.math.concat([QS_SOURCES.rank]))
+    mathBox(R.math.concat([QS_SOURCES.rank])) +
+    `<button class="ghost wide slim" data-a="peers">You and people like you: savings rate, pay and more</button>`
   );
 }
 function qvRivalsBody(c) {

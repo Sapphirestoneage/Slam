@@ -108,7 +108,8 @@ export const FORMATS = [
   { version: 65, shape: '3a6e1325' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 6): M8P your own path, app-only, ten NY ID papers fees and four adoption credit values on the assumptions list
   { version: 66, shape: 'bb137bfc' }, // Nov 26 2026 (run Not built, groups 1 to 5, Part 10a): M8Z the game's Quest mode, game-only math
   { version: 67, shape: '165f14bc' }, // Nov 26 2026 (run Finish everything partly built, Part 8): the joy of a line (1 to 5) on the Budget lines, settings.richLife
-  { version: 68, shape: 'eb9d04a0' }, // Nov 26 2026 (run Finish everything partly built, Part 12): M8K households together, game screens and the email draft
+  { version: 68, shape: 'b079931d' }, // Nov 26 2026 (run Finish everything partly built, Part 9): M8N comparing with peers, app-only math on dated rows
+  { version: 69, shape: '7d9a5ec9' }, // Nov 26 2026 (run Finish everything partly built, Part 12): M8K households together, game screens and the email draft
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

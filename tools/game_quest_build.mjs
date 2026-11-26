@@ -23,7 +23,7 @@ const HEAD = `/* ===============================================================
                qsCapacity, qsFails, qsInterest, qsCashDrag, qsTimeCost, qsHidden, qsRank, qsCost,
                qsDuel, qsJudge, qsJudgeAdd, qsFromPush, qsAsk, qsLearn, qsPack, qsPackFit, qsGraduate,
                qsStory.
-   DEPENDS ON  Nothing.
+   DEPENDS ON  core/peers.js (PE_RULES, PE_WORDS, peNetWorth: the rank).
    RULES       GENERATED FILE. Do not edit it. The source is js/math/quest.js of the main SLAM app, with
                the net worth rows of data/priors-2026.json. To change a rule or a row, change the source,
                then run: node tools/game_quest_build.mjs. The tests fail when this copy is stale.
@@ -36,8 +36,9 @@ export function priorRows() {
 }
 export function built() {
   const src = readFileSync(at('js/math/quest.js'), 'utf8');
-  const body = src.split('\n').filter(l => !l.startsWith('// SPDX-License-Identifier')).join('\n').replace(/^export /gm, '');
-  if (/^\s*import /m.test(body) || /\bexport\b/.test(body.replace(/\/\/.*$/gm, ''))) throw new Error('js/math/quest.js must stay free of imports, and export only at the start of a line.');
+  // the one import (js/math/peers.js) is a global of game/core/peers.js, which index.html loads first
+  const body = src.split('\n').filter(l => !l.startsWith('// SPDX-License-Identifier') && !/^import \{[^}]*\} from '\.\/peers\.js';/.test(l)).join('\n').replace(/^export /gm, '');
+  if (/^\s*import /m.test(body) || /\bexport\b/.test(body.replace(/\/\/.*$/gm, ''))) throw new Error('js/math/quest.js may import only from ./peers.js, and export only at the start of a line.');
   return `${HEAD}${body}// The net worth rows of data/priors-2026.json (SCF 2025), for Where you rank.
 const QS_PRIORS = ${JSON.stringify(priorRows())};
 `;
