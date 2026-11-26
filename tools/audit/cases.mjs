@@ -38,6 +38,7 @@ import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRi
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
+import { ivMix, ivFees, ivHeatCell, ivRoth, ivGuide } from '../../js/math/invest.js'; // investing (run Finish everything partly built, Part 13, M8I)
 import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
 import * as RA from '../../js/math/ratios.js';
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
@@ -146,6 +147,22 @@ for (let i = 0; i < N; i++) {
     add('peIncome', x, { where: r.where, ratio: r.ratio, middle: r.middle }); }
   { const x = { rate: pick([-0.3, 0, 0.05, 0.2, 0.55]) * rnd() * 2 }, r = peSaving({ ...x, data: priorsAll });
     add('peSaving', x, { gap: r.gap, country: r.country }); }
+  // Investing (js/math/invest.js, M8I): the household mix, the fee X-ray, invest or pay debt, Roth or traditional
+  { const K = ['us', 'intl', 'stocks', 'bonds', 'cash', 'single', 'crypto'], n = whole(1, 4), accts = [];
+    for (let k = 0; k < n; k++) { const parts = rnd() < 0.15 ? null : Object.fromEntries(K.filter(() => rnd() < 0.5).map(c => [c, whole(1, 9) / 10])); const amt = money(500, 400000);
+      accts.push({ name: `A${k}`, amt, parts: parts && Object.keys(parts).length ? parts : null, holdings: rnd() < 0.5 ? [{ name: pick(['ACME', 'ZZZ']), v: Math.round(amt * between(0, 0.4)), kind: pick(['employer', 'stock', 'fund']) }] : [] }); }
+    const age = whole(20, 75), ret = pick([55, 60, 65, 67]), target = rnd() < 0.5 ? null : pick([0.6, 0.7, 0.8, 0.9]), r = ivMix(accts, { target, guide: ivGuide(age, ret) });
+    add('ivMix', { accts, age, ret, target }, { known: r.known, stock: r.stock, drift: r.drift, inside: r.inside, employerShare: r.conc.employerShare, biggest: r.conc.biggest ? r.conc.biggest.share : null, guide: ivGuide(age, ret).stock }); }
+  { const n = whole(1, 3), accts = [];
+    for (let k = 0; k < n; k++) { const f = whole(0, 3), funds = []; for (let j = 0; j < f; j++) funds.push({ name: `F${j}`, v: money(100, 200000), er: rnd() < 0.2 ? null : pick([0.0003, 0.0005, 0.002, 0.005, 0.01]), load: pick([null, 0, 0.03, 0.0575]) });
+      accts.push({ name: `A${k}`, amt: funds.reduce((t, x) => t + x.v, 0) || money(500, 50000), accountFee: pick([null, 0, 25, 50]), funds }); }
+    const advisor = pick([null, 0, 0.005, 0.01]), r = ivFees(accts, { advisor });
+    add('ivFees', { accts, advisor }, { year: r.year, missing: r.missing.length, loads: r.loads.map(l => l.per1000) }); }
+  { const x = { apr: pick([0.03, 0.05, 0.0699, 0.1, 0.15, 0.2299, 0.2999]), ret: pick([0.03, 0.05, 0.06, 0.07, 0.09]) }, r = ivHeatCell(x.apr, x.ret);
+    add('ivHeatCell', x, { debt: r.debt, invest: r.invest, gap: r.gap, side: r.side }); }
+  { const rate = () => ({ fed: pick([0.1, 0.12, 0.22, 0.24, 0.32]), state: pick([0, 0.04, 0.055, 0.0625, 0.0685]), local: pick([0, 0, 0.03876]) }), x = { type: pick(['401(k)', 'Roth IRA', 'Traditional IRA', 'HSA', 'Brokerage']), yearly: pick([null, money(500, 23000)]), now: rate(), later: rate() };
+    const r = ivRoth([{ name: 'A', type: x.type, yearly: x.yearly, now: x.now }], { later: x.later }).rows[0];
+    add('ivRoth', x, { ready: r.ready, yearGap: r.ready ? r.yearGap : null, lead: r.ready ? r.M.lead : null }); }
   // Family money (js/math/family.js, M8F): the sandwich years, living at home, tuition and the NY 529
   { const yrs = () => pick([null, 0, 1, 3, 5, 10]), x = { parents: pick([0, money(50, 3000)]), kids: pick([0, money(50, 4000)]), parentsYears: yrs(), kidsYears: yrs(), parentsFrom: pick([0, 0, 2]), kidsFrom: pick([0, 0, 1, 5]), inSpending: rnd() < 0.2, takeHome: money(1500, 20000), spending: money(1000, 15000) }, r = fmSandwich(x);
     add('fmSandwich', x, { peak: r.peak, total: r.total, both: r.both, all: r.all, leftAfter: r.leftAfter, flows: r.flows.map(f => [f.at, f.monthly]) }); }

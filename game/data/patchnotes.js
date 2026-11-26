@@ -485,6 +485,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Your investments, all together",
+    l: [
+      "Investment mix and fees now adds up every account: your stock share next to your own target or the age guide, and how far it has drifted.",
+      "A three-fund check sits next to it: how much is in US stocks, international stocks and bonds, and what sits outside them. A comparison, not advice.",
+      "One company: your employer's stock and any single company, as a share of all you invest.",
+      "Every fund and fee: add funds one by one with their own fee and any sales charge, plus account and advisor fees, all in dollars a year.",
+      "Two new tools: Invest or pay debt (one grid, your own debts marked) and Roth or traditional, by account. The web app has the same page.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Giving",
     l: [
       "Menu has Giving: what you give as a share of the pay you pick (gross, take-home, or after the costs of earning it), and what your share comes to. Maaser is commonly 10%; the share is your own tap.",

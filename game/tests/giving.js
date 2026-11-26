@@ -127,7 +127,7 @@
       B.rows.some(r => r.id === "gv_target" && r.f) &&
       B.rows.some(r => r.id === "gv_kept" && r.f)
   );
-  const tone = h => !/mistake|failed|behind|off track|\bbad\b|\bwrong\b|—/i.test(h);
+  const tone = h => !/mistake|failed|behind|off track|\bbad\b|\bwrong\b|\u2014/i.test(h);
   chk("calm words: no verdict, no em dash", tone(ov()) && clean(ov()), junk(ov()));
   X("close");
   G.chars.length = n0;

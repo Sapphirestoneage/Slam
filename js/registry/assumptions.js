@@ -14,6 +14,8 @@ import { WAY_CAPE, WAY_CASH_REAL, WAY_CUT_LINE } from '../math/withdraw.js';
 import { HB_RULES, HB_SOURCE } from '../math/homebuy.js';
 import { CR_VEST, CR_VEST_SOURCE, CR_RULES } from '../math/career.js';
 import { TP_RULES, TP_RULES_SOURCE } from '../math/trip.js';
+import { IV_RULES, IV_SOURCES, IV_GUIDE_SOURCE, ivGuide } from '../math/invest.js';
+const ivGuideAt = age => ivGuide(age, 65).stock;
 import { GIG_OWNER_RATE, GIG_PF_SAMPLE } from '../math/gig.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
 import { priorsData } from '../priorslib.js';
@@ -278,6 +280,14 @@ export const ASSUMPTIONS = [
   { id: 'rules.careerVestCliff', name: 'CareerVestCliff', label: 'Vesting: a 3-year cliff, the years of service after which all of the match is yours', unit: 'number', get: () => CR_VEST.find(v => v.id === 'cliff3').steps[1][0], source: `${CR_VEST_SOURCE}; js/math/career.js`, date: '2026-11-25' },
   { id: 'rules.careerVestGraded', name: 'CareerVestGraded', label: 'Vesting: a 6-year graded schedule, the share vested after 2 years (then 20% more each year, all after 6)', unit: 'pct', get: () => CR_VEST.find(v => v.id === 'graded6').steps[1][1] / 100, source: `${CR_VEST_SOURCE}; js/math/career.js`, date: '2026-11-25' },
   { id: 'rules.careerDaysPerMonth', name: 'CareerDaysPerMonth', label: 'Career and education: days in a month, to say a change of the FI date in days (365.25 / 12)', unit: 'number', get: () => CR_RULES.daysPerMonth, source: RULE('js/math/career.js: a year of 365.25 days over 12 months'), date: '2026-11-25' },
+  // Run Finish everything partly built, Part 13 (M8I): investing. The one-stock line was read on finra.org Nov 26 2026.
+  { id: 'rules.investOneStock', name: 'InvestOneStock', label: 'Investing: one company\'s stock (the employer\'s included) over this share of all investments gets a line', unit: 'pct', get: () => IV_RULES.oneStock, source: IV_SOURCES.oneStock, date: '2026-11-26' },
+  { id: 'rules.investDrift', name: 'InvestDrift', label: 'Investing: the household stock share this far from the target gets a line', unit: 'pct', get: () => IV_RULES.drift, source: IV_SOURCES.drift, date: '2026-11-26' },
+  { id: 'rules.investHeatYears', name: 'InvestHeatYears', label: 'Invest or pay debt: the years each square of the grid compares', unit: 'number', get: () => IV_RULES.heatYears, source: IV_SOURCES.heat, date: '2026-11-26' },
+  { id: 'rules.investHeatAmount', name: 'InvestHeatAmount', label: 'Invest or pay debt: the amount each square of the grid compares', unit: 'money', get: () => IV_RULES.heatAmount, source: IV_SOURCES.heat, date: '2026-11-26' },
+  { id: 'rules.investGuideFar', name: 'InvestGuideFar', label: 'The age guide: stock share 25 years or more before the stop age', unit: 'pct', get: () => ivGuideAt(30), source: IV_GUIDE_SOURCE, date: '2026-11-26' },
+  { id: 'rules.investGuideStop', name: 'InvestGuideStop', label: 'The age guide: stock share at the stop age', unit: 'pct', get: () => ivGuideAt(65), source: IV_GUIDE_SOURCE, date: '2026-11-26' },
+  { id: 'rules.investGuideLate', name: 'InvestGuideLate', label: 'The age guide: stock share seven years after the stop age', unit: 'pct', get: () => ivGuideAt(72), source: IV_GUIDE_SOURCE, date: '2026-11-26' },
   { id: 'rules.tripFirstK', name: 'TripFirstK', label: 'The FIRE journey: the stage First $1k, cash set aside', unit: 'money', get: () => TP_RULES.firstK, source: `${TP_RULES_SOURCE}; js/math/trip.js`, date: '2026-11-25' },
   { id: 'rules.tripK100', name: 'TripK100', label: 'The FIRE journey: the stage $100k, net worth', unit: 'money', get: () => TP_RULES.k100, source: `${TP_RULES_SOURCE}; js/math/trip.js`, date: '2026-11-25' },
   { id: 'rules.wayCutLine', name: 'WayCutLine', label: 'Compare the ways: a year counts as a cut when it pays under this share of what the way aims to pay', unit: 'pct', get: () => WAY_CUT_LINE, source: RULE('js/math/withdraw.js'), date: '2026-11-25' },
