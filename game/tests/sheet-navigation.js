@@ -23,7 +23,10 @@
       spends: [R({ k: "Home", amt: 1800 }), R({ k: "Food", amt: 1200 })],
       cashes: [R({ k: "Checking", amt: 900 })],
       invs: [R({ k: "Retirement plan at work", amt: 5000 })],
-      debts: [R({ k: "Credit card balance", amt: 2500, high: true }), R({ k: "Car loan", amt: 9000, high: false })],
+      debts: [
+        R({ k: "Credit card balance", amt: 2500, high: true }),
+        { k: "Car loan", amt: 9000, high: false, s: true, cf: 2, rg: [8500, 9500, 9000] },
+      ] /* Close: it moves less than the card's guess, so it comes second (fewer.js) */,
     });
   G.demo = false;
   G.chars.push(a);

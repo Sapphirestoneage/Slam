@@ -548,6 +548,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Fewer questions",
+    l: [
+      "Every guess now shows what not knowing it could move your money a year from now, in dollars.",
+      "Setup asks the spending that matters most first. When the rest would move your plan only a little, it says so and you can stop there with one tap.",
+      "Make your numbers real asks the biggest blanks first and offers to stop when the rest move little. Close numbers sorts the same way.",
+      "Here's where you stand ranks what your date depends on by dollars, and says how many taps your setup took.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Eight famous money ideas, finished",
     l: [
       "Famous money ideas has F-You money: the months you could walk away from a job, with what stops with the job and what health cover would cost. The web app's How long would my money last has it too.",

@@ -28,7 +28,16 @@ export function askNextCard(app, ctx) {
       S.button('Open the box', { kind: 'primary', size: 'small', iconName: 'right', onClick: () => openQuestion(app, q) })),
     q.why ? h('p.muted.small.ask-why', {}, q.addsWords ? `${q.why}. ${q.addsWords}.` : q.why) : null, // batch 57: says which half it moves
     then ? h('div.row-line.ask-then', {}, h('span.muted.small', {}, 'Then: ', then.question),
-      S.button('Open', { size: 'small', iconName: 'right', onClick: () => openQuestion(app, then) })) : null);
+      S.button('Open', { size: 'small', iconName: 'right', onClick: () => openQuestion(app, then) })) : null,
+    enoughWords(A.enough) ? h('p.muted.small.ask-enough', {}, enoughWords(A.enough)) : null); // run Part 17: the stopping rule (M8Y)
+}
+
+// The stopping rule in plain words (js/math/askrank.js arStop, through askNextOf): how many questions are worth asking,
+// and that the rest move the plan little. null when every question is worth asking.
+export function enoughWords(E) {
+  if (!E || !(E.rest > 0) || !(E.ask > 0)) return null;
+  const q = n => `${n} question${n === 1 ? '' : 's'}`;
+  return `${q(E.ask)} cover most of what could still narrow the plan. The other ${q(E.rest)} move it little, so they can wait.`;
 }
 
 // The certainty meter: how narrow the key ranges are (0 to 100), and a calm word for it.

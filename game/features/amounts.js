@@ -685,17 +685,24 @@ function amSteps(w, p) {
         rk: fr ? fr[2] : "mo",
       });
     });
-  if (p === 13)
-    AM_GROUPS.forEach(g => {
-      const id = "s:" + amSlug(g[0]),
-        st = { id, grp: g[0], head: g[1] + " " + g[0], l: g[2], t: "grp", g };
-      S.push(Object.assign(st, { done: !!amA(o, id), v: amA(o, id) ? amGroupWords(o, g) : null }));
-    });
+  if (p === 13) {
+    /* fewer.js: the groups in the order of what their typical amount could move, the biggest first */
+    const P = typeof fqSpendOrder === "function" ? fqSpendOrder(w) : null,
+      at = g => (P ? P.order.indexOf("s:" + amSlug(g[0])) : -1);
+    AM_GROUPS.slice()
+      .sort((a, b) => (at(a) < 0 ? 99 : at(a)) - (at(b) < 0 ? 99 : at(b)))
+      .forEach(g => {
+        const id = "s:" + amSlug(g[0]),
+          st = { id, grp: g[0], head: g[1] + " " + g[0], l: g[2], t: "grp", g };
+        S.push(Object.assign(st, { done: !!amA(o, id), v: amA(o, id) ? amGroupWords(o, g) : null }));
+      });
+  }
   return S;
 }
 function amGroupWords(o, g) {
-  const L = amGroupLines(o, g);
-  if (!L.some(l => l.amt != null)) return "Skipped";
+  const L = amGroupLines(o, g),
+    a = amA(o, "s:" + amSlug(g[0]));
+  if (!L.some(l => l.amt != null)) return a && a.few ? "Typical for now, a Guess" : "Skipped";
   const i = AM_GROUPS.indexOf(g),
     T = amGroupTotal(
       L,
@@ -795,7 +802,9 @@ function amGroupHtml(w, st) {
     L = amGroupLines(o, g),
     guess = typSpend(Object.assign({}, o, { home: HOMEMAP[o.homeQ] || o.home }), i),
     all = L.every(l => l.amt != null || l.skip),
-    T = amGroupTotal(L, guess, all);
+    T = amGroupTotal(L, guess, all),
+    /* fewer.js: when the lines left move little, say so and make "That's all" the main button */
+    few = !all && typeof fqGroupFew === "function" ? fqGroupFew(g, L) : null;
   return (
     `<div class="field smopen amstep amgrp"><div class="tiny muted amcrumb">Money going out › ${esc(g[0])}</div><h2 class="amhead"><span aria-hidden="true">${g[1]}</span> ${esc(g[0])}</h2><div class="small muted">${esc(g[2])}</div>` +
     `<div class="tile amtotal" role="status"><span class="small">${esc(g[0])} total</span> <b class="amtot">${money(T.amt)}</b> <span class="tiny muted">a month</span>${T.rest > 0 && L.some(l => l.amt != null) ? `<div class="tiny muted">${money(T.rest)} not split up yet</div>` : !L.some(l => l.amt != null) ? `<div class="tiny muted">A typical amount for now. Tap your lines.</div>` : ""}</div>` +
@@ -804,7 +813,8 @@ function amGroupHtml(w, st) {
         cur = amA(o, id);
       return `<div class="amline"><div class="small"><b>${esc(l.n)}</b>${l.amt != null ? ` <span class="tiny muted">✓ ${money(l.amt)}</span>` : ""}</div>${amChipsRng(w, id, g[3][j][1], cur)}</div>`;
     }).join("") +
-    `<button class="${all ? "primary go" : "ghost"} wide slim" data-a="amgrp" data-q="${esc(st.id)}">${all ? "Done with " + esc(g[0]) : "That's all for " + esc(g[0])}</button></div>`
+    (few ? few.html : "") +
+    `<button class="${all || few ? "primary go" : "ghost"} wide slim" data-a="amgrp" data-q="${esc(st.id)}">${all ? "Done with " + esc(g[0]) : "That's all for " + esc(g[0])}</button></div>`
   );
 }
 /* The body of a page: the step that is open, or the first one with no answer. */
@@ -825,7 +835,9 @@ function amBody(w, p) {
       !beat && st && prev && prev.grp !== st.grp && prev.done
         ? `<div class="tile small amhand pop" role="status">${esc(amGrpDone(prev.grp))} done ✓. Next: ${esc(amGrpName(st.grp))}</div>`
         : "";
-  let h = hand + (st ? amStepHtml(w, st) : "");
+  /* fewer.js: on the spending page, when the group up next moves little, "You can stop here" */
+  const stop = p === 13 && !beat && typeof fqSetupStop === "function" ? fqSetupStop(w, st) : "";
+  let h = hand + stop + (st ? amStepHtml(w, st) : "");
   if (beat) h += `<div class="spbeat pop" role="status">✓ <b>${esc(st.head || st.l)}:</b> ${esc(st.v || "")}</div>`;
   if (!st)
     h += S.length

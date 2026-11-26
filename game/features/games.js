@@ -8,7 +8,8 @@
                pyopen, pylink, pyamt, pysplit, pyok, pydel, and 16 more.
    DEPENDS ON  core/engine.js, core/engine2.js, screens/ui.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/games2.js, features/year.js, features/people.js, features/questlog.js.
+               page loads: features/games2.js, features/year.js, features/people.js, features/questlog.js,
+               features/fewer.js (fqRough, fqDollars).
    ========================================================================= */
 Object.assign(GLOSS, {
   camp: [
@@ -317,17 +318,20 @@ function hl1Sheet() {
 }
 function roughSheet() {
   const c = C(),
-    rs = roughOnes(c);
+    rs0 = roughOnes(c),
+    /* fewer.js: the close numbers ranked by what they could move, and the ones that move little */
+    F = typeof fqRough === "function" ? fqRough(c, rs0) : null,
+    rs = F ? F.ask.concat(F.rest) : rs0,
+    line = r =>
+      `<div class="row between small numrow"><span><b>${esc(r.n)}</b><div class="tiny muted">${money(r.lo)} to ${money(r.hi)}${F && r.value ? ". Could move your money a year from now by " + esc(fqDollars(r.value)) : ""}</div></span><span class="row"><button class="ghost slim" data-a="hl" data-v="${r.k}">Play again</button><button class="ghost slim" data-a="rsolid" data-v="${r.k}">It's right</button></span></div>`;
   return (
     head("Make it exact", "Close numbers") +
     (rs.length
-      ? `<div class="small muted">These are close, not exact. Play again, or type the exact number when you have it.</div>` +
-        rs
-          .map(
-            r =>
-              `<div class="row between small numrow"><span><b>${esc(r.n)}</b><div class="tiny muted">${money(r.lo)} to ${money(r.hi)}</div></span><span class="row"><button class="ghost slim" data-a="hl" data-v="${r.k}">Play again</button><button class="ghost slim" data-a="rsolid" data-v="${r.k}">It's right</button></span></div>`
-          )
-          .join("")
+      ? `<div class="small muted">These are close, not exact. ${F ? "The ones that could move your money most come first. " : ""}Play again, or type the exact number when you have it.</div>` +
+        (F ? F.ask : rs).map(line).join("") +
+        (F && F.rest.length
+          ? `<details><summary>These move little (${F.rest.length})</summary><div class="inner stack"><div class="tiny muted">Together they could move your money a year from now by ${esc(fqDollars(F.restValue))}. You can leave them close.</div>${F.rest.map(line).join("")}</div></details>`
+          : "")
       : `<div class="small muted">Nothing left to make exact. Every number here is one you stand behind.</div>` +
         (typeof rcpNextRow === "function" ? rcpNextRow() : "")) +
     `<button class="${rs.length ? "primary" : "ghost"} wide" data-a="close">Done</button>`

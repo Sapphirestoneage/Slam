@@ -86,6 +86,7 @@ const BOOK_PARTS = [
   ivBook,
   gxBook,
   givingBook,
+  fewerBook,
   mtBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */
