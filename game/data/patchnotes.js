@@ -340,6 +340,9 @@ const PATCH_NOTES = [
       "Quantum Collapse: a few taps, the plans still possible shrinking with each one, and the one first move that matters.",
       "After the daily question you get a skill and a short read that fit your latest quiz.",
       "Daily lessons in the menu: one short lesson a day for you, like Kids mode, with the lessons that fit your quiz first.",
+    ],
+  },
+  {
     d: "2026-11-26",
     t: "Moves to try: one question for every move",
     l: [
