@@ -6,12 +6,11 @@ Written by `node --test` (test/coverage.test.js). Every spec row names what it i
 
 None.
 
-## In the spec, not built yet (5)
+## In the spec, not built yet (4)
 
 Known gaps, named on their spec rows (notyet: why).
 
 - F039 Taxes › Itemizing or standard: itemized deductions (the standard deduction is used)
-- F099 Needs › Happiness rating: a happiness rating per line (Bedazzle marks joy lines)
 - F115 Debt › Card from library (benefits prefill): a card library to prefill benefits
 - F172 Debt › Due in full if you leave job: the note that a 401(k) loan is due if you leave the job
 - F222 Goals › Social Security: Social Security (parked, the answer on Plan is kept and no math uses it yet)

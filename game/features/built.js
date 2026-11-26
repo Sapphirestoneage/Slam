@@ -1245,6 +1245,14 @@ const WB = [
     "One exercise. Only you see it.",
     "exletter",
   ],
+  [
+    "plan",
+    "Money exercises: ten pieces of writing about you and money, and three prompts for life after work",
+    "b",
+    () => WB_HAS("exercises") && WB_FN("exsSheet") && typeof EX_LIST !== "undefined" && EX_LIST.length === 13,
+    "A letter to money, your earliest money memory, a shame inventory, finish these sentences, scarcity and abundance, your alter ego, a forgiveness letter, values and spending, the Enough exercise, your money autobiography; then Why journal, Little p purpose and who you are after work. The letter from your calm self is the first card. Typed or spoken. Me only unless you share one with your coach.",
+    "exercises",
+  ],
   ["see", "A dashboard you can rearrange, with modes for who you are", "n", null, "Not built.", null],
   ["see", "One number shown as a thermometer, a bucket or a bar", "n", null, "Not built.", null],
   ["see", "Money weather: how it feels, Clear to Storm", "n", null, "Not built.", null],
@@ -1417,6 +1425,23 @@ const WB = [
       typeof EN_CPI === "object",
     "Each category of your money log, this year next to last year and next to your income, with the lines that grow faster than prices (the CPI figure or your own rate) and one quiet Recalculating card. The few lines that make 80% of your spending. Your enough number with room for error. Rough numbers shows ranges in place of exact amounts, one switch on Me.",
     "enough",
+  ],
+  [
+    "see",
+    "Joy and enough: joy per dollar, the fulfillment curve and the Enough meter, the rich-life list, subscriptions in days",
+    "b",
+    () =>
+      WB_HAS("joy") &&
+      WB_HAS("jyrate") &&
+      WB_HAS("jycurve") &&
+      WB_HAS("jyset") &&
+      WB_FN("enJoy") &&
+      WB_FN("enCurve") &&
+      WB_FN("enRich") &&
+      WB_FN("enSubs") &&
+      WB_FN("joyHomeLine"),
+    "A joy tap on each spending line, with its share of your joy, joy per dollar and joy per hour of work. Each line placed on survival, comforts, luxuries or past enough, and the Enough meter from that. Your rich-life list with prices, joy, memory dividends and a regret view. Every subscription as the days it adds to the day work becomes optional.",
+    "joy",
   ],
   [
     "plan",

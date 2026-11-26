@@ -23,11 +23,14 @@
 // at 12 (a whole year on both sides). mutantMin: a line is called a mutant only when it grew at least $10 a month more
 // than inflation would have taken it, so a $2 line that doubled is not flagged. pareto: the share of spending "most"
 // means (the 80 of 80/20). paretoMin: a Pareto needs at least 3 lines.
-export const EN_RULES = { minMonths: 3, closeMonths: 6, exactMonths: 12, mutantMin: 10, pareto: 0.8, paretoMin: 3 };
+export const EN_RULES = { minMonths: 3, closeMonths: 6, exactMonths: 12, mutantMin: 10, pareto: 0.8, paretoMin: 3, loved: 4, later: 10, daysMonth: 30.4375 };
 export const EN_SOURCES = {
   housel: 'Morgan Housel, The Psychology of Money (2020): chapter 3, Never Enough, and chapter 13, Room for Error',
   pareto: 'The Pareto principle: about 80% of an effect comes from about 20% of the causes (Joseph Juran, after Vilfredo Pareto)',
   creep: 'Spending growth next to income growth, year over year, from your own ledger',
+  ymoyl: 'Vicki Robin and Joe Dominguez, Your Money or Your Life (1992, revised 2018): the fulfillment curve and Enough',
+  perkins: 'Bill Perkins, Die With Zero (2020): memory dividends',
+  sethi: 'Ramit Sethi, I Will Teach You to Be Rich (2009, revised 2019): a rich life, spending a lot on what you love and cutting costs on what you do not',
 };
 // The taps. Enough: the life you call enough, as a share of the spending the plan already uses. Room for error: how
 // much to add on top. Income growth: a guess to tap when the ledger holds no paychecks for both years (a Guess).
@@ -150,3 +153,92 @@ export function enRough(v, { minus = '-' } = {}) {
   const s = x => (x >= 1e6 ? `$${+(x / 1e6).toFixed(1)}M` : x >= 1e3 ? `$${+(x / 1e3).toFixed(1)}k` : `$${x}`);
   return v < 0 ? `${minus}${s(lo)} to ${minus}${s(hi)}` : `${s(lo)} to ${s(hi)}`;
 }
+
+// ---------- joy and enough (run "Finish everything partly built", Part 8, Nov 26 2026) ----------
+// FOUR MORE TOOLS on the same plain numbers. The joy, the curve, the regret and the kind of each thing are the
+// person's own taps: nothing here judges what anyone enjoys. A line with no joy tapped is left out of the joy math,
+// never counted as no joy.
+//   joy per dollar   enJoy: each line's joy (1 to 5), its share of the joy, joy per $100, the hours of work it
+//                    costs and its joy per hour of work; the joy of an average dollar.
+//   the curve        enCurve: each category placed on survival, comforts, luxuries or past enough (Your Money or
+//                    Your Life); the Enough meter from that, and the share of today's life it calls enough (the share
+//                    enEnough reads).
+//   rich-life list   enRich: things and experiences with a price and a joy, the memory dividends of an experience
+//                    (Die With Zero: the years left to enjoy the memory), and the regret view.
+//   subscriptions    enSubs: each subscription as days added to the FI date. The days come from each app's own FI
+//                    date function (the caller hands in the days of all of them together); each one's part is its
+//                    share of the total, as the FI date moves in a near straight line for small amounts.
+export const EN_JOY = [[1, 'A little'], [2, 'Some'], [3, 'Good'], [4, 'A lot'], [5, 'Love it']];
+export const EN_CURVE = [['survival', 'Survival'], ['comforts', 'Comforts'], ['luxuries', 'Luxuries'], ['past', 'Past enough']];
+export const EN_REGRET = [['alot', 'A lot'], ['little', 'A little'], ['no', 'Not really']];
+export const EN_KIND = [['experience', 'An experience'], ['thing', 'A thing']];
+export const enJoyOk = v => typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5;
+
+// lines: [{ name, amt (a month), joy (1 to 5 or null), from ('line' or 'category') }]; wage: the real hourly wage.
+export function enJoy(lines, { wage = null } = {}) {
+  const L = (lines || []).filter(l => l && typeof l.amt === 'number' && Number.isFinite(l.amt) && l.amt > 0)
+    .map(l => ({ name: l.name || 'A line', amt: l.amt, joy: enJoyOk(l.joy) ? l.joy : null, from: enJoyOk(l.joy) ? l.from || 'line' : null }));
+  const total = enRound(L.reduce((s, l) => s + l.amt, 0)), R = L.filter(l => l.joy !== null);
+  const w = enBlank(wage) || !(wage > 0) ? null : wage;
+  if (!R.length) return { ready: false, total, of: L.length, rated: 0, need: 'a joy tap on at least one spending line', wage: w, rows: L };
+  const ratedTotal = enRound(R.reduce((s, l) => s + l.amt, 0)), points = R.reduce((s, l) => s + l.joy, 0);
+  const rows = L.map(l => {
+    if (l.joy === null) return { ...l, share: l.amt / total, joyShare: null, per100: null, even: null, hours: w === null ? null : l.amt / w, perHour: null };
+    const share = l.amt / ratedTotal, joyShare = l.joy / points, hours = w === null ? null : l.amt / w;
+    return { ...l, share: l.amt / total, joyShare, per100: l.joy / (l.amt / 100), even: joyShare / share, hours, perHour: hours ? l.joy / hours : null };
+  }).sort((a, b) => (b.per100 ?? -1) - (a.per100 ?? -1) || b.amt - a.amt || a.name.localeCompare(b.name));
+  const rated = rows.filter(r => r.joy !== null), loved = rated.filter(r => r.joy >= EN_RULES.loved);
+  return { ready: true, total, of: L.length, rated: R.length, ratedTotal, points, wage: w, rows,
+    dollarJoy: R.reduce((s, l) => s + l.joy * l.amt, 0) / ratedTotal, // the joy of an average dollar, 1 to 5
+    lovedTotal: enRound(loved.reduce((s, r) => s + r.amt, 0)), lovedShare: loved.reduce((s, r) => s + r.amt, 0) / ratedTotal,
+    most: rated[0] || null, least: rated.length > 1 ? rated[rated.length - 1] : null, fromCategory: R.filter(l => l.from === 'category').length };
+}
+
+// cats: [{ cat, amt (a month) }]; place: { [cat]: 'survival' | 'comforts' | 'luxuries' | 'past' }.
+export function enCurve(cats, place = {}) {
+  const ids = EN_CURVE.map(c => c[0]);
+  const C = (cats || []).filter(c => c && typeof c.amt === 'number' && Number.isFinite(c.amt) && c.amt > 0).map(c => ({ cat: c.cat || 'Not sorted', amt: c.amt, at: ids.includes(place?.[c.cat]) ? place[c.cat] : null }));
+  const total = enRound(C.reduce((s, c) => s + c.amt, 0)), P = C.filter(c => c.at !== null);
+  const levels = EN_CURVE.map(([id, label]) => { const amt = enRound(P.filter(c => c.at === id).reduce((s, c) => s + c.amt, 0)); return { id, label, amt, cats: P.filter(c => c.at === id).map(c => c.cat) }; });
+  if (!P.length) return { ready: false, total, of: C.length, placed: 0, need: 'at least one category placed on the curve', levels, cats: C };
+  const placedTotal = enRound(P.reduce((s, c) => s + c.amt, 0)), past = levels[3].amt, up = enRound(placedTotal - past);
+  const top = [...levels].reverse().find(l => l.amt > 0).id; // where you sit: the highest step that holds spending
+  return { ready: true, total, of: C.length, placed: P.length, all: P.length === C.length, placedTotal, levels, cats: C, top,
+    meter: up / placedTotal, // the Enough meter: the share of the placed spending that still adds to the life you want
+    past, up, share: total > 0 ? Math.round((1 - past / total) * 100) / 100 : null }; // the life called enough, for enEnough
+}
+
+// items: [{ id, name, price, joy (1 to 5), kind ('experience' | 'thing'), done (true | false), regret ('alot' |
+// 'little' | 'no' | null) }]; age and lifeTo (the age the plan runs to) for the memory dividends; days: a function
+// (a price paid now) => the days it adds to the FI date, from the app's own FI date (optional).
+export function enRich(items, { age = null, lifeTo = null, days = null } = {}) {
+  const rank = { alot: 0, little: 1, no: 2 }, yrs = !enBlank(age) && !enBlank(lifeTo) ? Math.max(0, lifeTo - age) : null;
+  const I = (items || []).filter(i => i && (i.name || !enBlank(i.price))).map(i => {
+    const price = typeof i.price === 'number' && Number.isFinite(i.price) && i.price >= 0 ? i.price : null, joy = enJoyOk(i.joy) ? i.joy : null;
+    const exp = i.kind === 'experience', memYears = exp && yrs !== null ? yrs : null;
+    return { id: i.id ?? null, name: i.name || 'Something', price, joy, kind: exp ? 'experience' : i.kind === 'thing' ? 'thing' : null, done: i.done === true, regret: rank[i.regret] !== undefined ? i.regret : null,
+      per100: joy !== null && price > 0 ? joy / (price / 100) : null, memYears, dividend: memYears !== null && joy !== null ? joy * memYears : null,
+      laterYears: memYears === null ? null : Math.max(0, memYears - EN_RULES.later), // the same memory, started 10 years later
+      days: !i.done && price > 0 && typeof days === 'function' ? days(price) : null };
+  });
+  const planned = I.filter(i => !i.done), sum = L => enRound(L.reduce((s, i) => s + (i.price ?? 0), 0));
+  const regret = [...I].sort((a, b) => (rank[a.regret] ?? 3) - (rank[b.regret] ?? 3) || (b.joy ?? 0) - (a.joy ?? 0) || (a.price ?? 0) - (b.price ?? 0) || a.name.localeCompare(b.name));
+  const alot = planned.filter(i => i.regret === 'alot');
+  return { count: I.length, items: I, regret, planned: planned.length, plannedTotal: sum(planned), done: I.length - planned.length, doneTotal: sum(I.filter(i => i.done)),
+    alot: alot.length, alotTotal: sum(alot), alotDays: alot.length && typeof days === 'function' && sum(alot) > 0 ? days(sum(alot)) : null,
+    noPrice: I.filter(i => i.price === null).length, memYears: yrs };
+}
+
+// subs: [{ name, amt (a month) }]; totalDays: the days all of them together add to the FI date (the app's own FI
+// date run with and without them; null when there is no FI date yet); wage: the real hourly wage, for the hours.
+export function enSubs(subs, totalDays, { wage = null } = {}) {
+  const S = (subs || []).filter(s => s && typeof s.amt === 'number' && Number.isFinite(s.amt) && s.amt > 0).map(s => ({ name: s.name || 'A subscription', amt: s.amt }));
+  const total = enRound(S.reduce((s, x) => s + x.amt, 0)), w = enBlank(wage) || !(wage > 0) ? null : wage;
+  if (!S.length) return { ready: false, total, of: 0, need: 'a subscription with an amount', rows: [] };
+  if (enBlank(totalDays)) return { ready: false, total, of: S.length, need: 'an FI date', rows: S.map(s => ({ ...s, year: enRound(s.amt * 12), days: null, hoursYear: w === null ? null : (s.amt * 12) / w })) };
+  const rows = S.map(s => ({ ...s, year: enRound(s.amt * 12), days: Math.round((totalDays * s.amt) / total), hoursYear: w === null ? null : (s.amt * 12) / w }))
+    .sort((a, b) => b.amt - a.amt || a.name.localeCompare(b.name));
+  return { ready: true, total, year: enRound(total * 12), of: S.length, days: Math.round(totalDays), rows, hoursYear: w === null ? null : (total * 12) / w };
+}
+// Months to days, for an app whose FI date runs in months (the game's free date).
+export const enDays = (monthsWith, monthsWithout) => (enBlank(monthsWith) || enBlank(monthsWithout) ? null : (monthsWith - monthsWithout) * EN_RULES.daysMonth);
