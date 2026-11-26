@@ -16,6 +16,14 @@
    STATE       W.st (the step), W.idk (the rows that stay a guess), c.x.none = {debt, inv} for a plain
                "no, none".
    ========================================================================= */
+/* The icon of each area on the screen "Done" (UX pass, item 23: "💵 Cash: $X" and a small status tag). */
+const ASK_ICON = {
+  take: ["💵", "Money in"],
+  spend: ["🛒", "Money out"],
+  cash: ["💵", "Cash"],
+  debt: ["💳", "You owe"],
+  inv: ["📈", "Investments"],
+};
 function askFind(k, x) {
   const n = String(x.k || "");
   if (k === "debt") {
@@ -219,7 +227,7 @@ function askFinish() {
   sheet(
     () =>
       head("Done", SHARP_Q[k]) +
-      `<div class="tile stack" style="gap:6px"><b>What you just did</b><div class="small bkdid"><span class="bktick">✓</span><span>${real} of ${rows.length} ${rows.length === 1 ? "number" : "numbers"} here ${real === 1 ? "is" : "are"} real now, not a guess.</span></div>${left.length ? `<div class="small">Still a guess: ${left.map(x => esc(x.k)).join(", ")}. That is fine. Come back when you have it.</div>` : ""}</div>` +
+      `<div class="tile stack" style="gap:6px"><div class="row between bkdid"><span><span aria-hidden="true">${(ASK_ICON[k] || ["✓"])[0]}</span> <b>${esc((ASK_ICON[k] || [0, SHARP_Q[k]])[1])}: ${money(rows.reduce((t, x) => t + (+x.amt || 0), 0))}</b></span>${typeof kitPill === "function" ? kitPill(knSt(rows)) : ""}</div>${left.length ? `<div class="small">Still a guess: ${left.map(x => esc(x.k)).join(", ")}. That is fine. Come back when you have it.</div>` : ""}</div>` +
       (typeof allocBar === "function" ? allocBar(C(), k, null, { end: true }) : "") +
       `<div class="tile stack" style="gap:6px"><b>What that changed</b>${kn0 && kn1 && kn1.t === kn0.t && kn1.k !== kn0.k ? `<div class="small">You now know ${kn1.k} of ${kn1.t} things about your money. Before, it was ${kn0.k}.</div>` : ""}<div class="small">Every screen that uses ${SHARP_Q[k].toLowerCase()} now runs on your real ${real === 1 ? "number" : "numbers"}.</div></div>` +
       (nx

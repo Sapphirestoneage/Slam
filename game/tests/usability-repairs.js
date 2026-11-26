@@ -126,7 +126,7 @@
   o = ov();
   chk(
     "age moves on to round 1 (Debts), and the counter drops by one",
-    W.o.age === 34 && W.step === 4 && o.includes("Question 1 of 5") && smLeft(W) === left0 - 1
+    W.o.age === 34 && W.step === 9 && o.includes("Question 1 of 5") && smLeft(W) === left0 - 1
   );
   W.step = 7;
   drawSheet();

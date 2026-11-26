@@ -73,6 +73,9 @@ function lkRangeOfLabel(lab, v) {
 function lkRowRange(x, sec) {
   const v = +x.amt || 0;
   if (x.s && (x.cf || 0) >= 3) return [v, v];
+  /* a range chip of setup keeps its own range [low, high, the amount it was for] (features/amounts.js).
+     A later change of the amount makes the range old, so it counts only for the same amount. */
+  if (x.s && Array.isArray(x.rg) && x.rg.length === 3 && +x.rg[2] === v) return [+x.rg[0], +x.rg[1]];
   const rs = (typeof RANGES !== "undefined" && RANGES[LK_NW_RK[sec]]) || [],
     hit = rs.find(r => r[0] === v),
     r = hit ? lkRangeOfLabel(hit[1], v) : null;
@@ -156,6 +159,23 @@ function lkBreakList(c, sec, sign) {
     (anyRet ? `<div class="tiny muted">Before taxes. Some of this goes to taxes when you take it out.</div>` : "")
   );
 }
+/* "💵 Cash: $X" with a small status tag, over the lines of the group (UX pass, item 23). */
+function lkGroupHead(c, sec, icon, n) {
+  const L = lkBreakRows(c, sec);
+  if (!L.length) return "";
+  const st = c.led ? knSt(L.map(o => o.x)) : "Guess";
+  return `<div class="row between small" style="margin-top:4px"><span><span aria-hidden="true">${icon}</span> <b>${n}: ${money(rsum(L.map(o => o.x)))}</b></span>${kitPill(st)}</div>`;
+}
+/* An account that was rolled over into another one: a greyed line, not a number (c.x.rolled, amounts.js). */
+function lkRolled(c) {
+  const r = (c.x && c.x.rolled) || {};
+  return Object.keys(r)
+    .map(
+      f =>
+        `<div class="small muted" style="opacity:.6">${esc(/401/.test(f) ? "401(k)" : f)} (rolled over to ${esc(r[f])})</div>`
+    )
+    .join("");
+}
 function lkBreakSheet() {
   const c = C(),
     d = D || derive(c),
@@ -169,15 +189,18 @@ function lkBreakSheet() {
     big = N.txt;
     body =
       `<div class="eyebrow" style="margin-top:6px">What you own</div>` +
+      lkGroupHead(c, "cashes", "💵", "Cash") +
       lkBreakList(c, "cashes", "") +
+      lkGroupHead(c, "invs", "📈", "Investments") +
       lkBreakList(c, "invs", "") +
+      lkRolled(c) +
       `<div class="eyebrow" style="margin-top:6px">What you owe</div>` +
       lkBreakList(c, "debts", "-") +
       `<div class="tiny muted">${money(sum(lkBreakRows(c, "cashes")) + sum(lkBreakRows(c, "invs")))} you own, minus ${money(sum(lkBreakRows(c, "debts")))} you owe.${N.range ? " Each guess is a range, so the total is a range." : ""}</div>`;
   } else {
     const sec = { cash: "cashes", inv: "invs", debt: "debts" }[k];
     big = money(sum(lkBreakRows(c, sec)));
-    body = lkBreakList(c, sec, k === "debt" ? "-" : "");
+    body = lkBreakList(c, sec, k === "debt" ? "-" : "") + (k === "inv" ? lkRolled(c) : "");
   }
   const st =
     k === "nw"
