@@ -323,6 +323,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Family money",
+    l: [
+      "Menu has Family money: what goes to your parents and your kids at the same time, next to your freedom date and your first goal.",
+      "Living at home: the rent you save each month, and when it reaches your moving-out goal.",
+      "Kids and tuition: childcare (New York from a dated state source), school or yeshiva tuition, what to put away a month, and the New York 529 rules.",
+      "Yeshiva tuition is a goal type of its own. Make it a goal from Kids and tuition in one tap.",
+      "On the web: three small pages on the same math, on the shelf Family money.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Six more quizzes, and a daily lesson for you",
     l: [
       "New under Me, Quizzes: Money Scripts, the Enneagram on your own, the FIRE Community Quiz with your flavor and three spectrums, a picture quiz for fun, and Money Trait Percents.",

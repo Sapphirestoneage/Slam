@@ -2330,12 +2330,16 @@ function niceAmt(x) {
   return s.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a));
 }
 function goalTypical(c, k) {
+  /* features/family.js: the Yeshiva tuition goal's amount (its community presets, or the player's own) */
+  const fam = typeof famGoalTypical === "function" ? famGoalTypical(c, k) : undefined;
+  if (fam !== undefined) return fam;
   const g = GOAL_K.find(x => x[0] === k) || GOAL_K[7];
   return k === "Quit my job" ? niceAmt(c.spend * 12) : k === "Sabbatical" ? niceAmt(c.spend * 6) : g[1];
 }
 function goalAmts(c, k) {
   const t = goalTypical(c, k),
     o = [];
+  if (t == null) return o; /* no usual amount (a goal the player prices): the exact amount is typed */
   [0.25, 0.5, 1, 2, 4].forEach(m => {
     const v = niceAmt(t * m);
     if (!o.includes(v)) o.push(v);
