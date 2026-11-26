@@ -288,7 +288,7 @@ function lfPer(words) {
 function lfNums(text) {
   const T = lfTokens(text),
     raw = [];
-  for (let i = 0; i < T.length; ) {
+  for (let i = 0; i < T.length;) {
     const n = lfNumAt(T, i);
     if (n) {
       raw.push(n);
@@ -297,7 +297,7 @@ function lfNums(text) {
   }
   /* three small numbers side by side are the digits of a phone number, not three amounts */
   const run = {};
-  for (let a = 0; a < raw.length; ) {
+  for (let a = 0; a < raw.length;) {
     let b = a;
     while (b + 1 < raw.length && raw[b + 1].i0 === raw[b].i1 && raw[b + 1].i1 - raw[b + 1].i0 === 1) b++;
     if (b - a + 1 >= 3 || (b > a && raw.slice(a, b + 1).every(x => x.digits))) for (let k = a; k <= b; k++) run[k] = 1;

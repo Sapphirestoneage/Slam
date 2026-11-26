@@ -419,6 +419,16 @@ const PATCH_NOTES = [
       "In the Menu, under Money exercises. In the web app: About you, then Open the exercises.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "You and people like you",
+    l: [
+      "Menu, My money: your net worth, savings rate and household pay next to published numbers for people your age.",
+      "Your next milestone on the journey, and plain lines on what is common at your age, like how many could cover a surprise bill.",
+      "Each number names its source and its date. Private: nothing leaves this device, and a coach sees it only if you let them.",
+      "Quest mode's Where you rank reads the same numbers and links here. The web app has the same page.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

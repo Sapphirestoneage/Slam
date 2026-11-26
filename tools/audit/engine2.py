@@ -923,6 +923,31 @@ def quest_check(fn, x, o, ck):
         ck('beaten', o['beaten'], want)
 
 
+def peers_check(fn, x, o, ck):
+    """Comparing with peers (M8N): each row looked up again in data/priors-2026.json and each rule applied from its words."""
+    rows = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'priors-2026.json')))['rows']
+    def where(v, m): return 'below' if v < m * 0.9 else 'above' if v > m * 1.1 else 'near'
+    if fn == 'peNetWorth':
+        nwr = [r for r in rows if r['field'] == 'netWorth']
+        band = next((r for r in nwr if r.get('ages') and (r['ages'][0] is None or x['age'] >= r['ages'][0]) and (r['ages'][1] is None or x['age'] <= r['ages'][1])), None)
+        allr = next(r for r in nwr if not r.get('ages'))
+        m = band['median']; nw = x['nw']
+        ck('the middle at the age', o['median'], m, 0)
+        ck('where', o['where'] == where(nw, m), True)
+        ck('quarter', o['quarter'], 1 if nw < allr['p25'] else 2 if nw < allr['median'] else 3 if nw < allr['p75'] else 4, 0)
+        ck('over the 90th', o['top10'], nw >= allr['p90'])
+        ck('of the middle', o['ratio'], nw / m, 1e-9)
+    elif fn == 'peIncome':
+        m = next(r for r in rows if r['field'] == 'income' and not r.get('ages') and not r.get('place') and not r.get('household'))['median']
+        ck('the middle', o['middle'], m, 0)
+        ck('where', o['where'] == where(x['gross'], m), True)
+        ck('of the middle', o['ratio'], x['gross'] / m, 1e-9)
+    elif fn == 'peSaving':
+        c = next(r for r in rows if r['field'] == 'savingRate')['share']
+        ck('the country', o['country'], c, 0)
+        ck('the gap', o['gap'], x['rate'] - c, 1e-12)
+
+
 def family_check(fn, x, o, ck):
     """Family money (M8F), worked out month by month instead of by stretches and formulas."""
     if fn == 'fmSandwich':
@@ -1593,6 +1618,8 @@ def run(cases, ref, il=None):
             family_check(fn, x, o, ck)
         elif fn in ('qsStats', 'qsCapacity', 'qsFails', 'qsHidden', 'qsRank', 'qsDuel'):
             quest_check(fn, x, o, ck)
+        elif fn in ('peNetWorth', 'peIncome', 'peSaving'):
+            peers_check(fn, x, o, ck)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
