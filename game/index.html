@@ -343,6 +343,7 @@ button.sw.on{border:2px solid var(--a3)}button.sw i{width:18px;height:18px;borde
 .less2>*:nth-child(n+3){display:none}.less2>.morebtn{display:flex!important;justify-content:center}
 button.whatdo{min-width:36px;min-height:36px;border-radius:50%;padding:0;font-weight:800}
 .imrow{min-height:52px;padding:6px 10px}.imrow .pn{flex:1;min-width:0}.imch{gap:6px}.imch .chip{padding:5px 9px;font-size:12.5px}
+#tadock{position:fixed;left:0;right:0;bottom:0;z-index:72;background:var(--panel);border-top:2px solid var(--sap);box-shadow:0 -4px 16px rgba(0,0,0,.45);max-height:46vh;overflow-y:auto}#tadock .ta-in{max-width:760px;margin:0 auto;padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px}#tadock .ta-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#tadock .ta-row.between{justify-content:space-between}#tadock .ta-task{font-size:16px;font-weight:700;line-height:1.35}#tadock .ta-taps b{font-size:18px}#tadock .ta-rep{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line,rgba(255,255,255,.12));padding-top:8px}#tadock textarea{width:100%;box-sizing:border-box;min-height:44px;border:2px solid var(--muted);border-radius:10px;background:var(--panel2);color:var(--text);font:inherit;padding:8px}#tadock button{min-height:44px}#tadock button:disabled{opacity:.55}body.ta-on{padding-bottom:300px}body.ta-on .sheet{padding-bottom:calc(var(--ta-h,300px) + 24px)}
 #tkchip{position:fixed;top:62px;right:10px;z-index:70}#tkchip button{background:var(--good);color:#04202a;font-weight:800;font-size:13.5px;border-radius:999px;padding:9px 13px;border:0;box-shadow:0 2px 10px rgba(0,0,0,.55)}
 .dbcols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .dbcol{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:8px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);min-height:128px}
@@ -607,7 +608,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
-<script src="core/engine.js?v=fe0b462c"></script>
+<script src="core/engine.js?v=9072d39f"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
@@ -638,7 +639,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/canonmath.js?v=ab4e0b0d"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=adb500c2"></script>
+<script src="screens/ui.js?v=e612b457"></script>
 <script src="screens/dash.js?v=fe4d3586"></script>
 <script src="features/games.js?v=2c23c7f4"></script>
 <script src="features/games2.js?v=c2827cda"></script>
@@ -647,14 +648,14 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=d0f900aa"></script>
 <script src="screens/smart.js?v=96e07bbd"></script>
-<script src="screens/planner.js?v=697936d3"></script>
+<script src="screens/planner.js?v=87f3ba09"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=cfcddd02"></script>
 <script src="core/metrics.js?v=ab902b52"></script>
-<script src="features/debts.js?v=1018cceb"></script>
+<script src="features/debts.js?v=03c85bb0"></script>
 <script src="features/import.js?v=1e499e73"></script>
 <script src="features/compare.js?v=abf08001"></script>
-<script src="features/quick.js?v=937f3bb0"></script>
+<script src="features/quick.js?v=9072f9d7"></script>
 <script src="features/reveal.js?v=eff3bca3"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=d9bf675b"></script>
@@ -679,7 +680,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/together.js?v=24e8dfb2"></script>
 <script src="features/people.js?v=f590e4e5"></script>
 <script src="features/fold.js?v=8028f031"></script>
-<script src="screens/nav.js?v=88b3808e"></script>
+<script src="screens/nav.js?v=613440a6"></script>
 <script src="features/home.js?v=6abaee87"></script>
 <script src="screens/tidy.js?v=a7a7677f"></script>
 <script src="account/addon.js?v=3c9c00fb"></script>
@@ -694,27 +695,28 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/ideasz.js?v=637c7293"></script>
 <script src="features/dep.js?v=0b4ba57c"></script>
 <script src="features/eras.js?v=d11b7a9c"></script>
-<script src="features/testkit.js?v=f98fc556"></script>
+<script src="features/testkit.js?v=2cf2b294"></script>
+<script src="features/thinkaloud.js?v=d16ea51d"></script>
 <script src="features/kit.js?v=7b0b035e"></script>
 <script src="features/retire.js?v=711b04be"></script>
 <script src="features/taxview.js?v=68d4fe00"></script>
 <script src="features/odds.js?v=9b1e56bc"></script>
 <script src="features/cover.js?v=63f66f9b"></script>
 <script src="features/mix.js?v=53347bcf"></script>
-<script src="features/slept.js?v=fcbe5bcb"></script>
+<script src="features/slept.js?v=14da2d57"></script>
 <script src="features/coast.js?v=f0092f60"></script>
-<script src="features/sim.js?v=aa662e7e"></script>
+<script src="features/sim.js?v=59617d65"></script>
 <script src="features/sims/rentbuy.js?v=54ad93a0"></script>
 <script src="features/sims/mortgage.js?v=19fb0257"></script>
 <script src="features/sims/debt.js?v=1c6d3f92"></script>
 <script src="features/sims/car.js?v=1bf9cc02"></script>
 <script src="features/sims/roth.js?v=6a833818"></script>
-<script src="features/sims/job.js?v=b4353e7f"></script>
-<script src="features/sims/break.js?v=a1df70c3"></script>
-<script src="features/sims/side.js?v=d663e805"></script>
-<script src="features/sims/kid.js?v=a8ca7cdf"></script>
-<script src="features/sims/city.js?v=ff989424"></script>
-<script src="features/sims/spend.js?v=4799c09f"></script>
+<script src="features/sims/job.js?v=ddda83f4"></script>
+<script src="features/sims/break.js?v=8791f4ca"></script>
+<script src="features/sims/side.js?v=df769b76"></script>
+<script src="features/sims/kid.js?v=84667776"></script>
+<script src="features/sims/city.js?v=0a7f6cb7"></script>
+<script src="features/sims/spend.js?v=40d260f5"></script>
 <script src="features/sims/stop.js?v=fb5751f6"></script>
 <script src="features/paths.js?v=14d4a153"></script>
 <script src="features/plan.js?v=593a2507"></script>
@@ -749,7 +751,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="data/metros.js?v=10acde40"></script>
 <script src="data/strategies.js?v=b8975c5b"></script>
 <script src="features/strat.js?v=41660a27"></script>
-<script src="account/roles.js?v=347ce1b8"></script>
+<script src="account/roles.js?v=16f6dd76"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
 <script src="features/recalc.js?v=6199bbbd"></script>
@@ -759,7 +761,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=b0a54e13"></script>
 <script src="features/peers.js?v=2c804668"></script>
-<script src="data/patchnotes.js?v=5e044e83"></script>
+<script src="data/patchnotes.js?v=4638cfce"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -791,6 +793,6 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/book.js?v=47b9c9a3"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=41400153"></script>
+<script src="features/built.js?v=b0cc483a"></script>
 </body>
 </html>

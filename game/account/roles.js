@@ -23,7 +23,7 @@ const RO_HATS = [
   ["admin", "Admin", "./admin.html"],
 ];
 /* The menu rows that belong to a role. A player never sees them (UX pass, phase 2). */
-const RO_ONLY = { session: "coach", built: "admin", testkit: "admin" };
+const RO_ONLY = { session: "coach", built: "admin", testkit: "admin", thinkaloud: "admin" };
 /* Can an account with roles r use a part for the role "need"? The admin has each role. */
 function roCan(need, r) {
   r = r || ROLES;

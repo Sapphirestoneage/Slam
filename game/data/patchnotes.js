@@ -538,12 +538,21 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Testing and the math checked twice",
+    l: [
+      "Testers can run a think-aloud test on their own: a panel at the bottom of every screen shows one task at a time, counts the taps, and keeps Report this open with the screen name filled in.",
+      "Every core number of the game (your FI number, Coast FI, the debt plan, what an hour is worth, the cash calendar, the month work becomes optional) is now worked out a second time by a separate engine.",
+      "Fixed: money in the game now grows 7% a year month by month too, the same pace as a whole year. Before, the month-by-month dates grew a little faster.",
+      "Fixed: a debt has one rate everywhere. The rate you typed, or the middle of the band you tapped, counts the same in the debt plan, the heavy-debt card and what your money does while you sleep.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Eight famous money ideas, finished",
     l: [
       "Famous money ideas has F-You money: the months you could walk away from a job, with what stops with the job and what health cover would cost. The web app's How long would my money last has it too.",
       "The noodle budget: keep or set aside each line for the bare-bones month, and see how long your cash lasts on it.",
-      "Pay yourself first: what leaves your pay before any spending, a paycheck at a time, and what is left to live on.",
-      "Shockingly Simple Math: your savings rate, from $0, as years until work is optional, and the next 5% step.",
+      "Pay yourself first, a paycheck at a time. Shockingly Simple Math: your savings rate, starting from nothing, as years until work is optional, and the next 5% step.",
       "What an hour of your time is worth, next to what the help costs an hour, to decide what to hand off. And which of the Money Guy's nine steps you are on.",
       "Your Money or Your Life: step 1b shows your balance sheet, and step 3 shows each month you log in hours of your life.",
     ],

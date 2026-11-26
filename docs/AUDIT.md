@@ -220,6 +220,33 @@ payment on each rung and what it pays in all. For the total the second engine st
 paid, then uses the annuity formula for the rest. The federal plans themselves (M9S, IBR and RAP) are not worked out a
 second time yet.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 19) it also covers the game's own older math, which lives
+in the game's scripts and not in `js/math`. `tools/audit/game.cjs` loads the game the way the browser does (one global
+scope, the order of `game/index.html`), makes made-up players (one to three incomes, some a partner's, cash some of it
+held, investments, up to four debts with a typed rate, a band, both or neither, a payment or the game's guess,
+Social Security counted at 0, 75% or 100%, a pension, costs that end, a mortgage that ends), and `engine2game.py`
+works each number out again: `derive()` (cash, net worth, the FI number with the Social Security estimate from the
+SSA bend points in the reference file, each bridge year brought back to today one year at a time, the savings rate,
+the share of the way, years to FI from the closed formula with logarithms, Coast FI, the low-month gap, a pay
+period, four of the six stats, the years gained by starting before 35); the debt planner `dbPlan()` (avalanche and
+snowball with an extra, each debt's month and interest, a missing payment as the level amount whose discounted sum is
+the balance) and its reverse `dbExtraFor()` (the extra ends the debts in time and a dollar less does not);
+`timeLedger()` (an hour of work, what money and debt do an hour, the minutes a day, the money that out-earns the
+work); `debtOutlook()` (the heavy-debt card); `cashCal()` (the cash calendar, day by day); and `goalSim()` with
+`freeAt()` (the month of each era, each goal and the month work becomes optional, with a month of growth as 1.07 to
+the power 1/12). It found two mistakes, both fixed in the game: (1) the month-by-month runs (goalSim, the sims, the
+quick calculators) grew money by 7% / 12 a month, which is 7.23% a year, so the month work becomes optional came early (by 8
+months in one made-up case of 300); the game now has one month, `RM`, and `test/audit.test.js` fails if `R / 12`
+comes back; (2) a debt had two rates: the debt planner read 8% to 15% as 11.5% and a typed rate without a band,
+the heavy-debt card and the time ledger read 12% and ignored that typed rate, and a debt with no answer was 20% or 5%
+in one and 22% or 6% in the other; now `debtRate()` in `game/core/engine.js` is the one rule. Honest limit: for
+goalSim the second engine follows the game's own order of the money (goals, cushion, heavy debt, full cushion,
+investing) and takes the starting era from the game, so it checks the arithmetic and the pace, not the era rules.
+Still not in it (game): `knMetrics()` (Key numbers: most of its ratios are `js/math/ratios.js`, which is covered; its
+own lines are text around them), the retirement odds (`features/odds.js`: a random market, Zack's engine, MIT; the
+second engine has no copy of the market history it draws from), the sims of `features/sims/` (each a month loop on
+the same pace, now `RM`), the stats Know-how and Habits (counts of steps, not money), and the eras' gates.
+
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the
 history replay. Each is a row to add (ROADMAP.md, Run 2).

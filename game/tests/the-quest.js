@@ -81,7 +81,7 @@
   const H = qgHidden(c);
   chk(
     "hidden costs: the debt's interest at the game's own rate, a year",
-    H.rows.some(r => r.id === "interest" && r.year === 6000 * 0.22),
+    H.rows.some(r => r.id === "interest" && r.year === 6000 * 0.2) /* the one guess for heavy debt: 20% (debtRate) */,
     JSON.stringify(H.rows.map(r => [r.id, r.year]))
   );
   chk(

@@ -14,7 +14,7 @@ function cityRun(c, x) {
   const months = Math.round(x.years * 12),
     T = cityStateTax(c, x.state),
     gain = ((c.take || 0) * x.pay) / 100 - ((c.spend || 0) * x.col) / 100 + T.change / 12,
-    rr = R / 12,
+    rr = RM,
     A = [-x.move],
     B = [0];
   let v = -x.move;

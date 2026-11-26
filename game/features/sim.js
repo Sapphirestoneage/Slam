@@ -63,14 +63,14 @@ function simBaseline(c, months) {
       debt -= u;
       s -= u;
     }
-    if (s >= 0) inv = inv * (1 + R / 12) + s;
+    if (s >= 0) inv = inv * (1 + RM) + s;
     else {
       cash += s;
       if (cash < 0) {
         debt -= cash;
         cash = 0;
       }
-      inv *= 1 + R / 12;
+      inv *= 1 + RM;
     }
     out.push(cash + inv - debt);
   }

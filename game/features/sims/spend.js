@@ -22,7 +22,7 @@ function spendRun(c, x) {
     A = [-x.cost],
     B = [0];
   for (let m = 1; m <= months; m++) {
-    A.push(-x.cost * Math.pow(1 + R / 12, m));
+    A.push(-x.cost * Math.pow(1 + RM, m));
     B.push(0);
   }
   const spare = simReach(c, { once: x.cost });
