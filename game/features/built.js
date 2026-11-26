@@ -290,7 +290,7 @@ const WB = [
   [
     "plan",
     "Platform P&L: fees and payout timing by app",
-    "p",
+    "n",
     null,
     "In the web app (gigapps.html): each app's fee, when it pays out and the money still on its way, from the app's own help page (Uber, DoorDash, Upwork) or your taps. The game has no list of apps yet.",
     null,
