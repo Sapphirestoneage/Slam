@@ -333,7 +333,39 @@ const PATCH_NOTES = [
     ],
   },
   {
+    d: "2026-11-25",
+    t: "Six more quizzes, and a daily lesson for you",
+    l: [
+      "New under Me, Quizzes: Money Scripts, the Enneagram on your own, the FIRE Community Quiz with your flavor and three spectrums, a picture quiz for fun, and Money Trait Percents.",
+      "Quantum Collapse: a few taps, the plans still possible shrinking with each one, and the one first move that matters.",
+      "After the daily question you get a skill and a short read that fit your latest quiz.",
+      "Daily lessons in the menu: one short lesson a day for you, like Kids mode, with the lessons that fit your quiz first.",
+    ],
+  },
+  {
     d: "2026-11-26",
+    t: "Moves to try: one question for every move",
+    l: [
+      "Each question about you is asked once. Your credit score band answers every move that needs a score, and the card vault reads the same answer.",
+      "Next Steps and the Moves library ask one question first: the one that sorts the most moves.",
+      "The library shows what would open the most: for example, a score of 670 or more, and the moves it opens.",
+      "Each of those has How to get there, and one button puts the steps on Next Steps.",
+      "Setup answers some checks for you: if you live on your own, no one else has to agree, and the roommate move knows where you live.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Ratios on Key numbers",
+    l: [
+      "Key numbers now ends with Ratios: about twenty of them in groups, one line each, closed until you open a group.",
+      "Each line says what it means in one sentence, how sure it is (Guess, Close or Exact) and, under Show the math, its formula.",
+      "A ratio that is missing a number says which one. It never shows a 0 in its place.",
+      "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
+      "In the web app the same ratios are on Report, Overview, under Ratios.",
+    ],
+  },
+  {
+d: "2026-11-26",
     t: "Results first: see where you stand",
     l: [
       "Setup now ends on Here's where you stand: your lead number and five result cards, each with its target and the time to get there.",

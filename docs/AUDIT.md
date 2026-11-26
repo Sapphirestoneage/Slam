@@ -85,6 +85,12 @@ after the last one, with the end of a month moved to its last day); and a date t
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
+one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked
+out again from its definition (the short-term and revolving debts sorted by type a second way, the interest month by
+month, human capital as a sum of each year's pay brought back to today, spending volatility from the months logged),
+with no number where an input is missing or there is nothing to measure.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 3) it also covers Lifestyle creep and enough (`js/math/enough.js`,
 the one engine of the web app and the game): a made-up ledger of one to four years with months missing, refunds and
 income in some years only, worked out a second time month by month (each year is the months that hold spending, the

@@ -280,7 +280,7 @@ function rsNextWin(c, d) {
       amt: null,
       days: null,
       daysOf: null,
-      unlock: dest ? "Next stop: " + dest.n : "",
+      unlock: dest ? dest.n : "",
       math: [],
     });
   if (RS_MUST.includes(ns.a) || c.gentle || typeof stgRank !== "function") return step();
@@ -317,12 +317,7 @@ function rsNextWin(c, d) {
     days: days != null && days > 0 ? days : null,
     daysOf,
     pending: !!r.V.pending,
-    unlock:
-      g && g.days >= 1
-        ? g.n + ", " + Math.round(g.days).toLocaleString() + " days sooner"
-        : dest
-          ? "Next stop: " + dest.n
-          : "",
+    unlock: g && g.days >= 1 ? g.n + ", " + Math.round(g.days).toLocaleString() + " days sooner" : dest ? dest.n : "",
     math: [
       "The move's money a month: " + money(amt) + " (what it saves plus what it adds).",
       daysOf === "FI"
