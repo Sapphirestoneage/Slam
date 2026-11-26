@@ -506,6 +506,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Safety nets",
+    l: [
+      "Break in case of emergency, on My Goals, now has four more life changes next to the layoff: medical leave, a move, a breakup and a new baby.",
+      "Each one shows how long your cash lasts, the lowest point, three tripwires where you decide now what you would do, and a Plan B.",
+      "The layoff's Dip tab shows how long you last at each level of spending, from full life down to food and housing only, with the Rule of 5 beside it.",
+      "In the web app the same changes are on If the pay stopped, and your plan gets a calm note when it counts on a tax rule with an end date.",
+      "With Game words on, How long would my money last? has a zombie mode.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Giving",
     l: [
       "Menu has Giving: what you give as a share of the pay you pick (gross, take-home, or after the costs of earning it), and what your share comes to. Maaser is commonly 10%; the share is your own tap.",

@@ -73,4 +73,12 @@ export function carryCard(api, { ready = true, pulse = true } = {}) {
   card.setReady = on => { next.disabled = !on; next.classList.toggle('st-pulse', on && pulse); };
   return card;
 }
+// The game's "Game words" switch (Me, in SLAM the Game: G.gamer, saved on this device under slamgame4). A page that
+// has a playful extra (runway.html: Zombie mode) shows it only with game words on. The page's own tap (settings.start.gamer)
+// wins over the game's switch; neither one is written to the other.
+export function gameWords(api) {
+  const own = api.mine().gamer;
+  if (own != null) return own === true;
+  try { return JSON.parse(localStorage.getItem('slamgame4') || 'null')?.gamer === true; } catch { return false; }
+}
 export const foot = () => document.getElementById('foot').replaceChildren(trustFoot('Your answers stay in your browser and in the link you choose to share.'));

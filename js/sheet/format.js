@@ -112,7 +112,8 @@ export const FORMATS = [
   { version: 69, shape: '535eb5a3' }, // Nov 26 2026 (run Finish everything partly built, Part 11): M8E estate and marriage, app-only, seven estate rules on the assumptions list
   { version: 70, shape: 'c81300bf' }, // Nov 26 2026 (run Finish everything partly built, Part 12): M8K households together, game screens and the email draft
   { version: 71, shape: '813fa1dd' }, // Nov 26 2026 (run Finish everything partly built, Part 13): M8I investing, app-only math, seven SLAM rules on the assumptions list
-  { version: 72, shape: 'aa8a0ba6' }, // Nov 26 2026 (run Finish everything partly built, Part 16): M8V giving, app-only, four charitable rules of 2026 on the assumptions list
+  { version: 72, shape: '9332b38b' }, // Nov 26 2026 (run Finish everything partly built, Part 15): M8U safety nets (life changes on the ladder, the levels, rule ends)
+  { version: 73, shape: 'efadf1ac' }, // Nov 26 2026 (run Finish everything partly built, Part 16): M8V giving, app-only, four charitable rules of 2026 on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

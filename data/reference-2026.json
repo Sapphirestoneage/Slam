@@ -113,6 +113,26 @@
         "minWeeklyLow": 100
       }
     },
+    "leave": {
+      "NY": {
+        "dbl": {
+          "name": "NY state disability",
+          "rate": 0.5,
+          "weeklyMax": 170,
+          "weeks": 26,
+          "waitWeeks": 1,
+          "note": "Your own illness, injury or pregnancy off the job: 50% of the average weekly wage of the last 8 weeks worked, up to $170 a week, for up to 26 weeks in 52, from the 8th day of the disability (NY Workers' Compensation Board, What are disability benefits; WCL 204 and 205). Read through a web search on Nov 26 2026 (wcb.ny.gov does not open from the build machine)"
+        },
+        "pfl": {
+          "name": "NY Paid Family Leave",
+          "rate": 0.67,
+          "weeklyMax": 1228.53,
+          "weeks": 12,
+          "waitWeeks": 0,
+          "note": "Bonding with a new child or caring for family, 2026: 67% of the average weekly wage, up to 67% of the statewide average weekly wage ($1,833.63), $1,228.53 a week, for up to 12 weeks (paidfamilyleave.ny.gov, New York Paid Family Leave Updates for 2026). Read through a web search on Nov 26 2026 (the state site does not open from the build machine)"
+        }
+      }
+    },
     "ny529": {
       "single": 5000,
       "joint": 10000
@@ -2463,7 +2483,44 @@
           "when": "reached",
           "level": "draftt"
         },
-        "tripwires": []
+        "tripwires": [],
+        "nets": {
+          "trips": [
+            [
+              3,
+              [
+                "Cut to the basics",
+                "Check the dependent care FSA",
+                "Ask family about child care"
+              ]
+            ],
+            [
+              2,
+              [
+                "Ask family for help",
+                "Pause investing for the leave",
+                "Sell things the baby will not need"
+              ]
+            ],
+            [
+              1,
+              [
+                "Call my coach",
+                "Go back part-time",
+                "Take any job that covers the Basics"
+              ]
+            ]
+          ],
+          "planB": [
+            "A longer leave on less pay",
+            "Family child care for the first year",
+            "The dependent care FSA for child care"
+          ],
+          "link": {
+            "label": "Family money",
+            "web": "family.html"
+          }
+        }
       },
       {
         "id": "divorce",
@@ -2492,7 +2549,45 @@
             },
             "then": "Move somewhere cheaper"
           }
-        ]
+        ],
+        "nets": {
+          "trips": [
+            [
+              3,
+              [
+                "Open an account in my own name",
+                "Cut to the basics",
+                "List every joint account and card"
+              ]
+            ],
+            [
+              2,
+              [
+                "Get a roommate",
+                "Ask family for help",
+                "Call lenders for a hardship plan"
+              ]
+            ],
+            [
+              1,
+              [
+                "Move somewhere cheaper",
+                "Call my coach",
+                "Take any job that covers the Basics"
+              ]
+            ]
+          ],
+          "planB": [
+            "A cheaper place on your own",
+            "A roommate for the first year",
+            "Keep the car, sell the extra one"
+          ],
+          "link": {
+            "label": "Untangling after a breakup",
+            "web": "untangle.html",
+            "game": "untangle"
+          }
+        }
       },
       {
         "id": "empty-nest",
@@ -2511,6 +2606,141 @@
           "level": "draftt"
         },
         "tripwires": []
+      },
+      {
+        "id": "medical-leave",
+        "label": "Medical leave",
+        "from": [
+          "Working",
+          "Expecting time off"
+        ],
+        "to": [
+          "Back at work",
+          "Back part-time"
+        ],
+        "stops": [
+          "Job"
+        ],
+        "cut": {
+          "when": "reached",
+          "level": "draftt"
+        },
+        "tripwires": [
+          {
+            "if": {
+              "kind": "rung",
+              "rung": "bigE"
+            },
+            "then": "Cut to the basics"
+          },
+          {
+            "if": {
+              "kind": "rung",
+              "rung": "card"
+            },
+            "then": "Call my coach"
+          }
+        ],
+        "nets": {
+          "trips": [
+            [
+              3,
+              [
+                "Ask HR about short-term disability and leave",
+                "Cut to the basics",
+                "Call lenders for a hardship plan"
+              ]
+            ],
+            [
+              2,
+              [
+                "Ask family for help",
+                "Pause investing until pay is back",
+                "Sell one big thing"
+              ]
+            ],
+            [
+              1,
+              [
+                "Call my coach",
+                "Ask about a payment plan for the medical bills",
+                "Take part-time work I can do"
+              ]
+            ]
+          ],
+          "planB": [
+            "Cut to the basics from the first week",
+            "Ask the hospital for a payment plan",
+            "Use the leave benefit and keep the cushion"
+          ],
+          "link": {
+            "label": "Benefits and health",
+            "web": "one.html"
+          }
+        }
+      },
+      {
+        "id": "move",
+        "label": "A move",
+        "from": [
+          "Here",
+          "This place"
+        ],
+        "to": [
+          "A new place",
+          "A new city"
+        ],
+        "stops": [],
+        "cut": {
+          "when": "reached",
+          "level": "draftt"
+        },
+        "tripwires": [
+          {
+            "if": {
+              "kind": "rung",
+              "rung": "card"
+            },
+            "then": "Get a roommate"
+          }
+        ],
+        "nets": {
+          "trips": [
+            [
+              3,
+              [
+                "Keep the old deposit for the new one",
+                "Cut to the basics",
+                "Hold off on new furniture"
+              ]
+            ],
+            [
+              2,
+              [
+                "Get a roommate",
+                "Sell things I do not want to move",
+                "Ask family for help"
+              ]
+            ],
+            [
+              1,
+              [
+                "Call my coach",
+                "Pick a cheaper place",
+                "Delay the move a month"
+              ]
+            ]
+          ],
+          "planB": [
+            "Move to a place for less",
+            "Sell what you would pay to move",
+            "Ask for the old deposit back first"
+          ],
+          "link": {
+            "label": "Your first apartment",
+            "web": "apartment.html"
+          }
+        }
       },
       {
         "id": "custom",

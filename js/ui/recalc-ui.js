@@ -14,6 +14,7 @@ import { soonPart } from './soon.js';
 import { SINS } from '../quiz/skins/sins.js';
 import { sinsReadNow, sinsKeyOf } from '../quiz/store.js';
 import { snFrame } from '../math/sins.js';
+import { ruleEndsOf } from '../math/safetyplan.js';
 
 // The money sins, Part 2: the app talks to the type. One short line for the moment (snFrame), added under the card's
 // own words; it never changes or hides a number. ctx.store.doc is the folded view, so a read that is private to its
@@ -122,12 +123,25 @@ function safeCard(ctx, R) {
     X ? S.moreBlock('rc:safe-math', () => h('div.stack.small', { style: { gap: '4px' } }, h('span', {}, `The plan's spending includes this line at ${money(X.cap)} every month.`), h('span', {}, 'Spent this month comes from Month end or the calendar. Until one of them has a number, nothing is shown as spent.')), { label: 'Show the math' }) : null));
 }
 
+// Part 15 (rule-change tripwires): a dated rule with an end that the plan counts on, said calmly, with the date, what
+// moves and the one next turn. Only when the plan leans on one; the math is ruleEndsOf (js/math/safetyplan.js).
+function ruleEndsCard(ctx) {
+  let L = [];
+  try { L = ruleEndsOf(ctx.store.doc, ctx.ref, { now: ctx.now() }); } catch (e) { console.error(e); return null; }
+  if (!L.length) return null;
+  return h('section.card.rc-card', { 'aria-label': 'Rules with an end date', 'data-rc': 'rule-ends' },
+    h('div.row-line', { style: { gap: '10px', alignItems: 'baseline' } }, h('span.label', {}, 'Recalculating ahead'), h('span.muted.small', {}, 'Rules your plan counts on that have an end date')),
+    L.map(r => h('p.rc-line', { 'data-rule': r.id }, h('strong', {}, `${r.name} ends ${rcMonthName(r.ends.slice(0, 7))}.`), ' ',
+      r.yearly != null ? `Your plan counts about ${money(r.yearly)} a year from it (${money(Math.round(r.monthly))} a month). ` : r.loans?.length ? `On your plan: ${r.loans.join(', ')}. ` : '',
+      r.then, ' ', h('span.muted.small', {}, `Source: ${r.source}.`))));
+}
+
 // The parts for one screen, in order. Nothing shows when nothing applies.
 // inSession: during a session the coach is working the list, so Done for this month waits until the session ends.
 export function recalcParts(app, ctx, where, { inSession = false } = {}) {
   return S.live(ctx, () => {
     let R; try { R = recalcOf(ctx.store.doc, ctx.ref, ctx.metrics(), { now: ctx.now() }); } catch (e) { console.error(e); return null; }
-    const parts = where === 'home' ? [routeCard(app, ctx, R, where), triageCard(ctx, R), refillCard(app, ctx, R), letterCard(ctx, R), inSession ? null : doneCard(ctx, R)]
+    const parts = where === 'home' ? [routeCard(app, ctx, R, where), ruleEndsCard(ctx), triageCard(ctx, R), refillCard(app, ctx, R), letterCard(ctx, R), inSession ? null : doneCard(ctx, R)]
       : where === 'budget' ? [routeCard(app, ctx, R, where), triageCard(ctx, R), safeCard(ctx, R)]
         : [routeCard(app, ctx, R, where)];
     return parts.filter(Boolean);

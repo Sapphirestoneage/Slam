@@ -76,6 +76,7 @@ const BOOK_PARTS = [
   fieldsBook,
   stgBook,
   trBook,
+  ntBook,
   xrBook,
   cardsBook,
   hmBook,

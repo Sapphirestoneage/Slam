@@ -6,6 +6,8 @@ import { fiDate } from './math/fi.js';
 import { payoffPlan, cardMinimum } from './math/debt.js';
 import { loanPayment, loanSchedule } from './math/truecost.js';
 import { transitionOf } from './math/transitions.js';
+import { metrics } from './math/metrics.js';
+import { ntDays, NT_DAYS_A_MONTH } from './math/safetynet.js';
 import { collapseOf } from './collapse.js';
 import { quizOf } from './quiz.js';
 import { answeredOf } from './math/agestart.js';
@@ -69,7 +71,8 @@ export function runwayOf({ cash, spending, stillIn = 0, cut = 0, now = new Date(
   const out = spending * (1 - cut), gap = out - stillIn;
   if (gap <= 0) return { ready: true, covered: true, out, gap, months: null, date: null, cash };
   const months = cash / gap, whole = Math.floor(months), base = cash / Math.max(1e-9, spending - stillIn);
-  return { ready: true, covered: false, out, gap, months, whole, date: monthLabel(whole, now), cash, extraMonths: cut > 0 && spending - stillIn > 0 ? months - base : 0, perThousand: 1000 / gap * 30.44 };
+  return { ready: true, covered: false, out, gap, months, whole, date: monthLabel(whole, now), cash, extraMonths: cut > 0 && spending - stillIn > 0 ? months - base : 0, perThousand: 1000 / gap * NT_DAYS_A_MONTH,
+    days: ntDays(months) }; // Part 15: the days, for the playful card (game words on)
 }
 
 // ---------- Start at the finish line: the end first, then backwards to today ----------
@@ -171,7 +174,11 @@ export function stoppedPayOf(doc, ref, { now = new Date() } = {}) {
   const copy = JSON.parse(JSON.stringify(doc)); copy.records = (copy.records || []).filter(r => r.kind !== 'income');
   const T = transitionOf(copy, ref, { now }), reach = T.dip.reached || {};
   const rung = r => ({ id: r.id, name: r.plain ?? r.name, amount: r.amount ?? null, cost: r.costText ?? null, note: r.note ?? null, on: !!r.on, month: reach[r.id] ?? null });
+  // Part 15 (graceful degradation): the months at each level of spending with no pay, and the Rule of 5 (M43) beside it.
+  const r5 = metrics(copy, ref, { now }).ruleOf5;
   return { ready: true, text: T.text, runway: T.runway, floorYm: T.floorYm, total: T.total, costs: T.costs, burn: T.levels[0]?.burn ?? null,
+    levels: T.levels.map(l => ({ id: l.id, name: l.name, tip: l.tip, burn: l.burn, runway: l.runway, lasts: l.lasts, needs: l.needs })),
+    ruleOf5: { months: r5.months ?? null, target: r5.value ?? null, needs: r5.months == null ? 'age' : null },
     used: T.ladder.rungs.filter(r => r.on).map(rung), unused: T.ladder.rungs.filter(r => !r.on).map(rung) };
 }
 

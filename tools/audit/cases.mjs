@@ -41,6 +41,7 @@ import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } 
 import { ivMix, ivFees, ivHeatCell, ivRoth, ivGuide } from '../../js/math/invest.js'; // investing (run Finish everything partly built, Part 13, M8I)
 import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
 import * as RA from '../../js/math/ratios.js';
+import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -540,6 +541,20 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
       add('bpCoverage', { h, magi }, { on: A.on, cost: A.cost, help: A.help }); }
     { const plans = Array.from({ length: whole(1, 3) }, () => ({ premium: maybe(money(1, 1200)), deductible: maybe(money(1, 9000)), oop: maybe(money(1, 12000)), market: rnd() < 0.6 })), help = pick([null, 0, money(1, 15000)]);
       const P = bpPlans(plans, { help }); add('bpPlans', { plans, help }, { rows: P.rows.map(r => (r.ready ? { ready: true, year: r.year, typical: r.typical, heavy: r.heavy } : { ready: false })), cheapest: P.cheapest }); }
+  }
+}
+// Safety nets (run Finish everything partly built, Part 15): a life change on random taps (some left to the start
+// pick), with or without pay, a weekly wage and rent; the run of the cash, the tripwires, Plan B and the levels.
+{ const rules = { dbl: ref.limits.leave.NY.dbl, pfl: ref.limits.leave.NY.pfl };
+  for (let i = 0; i < N; i++) {
+    const kind = pick(['medical', 'move', 'breakup', 'baby']), taps = {};
+    for (const [k, , opts] of NT_TAPS[kind]) if (rnd() < 0.8) taps[k] = pick(opts)[0];
+    const base = { pay: rnd() < 0.1 ? null : money(800, 12000), weekly: rnd() < 0.5 ? null : money(200, 5000), housing: rnd() < 0.2 ? null : money(300, 5000) };
+    const E = ntEvent(kind, taps, base, rules), x = { kind, taps, base, cash: money(1, 80000), burn: money(500, 12000), income: rnd() < 0.2 ? 0 : money(500, 15000), basics: money(300, 6000), planBurn: money(300, 9000), max: 60 };
+    const args = { cash: x.cash, burn: x.burn, income: x.income, flows: E.flows, max: x.max }, R = ntRun(args), T = ntTrips(R, x.basics), B = ntPlanB(args, x.planBurn);
+    x.levels = [x.burn, rnd() < 0.2 ? null : money(300, 12000), money(300, 9000), money(200, 6000)];
+    const L = ntDegrade({ cash: x.cash, income: x.income, levels: x.levels.map((burn, j) => ({ id: String(j), burn })) });
+    add('ntRun', x, { once: E.once, needs: E.needs, runway: R.runway, lowest: R.lowest, lowestK: R.lowestK, end: R.end, steady: R.steady, trips: T.map(t => [t.level, t.k, t.now]), planB: B.run.runway, more: B.more, levels: L.map(l => [l.burn, l.months, l.lasts]) });
   }
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));

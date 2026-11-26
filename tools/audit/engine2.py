@@ -2134,6 +2134,72 @@ def run(cases, ref, il=None):
                     lo = up
                 cost = min(bench, pct * magi); want = ('aca', cost, bench - cost)
             ck('coverage', o['on'] == want[0], True); ck('coverage cost', o['cost'], want[1], 0.01); ck('the credit', o['help'], want[2], 0.01)
+        elif fn == 'ntRun':
+            # Safety nets, worked a second way: each change as (amount a month, start week, end week) in WEEKS, then each
+            # month of the run as 52/12 weeks; a one-time cost lands in the first month.
+            k, t, b, L = x['kind'], dict(x['taps']), x['base'], ref['limits']['leave']['NY']
+            start = {'medical': {'weeks': 6, 'paid': 'none', 'once': 0}, 'move': {'housing': 0, 'moving': 1500, 'deposit': 1, 'overlap': 0},
+                     'breakup': {'lost': 0, 'housing': 0, 'once': 1000}, 'baby': {'weeks': 12, 'paid': 'none', 'monthly': 500, 'once': 1000}}[k]
+            for key, v in start.items(): t.setdefault(key, v)
+            wk = 52 / 12  # weeks in a month
+            spans, once, needs = [], 0.0, []  # spans: (per month, from week, to week)
+            pay, weekly = b['pay'], b['weekly'] if b['weekly'] is not None else (b['pay'] * 12 / 52 if b['pay'] else None)
+            def leave(weeks, paid, rule):
+                if not weeks: return
+                if pay is None: needs.append('pay'); return
+                spans.append((-pay, 0, weeks))
+                if paid == 'full': spans.append((pay, 0, weeks))
+                elif paid == 'half': spans.append((pay / 2, 0, weeks))
+                elif paid == 'ny' and weekly:
+                    wait = rule['waitWeeks']; paid_weeks = max(0, min(weeks, rule['weeks']) - wait)
+                    if paid_weeks > 0: spans.append((min(rule['weeklyMax'], rule['rate'] * weekly) * wk, wait, wait + paid_weeks))
+            if k == 'medical':
+                leave(t['weeks'], t['paid'], L['dbl']); once += t['once']
+            elif k == 'move':
+                nxt = None if b['housing'] is None else max(0, b['housing'] + t['housing'])
+                if t['housing']: spans.append((-t['housing'], t['overlap'] * wk, math.inf))
+                once += t['moving']
+                if t['deposit']:
+                    if nxt is None: needs.append('housing')
+                    else: once += nxt * t['deposit']
+                if t['overlap']:
+                    if nxt is None: needs.append('housing')
+                    else: once += nxt * t['overlap']  # one month of both places, at the start
+            elif k == 'breakup':
+                if t['lost']: spans.append((-t['lost'], 0, math.inf))
+                if t['housing']: spans.append((-t['housing'], 0, math.inf))
+                once += t['once']
+            else:
+                leave(t['weeks'], t['paid'], L['pfl'])
+                if t['monthly']: spans.append((-t['monthly'], 0, math.inf))
+                once += t['once']
+            ck('one-time costs', o['once'], once, 0.01); ck('what it needs', sorted(set(o['needs'])) == sorted(set(needs)), True)
+            def run(burn):
+                left, low, lowk, out = x['cash'], x['cash'], 0, None
+                lefts = [left]
+                for m in range(x['max']):
+                    a, z = m * wk, (m + 1) * wk
+                    net = x['income'] - burn - (once if m == 0 else 0) + sum(v * max(0, min(z, e) - max(a, f)) / wk for v, f, e in spans)
+                    if out is None and left + net < 0: out = m + (left / -net if net < 0 and left > 0 else 0)
+                    left += net; lefts.append(left)
+                    if left < low: low, lowk = left, m + 1
+                return out, low, lowk, left, lefts
+            out, low, lowk, end, lefts = run(x['burn'])
+            ck('runway', o['runway'], out, 1e-6); ck('lowest point', o['lowest'], low, 0.01); ck('lowest month', o['lowestK'], lowk, 0)
+            ck('left at the end', o['end'], end, 0.05)
+            ck('steady month', o['steady'], x['income'] - x['burn'] + sum(v for v, f, e in spans if e == math.inf), 0.01)
+            for i, n in enumerate((3, 2, 1)):
+                lvl = n * x['basics']; at = next((j for j, v in enumerate(lefts) if v <= lvl), None)
+                ck('tripwire level', o['trips'][i][0], lvl, 0.01); ck('tripwire month', o['trips'][i][1], at, 0); ck('tripwire now', o['trips'][i][2], x['cash'] <= lvl)
+            b_out = run(x['planBurn'])[0]
+            ck('Plan B runway', o['planB'], b_out, 1e-6); ck('Plan B more', o['more'], None if out is None or b_out is None else b_out - out, 1e-6)
+            above = None
+            for i, raw in enumerate(x['levels']):
+                burn = None if raw is None else (raw if above is None else min(raw, above))
+                if burn is not None: above = burn
+                gap = None if burn is None else burn - x['income']
+                months = None if gap is None or gap <= 0 else x['cash'] / gap
+                ck('level burn', o['levels'][i][0], burn, 0.01); ck('level months', o['levels'][i][1], months, 1e-6); ck('level lasts', o['levels'][i][2], gap is not None and gap <= 0)
         elif fn == 'bpPlans':
             rows = []
             for i, p in enumerate(x['plans'][:3]):

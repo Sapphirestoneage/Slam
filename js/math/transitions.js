@@ -200,7 +200,10 @@ export function ladderOf(doc, ref, { now = new Date(), plan = transitionPlan(doc
 // once the cut is on) less what comes in is drawn from the rungs in order; a surplus goes back into the buffer. A
 // card's balance grows by its APR each month (0% while its promo lasts) and that interest is the card's cost.
 // opts: order (rung ids, the ladder's by default), off (ids to leave out), level (a fixed burn level: no cut), extra
-// ([{ monthly, fromK }] more income), cut ({ level, when } instead of the ladder's).
+// ([{ monthly, fromK, toK? }] more income, or less when monthly is below zero), cut ({ level, when } instead of the ladder's).
+// Part 15 (safety nets): an extra row may end (toK, after the start) and start or end inside a month; it counts for the
+// share of month k it covers. Without toK it runs from fromK on, as before (a whole month once k reaches fromK).
+const extraShare = (e, k) => (e.toK == null ? (k >= (e.fromK ?? 0) ? 1 : 0) : Math.max(0, Math.min(k + 1, e.toK) - Math.max(k, e.fromK ?? 0)));
 export function dipOf(lad, { order = null, off = [], level = null, extra = [], cutAs = null, max = RULES.transitionMaxMonths } = {}) {
   const ids = order ?? lad.rungs.map(r => r.id);
   const byId = Object.fromEntries(lad.rungs.map(r => [r.id, r]));
@@ -227,7 +230,7 @@ export function dipOf(lad, { order = null, off = [], level = null, extra = [], c
     if (cutOn && !cutLive && cutWhen === 'reached' && after && lumps.filter(l => ids.indexOf(l.id) < cutPos).every(l => l.left <= 0.0001)) { cutLive = true; reached.cut ??= k; }
     const burn = after && cutLive ? cutBurn : after ? full : lv.full;
     const income = (after ? lad.after : lad.before) + (ben && ben.endK != null ? (k < ben.endK ? ben.monthly : 0) : ben ? ben.monthly : 0)
-      + (after ? sideM : 0) + sum(extra.filter(e => k >= lad.startK + (e.fromK ?? 0)), e => e.monthly ?? 0);
+      + (after ? sideM : 0) + sum(extra, e => (e.monthly ?? 0) * extraShare(e, k - lad.startK));
     let need = burn - income;
     const need0 = need;
     if (need < 0) { const first = lumps.find(l => !l.card && l.id !== 'retirement') ?? lumps[0]; if (first) first.left -= need; need = 0; }
