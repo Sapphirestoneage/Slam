@@ -1925,6 +1925,65 @@ def run(cases, ref, il=None):
                     a = by[r['name']]['amt']
                     ck('a subscription\'s days', r['days'], math.floor(x['totalDays'] * a / tot + 0.5))
                     ck('hours of work a year', r['hoursYear'], a * 12 / w if w else None, 1e-9)
+        elif fn == 'bpHsa':
+            B = ref['benefits']; nb = lambda v: v is None
+            if nb(x['cover']) or nb(x['you']) or nb(x['rate']): ck('not ready', o['ready'], False)
+            else:
+                lim = B['hsa'][x['cover']] + (B['hsa']['catchUp55'] if x['age'] is not None and x['age'] >= 55 else 0)
+                emp = max(0, x['employer'] or 0); put = min(max(0, x['you']), max(0, lim - emp))
+                ck('HSA that counts', o['put'], put, 0.01); ck('HSA a year', o['yearly'], put * x['rate'] + emp, 0.01)
+                y, g = x['years'], x['growth']
+                fv = None if y is None or g is None else 0 if y <= 0 else sum((put + emp) * (1 + g) ** k for k in range(y))
+                ck('HSA invested', o['grows'], fv, 0.01); ck('receipts', o['receiptsBank'], None if y is None else (x['receipts'] or 0) * max(0, y), 0.01)
+        elif fn == 'bpDcfsa':
+            D = ref['benefits']['dcfsa']; ages = [a for a in x['ages'] if a is not None and a >= 0]
+            if x['care'] is None or x['rate'] is None or not ages: ck('not ready', o['ready'], False)
+            else:
+                young = [a for a in ages if a < D['ageUnder']]; cap = D['separate'] if x['separate'] else D['limit']
+                put = min(x['care'], cap) if young else 0; yrs = max(D['ageUnder'] - a for a in young) if young else 0
+                ck('care that counts', o['put'], put, 0.01); ck('FSA a year', o['yearly'], put * x['rate'], 0.01); ck('daycare years', o['years'], yrs); ck('FSA in all', o['total'], put * x['rate'] * yrs, 0.01)
+        elif fn == 'bpEspp':
+            E = ref['benefits']['espp']
+            if x['put'] is None or x['discount'] is None or x['rate'] is None or not (0 < x['discount'] <= E['maxDiscount'] + 1e-9): ck('not ready', o['ready'], False)
+            else:
+                d = x['discount']; put = min(x['put'], E['cap'] * (1 - d)); gain = put * d / (1 - d)
+                ck('ESPP put in', o['put'], put, 0.01); ck('ESPP gain', o['gain'], gain, 0.01); ck('ESPP after tax', o['yearly'], gain * (1 - x['rate']), 0.01)
+        elif fn == 'bpCommuter':
+            if x['monthly'] is None or x['rate'] is None: ck('not ready', o['ready'], False)
+            else:
+                cov = min(x['monthly'], ref['benefits']['commuterMonthly']) * 12
+                ck('commuter covered', o['covered'], cov, 0.01); ck('commuter a year', o['yearly'], cov * x['rate'], 0.01)
+        elif fn == 'bpCoverage':
+            h, magi, C = x['h'], x['magi'], ref['cliff']; P = ref['studentLoans']['poverty']
+            f = P['base'] + P['perPerson'] * max(0, h['size'] - 1); r = magi / f
+            bench = C['aca']['benchmark40'].get(h['state'], C['aca']['benchmarkUs']) * 12 * h['adults']
+            if h['state'] not in C['medicaid']['nonExpansion'] and r <= C['medicaid']['adultMultiple'] + 1e-9: want = ('medicaid', 0, bench)
+            elif h['state'] == 'NY' and r <= C['ny']['essentialMultiple'] + 1e-9: want = ('essential', C['ny']['essentialPremium'] * 12 * h['adults'], bench)
+            elif r < C['aca']['floorMultiple']: want = ('gap', bench, 0)
+            elif r > C['aca']['cliffMultiple'] + 1e-9: want = ('full', bench, 0)
+            else:
+                lo, pct = 0.0, None
+                for up, a, b in C['aca']['applicable']:
+                    if r < up or up == C['aca']['cliffMultiple']: pct = a + (b - a) * min(1, max(0, (r - lo) / (up - lo))); break
+                    lo = up
+                cost = min(bench, pct * magi); want = ('aca', cost, bench - cost)
+            ck('coverage', o['on'] == want[0], True); ck('coverage cost', o['cost'], want[1], 0.01); ck('the credit', o['help'], want[2], 0.01)
+        elif fn == 'bpPlans':
+            rows = []
+            for i, p in enumerate(x['plans'][:3]):
+                if p['premium'] is None or p['deductible'] is None or p['oop'] is None: rows.append(None); ck('plan not ready', o['rows'][i]['ready'], False); continue
+                full = p['premium'] * 12; cr = min(full, x['help']) if p['market'] and x['help'] and x['help'] > 0 else 0; yr = full - cr
+                oop = max(p['oop'], p['deductible']); rows.append((i, yr, yr + p['deductible'], yr + oop))
+                ck('plan a year', o['rows'][i]['year'], yr, 0.01); ck('typical year', o['rows'][i]['typical'], yr + p['deductible'], 0.01); ck('heavy year', o['rows'][i]['heavy'], yr + oop, 0.01)
+            okr = [r for r in rows if r]
+            for k, j in (('light', 1), ('typical', 2), ('heavy', 3)):
+                want = None
+                if len(okr) >= 2:
+                    best = okr[0]
+                    for r in okr[1:]:
+                        if r[j] < best[j] - 1e-9: best = r
+                    want = best[0]
+                ck('least ' + k, o['cheapest'][k], want)
         elif fn == 'hhCompare':
             # Households together, Same question: from the definition (the questions' order and kinds read from the source list)
             QS = HH_Q

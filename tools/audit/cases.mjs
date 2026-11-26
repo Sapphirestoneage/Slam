@@ -32,6 +32,7 @@ import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwSt
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
+import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
 import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
@@ -461,6 +462,25 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
   x.seq = market(x.planAge - x.retireAge + 1 + 10).map(y => ({ ...y, r: x.stocks * y.s + (1 - x.stocks) * y.b, stock: x.stocks }));
   const lead = x.retireAge - x.age, run = lifetime(x, ref, { returns: k => (k < lead ? x.realReturn : x.seq[k - lead] ?? x.realReturn) });
   add('wayLife', x, { ...slim(run), lowestPaid: run.lowestPaid, cutYears: run.cutYears, firstSpend: run.firstSpend, worked: worked(run, x) });
+}
+// Benefits and health (run Finish everything partly built, Part 10): the optimizer's four, the health chain at an income
+// (any state, any size) and plans side by side, some answers missing (null). The 2027 limits and the cliff rows are the
+// reference file's; the second engine reads them from there too.
+{ const BR = bpRules(ref), maybe = (v, p = 0.1) => (rnd() < p ? null : v);
+  for (let i = 0; i < N; i++) {
+    { const x = { cover: maybe(pick(['self', 'family'])), age: maybe(whole(20, 70)), you: maybe(money(1, 12000)), employer: pick([null, 0, money(1, 3000)]), rate: maybe(pick([0.15, 0.22, 0.3, 0.4])), years: pick([null, 0, 5, 20, 35]), growth: pick([null, 0, 0.04, 0.07]), receipts: pick([null, 0, money(1, 3000)]) };
+      const H = bpHsa(x, BR); add('bpHsa', x, H.ready ? { ready: true, put: H.put, yearly: H.yearly, grows: H.grows, receiptsBank: H.receiptsBank } : { ready: false }); }
+    { const x = { care: maybe(money(1, 30000)), ages: Array.from({ length: whole(0, 3) }, () => whole(0, 17)), rate: maybe(pick([0.2, 0.3])), separate: rnd() < 0.2 };
+      const D = bpDcfsa(x, BR); add('bpDcfsa', x, D.ready ? { ready: true, put: D.put, yearly: D.yearly, years: D.years, total: D.total } : { ready: false }); }
+    { const x = { put: maybe(money(1, 40000)), discount: maybe(pick([0.05, 0.1, 0.15, 0.2])), rate: maybe(pick([0.12, 0.22, 0.32])) };
+      const E = bpEspp(x, BR); add('bpEspp', x, E.ready ? { ready: true, put: E.put, gain: E.gain, yearly: E.yearly } : { ready: false }); }
+    { const x = { monthly: maybe(money(1, 600)), rate: maybe(pick([0.2, 0.3])) };
+      const C = bpCommuter(x, BR); add('bpCommuter', x, C.ready ? { ready: true, covered: C.covered, yearly: C.yearly } : { ready: false }); }
+    { const h = { state: pick(['NY', 'NY', 'TX', 'FL', 'CA', 'VT', 'ZZ']), size: whole(1, 8), adults: whole(1, 2) }, magi = money(1, 250000), A = bpCoverage(h, BR, magi);
+      add('bpCoverage', { h, magi }, { on: A.on, cost: A.cost, help: A.help }); }
+    { const plans = Array.from({ length: whole(1, 3) }, () => ({ premium: maybe(money(1, 1200)), deductible: maybe(money(1, 9000)), oop: maybe(money(1, 12000)), market: rnd() < 0.6 })), help = pick([null, 0, money(1, 15000)]);
+      const P = bpPlans(plans, { help }); add('bpPlans', { plans, help }, { rows: P.rows.map(r => (r.ready ? { ready: true, year: r.year, typical: r.typical, heavy: r.heavy } : { ready: false })), cheapest: P.cheapest }); }
+  }
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

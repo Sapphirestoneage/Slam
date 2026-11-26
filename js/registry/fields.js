@@ -171,7 +171,7 @@ export const AREAS = [
       pick('ss.level', 'Social Security number: how sure', ['Gut', 'Estimate', 'Know it']),
       f('ss.benefitPartner', 'Partner: Social Security at full retirement age, a month', 'money'),
       pick('ss.levelPartner', 'Partner: Social Security number, how sure', ['Gut', 'Estimate', 'Know it']),
-      f('benefits', 'Employer benefits', 'text', { sheet: { skip: 'a set of benefit answers, each with have it, amount and per; on About you › Benefits' } }),
+      f('benefits', 'Employer benefits', 'text', { sheet: { skip: 'a set of benefit answers, each with have it, amount and per; on About you › Benefits. Since run Finish everything partly built, Part 10: also the employer picked from the library (employer), the optimizer\'s own taps (plan: HSA cover, what you put in, years, receipts, child care, ESPP) and the health plans side by side (plans); what-if answers, not money inputs of the plan' } }), // the optimizer and plans: run Finish everything partly built, Part 10
       f('lifeAdmin', 'Life admin checklist', 'text', { sheet: { skip: 'done / not yet / not for me per item; on Net worth › Protection' } }),
       f('taxHistory', 'Refund history', 'text', { area: 'taxes', sheet: { skip: 'two earlier tax years; on the Taxes tab of SLAM' } }),
       f('later', "I'll find it later", 'text', { sheet: { skip: 'homework flags on profile answers; the Homework list in SLAM' } }),
