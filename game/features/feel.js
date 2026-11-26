@@ -514,3 +514,16 @@ Object.assign(ACT, {
 });
 kitMenu("Start at the finish line", "fline", "What you need at the end, worked back to today", "qmode");
 kitMenu("What's in the way", "bneck", "The bottleneck finder: eight kinds, and Is this really it?", "fline");
+/* The "i" of the two screens (the END of the run Finish everything partly built: a first-time player had no "i" here). */
+kitScreen(
+  "fline",
+  "Start at the finish line",
+  "Say what you need each month once work is optional, and by when.",
+  "The game works back to what you need invested by then, and what has to be left over each month."
+);
+kitScreen(
+  "bneck",
+  "What's in the way",
+  "Eight kinds of thing can hold a plan up: money, time, energy, skill, knowledge, people, fear, rules.",
+  "Your numbers point at one, your taps can change it, and Is this really it? tests the answer."
+);

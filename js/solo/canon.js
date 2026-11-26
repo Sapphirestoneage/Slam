@@ -84,7 +84,7 @@ const SPECS = {
       fold: [['Whose idea this is, and where it bends', 'The 50/30/20 rule is from All Your Worth by Elizabeth Warren and Amelia Warren Tyagi. It works on take-home pay.', 'Where rent is high or pay is low, needs run past half for almost everyone, and that is the place you live talking, not something you did. People aiming to stop work early usually keep far more than 20%.']] }),
   },
   home: {
-    title: 'How much home would a lender say fits?', why: 'Lenders start from two lines drawn on your pay before taxes. Two numbers show where they land for you, before you ever talk to one.',
+    title: 'How much home would a lender say fits?', why: 'Lenders start from two lines drawn on your pay before taxes. Two numbers show where they land for you, before you ever talk to one. Below them: the true cost of owning next to renting, and the year owning comes out ahead.',
     fields: [{ key: 'grossMonthly', label: 'Your pay in a month, before taxes', picks: GROSS_MONTH, help: 'Everyone on the loan, added up. Yearly salary divided by 12.' }, { key: 'otherDebt', label: 'Your other debt payments in a month', picks: [0, 200, 400, 700, 1000, 1500], start: 0, help: 'Car, student loans, card minimums. Not rent.', optional: true }],
     run: v => homeFitsOf(v),
     more: api => homeCostCards(api), // run of Nov 25 2026, Part 2: the bank's payment, the true cost of owning and renting, the breakeven year

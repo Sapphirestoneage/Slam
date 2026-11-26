@@ -51,8 +51,8 @@ function draw(api) {
   const wholePlan = async () => { location.href = carryUrl('plan', await api.packed()); };
   if (!accts.length) {
     return $('main').replaceChildren(hero, h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'No investment accounts yet'),
-      h('p.st-soft', {}, 'Add your 401(k), IRA, HSA or brokerage account with its balance, and what is inside it, in the whole plan. They show here, added up.'),
-      h('div.st-row', {}, btn('Open the whole plan', wholePlan, 'slim'))));
+      h('p.st-soft', {}, 'Add your 401(k), IRA, HSA or brokerage account with its balance, and what is inside it, in the whole plan, under Net worth › Assets. They show here, added up.'),
+      h('div.st-row', {}, btn('Add an account in the whole plan', wholePlan, 'primary'))));
   }
 
   // ---------- each account as the engine reads it ----------

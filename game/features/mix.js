@@ -538,9 +538,11 @@ function mixSheet() {
       }),
       dkTile("Fees over 30 years", money(Math.round(M.lost)), {
         sub:
-          M.days != null && M.days > 0
+          /* with nothing invested yet, the 30 years are on what you add each month (Krug walk, Nov 26 2026) */
+          (M.total > 0 ? "" : "on the " + money(Math.round(M.add)) + " a month you add, ") +
+          (M.days != null && M.days > 0
             ? "about " + M.days.toLocaleString() + " days later to freedom"
-            : "no change to your freedom date",
+            : "no change to your freedom date"),
         guess,
       }),
       H.ready ? dkTile("In the three kinds", P(H.inside), { sub: "of a three-fund mix", guess }) : "",

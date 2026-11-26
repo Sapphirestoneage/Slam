@@ -112,6 +112,37 @@ QUESTIONS.md 581 to 625.
 | Quiz engine, many skins (Part 11) | Done | quiz.html "More quizzes"; the game's Me › Quizzes | How to add a skin: `docs/QUIZ-ENGINE.md`. | M |
 | END: tests, layout check, Krug walk | Done Nov 26 2026 | STATUS.md (the END line) | The layout tool runs whole again (it waited 30 s on each hidden chip). | S |
 
+### Run: Finish everything partly built (Nov 25 to 26 2026)
+
+Twenty-one parts from Eli's list of things that were partly built. Each part reuses one engine for both apps (a game
+copy made by a build tool, a test fails when the copy is stale) and the second engine checks the new math. Details:
+STATUS.md (the run's table), PROGRESS.md, QUESTIONS.md 580, 595, 600, 606, 615, 619, 626, 627, 630 to 642.
+
+| Tool or job | Status | Where it lives | What is left, and what done means | Size |
+|---|---|---|---|---|
+| FI number variants (Part 1) | Done | Plan › Goals (FI destinations, stress test, pod FI), Plan › FOO, Home; the game's Key numbers and Home | Eli to check the three FOO orders by destination. | M |
+| Home buying and renting (Part 2) | Done | home.html; the game's Rent or buy | No typical property tax, insurance, PMI, HOA or repairs (no dated source): taps only. | M |
+| Career and education (Part 3) | Done | career.html; the game's Career and education | No national pay figures (bls.gov blocked); the atlases wait for Eli. | M |
+| Travel (Part 4) | Done | trip.html; the game's Trips and the journey | No exchange rates; no settle-up of who paid what. | M |
+| Student loans (Part 5) | Done | student.html; the game's Student loan plans | The game keeps its own copy of the loan rules (`SL_REF`); the stepladder is web only. | M |
+| Quizzes (Part 6) | Done | quiz.html › More quizzes; the game's Quizzes and Daily lessons | The spec row for Duolingo mode still reads LATER. | M |
+| Money psychology (Part 7) | Done | Home › Exercises; the game's Money exercises | Voice to text uses the browser's own recognition (Eli to keep or turn off). | S |
+| Joy and enough (Part 8) | Done | Budget (Joy per dollar, Subscriptions in days), Goals; the game's Joy and enough | Nothing on Home yet (`joyHomeLine` waits). | M |
+| Comparing with peers (Part 9) | Partly | peers.html; the game's You and people like you | Savings rate and income percentiles by age: no dated table reached. | S |
+| Benefits and health (Part 10) | Done, cliff partly | About you › Benefits at work, Health coverage and plans; the game's Benefits and health | Employer library has 9 sourced rows, not 25; the cliff has New York and New Jersey SNAP only. | L |
+| Estate and marriage (Part 11) | Done | kin.html, heirs.html, married.html; the game's Estate and marriage | Federal tax only (New York joint brackets wait for Eli); NY estate tax amount not worked out. | M |
+| Households (Part 12) | Done | One-pager › Share by email; the game's Households together | Same question, FI together and the shared home are game only. | M |
+| Investing (Part 13) | Done | invest.html; the game's Investment mix and fees, Invest or pay debt, Roth or traditional | The game has no city tax. | M |
+| Taxes and self-employed (Part 14) | Done, platform P&L partly | setaside.html, freelance.html, gigapps.html, Report › Ratios; the game's Taxes first, My floor | Payout timing sourced for Uber, DoorDash, Upwork only; not joined to Tips and shifts. | M |
+| Safety nets (Part 15) | Done | ladder.html, runway.html, Plan › Transitions, Home; the game's Break in case of emergency | Leave pay for New York only; the SALT cap end waits for a dated source. | M |
+| Giving (Part 16) | Done | giving.html; the game's Giving | Volunteer hours toward maaser; the 35% itemizing limit in the 37% bracket. | M |
+| Asking fewer questions (Part 17) | Done, partly for goals, the money log and gig screens | Ask me next; the game's setup, Make your numbers real, the reveal | One question at a time on goals, the money log and the gig screens. | M |
+| Coach and reports (Part 18) | Done (web app) | Report › One-pager (session summary), Report › Plan report, Plan › FIRE; the game's statement import | No session summary, plan report or FIRE board in the game. | M |
+| Testing and math (Part 19) | Done | Admin › Tester drives (`?think=1`); tools/audit | The retirement odds, Key numbers' own lines, the sims and the era gates are not in the second engine. | M |
+| Game feel (Part 20) | Done | The game's Start at the finish line, What's in the way, Role model and rival, People, the receipt strip | Real people's stories kept beside the made-up ones until Eli says. | M |
+| Spec rows marked Partly (Part 21) | Done | runway.html (F-You money), Plan › FOO; the game's Famous money ideas, YMOYL 1b and 3 | No web noodle budget page (the fixed floor and DRAFTT stand in). | M |
+| END: tests, layout check, Krug walk, tap counter | Done Nov 26 2026 | STATUS.md (the END line) | `tools/game_clicks.cjs` walks today's setup to the reveal again. | S |
+
 ### Alongside the runs: testing
 
 | Tool or job | Status | Where it lives | What is left, and what done means | Size |

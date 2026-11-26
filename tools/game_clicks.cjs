@@ -1,16 +1,18 @@
 /* ============================================================================
    tools/game_clicks.cjs
-   PURPOSE     Count the clicks from the first screen of the game to the first plan, for two invented
-               personas: a speedrun persona (the simplest answers) and the most complex persona (many
-               income kinds, a household, many debts and accounts).
+   PURPOSE     Count the taps from the first screen of the game to the payoff reveal ("Here's where you
+               stand"), for two invented personas: a speedrun persona (the simplest answers) and the most
+               complex persona (many income kinds, a household, many debts and accounts).
    USAGE       node tools/game_clicks.cjs [--trace]
    INPUT       The folder game/. No saved game.
-   OUTPUT      One line for each persona: clicks to the end of setup, and clicks to the first plan
-               (the Home tab with no open sheet: the one thing to do, and the count of next steps). With --trace, each click.
+   OUTPUT      One line for each persona: taps to the reveal, and the answers that never came up.
+               With --trace, each tap.
    DEPENDS ON  tools/game_walk/walk.cjs (the local server), the package "playwright".
-   RULES       The walk taps what a person would tap: the answer of the persona when it is on the
-               screen, else the button that pulses, else the main button. The count has no clicks on
-               Back, on "i" or on the glossary.
+   RULES       Today's setup asks one question at a time and fills in what the earlier taps already say,
+               so the walk looks at the screen as a person does (the same robot as tools/e2e/door_walk.cjs):
+               it taps its answer to the open question (data-k, data-v), or "That's all", or Next. A key
+               with a list taps every value on the list. The count has no taps on Back, on "i" or on the
+               glossary. Exit code 1 when a persona does not reach the reveal.
    ========================================================================= */
 let chromium;
 try {
@@ -22,67 +24,125 @@ const path = require("path");
 const { serve } = require("./game_walk/walk.cjs");
 const TRACE = process.argv.includes("--trace");
 const PERSONAS = {
-  speedrun: ["20s", "27", "Yes", "1 to 3 months", "No", "First job", "A main job", "Steady", "I rent", "On my own", "Single by choice", "None", "No one"],
-  complex: [
-    "40s", "44", "No", "Less than a month", "Sometimes", "A few jobs or gigs", "A main job", "Side gigs", "My own business", "Help from family",
-    "Changes month to month", "I own", "A partner", "Kids", "Parents or family", "Married", "Supporting a parent", "A partner",
-    "Credit card balance", "Student loans", "Car loan", "Medical bills", "Mortgage", "Owed to family or friends",
-    "Checking", "Savings", "Retirement plan at work", "IRA or Roth IRA", "HSA", "Brokerage account",
-  ],
+  speedrun: {
+    ageDec: "20s", age: "27", work: "First job", incKinds: ["A main job"], payFreq: "Every 2 weeks", steady: "Steady",
+    homeQ: "I rent", live: "On my own", rel: "Single by choice", deps: "None", share: "No one",
+    debtKinds: [], accts: ["Checking"], can1k: "Yes", cover: "1 to 3 months", invest: "No",
+  },
+  complex: {
+    ageDec: "40s", age: "44", work: "Established", incKinds: ["A main job", "Side gigs", "My own business"],
+    payFreq: "Every 2 weeks", steady: "Changes month to month", homeQ: "I own", live: "A partner",
+    rel: "Married", deps: "Kids", share: "A partner",
+    debtKinds: ["Credit card balance", "Student loans", "Car loan", "Medical bills"],
+    accts: ["Checking", "Savings", "Retirement plan at work", "IRA or Roth IRA", "HSA", "Brokerage account"],
+    can1k: "No", cover: "Less than a month", invest: "Sometimes",
+  },
 };
-async function walk(browser, base, pref) {
+async function walk(browser, base, want) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
   await ctx.route("**/*", r => (r.request().url().startsWith(base) ? r.continue() : r.abort()));
   const page = await ctx.newPage(),
-    used = {},
-    trace = [];
-  let clicks = 0,
-    setupEnd = null;
+    trace = [],
+    errs = [];
+  page.on("pageerror", e => errs.push(String(e)));
+  let taps = 0,
+    stuck = 0,
+    lastFp = null,
+    reveal = false;
   await page.goto(base + "index.html");
-  for (let i = 0; i < 150; i++) {
-    await page.waitForTimeout(80);
-    const s = await page.evaluate(
-      ([PREF, used]) => {
-        const ov = document.getElementById("ov"),
-          open = !!ov && ov.offsetParent !== null && ov.innerText.trim().length > 0,
-          root = open ? ov : document.getElementById("app"),
-          vis = e => e.offsetParent !== null && !e.disabled && !e.closest("details:not([open])"),
-          q = sel => [...root.querySelectorAll(sel)].filter(vis),
-          first = e => e.innerText.trim().split("\n")[0].replace(/ Likely$/, ""),
-          pf = q("button").find(e => PREF.includes(first(e)) && !used[first(e)] && !/\b(on|sel)\b/.test(e.className)),
-          el = pf || q(".chip.likely")[0] || q(".pulse")[0] || q("button.go")[0] || q("button.primary")[0];
-        if (el) el.setAttribute("data-pick", "1");
-        return {
-          open,
-          kind: (typeof W !== "undefined" && W && W.kind) || "",
-          tab: typeof tab !== "undefined" ? tab : "",
-          pf: pf ? first(pf) : null,
-          text: el ? first(el) : null,
-        };
-      },
-      [pref, used]
-    );
-    if (clicks > 0 && setupEnd === null && s.kind !== "setup") setupEnd = clicks;
-    if (clicks > 1 && !s.open && (s.tab === "home" || s.tab === "plan")) break;
-    if (!s.text) break;
-    if (s.pf) used[s.pf] = 1;
-    await page.click("[data-pick]");
-    await page.evaluate(() => document.querySelectorAll("[data-pick]").forEach(e => e.removeAttribute("data-pick")));
-    clicks++;
-    trace.push(clicks + ". [" + (s.kind || s.tab) + "] " + s.text);
+  await page.waitForTimeout(500);
+  // the landing (account/door.js) when it shows, else the welcome box's "Start my game" (no account reachable)
+  const start = page.locator('#door [data-door=start], [data-a="start"].primary');
+  if (await start.count()) {
+    await start.first().click();
+    taps++;
+    trace.push("1. Start");
+    await page.waitForTimeout(400);
   }
+  for (let i = 0; i < 120; i++) {
+    const pick = await page.evaluate(want => {
+      if (typeof W === "undefined" || !W || W.kind !== "setup") return null;
+      const vis = [...document.querySelectorAll("#ov .sheet button")].filter(b => b.offsetParent && !b.disabled);
+      const on = b => /(^| )(on|sel)( |$)/.test(b.className);
+      const mark = (b, why) => (b.setAttribute("data-robot", "1"), why);
+      W.robot = W.robot || {};
+      for (const b of vis) {
+        const k = b.dataset.k,
+          a = b.dataset.a;
+        if (!k || !(k in want) || !["set", "setn", "tog", "agedec"].includes(a)) continue;
+        const list = Array.isArray(want[k]) ? want[k] : null;
+        if (list) {
+          if (!list.includes(b.dataset.v) || on(b) || W.robot[k + "=" + b.dataset.v]) continue;
+          W.robot[k + "=" + b.dataset.v] = 1;
+          return mark(b, k + " + " + b.dataset.v);
+        }
+        const answered = vis.some(x => x.dataset.k === k && on(x)) || (W.o[k] != null && !Array.isArray(W.o[k]) && k !== "ageDec" && k !== "age") || W.robot[k];
+        if (answered) continue;
+        if (b.dataset.v === want[k]) {
+          W.robot[k] = 1;
+          return mark(b, k + " = " + b.dataset.v);
+        }
+      }
+      const all = vis.find(b => /^That's all$/.test(b.innerText.trim()));
+      if (all) return mark(all, "That's all");
+      const nx = vis.find(b => ["wnext", "spnext", "spgo"].includes(b.dataset.a));
+      return nx ? mark(nx, "Next (page " + (W.step + 1) + ")") : "STUCK";
+    }, want);
+    if (pick === null) break;
+    if (pick === "STUCK") break;
+    // a busy machine can draw a question late, and a Next with the question still open does nothing: when two
+    // Nexts in a row leave the screen as it was, forget the robot's notes and look again
+    const fp = await page.evaluate(() => (document.getElementById("ov") || document.body).innerText);
+    if (/^Next/.test(pick) && fp === lastFp && /^\d+\. Next/.test(trace[trace.length - 1] || "")) {
+      await page.evaluate(() => {
+        document.querySelectorAll("[data-robot]").forEach(b => b.removeAttribute("data-robot"));
+        W.robot = {};
+      });
+      await page.waitForTimeout(800);
+      lastFp = null;
+      if (++stuck > 6) break;
+      continue;
+    }
+    await page.click('#ov [data-robot="1"]');
+    taps++;
+    trace.push(taps + ". " + pick);
+    lastFp = fp;
+    await page.evaluate(() => document.querySelectorAll("[data-robot]").forEach(b => b.removeAttribute("data-robot")));
+    // the game ignores a second Next that comes at once, and an answer draws the next question after a moment
+    await page.waitForTimeout(650);
+  }
+  await page.waitForTimeout(400);
+  const txt = await page.evaluate(() => (document.getElementById("ov") || document.body).innerText);
+  reveal = /Here's where you stand/.test(txt);
+  const used = {};
+  trace.forEach(t => {
+    const m = /^\d+\. (\w+) [=+] (.+)$/.exec(t);
+    if (m) used[m[1] + "=" + m[2]] = used[m[1]] = 1;
+  });
+  const missed = Object.entries(want).flatMap(([k, v]) =>
+    Array.isArray(v) ? v.filter(x => !used[k + "=" + x]).map(x => k + " " + x) : used[k] ? [] : [k + " " + v]
+  );
   await ctx.close();
-  return { clicks, setupEnd, trace, missed: pref.filter(x => !used[x]) };
+  return { taps, reveal, trace, missed, errs };
 }
 (async () => {
   const srv = await serve(path.resolve(__dirname, "../game")),
     base = `http://127.0.0.1:${srv.address().port}/`,
     browser = await chromium.launch();
+  let bad = 0;
   for (const name of Object.keys(PERSONAS)) {
     const r = await walk(browser, base, PERSONAS[name]);
-    console.log(name + ": " + r.setupEnd + " clicks to the end of setup, " + r.clicks + " clicks to the first plan" + (r.missed.length ? ". Answers that never came up: " + r.missed.join(", ") : ""));
+    if (!r.reveal) bad++;
+    console.log(
+      name +
+        ": " +
+        (r.reveal ? r.taps + " taps from Start to \"Here's where you stand\"" : "did not reach the reveal after " + r.taps + " taps") +
+        (r.missed.length ? ". Not asked (filled in from earlier taps, or not on the setup): " + r.missed.join(", ") : "") +
+        (r.errs.length ? ". Page errors: " + r.errs.slice(0, 2).join(" | ") : "")
+    );
     if (TRACE) console.log(r.trace.join("\n"));
   }
   await browser.close();
   srv.close();
+  process.exit(bad ? 1 : 0);
 })();
