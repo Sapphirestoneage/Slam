@@ -309,6 +309,10 @@ const PATCH_NOTES = [
       "A PSLF card: the payments counted, the payments and years left, and what is forgiven, tax-free.",
       "Tap a rate a private lender offers you and see it next to the federal plans, with what you give up in plain words.",
       "On the web page Which student loan plan costs least?, the stepladder: each school year's loan at its own rate, and the interest it gathers before your first payment.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "LGBTQ+ money tools, private by default",
     l: [
       "What care would cost you after your plan pays, and a check of what a health plan covers.",
