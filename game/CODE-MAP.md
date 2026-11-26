@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 199. Lines: 117,639. Top-level functions: 2811. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 199. Lines: 117,785. Top-level functions: 2814. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -60,7 +60,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 46 | `screens/ui.js` | 6,697 | 217 | 137 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
 | 47 | `screens/dash.js` | 426 | 29 | 4 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
 | 48 | `features/games.js` | 674 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
-| 49 | `features/games2.js` | 1,431 | 39 | 18 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
+| 49 | `features/games2.js` | 1,456 | 40 | 18 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
 | 50 | `features/goalrank.js` | 225 | 8 | 5 | 0 | Goals you keep, then rank (UX pass, item 29) |
 | 51 | `features/year.js` | 783 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
 | 52 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
@@ -71,7 +71,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 57 | `screens/ux.js` | 910 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 58 | `core/metrics.js` | 1,860 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
 | 59 | `features/debts.js` | 448 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
-| 60 | `features/import.js` | 274 | 7 | 9 | 0 | Fill in the spending from a bank or card statement file |
+| 60 | `features/import.js` | 357 | 9 | 9 | 0 | Fill in the spending from a bank or card statement file |
 | 61 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
 | 62 | `features/quick.js` | 467 | 13 | 1 | 0 | Quick math. Small what-if questions: does this car fit, how much home fits, what one dollar becomes, and (run Not built, Part 2) a HYSA switch, all at... |
 | 63 | `features/reveal.js` | 269 | 8 | 1 | 0 | Meet your character. Six cards, one tap each, change the numbers into a person: chapter, era, who the player is with money, the strongest number, and ... |
@@ -178,7 +178,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 164 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 165 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 166 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 167 | `data/patchnotes.js` | 533 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 167 | `data/patchnotes.js` | 554 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 168 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 169 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 170 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
@@ -200,7 +200,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 186 | `features/estate.js` | 495 | 8 | 5 | 0 | Estate and marriage (run Finish everything partly built, Part 11) |
 | 187 | `features/life.js` | 549 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
 | 188 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
-| 189 | `features/feel.js` | 516 | 15 | 4 | 0 | Game feel (run Finish everything partly built, Part 20) |
+| 189 | `features/feel.js` | 517 | 15 | 4 | 0 | Game feel (run Finish everything partly built, Part 20) |
 | 190 | `features/guild.js` | 264 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
 | 191 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 192 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
@@ -210,7 +210,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 196 | `features/book.js` | 627 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 197 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 198 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 199 | `features/built.js` | 1,814 | 4 | 22 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 199 | `features/built.js` | 1,830 | 4 | 22 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

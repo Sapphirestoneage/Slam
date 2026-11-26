@@ -14,7 +14,7 @@
                node tools/game_feel_build.mjs. The tests fail when this copy is stale.
                Prettier does not format this file (.prettierignore).
    ========================================================================= */
-// Game feel (run "Finish everything partly built", Part 20, Nov 26 2026; M8R). ONE engine for both apps: pure, and with
+// Game feel (run "Finish everything partly built", Part 20, Nov 26 2026; M8J). ONE engine for both apps: pure, and with
 // no import on purpose, so tools/game_feel_build.mjs copies it word for word into game/core/feel.js. Every name starts
 // with gf or GF_ because the game has one global scope. Empty is not zero: a blank answer gives ready false (or step 1)
 // and never a number.

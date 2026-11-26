@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Game feel (run Finish everything partly built, Part 20; M8R): each function of js/math/feel.js checked by hand on
+// Game feel (run Finish everything partly built, Part 20; M8J): each function of js/math/feel.js checked by hand on
 // made-up numbers, the web page's backwardsOf on the same function, and the game's copy current.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

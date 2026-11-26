@@ -2,9 +2,9 @@
 
 Written by `node --test` (test/coverage.test.js). Every spec row names what it is in code (the SLAM id column on the Fields tab), and every field is on a spec row. Any drift fails the run.
 
-## Drift (1)
+## Drift (0)
 
-- M8R Game feel: start at the finish line (work back from what you need once work is optional to a month to put in today), the race against your past self, the bottleneck finder (eight kinds, Is this really it?), and the made-up composite stories: not on the spec's Math tab
+None.
 
 ## In the spec, not built yet (4)
 

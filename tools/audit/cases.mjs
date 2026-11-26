@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { federalTax, fica, stateTax, takeHomeFromGross, grossFromTakeHome } from '../../js/math/income.js';
 import { payoffMonths, totalInterest, payoffPlan, cardMinimum } from '../../js/math/debt.js';
+import { recapNumbers } from '../../js/math/recap.js';
 import { fiNumber, fiDate, coastFi, solveMonthlySaving, fatFiNumber, chubbyFiNumber, baristaGap, baristaFiNumber, fiStress } from '../../js/math/fi.js';
 import { yearsAtRate } from '../../js/math/simple.js';
 import { fireSheetRows } from '../../js/math/firesheet.js';
@@ -43,7 +44,7 @@ import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comp
 import * as RA from '../../js/math/ratios.js';
 import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
-import { gfBackwards, gfPastSelf, gfBottleneck, GF_KINDS } from '../../js/math/feel.js'; // game feel (run Finish everything partly built, Part 20, M8R)
+import { gfBackwards, gfPastSelf, gfBottleneck, GF_KINDS } from '../../js/math/feel.js'; // game feel (run Finish everything partly built, Part 20, M8J)
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -544,6 +545,19 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
       const P = bpPlans(plans, { help }); add('bpPlans', { plans, help }, { rows: P.rows.map(r => (r.ready ? { ready: true, year: r.year, typical: r.typical, heavy: r.heavy } : { ready: false })), cheapest: P.cheapest }); }
   }
 }
+// Coach and reports (run Finish everything partly built, Part 18). The FIRE dashboard's pace: the same FI date with more
+// a month, and how many months sooner. The session summary (M8R): then and now as up or down, and a date compared as
+// a calendar month (the snapshot's month plus its count against this month plus today's).
+for (let i = 0; i < N; i++) {
+  const x = { invested: rnd() < 0.2 ? 0 : money(500, 900000), monthlyInvesting: money(50, 6000), extra: pick([0, 100, 250, 500, 1000]), realReturn: pick([0.06, 0.07, 0.08]), target: money(300000, 4000000) };
+  const a = fiDate(x, { from: NOW }), b = fiDate({ ...x, monthlyInvesting: x.monthlyInvesting + x.extra }, { from: NOW });
+  add('firePace', x, { base: a.value, pace: b.value, sooner: a.value != null && b.value != null ? a.value - b.value : null });
+  const k = () => (rnd() < 0.15 ? null : rnd() < 0.3 ? -money(1, 50000) : money(1, 400000));
+  const before = { netWorth: k(), surplus: k(), debtFreeMonths: rnd() < 0.2 ? null : whole(0, 120) }, now = { netWorth: k(), surplus: k(), debtFreeMonths: rnd() < 0.2 ? null : whole(0, 120) };
+  const y = { before, now, at: '2026-11', beforeAt: pick(['2026-08', '2026-09', '2026-10', '2026-11']) };
+  const R = recapNumbers(before, now, { at: y.at, beforeAt: y.beforeAt, fiOk: false });
+  add('recapNumbers', y, { keys: R.map(t => t.key), texts: R.map(t => t.text) });
+}
 // Safety nets (run Finish everything partly built, Part 15): a life change on random taps (some left to the start
 // pick), with or without pay, a weekly wage and rent; the run of the cash, the tripwires, Plan B and the levels.
 { const rules = { dbl: ref.limits.leave.NY.dbl, pfl: ref.limits.leave.NY.pfl };
@@ -558,7 +572,7 @@ for (let i = 0; i < Math.max(30, Math.round(N * 0.8)); i++) {
     add('ntRun', x, { once: E.once, needs: E.needs, runway: R.runway, lowest: R.lowest, lowestK: R.lowestK, end: R.end, steady: R.steady, trips: T.map(t => [t.level, t.k, t.now]), planB: B.run.runway, more: B.more, levels: L.map(l => [l.burn, l.months, l.lasts]) });
   }
 }
-// Game feel (run Finish everything partly built, Part 20, M8R): the finish line at each step (some answers blank, the
+// Game feel (run Finish everything partly built, Part 20, M8J): the finish line at each step (some answers blank, the
 // three ways to say the need), the race against your past self on random snapshots, and the bottleneck on random facts,
 // taps and picks.
 { const isoOf = n => new Date(Date.UTC(2026, 10, 14) - n * 864e5).toISOString().slice(0, 10), mb = x => (rnd() < 0.15 ? null : x);
