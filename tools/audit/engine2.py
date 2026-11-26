@@ -2134,6 +2134,75 @@ def run(cases, ref, il=None):
                     lo = up
                 cost = min(bench, pct * magi); want = ('aca', cost, bench - cost)
             ck('coverage', o['on'] == want[0], True); ck('coverage cost', o['cost'], want[1], 0.01); ck('the credit', o['help'], want[2], 0.01)
+        elif fn == 'gfBackwards':
+            # Game feel, the finish line: from the definitions, month by month (no closed form for the months)
+            r_, w_ = x['r'], x['wr']; i_ = (1 + r_) ** (1 / 12) - 1
+            need, per, yrs, have, tk, sp = x['need'], x['per'], x['years'], x['have'], x['takeHome'], x['spending']
+            step = 1
+            if need is not None and need > 0:
+                step = 2; total = need if per == 'total' else (need if per == 'year' else need * 12) / w_
+                ck('total', o['total'], total)
+                if yrs is not None and yrs > 0:
+                    step = 3; ck('by year', o['byYear'], 2026 + yrs)
+                    if have is not None:
+                        step = 4; n_ = yrs * 12; grown = have
+                        for _ in range(n_): grown *= 1 + i_
+                        ck('grown', o['grown'], grown, max(0.01, grown * 1e-9))
+                        short = max(0.0, total - grown)
+                        # the level amount a month: a month's deposit at the end of each month grows by the same factor
+                        fv1 = 0.0
+                        for _ in range(n_): fv1 = fv1 * (1 + i_) + 1
+                        needed = 0.0 if short <= 0 else short / fv1
+                        ck('a month to put in', o['needed'], needed, 0.01); ck('already there', o['alreadyThere'], have >= total); ck('grows there', o['growsThere'], short <= 0)
+                        if tk is not None and sp is not None:
+                            step = 5; left = tk - sp; gap = needed - left
+                            ck('left over', o['left'], left); ck('the gap', o['gap'], gap, 0.01)
+                            ck('close by spending', o['spendToClose'], max(0.0, sp - gap) if gap > 0 else None, 0.01); ck('close by earning', o['earnToClose'], tk + gap if gap > 0 else None, 0.01)
+                            m = o['months']
+                            if have >= total: ck('months', m, 0)
+                            elif m is not None:
+                                bal = lambda k: have * (1 + i_) ** k + (left * ((1 + i_) ** k - 1) / i_ if i_ else left * k)
+                                ck('the month at today\'s pace gets there', bal(math.floor(m)) <= total + 0.01 and bal(math.ceil(m)) >= total - 0.01 and 0 <= m <= 1200, True)
+                                ck('the year at today\'s pace', o['onPaceYear'], 2026 + math.floor((10 + m) / 12))
+                            else:
+                                # no date: today's pace never gets there within 100 years
+                                b_, k_ = have, 0
+                                while k_ < 1200 and b_ < total: b_ = b_ * (1 + i_) + left; k_ += 1
+                                ck('no date at today\'s pace', b_ < total - 0.01 or k_ >= 1200, True)
+            ck('step', o['step'], step)
+        elif fn == 'gfPastSelf':
+            # Game feel, your past self: the two stretches picked from the snapshots by their definition
+            from datetime import date
+            day = lambda s_: date.fromisoformat(s_).toordinal()
+            t_, win = day(x['today']), x['win']
+            pts = sorted([p_ for p_ in x['hist'] if p_['nw'] is not None and day(p_['d']) <= t_], key=lambda p_: day(p_['d']))
+            if x['nw'] is None: ck('no net worth, no race', o['ready'], False)
+            else:
+                last = lambda at, gap: ([p_ for p_ in pts if day(p_['d']) <= at - gap] or [None])[-1]
+                a_ = last(t_, win); b_ = last(day(a_['d']), win) if a_ else None
+                ck('ready', o['ready'], bool(a_ and b_))
+                if a_ and b_:
+                    dn, dt = t_ - day(a_['d']), day(a_['d']) - day(b_['d'])
+                    pn, pt = (x['nw'] - a_['nw']) / dn * 30.4, (a_['nw'] - b_['nw']) / dt * 30.4
+                    ck('from, now', o['nowFrom'] == a_['d'], True); ck('from, before', o['thenFrom'] == b_['d'], True); ck('pace now', o['nowPace'], pn, 1e-6); ck('pace before', o['thenPace'], pt, 1e-6)
+                    ck('who leads', o['lead'] == ('tie' if abs(pn - pt) < 1 else ('now' if pn > pt else 'then')), True)
+                else:
+                    first = day(pts[0]['d']) if pts else t_
+                    ck('days to go', o['daysToGo'], max(1, math.ceil(2 * win - (t_ - first))))
+        elif fn == 'gfBottleneck':
+            # Game feel, the bottleneck: the points written out a second time
+            K = ['money', 'time', 'energy', 'skill', 'knowledge', 'people', 'fear', 'rules']
+            sc = {k: 0 for k in K}; f_ = x['facts']
+            if f_['left'] is not None and f_['left'] <= 0: sc['money'] += 3
+            elif f_['left'] is not None and f_['need'] is not None and f_['left'] < f_['need']: sc['money'] += 2
+            if f_['late'] is True: sc['time'] += 2
+            if f_['rules'] is True: sc['rules'] += 2
+            pts_ = {'yes': 2, 'some': 1, 'no': -1}
+            for k, v_ in x['taps'].items(): sc[k] = max(0, sc[k] + pts_[v_])
+            best = max(K, key=lambda k: (sc[k], -K.index(k)))
+            top = x['pick'] if x['pick'] in K else (best if sc[best] > 0 else None)
+            ck('the call', o['top'] == top, True); ck('checks answered', o['asked'], len(x['taps']))
+            ck('the points', all(o['scores'][k] == sc[k] for k in K), True)
         elif fn == 'ntRun':
             # Safety nets, worked a second way: each change as (amount a month, start week, end week) in WEEKS, then each
             # month of the run as 52/12 weeks; a one-time cost lands in the first month.

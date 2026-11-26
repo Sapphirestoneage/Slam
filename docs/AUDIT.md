@@ -121,6 +121,13 @@ bonus kept (the deposit's interest at each rate grown month by month, the gap af
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 20) it also covers Game feel (`js/math/feel.js`, the one
+engine of the web page end.html and the game): Start at the finish line at each step with some answers blank and the
+need said a month, a year or as a total (what you have grown one month at a time, the month to put in from a deposit
+grown month by month, the gap and the two ways to close it, and the month at today's pace checked by walking the
+balance); the race against your past self on random snapshots (the two stretches picked by their definition, the pace
+of each, who leads); and the bottleneck finder on random facts, taps and picks (the points written out a second time).
+
 Since Nov 26 2026 (run Finish everything partly built, Part 16) it also covers Giving (`js/math/giving.js`, the one
 engine of the web app and the game): the giving rate and the target on each base (gross, take-home, after work costs)
 with some inputs blank; one gift once or every month (hours at the wage, each month's gift grown to the FI date one

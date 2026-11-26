@@ -9,8 +9,11 @@
    INPUT       The profile before the tap (RCP_BASE, kept by the click handler when no sheet is open) and the
                profile now.
    OUTPUT      Math (compositions of the engines, no formula of their own): rcpNums, rcpDiff, rcpTeaser,
-               rcpNext, rcpData. Views: rcpHtml, rcpInline, rcpNextRow. Parts of functions in other files:
-               rcpTapStart (the click handler in ui.js), celebrateReceipt (celebrateBase in ui.js).
+               rcpNext, rcpData, rcpBar (the widths of the before and after bar). Views: rcpHtml, rcpBarHtml
+               (the bar that moves from before to after), rcpInline, rcpNextRow. Actions (ACT): rcpreplay
+               (play the motion again). Parts of functions in other files: rcpTapStart (the click handler
+               in ui.js), celebrateReceipt (celebrateBase in ui.js). features/feel.js draws the same receipt
+               lines at the top of a sheet when an answer moved a number.
    DEPENDS ON  core/engine.js (derive, ERAS, eraSteps), screens/ui.js (freeAt, celebrate, signed, money,
                mathBox), core/metrics.js (knMetrics), core/frameworks.js (fwLead), features/results.js
                (rsFire, rsDebtFree, rsNextWin), features/debts.js (dbLive), features/kit.js (kitDays),
@@ -77,6 +80,9 @@ function rcpDiff(a, b, fire) {
       txt: signed(dn),
       up: dn > 0,
       math: "Net worth before " + money(a.nw) + ", now " + money(b.nw) + ".",
+      was: money(a.nw),
+      now: money(b.nw),
+      ...rcpBar(a.nw, b.nw),
     });
   /* the date of the lead: debt-free while below zero, else FI (fwLead, the same pick as the payoff reveal) */
   const lead = fwLead({ worth: b.nw, fire: !!fire }),
@@ -100,6 +106,9 @@ function rcpDiff(a, b, fire) {
           " then " +
           dkMonth(m1) +
           ".",
+        was: dkMonth(m0),
+        now: dkMonth(m1),
+        ...rcpBar(m0, m1),
       });
     else if (days <= -1)
       out.push({
@@ -108,6 +117,9 @@ function rcpDiff(a, b, fire) {
         txt: "Recalculating route: " + what + " now " + dkMonth(m1),
         up: false,
         math: "The same run with your new numbers: " + dkMonth(m0) + " then " + dkMonth(m1) + ".",
+        was: dkMonth(m0),
+        now: dkMonth(m1),
+        ...rcpBar(m0, m1),
       });
   } else if (m0 == null && m1 != null)
     out.push({
@@ -135,6 +147,9 @@ function rcpDiff(a, b, fire) {
         txt: x[1] + " " + p.val + " to " + q.val,
         up: x[0] === "dti" ? q.num < p.num : q.num > p.num,
         math: x[1] + ": the same formula as Key numbers, before and after.",
+        was: p.val,
+        now: q.val,
+        ...rcpBar(p.num, q.num),
       });
   });
   if (b.era > a.era)
@@ -146,6 +161,14 @@ function rcpDiff(a, b, fire) {
       math: ERAS[b.era].gate + ".",
     });
   return out;
+}
+/* MOTION THAT SHOWS WHAT CHANGED (run Finish everything partly built, Part 20): the widths of the before and after bars
+   of one line, each a share of the larger of the two sizes. The bar grows or shrinks from before to after. */
+function rcpBar(a, b) {
+  const x = Math.abs(+a || 0),
+    y = Math.abs(+b || 0),
+    m = Math.max(x, y);
+  return m > 0 ? { w0: Math.round((x / m) * 1000) / 10, w1: Math.round((y / m) * 1000) / 10 } : {};
 }
 /* The next unlock: the steps of the next era, done of all ("2 of 3 to unlock Fortress"). */
 function rcpTeaser(c, d) {
@@ -197,7 +220,7 @@ function rcpHtml(R, o) {
   return (
     `<div class="rcp" data-fid="rcp:card">` +
     (L.length
-      ? `<div class="rcplines">${L.map((x, i) => `<div class="rcpl ${x.up ? "up" : "re"}" style="--i:${i}" data-fid="rcp:${x.k}">${esc(x.k === "nw" ? x.label + " " + x.txt : x.txt)}</div>`).join("")}</div>${mathBox(L.map(x => x.math))}`
+      ? `<div class="rcplines">${L.map((x, i) => `<div class="rcpl ${x.up ? "up" : "re"}" style="--i:${i}" data-fid="rcp:${x.k}">${esc(x.k === "nw" ? x.label + " " + x.txt : x.txt)}${rcpBarHtml(x)}</div>`).join("")}</div>${L.some(x => x.w1 != null) ? `<button class="ghost slim" data-a="rcpreplay">Replay what changed</button>` : ""}${mathBox(L.map(x => x.math))}`
       : "") +
     (T
       ? `<div class="rcpteaser" data-fid="rcp:teaser"><div class="row between small"><b>${esc(T.txt)}</b>${T.of ? `<span class="tiny muted">${T.pct}%</span>` : ""}</div>${T.of ? bar(T.pct) : ""}<div class="tiny muted">${esc(T.gate)}</div></div>`
@@ -207,6 +230,11 @@ function rcpHtml(R, o) {
       : "") +
     `</div>`
   );
+}
+/* The before and after of one line: a bar that moves from where it was to where it is now, with both values. */
+function rcpBarHtml(x) {
+  if (x.w1 == null) return "";
+  return `<span class="rcpbar" aria-hidden="true"><i style="--w0:${x.w0}%;width:${x.w1}%"></i></span><span class="row between tiny muted rcpba"><span>Before ${esc(String(x.was))}</span><span>Now ${esc(String(x.now))}</span></span>`;
 }
 /* Part of celebrateBase() in ui.js: the receipt in the place of the old line "Up next". Null: keep that line. */
 function celebrateReceipt() {
@@ -230,6 +258,10 @@ function rcpInline() {
     return "";
   }
 }
+Object.assign(ACT, {
+  /* Draw the sheet again: the bars and lines play their motion from before to after once more. */
+  rcpreplay: () => drawSheet(),
+});
 /* The end of a finish screen that had only Done or Close: the next action, so no screen is a dead end. */
 function rcpNextRow() {
   try {

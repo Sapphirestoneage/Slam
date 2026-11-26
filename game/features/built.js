@@ -343,10 +343,24 @@ const WB = [
   [
     "plan",
     "Start at the finish line: design the end, work backwards",
-    "p",
-    () => WB_HAS("goal"),
-    "Goals and the bucket list cover part of it. The web app's finish-line walk is not ported.",
-    null,
+    "b",
+    () => WB_HAS("fline") && WB_FN("flineSheet") && WB_FN("gfBackwards") && WB_FN("gflEnd"),
+    "Menu, Start at the finish line, and a button on the life map: what you need once work is optional, by when, then what you have and what comes in, worked back to a month to put in, the year at today's pace and two ways to close a gap. The same engine as the web app's finish-line walk.",
+    "fline",
+  ],
+  [
+    "plan",
+    "Bottleneck finder: money, time, energy, skill, knowledge, people, fear or rules, each with Is this really it?",
+    "b",
+    () =>
+      WB_HAS("bneck") &&
+      WB_HAS("bnreal") &&
+      WB_FN("gfBottleneck") &&
+      WB_FN("bnQuestCall") &&
+      typeof GF_KINDS !== "undefined" &&
+      GF_KINDS.length === 8,
+    "Menu, What's in the way: eight tap checks and your numbers rank what holds the plan up. The call has its own Is this really it? test; your answer wins, and the judge in Quest mode keeps it. Money as the call offers the first bonus hunt.",
+    "bneck",
   ],
   [
     "plan",
@@ -853,25 +867,26 @@ const WB = [
   [
     "feel",
     "A rival to race",
-    "p",
-    () => WB_HAS("rival"),
-    "A rival exists. Difficulty levels, and the Nepo baby, are not built.",
-    null,
+    "b",
+    () => WB_HAS("rival") && WB_FN("rivalPastPart") && WB_FN("gfPastSelf") && !!RIVALS.typical && !!RIVALS.nepo,
+    "Me, Role model and rival: past you from your own saved check-ins (the last 90 days next to the 90 before), a typical path on the country's saving rate, and made-up rivals at four levels plus the head-start one. Never a real person.",
+    "rival",
   ],
   [
     "feel",
     "People who did it",
-    "p",
-    () => Array.isArray(MENTORS) && MENTORS.length > 0,
-    "Real people and the moves they are known for. What each one would say about your plan is not built.",
-    null,
+    "b",
+    () =>
+      Array.isArray(MENTORS) && WB_FN("gfStoriesPart") && typeof GF_STORIES !== "undefined" && GF_STORIES.length >= 8,
+    "What if, People: made-up composite stories, one for each kind of bottleneck, labeled Made-up story on screen, the one for your bottleneck first; then the real people who told their stories in public.",
+    "moves",
   ],
   [
     "feel",
     "Motion that shows what changed",
-    "p",
-    () => WB_FN("celebrate"),
-    "Numbers flash when they change and wins get a card. A full before-and-after replay is not built.",
+    "b",
+    () => WB_FN("celebrate") && WB_FN("rcpBar") && WB_FN("rcpBarHtml") && WB_HAS("rcpreplay"),
+    "Numbers flash when they change and wins get a card. Each line of a receipt has a bar that moves from before to after, with both values, and Replay what changed plays it again. Less motion when the phone asks for it.",
     null,
   ],
   [
@@ -955,9 +970,9 @@ const WB = [
   [
     "feel",
     "Every answer shows what it unlocked",
-    "p",
-    () => WB_FN("cxNews"),
-    "Finishing a skill names the tracks it opens. Answers about your numbers do not show their ripple yet.",
+    "b",
+    () => WB_FN("cxNews") && WB_FN("sheetRippleRow") && WB_FN("sheetRippleStart"),
+    "Finishing a skill names the tracks it opens. An answer about your numbers puts a slim strip at the top of the sheet: what it moved (net worth, days to FI or debt-free, a key number, a new era) and a step it unlocked, from the same receipt as the Done screen.",
     null,
   ],
   [
@@ -1349,7 +1364,7 @@ const WB = [
     "The first $1,000 bonus hunt",
     "b",
     () => WB_HAS("hunt") && WB_FN("huRead") && WB_FN("plBonus") && WB_FN("plHunt"),
-    "From the bank bonus queue: a bank bonus calculator (the bonus less its tax, the HYSA interest the deposit gives up, and the fees), then bonuses one at a time, Planned, Open or Paid, toward $1,000 kept. Menu, Games and quizzes.",
+    "From the bank bonus queue: a bank bonus calculator (the bonus less its tax, the HYSA interest the deposit gives up, and the fees), then bonuses one at a time, Planned, Open or Paid, toward $1,000 kept. Menu, Games and quizzes; also a quick win from What's in the way (Money) and from a gap on Start at the finish line.",
     "hunt",
   ],
   [

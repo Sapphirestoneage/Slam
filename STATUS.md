@@ -149,7 +149,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 17 | Asking fewer questions | Not started | |
 | 18 | Coach and reports | Not started | |
 | 19 | Testing and math | Not started | |
-| 20 | Game feel | Not started | |
+| 20 | Game feel | Done | One engine, `js/math/feel.js` (M8R; game copy `game/core/feel.js` by `tools/game_feel_build.mjs`, a test fails when stale; second engine). Game: Menu › Start at the finish line (the web page end.html's walk on the same `gfBackwards`; also a button on the life map), Menu › What's in the way (bottleneck finder: money, time, energy, skill, knowledge, people, fear, rules, each with its own Is this really it?, the answers kept by the judge in Quest mode), Me › Role model and rival (past you from your own check-ins; a typical path on the BEA saving rate; never a real person), What if › People (eight made-up composite stories, labeled), a strip at the top of a sheet with what an answer moved and unlocked (the one receipt of receipt.js), before and after bars on every receipt line with Replay what changed. Gamified entry: the bonus hunt and bank bonus calculator were already built (run 2 Part 10b): covered, now linked from What's in the way (Money) and a gap on the finish line. QUESTIONS 639. |
 | 21 | Spec rows marked Partly | Not started | |
 
 ## RUN: Not built, groups 1 to 5 (Nov 25 2026)

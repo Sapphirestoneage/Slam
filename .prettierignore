@@ -29,3 +29,4 @@ game/core/benefitsplan.js
 game/core/invest.js
 game/core/safetynet.js
 game/core/giving.js
+game/core/feel.js

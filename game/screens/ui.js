@@ -1290,10 +1290,6 @@ const SOON = [
     "The Enneagram-style test",
     "A real set of questions about what drives you with money, with a result written in money terms.",
   ],
-  [
-    "Rivals",
-    "Race the typical person your age, a perfect you, and (once you surface) a head-start rival you may never catch.",
-  ],
   ["Mentors and the Judge", "Pick a mentor for tips, books and introductions. The Judge asks the hard questions."],
   ["Strategy collection", "Every strategy you learn is seen. Every one you use is caught. Some are legendary."],
   ["Guilds", "Groups that share deals, knowledge and accountability."],
@@ -1395,6 +1391,7 @@ function sheet(fn) {
   if (typeof sheetUx === "function") sheetUx(fn, was); /* ux.js: the resume note, the browser history, the chips */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
   if (typeof sheetQuest === "function") sheetQuest(fn); /* questlog.js: the trail of the last screens */
+  if (typeof sheetRippleStart === "function") sheetRippleStart(was); /* feel.js: the profile before the answers */
 }
 function sheetBase(fn) {
   SH = fn;
@@ -5044,12 +5041,12 @@ function rivalCard(c, d) {
     rs = rivalState(c, d, t, key),
     bm = bestMove(c, d, t);
   return `<div class="card"><div class="row between"><h3>Role model and rival</h3></div><div class="tile" style="margin-top:8px"><div class="eyebrow">Role model · someone to aim at</div><div class="small" style="margin-top:4px">Someone your age who did every step on time since 22 would have about <b>${money(rm.nw)}</b> saved and ${rm.cushion} months of cushion. Nobody is this person. It's a direction, not a score.</div>${bm && bm.title ? `<div class="small" style="margin-top:6px">The next thing they'd do that you haven't: <b>${esc(bm.title)}</b></div>` : ""}</div>
- <div class="tile" style="margin-top:8px"><div class="eyebrow">Rival · someone you can catch</div><div class="small" style="margin-top:4px">A made-up person who started the same day you did, from the same spot. Pick how hard they are.</div><div class="chips" style="margin-top:6px">${Object.keys(
+ <div class="tile" style="margin-top:8px"><div class="eyebrow">Rival · someone you can catch</div><div class="small" style="margin-top:4px">Someone who started the same day you did, from the same spot: a made-up person or a typical path, never a real one. Pick how hard.</div><div class="chips" style="margin-top:6px">${Object.keys(
    RIVALS
  )
    .map(k => `<button class="chip ${key === k ? "on" : ""}" data-a="rival" data-v="${k}">${RIVALS[k].n}</button>`)
    .join("")}</div><div class="small" style="margin-top:6px"><b>${rs.R.n}.</b> ${rs.R.d}</div>
- ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "Recalculating: " + money(-rs.gap) + " to close. One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div></div>`;
+ ${c.placed || G.demo ? `<div class="grid2" style="margin-top:8px"><div class="tile"><div class="tiny muted">You, in ${rs.days} day${rs.days === 1 ? "" : "s"}</div><div class="big">${signed(rs.you)}</div></div><div class="tile"><div class="tiny muted">${rs.R.n.split(" ")[1]}</div><div class="big">${signed(rs.them)}</div></div></div><div class="small" style="margin-top:6px">${rs.days < 7 ? "It's early. Check back in a week or two." : rs.gap >= 0 ? "You're ahead by " + money(rs.gap) + "." : "Recalculating: " + money(-rs.gap) + " to close. One good month closes most of that."}</div>` : `<div class="tiny muted" style="margin-top:6px">The race starts once your numbers are close.</div>`}</div>${typeof rivalPastPart === "function" && (c.placed || G.demo) ? rivalPastPart(c, d) : "" /* feel.js: past you */}</div>`;
 }
 Object.assign(ACT, {
   stmt: t => {
@@ -5394,7 +5391,10 @@ function drawSheetBase() {
       : "";
   /* fbreport.js: the button "Report" at the end of each sheet */
   const rep = typeof sheetReportRow === "function" ? sheetReportRow() : "";
-  el.innerHTML = `<div class="overlay"><div class="sheet stack">${soonDraw(SH, "ui.js: drawSheetBase")}${foot}${rep}</div></div>`;
+  const body = soonDraw(SH, "ui.js: drawSheetBase"),
+    /* feel.js: what an answer in this sheet moved and unlocked, a slim strip at the top */
+    rip = typeof sheetRippleRow === "function" ? sheetRippleRow(body) : "";
+  el.innerHTML = `<div class="overlay"><div class="sheet stack">${rip}${body}${foot}${rep}</div></div>`;
   const nw = el.querySelector ? el.querySelector(".sheet") : null;
   if (nw) nw.scrollTop = sc;
   if (nw && nw.querySelectorAll) {
@@ -6432,6 +6432,7 @@ function movesSheetBase() {
   }
   if (w.tab === "mentors")
     b +=
+      (typeof gfStoriesPart === "function" ? gfStoriesPart(c) : "") /* feel.js: the made-up composite stories */ +
       `<div class="small muted">Real people who have told their stories in public. They aren't part of this game. The dates below come from your numbers, not theirs.</div>` +
       MENTORS.map(m => {
         const open = w.open === m.id,
