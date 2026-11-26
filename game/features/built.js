@@ -1442,6 +1442,14 @@ const WB = [
     "peers",
   ],
   [
+    "see",
+    "Giving: rate, a gift in time, bunching, envelopes, maaser credit",
+    "b",
+    () => WB_HAS("giving") && WB_FN("gvBunch") && WB_FN("gvCredit") && typeof GV_TAX !== "undefined",
+    "Menu, Giving: your giving rate on the base you pick (gross, take-home, after work costs) and the share it comes to (maaser commonly 10%, your own tap), one gift in hours of work, days on your free date and what it could have grown to, bunching two or three years of giving into one on the 2026 federal rules (the $1,000 / $2,000 deduction without itemizing, the 0.5% floor), envelopes inside one account that fill and empty, and a running maaser count where giving ahead counts by your own rule. Not yet: volunteer hours toward maaser, the 35% limit in the 37% bracket. Also giving.html on the web.",
+    "giving",
+  ],
+  [
     "feel",
     "Hidden costs your life charges you",
     "b",

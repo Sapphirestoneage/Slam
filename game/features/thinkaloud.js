@@ -162,6 +162,7 @@ function taDock() {
   let el = document.getElementById("tadock");
   if (!taOn()) {
     if (el) el.remove();
+    if (document.body.classList.contains("ta-on")) document.body.style.paddingBottom = "";
     document.body.classList.remove("ta-on");
     return;
   }
@@ -174,6 +175,20 @@ function taDock() {
     document.body.appendChild(el);
   }
   document.body.classList.add("ta-on");
+  /* The panel sits above the tab bar (nav.tabs, fixed at the bottom on a phone), and the page gets room under its
+     last row, so nothing of the game hides behind the panel. */
+  try {
+    const nav = document.querySelector("nav.tabs"),
+      tabH = nav && getComputedStyle(nav).display !== "none" ? nav.offsetHeight : 0;
+    el.style.bottom = tabH + "px";
+    document.body.style.paddingBottom = el.offsetHeight + tabH + 16 + "px";
+    document.body.style.setProperty(
+      "--ta-h",
+      el.offsetHeight + tabH + "px"
+    ); /* a sheet scrolls its last row above the panel */
+  } catch (e) {
+    report(e, "thinkaloud.js: taDock");
+  }
   const top = document.getElementById("ta-top"),
     at = document.getElementById("ta-at"),
     said = document.getElementById("ta-said");

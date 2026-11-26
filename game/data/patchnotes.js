@@ -517,6 +517,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Giving",
+    l: [
+      "Menu has Giving: what you give as a share of the pay you pick (gross, take-home, or after the costs of earning it), and what your share comes to. Maaser is commonly 10%; the share is your own tap.",
+      "One gift, in time: the hours of work it is, the days it moves the day work becomes optional, and what it could have grown to.",
+      "Bunching: give two or three years' worth in one year and see the federal tax each way, on the 2026 rules.",
+      "Envelopes inside one account you already have, like maaser and fun money, each a bar that fills and empties.",
+      "A running maaser count, where giving ahead counts toward later months if that is your rule. The web app has the same page.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Testing and the math checked twice",
     l: [
       "Testers can run a think-aloud test on their own: a panel at the bottom of every screen shows one task at a time, counts the taps, and keeps Report this open with the screen name filled in.",

@@ -28,3 +28,4 @@ game/core/peers.js
 game/core/benefitsplan.js
 game/core/invest.js
 game/core/safetynet.js
+game/core/giving.js

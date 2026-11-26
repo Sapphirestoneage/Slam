@@ -4,6 +4,7 @@
 // left, a projected date and what it is made of.
 import { ownPlanPerson } from '../registry/couples.js';
 import { metrics } from './metrics.js';
+import { gvIsGiving } from './giving.js';
 import { isHeavyDebt } from './debt.js';
 import { matchFromTiers } from './portfolio.js';
 import { layersOf } from './layers.js';
@@ -77,7 +78,7 @@ export function foo(doc, ref, { now = new Date(), flags = [], person = ownPlanPe
   const sink = yearItems(doc.records, now).all.filter(i => i.rec.values.sinking).map(i => ({ ...sinkingOf(i, { records: doc.records, now }), name: i.name }));
   const give = p.giving?.on ? p.giving : null;
   const giveMonthly = !give ? 0 : give.mode === 'amount' ? give.amount ?? 0 : (give.pct ?? 0) * ((give.base === 'net' ? x.takeHome : (x.grossAnnual ?? 0) / 12) ?? 0);
-  const givingLines = sum(x.lines.filter(l => /giv|tithe|maaser|charit|donat/i.test(`${l.name} ${l.category ?? ''}`)), l => l.amount);
+  const givingLines = sum(x.lines.filter(l => gvIsGiving(`${l.name} ${l.category ?? ''}`)), l => l.amount);
   const joy = x.lines.filter(l => l.joy === true || l.values?.joy === true);
 
   const steps = [];

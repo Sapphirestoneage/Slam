@@ -32,6 +32,7 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { gvRate, gvTarget, gvGift, gvBunch, gvEnvelopes, gvCredit } from '../../js/math/giving.js';
 import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
@@ -374,6 +375,24 @@ for (let i = 0; i < N; i++) {
     items: Rr.items.map(x => ({ id: x.id, per100: x.per100, memYears: x.memYears, dividend: x.dividend, laterYears: x.laterYears, days: x.days })), regret: Rr.regret.map(x => x.id) });
   const subs = Array.from({ length: whole(0, 6) }, (_, k) => ({ name: `S${k}`, amt: rnd() < 0.1 ? 0 : money(1, 90) })), totalDays = rnd() < 0.15 ? null : money(1, 400);
   const P = enSubs(subs, totalDays, { wage }); add('enSubs', { subs, totalDays, wage }, P.ready ? { ready: true, total: P.total, days: P.days, rows: P.rows.map(r => ({ name: r.name, days: r.days, hoursYear: r.hoursYear })) } : { ready: false });
+}
+// Giving (run Finish everything partly built, Part 16): the rate and the target on each base, some inputs blank; one
+// gift once or every month; bunching 2 or 3 years on the 2026 federal rows (std, brackets, the charitable rules);
+// envelopes in one account; the maaser credit with and without giving ahead counting.
+const GV_T = { std: ref.tax.standardDeduction, brackets: ref.tax.brackets, charity: ref.tax.charity };
+for (let i = 0; i < N; i++) {
+  const b = { base: pick(['gross', 'net', 'after']), gross: rnd() < 0.15 ? null : money(1500, 40000), takeHome: rnd() < 0.15 ? null : money(1000, 30000), costs: rnd() < 0.2 ? null : rnd() < 0.2 ? 0 : money(10, 3000) };
+  const given = rnd() < 0.15 ? null : rnd() < 0.1 ? 0 : money(5, 5000), pct = rnd() < 0.4 ? null : pick([0.01, 0.02, 0.05, 0.1, 0.2, 0.15]);
+  const Rr = gvRate({ given, ...b }); add('gvRate', { given, ...b }, { ready: Rr.ready, of: Rr.of, rate: Rr.rate });
+  const Tt = gvTarget({ pct, given, ...b }); add('gvTarget', { pct, given, ...b }, { ready: Tt.ready, value: Tt.value ?? null, gap: Tt.gap ?? null, share: Tt.share });
+  const g = { amount: rnd() < 0.1 ? null : money(5, 20000), monthly: rnd() < 0.5, wage: rnd() < 0.2 ? null : between(8, 150), days: rnd() < 0.2 ? null : between(-5, 900), realReturn: rnd() < 0.15 ? null : pick([0, 0.03, 0.05, 0.07]), years: rnd() < 0.15 ? null : between(0, 40) };
+  const Gg = gvGift(g); add('gvGift', g, Gg.ready ? { ready: true, hours: Gg.hours, days: Gg.days, grown: Gg.grown, hoursYear: Gg.hoursYear } : { ready: false });
+  const k = { give: rnd() < 0.08 ? null : money(100, 80000), agi: rnd() < 0.08 ? null : money(15000, 1500000), other: rnd() < 0.08 ? null : rnd() < 0.2 ? 0 : money(500, 90000), filing: pick(['single', 'joint', 'head']), years: pick([2, 3]), cash: rnd() < 0.7 };
+  const Kb = gvBunch(k, GV_T); add('gvBunch', k, Kb.ready ? { ready: true, taxEvery: Kb.taxEvery, taxBunched: Kb.taxBunched, saved: Kb.saved, ways: [Kb.every[0].way, Kb.bunched[0].way, Kb.bunched[1].way] } : { ready: false });
+  const env = { balance: rnd() < 0.2 ? null : money(0 + 1, 20000), list: Array.from({ length: whole(0, 5) }, (_, j) => ({ id: `e${j}`, name: `E${j}`, put: rnd() < 0.2 ? null : rnd() < 0.1 ? 0 : money(10, 3000), used: rnd() < 0.3 ? null : rnd() < 0.2 ? 0 : money(1, 3500) })) };
+  const Ee = gvEnvelopes(env); add('gvEnvelopes', env, { held: Ee.held, free: Ee.free, rows: Ee.rows.map(r => ({ left: r.left, full: r.full, past: r.past })) });
+  const owedEach = money(10, 3000), cr = { months: Array.from({ length: whole(0, 14) }, (_, j) => ({ m: `2026-${String((j % 12) + 1).padStart(2, '0')}`, owed: rnd() < 0.1 ? null : owedEach, given: rnd() < 0.25 ? null : rnd() < 0.15 ? 0 : money(1, owedEach * 3) })), ahead: rnd() < 0.6 };
+  const Cc = gvCredit(cr); add('gvCredit', cr, { balance: Cc.balance, after: Cc.rows.map(r => r.after), fromCredit: Cc.rows.map(r => r.fromCredit) });
 }
 // Households together (run Finish everything partly built, Part 12): two to six people by name, some answers blank;
 // FI numbers and dates, some blank; a shared home with or without a loan typed; pay for the tax gap when two marry, on

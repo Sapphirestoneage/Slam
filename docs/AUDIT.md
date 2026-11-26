@@ -121,6 +121,14 @@ bonus kept (the deposit's interest at each rate grown month by month, the gap af
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 16) it also covers Giving (`js/math/giving.js`, the one
+engine of the web app and the game): the giving rate and the target on each base (gross, take-home, after work costs)
+with some inputs blank; one gift once or every month (hours at the wage, each month's gift grown to the FI date one
+month at a time); bunching two or three years on the 2026 federal rows, each year the larger of the standard deduction
+plus the cash-gift deduction for people who do not itemize and the itemized deductions above the 0.5% floor, through the
+second engine's own brackets; envelopes in one account (left, the bar, what is not labeled); and the maaser credit month
+by month, with and without giving ahead counting.
+
 Since Nov 26 2026 (run Finish everything partly built, Part 12) it also covers Households together (`js/math/hhold.js`,
 the one engine of the web app and the game): one to six people by name with some answers, numbers and dates blank; Same
 question worked out again from its own list of the questions (same, close or further apart, the spread, the talk points
