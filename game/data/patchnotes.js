@@ -430,6 +430,17 @@ const PATCH_NOTES = [
       "In the web app the same tools are on the Budget (Joy per dollar, Subscriptions in days) and on Goals.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Benefits and health",
+    l: [
+      "Menu has Benefits and health: what your HSA, dependent care FSA, ESPP and commuter benefit are worth to you in dollars a year.",
+      "Tap your employer from a short list of large employers to fill its 401(k) match, vesting and ESPP discount, each with where it comes from.",
+      "See the coverage you may qualify for at your income (Medicaid, the Essential Plan in New York, the marketplace credit) and what a raise does to it.",
+      "Put two or three health plans side by side: premiums after the credit, and a light, typical and heavy year.",
+      "In the web app the same tools are on About you, under Benefits at work and Health coverage and plans.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

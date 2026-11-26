@@ -1,0 +1,236 @@
+{
+  "id": "library.employers",
+  "about": "Run Finish everything partly built, Part 10: the employer benefits library. Only rows found in the employer's own benefits pages or its SEC filings, each with its source and date; a field not found stays empty (null). The search did not reach a dated official source for the other large employers (QUESTIONS). Each source names the document and its year; read is the day it was read through a web search (sec.gov and the employer sites do not open from the build machine).",
+  "asOf": "2026-11-26",
+  "rows": {
+    "bankofamerica": {
+      "name": "Bank of America",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.05
+        }
+      ],
+      "match": "100% of the first 5% of pay, after 12 months of service",
+      "vest": "now",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "Bank of America 401(k) Plan, Form 11-K for 2023 (SEC): the company match is up to 5% of plan-eligible pay, from the month after 12 months of vesting service",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "Bank of America 401(k) Plan, Form 11-K for 2024 (SEC): each participant is 100% vested in company matching contributions",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "cisco": {
+      "name": "Cisco",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.045
+        }
+      ],
+      "match": "100% of the first 4.5% of pay",
+      "vest": "now",
+      "esppDiscount": 0.15,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match and vesting",
+          "source": "Cisco Form 10-K for fiscal 2024 (SEC): a match on the first 4.5% of eligible pay that employees put in, at most $15,525 (4.5% of the $345,000 pay limit); matching contributions vest right away",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "ESPP",
+          "source": "Cisco Form 10-K for fiscal 2025 (SEC, period ending Jul 26 2025): the Employee Stock Purchase Plan buys at up to 15% off the lower of the price at the start of the 24-month offering or the end of each 6-month purchase period (quoted through the edgar.tools copy of the filing)",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "homedepot": {
+      "name": "The Home Depot",
+      "tiers": [
+        {
+          "rate": 1.5,
+          "upTo": 0.01
+        },
+        {
+          "rate": 0.5,
+          "upTo": 0.04
+        }
+      ],
+      "match": "150% of the first 1% of pay, then 50% of the next 4% (3.5% of pay in all)",
+      "vest": "cliff3",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "The Home Depot FutureBuilder 401(k) Plan, Form 11-K for 2024 (SEC): the match is 150% of the first 1% a participant puts in, plus 50% of the next 2% to 5%; catch-up money is not matched",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "The Home Depot FutureBuilder 401(k) Plan, Form 11-K for 2021 (SEC): 100% cliff vesting in the match after three years of vesting service (a year is 1,000 hours)",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "jpmorgan": {
+      "name": "JPMorgan Chase",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.05
+        }
+      ],
+      "match": "100% of the first 5% of pay, paid once a year to people still employed at year end",
+      "vest": null,
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "JPMorgan Chase 401(k) Savings Plan, Form 11-K for 2023 (SEC): an annual match of 100% of deferrals up to 5% of eligible pay, for participants employed at the end of the calendar year unless certain conditions are met",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "Not found in a filing from 2021 or later: left empty",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "microsoft": {
+      "name": "Microsoft",
+      "tiers": [
+        {
+          "rate": 0.5,
+          "upTo": 1
+        }
+      ],
+      "match": "50% of everything you put in, up to the IRS deferral limit (catch-up money is not matched)",
+      "vest": "now",
+      "esppDiscount": 0.1,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "Microsoft US benefits, 401(k) Savings Plan and Contribution options (usbenefits.microsoft.com): 50% of every pre-tax and Roth dollar, up to the IRS basic deferral limit ($24,500 for 2026, a match of $12,250); catch-up contributions are not matched",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "Microsoft US benefits, Financial (usbenefits.microsoft.com): the 401(k) has matching and full vesting",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "ESPP",
+          "source": "Microsoft US benefits, Stock Awards and ESPP (usbenefits.microsoft.com): shares at a 10 percent discount at the end of each three-month offering period",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "starbucks": {
+      "name": "Starbucks",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.05
+        }
+      ],
+      "match": "100% of the first 5% of pay each pay period",
+      "vest": "now",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match and vesting",
+          "source": "Starbucks Future Roast 401(k), starbucksbenefits.com and the Summary Plan Description for fiscal 2024 (dated Oct 1 2023): 100% of the first 5% of eligible pay each pay period; you are always 100% vested",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "ups": {
+      "name": "UPS",
+      "tiers": [
+        {
+          "rate": 0.5,
+          "upTo": 0.06
+        }
+      ],
+      "match": "50% of the first 6% of pay (non-union SavingsPlus)",
+      "vest": "now",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "UPS 401(k) Savings Plan, Form 11-K for 2024 (SEC): from Jan 1 2023 the SavingsPlus match is cash, 50% of pre-tax, Roth and after-tax contributions up to 6% of eligible pay",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "UPS 401(k) Savings Plan, Form 11-K for 2025 (SEC, filed Jun 2026): contributions and the SavingsPlus match are 100% vested at all times (the separate Retirement Contribution vests after three years)",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "walmart": {
+      "name": "Walmart",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.06
+        }
+      ],
+      "match": "100% of the first 6% of pay, once you are eligible for the match",
+      "vest": "now",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "Walmart 2024 Associate Benefits Guide (me.walmart.com): once you are match eligible, Walmart matches each dollar you put in, up to 6% of eligible pay",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "Walmart 401(k) Plan FAQ 2020 (one.walmart.com): you are 100% vested in your own money and the company match right away. The newest Walmart page found on vesting is from 2020",
+          "read": "2026-11-26"
+        }
+      ]
+    },
+    "wellsfargo": {
+      "name": "Wells Fargo",
+      "tiers": [
+        {
+          "rate": 1,
+          "upTo": 0.06
+        }
+      ],
+      "match": "100% of the first 6% of pay, paid at year end",
+      "vest": "cliff3",
+      "esppDiscount": null,
+      "hsaEmployer": null,
+      "sources": [
+        {
+          "what": "match",
+          "source": "Wells Fargo & Company 401(k) Plan, Form 11-K for 2024 (SEC): 100% of salary deferrals up to 6% of eligible certified pay in the plan year, paid at year end",
+          "read": "2026-11-26"
+        },
+        {
+          "what": "vesting",
+          "source": "Wells Fargo & Company 401(k) Plan, Form 11-K for 2025 (SEC): matching contributions for people hired on or after Jan 1 2021 have 3-year cliff vesting",
+          "read": "2026-11-26"
+        }
+      ]
+    }
+  }
+}
