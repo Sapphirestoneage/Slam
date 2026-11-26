@@ -142,10 +142,10 @@
   /* ---------- Home and the spreadsheet ---------- */
   go("home");
   chk(
-    "Home has one line of the next dollar at the top",
+    "Home has one line of the next dollar, under Why this one of Your next win (results.js)",
     (app().match(/Your next dollar:/g) || []).length === 1 &&
-      app().indexOf("hqtop") < app().indexOf("fwnext") &&
-      app().indexOf("fwnext") < app().indexOf("dkstats")
+      app().indexOf("rs:win") < app().indexOf("Your next dollar:") &&
+      app().indexOf("Your next dollar:") < app().indexOf("rs:month")
   );
   const B = fwBook(c);
   chk(

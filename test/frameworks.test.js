@@ -154,3 +154,21 @@ test('the five pages exist, load the canon renderer and are on the layout check'
 test('the game\'s copy is made from this file and is current (node tools/game_frameworks_build.mjs)', () => {
   execFileSync(process.execPath, [new URL('../tools/game_frameworks_build.mjs', import.meta.url).pathname, '--check'], { stdio: 'pipe' });
 });
+
+test('results first: the lead number, the DTI date and the month-end line', () => {
+  assert.equal(F.fwLead({ worth: -100, fire: true }), 'debtfree');
+  assert.equal(F.fwLead({ worth: 5000, fire: true }), 'fi');
+  assert.equal(F.fwLead({ worth: 5000 }), 'next');
+  assert.equal(F.fwLead({ worth: null, fire: false }), 'next');
+  assert.equal(F.fwDtiMonths({ home: 1000, gross: 5000, debts: [] }), 0);
+  // 1000 + 600 + 300 = 1900 of 5000 is 38%; the 300 ends in month 4: 1600 / 5000 = 32%
+  assert.equal(F.fwDtiMonths({ home: 1000, gross: 5000, debts: [{ pay: 600, off: 20 }, { pay: 300, off: 4 }] }), 4);
+  assert.equal(F.fwDtiMonths({ home: 2000, gross: 5000, debts: [{ pay: 500, off: null }] }), null);
+  assert.equal(F.fwDtiMonths({ home: 1000, gross: null }), null);
+  const E = F.fwMonthEnd({ worth: 1000, days: [{ day: 28, net: -200 }, { day: 30, net: 500 }, { day: 10, net: 9 }], today: 26, last: 30, extra: 40 });
+  assert.deepEqual(E.days, [26, 27, 28, 29, 30]);
+  assert.equal(E.endAsIs, 1300);
+  assert.equal(E.endPlanned, 1340);
+  assert.equal(E.planned[1], 1010);
+  assert.equal(F.fwMonthEnd({ worth: null }), null);
+});

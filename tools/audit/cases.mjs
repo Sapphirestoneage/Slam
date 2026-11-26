@@ -28,7 +28,7 @@ import { answer } from '../../js/journey.js';
 import { taxableSocialSecurity, gainsTax, requiredWithdrawal, premiumCredit, yearTax, medicareSurcharge, lifetime, earliestFreedom, worked } from '../../js/math/lifetime.js';
 import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, jobWirePer, jobCheckNext, jobDateNext, jobCarry, jobHourValue } from '../../js/math/jobs.js';
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
-import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS } from '../../js/math/frameworks.js';
+import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
@@ -212,6 +212,10 @@ for (let i = 0; i < N; i++) {
   { const spans = Array.from({ length: whole(1, 3) }, () => ({ years: whole(1, 20), pay: money(5000, 300000), hours: pick([null, 20, 40, 50]) })), L = fwLifetime(spans); add('fwLifetime', { spans }, { total: L.total, hours: L.hours }); }
   { const x = { invested: pick([0, money(1, 3000000)]), cash: pick([0, money(1, 90000)]), monthly: money(800, 15000), rate: pick([0.03, 0.035, 0.04]) }, S = fwStep9(x); add('fwStep9', x, { income: S.income, cushionLeft: S.cushionLeft, cache: S.cache }); }
   { const wins = Object.fromEntries(FW_WINS.filter(() => rnd() < 0.5).map(([id]) => [id, { done: 1, save: pick([null, 0, 5, 10, 25, 50, 100]) }])), y = money(12000, 200000), T = fwWins(wins, y); add('fwWins', { wins, yearSpend: y }, { month: T.month, fiDays: T.fiDays }); }
+  // Results first (Nov 26 2026): the lead number, the months to a DTI target, net worth to the end of the month
+  { const x = { worth: pick([null, -money(1, 90000), 0, money(1, 900000)]), fire: rnd() < 0.5 }; add('fwLead', x, { lead: fwLead(x) }); }
+  { const x = { home: pick([0, money(1, 4000)]), gross: pick([null, money(1500, 30000)]), debts: Array.from({ length: whole(0, 5) }, () => ({ pay: money(25, 1500), off: pick([null, whole(1, 120)]) })), target: pick([0.28, 0.36, 0.43]) }; add('fwDtiMonths', x, { months: fwDtiMonths(x) }); }
+  { const last = pick([28, 30, 31]), today = whole(1, last), x = { worth: money(1, 400000) * (rnd() < 0.3 ? -1 : 1), days: Array.from({ length: whole(0, 8) }, () => ({ day: whole(1, last), net: money(1, 6000) * (rnd() < 0.5 ? -1 : 1) })), today, last, extra: pick([0, money(1, 900)]) }, E = fwMonthEnd(x); add('fwMonthEnd', x, { endAsIs: E.endAsIs, endPlanned: E.endPlanned, n: E.days.length }); }
   // Career and education (js/math/career.js, M9Z): one path priced, the stack's overlaps, the match left behind, the launch window
   { const x = { cost: money(200, 150000), help: pick([0, 0, 1000, 5000]), months: pick([0, 3, 6, 12, 18, 48]), keepPct: pick([0, 50, 100]), payBefore: money(15000, 200000), payAfter: money(15000, 260000), taxPct: pick([0, 10, 12, 22, 24, 32, 35]),
       loan: pick([0, 0, 5000, 30000]), loanRatePct: pick([0, 4, 6.5, 9]), loanYears: pick([5, 10, 20]), age: whole(18, 55), endAge: pick([55, 60, 65, 70]) }, r = crRoi(x);

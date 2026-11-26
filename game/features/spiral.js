@@ -610,29 +610,20 @@ function spLeg(label, s) {
 function spPlanSheet() {
   const c = C(),
     P = spPlan(c),
-    E = P.el,
-    sd = E ? EL_SIDES[E.el] : null,
-    X = elStore(c),
     dest = P.dest;
-  return (
-    head("Your first plan", "Your first plan") +
+  /* Your route, stop by stop: the destination, the stops with their dates, what the date depends on. Inside the
+     payoff reveal of results.js, collapsed. */
+  const route =
     (dest
-      ? `<div class="spnum"><div class="eyebrow">Destination</div><div class="spbig ${P.st === "Guess" ? "guess" : ""}" data-fid="sp:dest">${esc(dest.n)}</div><div class="small">${esc(spWhen(dest.m))}</div>${kitPill(P.st)}</div><div class="small">${esc(dest.gate)}.</div>`
-      : `<div class="spnum"><div class="eyebrow">Destination</div><div class="spbig">Past every stop</div></div>`) +
-    `<b class="small">You are here</b>` +
+      ? `<div class="small"><b>Destination: ${esc(dest.n)}</b>, ${esc(spWhen(dest.m))}. ${esc(dest.gate)}.</div>`
+      : `<div class="small"><b>Past every stop</b></div>`) +
     spRouteStrip(c, P.d, P.rt, null).replace("Your route starts here", "Your route") +
     (P.rt.left <= 0
       ? `<div class="banner small">Recalculating route: right now about ${money(-P.rt.left)} more goes out than comes in. The first stop is finding that room.<button class="ghost wide slim" style="margin-top:8px" data-a="csp">See where it goes</button></div>`
       : "") +
     P.legs.map((s, k) => spLeg(k === 0 ? "Next stop" : s.i === 8 || k === 2 ? "Ultimately" : "Then", s)).join("") +
-    (P.week.length
-      ? `<b class="small">In the meantime, this week</b><div class="stack" style="gap:6px">${P.week.map(m => `<button class="rowbtn" data-a="${esc(m.a)}"${m.v != null ? ` data-v="${esc(m.v)}"` : ""}><span><b>${esc(m.t)}</b>${m.s ? `<div class="tiny muted">${esc(m.s)}</div>` : ""}</span><span class="caret">›</span></button>`).join("")}</div>`
-      : "") +
     (P.deps.length
       ? `<b class="small">It depends on</b><div class="stack" style="gap:6px">${P.deps.map(x => `<div class="tile row between" style="gap:8px"><span class="small"><b>${esc(x.n)}</b><div class="tiny muted">${x.months === Infinity ? "Could decide whether there is a date at all" : "Could move your date by about " + rcSpan(x.months)}</div></span><button class="ghost slim" data-a="sharp" data-v="${x.k}">Sharpen</button></div>`).join("")}</div>`
-      : "") +
-    (E && sd
-      ? `<div class="tile stack" style="gap:6px"><div class="row between"><b class="small">Your element: ${esc(E.el)}</b>${kitPill(E.st)}</div>${X.planSeen ? "" : `<div class="tiny muted">Your money style: how you tend to handle money surprises.</div>`}<div class="small">For this plan: ${esc(sd.tip)}</div><details class="math"><summary>Strong against, weak to</summary><div class="inner tiny">Strong against: ${esc(sd.strong.join(", "))}. Weak to: ${esc(sd.weak.join(", "))}.</div></details></div>`
       : "") +
     mathBox([
       "Each date: the money left each month (take-home pay less spending) goes to one stop at a time, in the order of the route.",
@@ -640,15 +631,21 @@ function spPlanSheet() {
       "Costly debt: the payoff order with the highest rate first, with the money left each month on top of the payments.",
       "Full emergency fund: (your age ÷ 5) months of spending, less the cash you have, ÷ the money left each month.",
       "It depends on: each Guess number, made a fifth smaller and a fifth bigger. The ones that move the date most come first.",
-    ]) +
+    ]);
+  /* results.js: the payoff reveal (the lead number, the five result cards, "Start my first win") */
+  if (typeof rsRevealBody === "function")
+    return head("Here's where you stand", "Here's where you stand") + rsRevealBody(c, route);
+  return (
+    head("Your first plan", "Your first plan") +
+    route +
     `<button class="primary wide go" data-a="spplan2">Next: two quick taps</button>`
   );
 }
 kitScreen(
   "firstplan",
-  "Your first plan",
-  "Your route from here: the destination, the next stops and their dates.",
-  "Each date is a Guess until your numbers are real. Sharpen the ones it depends on most."
+  "Here's where you stand",
+  "Your results from setup: the lead number, five result cards, and your route one tap away.",
+  "Greyed numbers are typical for people like you until you put in yours."
 );
 Object.assign(ACT, {
   spnext: () => {

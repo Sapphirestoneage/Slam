@@ -1,8 +1,8 @@
 /* ============================================================================
    SLAM the Game, test: tests/front-door.js
    PURPOSE     Examine the front door: a new visitor sees the landing screen, a person who is signed in
-               does not, Start opens the setup by taps with "Am I okay?" first and ends on the answer,
-               the offer to save by making an account, the link marks in the address stay, and the copy.
+               does not, Start opens the setup by taps with "Am I okay?" first and ends on the payoff
+               reveal (results.js), with the answer one tap away in the Menu, the offer to save by making an account, the link marks in the address stay, and the copy.
    INPUT       The game scripts, loaded by harness.cjs. A stand-in for the page (one element list) and for
                the browser storage, made here and removed at the end.
    OUTPUT      One result for each chk() call.
@@ -201,7 +201,24 @@
   P(6);
   R();
   h = ov();
-  chk("the path ends on the answer", W && W.kind === "okay" && /<h2>Am I okay\?<\/h2>/.test(h), W && W.kind);
+  /* results first: the path ends on the one payoff reveal, with the offer to keep the game; the answer to
+     "Am I okay?" is one tap away in the Menu */
+  chk(
+    "the path ends on the one reveal, Here's where you stand",
+    W && W.kind === "firstplan" && h.includes("Here's where you stand"),
+    W && W.kind
+  );
+  chk(
+    "the reveal offers to keep the game, with one primary button",
+    /data-a="doorsave">Keep this game: make a free account</.test(h) && (h.match(/class="primary/g) || []).length === 1
+  );
+  X("okay");
+  h = ov();
+  chk(
+    "the answer to Am I okay? opens from there",
+    W && W.kind === "okay" && /<h2>Am I okay\?<\/h2>/.test(h),
+    W && W.kind
+  );
   chk("the path stays short: at most 40 taps, with the five round screens", taps <= 40, taps);
   chk("the game is the visitor's own now", !G.demo && G.chars.length === 1);
   chk("the device remembers the game, so the landing does not come back", store.slam_guest === "2" && doorHasGame());

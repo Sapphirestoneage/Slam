@@ -2,8 +2,8 @@
    SLAM the Game, test: tests/spiral-onboarding.js
    PURPOSE     Examine setup as a spiral: the five rounds in the order D, A, I, T, E, one number for each
                round with its Guess tag, the chain and the route strip, the level change with "Next" and
-               "Stop here", the checklist of the round, the 50/30/20 summary, and "Your first plan" (the
-               route, the inputs it depends on most, then the two taps for accuracy and focus).
+               "Stop here", the checklist of the round, the 50/30/20 summary, and "Your first plan" (now the
+               payoff reveal of results.js, with the route and the inputs it depends on most inside it).
    INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
    OUTPUT      One result for each chk() call. The harness prints each failed check.
    DEPENDS ON  tests/harness.cjs. Examines: features/spiral.js, screens/smart.js, screens/ui.js (setupSheet).
@@ -161,22 +161,24 @@
   h = ov();
   chk("the first plan opens after the fifth round", W && W.kind === "firstplan" && !G.demo, W && W.kind);
   chk(
-    "the first plan is a route: destination, you are here, next stop, then",
+    "the first plan is the one payoff reveal, with the route inside it (results.js)",
+    h.includes("Here's where you stand") && h.includes("<summary>Your route, stop by stop</summary>")
+  );
+  chk(
+    "the route: destination, you are here, next stop, then",
     ["Destination", "You are here", "Next stop", "Then"].every(t => h.includes(t))
   );
   chk(
     "it says what it depends on, with Sharpen",
     h.includes("It depends on") && h.includes('data-a="sharp"') && h.includes("Sharpen")
   );
-  chk("it has a move for this week", h.includes("In the meantime, this week"));
-  chk(
-    "the element: one line, the first-time meaning",
-    h.includes("Your element:") && h.includes("how you tend to handle money surprises")
-  );
+  chk("it ends on one button: Start my first win", h.includes('data-a="rsfirst">Start my first win'));
   chk("the first plan is clean", clean(h), junk(h));
-  X("spplan2");
+  /* the accuracy and focus taps stay on Me > Strengths and your element */
+  W = { kind: "elem", i: 2, plan: true };
+  sheet(elSheet);
   chk(
-    "then accuracy as a tap",
+    "accuracy as a tap, on the element screens",
     W.kind === "elem" && W.i === 2 && ov().includes("Does this feel accurate?") && ov().includes("tap 1 of 2")
   );
   X("elacc", "Mostly");
