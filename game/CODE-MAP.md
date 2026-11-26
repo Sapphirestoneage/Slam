@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 187. Lines: 112,482. Top-level functions: 2676. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 187. Lines: 112,913. Top-level functions: 2689. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -36,14 +36,14 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 22 | `core/trip.js` | 322 | 17 | 2 | 0 | Travel: a trip line by line (flights, lodging, food a day, the card's fee on other currencies, visa fees, travel insurance), points (cash or redeem), ... |
 | 23 | `core/quick.js` | 163 | 14 | 0 | 0 | The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost per use, Return on Hassle, worth it, personal inflation, start... |
 | 24 | `core/play.js` | 235 | 6 | 0 | 0 | The math of the play parts (run Not built, groups 1 to 5, Part 10b): the daily life-sim challenge, the credit score game (myFICO's five factor shares)... |
-| 25 | `core/gigcore.js` | 200 | 12 | 0 | 0 | Gig and self-employed math with no tax engine: the price floor from a profit before tax and the billable hours, the set-aside so far, retirement room ... |
+| 25 | `core/gigcore.js` | 279 | 15 | 1 | 0 | Gig and self-employed math with no tax engine: the price floor from a profit before tax and the billable hours, the set-aside so far, retirement room ... |
 | 26 | `core/hardcore.js` | 134 | 6 | 1 | 0 | The math and the words of Hard moments (run Not built, groups 1 to 5, Part 7): the split of the rent, a roommate leaving, untangling after a breakup, ... |
 | 27 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
 | 28 | `core/jobs.js` | 354 | 18 | 0 | 0 | The math of the Job of Existing (run JOE-1): which of the six unpaid jobs a player holds, from answers already given; the hours a month of running the... |
 | 29 | `core/enough.js` | 554 | 11 | 0 | 0 | The math of Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): spending growth next to income growth per category, year over year, the... |
 | 30 | `core/benefitsplan.js` | 214 | 14 | 1 | 0 | The math of Benefits and health (run Finish everything partly built, Part 10): the benefits optimizer (HSA, dependent care FSA, ESPP, commuter), the h... |
 | 31 | `core/exercises.js` | 286 | 4 | 0 | 0 | The list of the Exercises screen (run Finish everything partly built, Part 7, Money psychology): ten money exercises and three prompts for life after ... |
-| 32 | `core/ratios.js` | 705 | 26 | 0 | 0 | The math of Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): one function for each ratio, the groups, the formula and the plain sentence ... |
+| 32 | `core/ratios.js` | 725 | 27 | 0 | 0 | The math of Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): one function for each ratio, the groups, the formula and the plain sentence ... |
 | 33 | `data/roles.js` | 412 | 0 | 0 | 0 | Data only. The six unpaid jobs of the Job of Existing (run JOE-1): the name, the line of the "i", the regions and trees of each job, and the recurring... |
 | 34 | `core/reportcore.js` | 592 | 28 | 2 | 0 | Report a bug or idea: one report with the screen name, the last 3 taps, the device, the width and the app version; the list on the device; the sending... |
 | 35 | `core/quizcore.js` | 560 | 21 | 0 | 0 | The one quiz engine: the questions a set of answers leads to, the scoring (with scores from outside as an input), ties, the top two, the confidence le... |
@@ -71,7 +71,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 57 | `features/reveal.js` | 269 | 8 | 1 | 0 | Meet your character. Six cards, one tap each, change the numbers into a person: chapter, era, who the player is with money, the strongest number, and ... |
 | 58 | `features/moneylog.js` | 255 | 11 | 4 | 0 | Two tools. (1) The money log: all logged entries by month, read-only, with a copy as plain text |
 | 59 | `features/drills.js` | 525 | 15 | 9 | 0 | Four tools for hard days. (1) Money fire drills: a money fear, calculated on the numbers of the player, then one small action |
-| 60 | `features/gig.js` | 605 | 32 | 13 | 0 | Work for yourself. For income with no tax taken out |
+| 60 | `features/gig.js` | 834 | 38 | 15 | 0 | Work for yourself. For income with no tax taken out |
 | 61 | `features/know.js` | 204 | 10 | 4 | 0 | What you already know. Five letters, D.A.I.T.E |
 | 62 | `features/fair.js` | 299 | 13 | 5 | 0 | Share costs fairly. For two or more persons: five ways to divide the shared costs, side by side |
 | 63 | `features/values.js` | 391 | 15 | 4 | 0 | Is my money going where I want? Three steps, all taps (UX pass, item 28): rank what matters (tap in order, or drag), a "Not important to me" pile and ... |
@@ -111,7 +111,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 97 | `features/kit.js` | 284 | 24 | 7 | 0 | The shared parts of the plan screens (the two paths, the odds, the simulators and the other screens of the Plan batch) |
 | 98 | `features/retire.js` | 574 | 24 | 0 | 0 | The one adapter to the retirement engine of Zack Williams (vendor/retire-engine.js, MIT license) |
 | 99 | `features/taxview.js` | 328 | 6 | 2 | 0 | The tax view. From pay before taxes, the filing status, the state and the pre-tax contributions: the top federal bracket, the average rate (federal pl... |
-| 100 | `features/odds.js` | 418 | 11 | 3 | 0 | Retirement odds. Two answers in plain words: "X out of 100 random markets work" (the Monte Carlo of the retirement engine of Zack Williams, through fe... |
+| 100 | `features/odds.js` | 460 | 13 | 4 | 0 | Retirement odds. Two answers in plain words: "X out of 100 random markets work" (the Monte Carlo of the retirement engine of Zack Williams, through fe... |
 | 101 | `features/cover.js` | 448 | 7 | 1 | 0 | Insurance needs. In place of the yes / no checks, each kind of cover gets a needs calculation, the gap in dollars, and one next step: disability (abou... |
 | 102 | `features/mix.js` | 325 | 7 | 1 | 0 | Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee |
 | 103 | `features/slept.js` | 117 | 5 | 0 | 0 | While you slept. What the invested money of the player earned per hour, per day, per month and per year, at the return of the plan, next to the real h... |
@@ -170,7 +170,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 156 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 157 | `features/quest.js` | 784 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 158 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 159 | `data/patchnotes.js` | 469 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 159 | `data/patchnotes.js` | 479 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 160 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 161 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 162 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
@@ -186,7 +186,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 172 | `features/exercises.js` | 216 | 6 | 0 | 0 | Money exercises (run Finish everything partly built, Part 7, Money psychology) |
 | 173 | `features/joy.js` | 489 | 8 | 2 | 0 | Joy and enough (run Finish everything partly built, Part 8) |
 | 174 | `features/benefits.js` | 613 | 11 | 3 | 0 | Benefits and health (run Finish everything partly built, Part 10) |
-| 175 | `features/ratios.js` | 278 | 6 | 2 | 0 | Ratios on Key numbers (run Not built, groups 1 to 5, Part 9) |
+| 175 | `features/ratios.js` | 296 | 7 | 2 | 0 | Ratios on Key numbers (run Not built, groups 1 to 5, Part 9) |
 | 176 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
 | 177 | `features/life.js` | 549 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
 | 178 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
@@ -195,10 +195,10 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 181 | `features/results.js` | 533 | 21 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
 | 182 | `features/receipt.js` | 245 | 11 | 1 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
 | 183 | `features/lifemap.js` | 249 | 9 | 5 | 0 | The life tech tree (run Results-first Home, item 4) |
-| 184 | `features/book.js` | 622 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 184 | `features/book.js` | 623 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 185 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 186 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 187 | `features/built.js` | 1,686 | 4 | 20 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 187 | `features/built.js` | 1,718 | 4 | 20 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -216,7 +216,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 965 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 966 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

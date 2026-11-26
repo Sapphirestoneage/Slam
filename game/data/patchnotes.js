@@ -462,6 +462,16 @@ const PATCH_NOTES = [
       "In the web app the same tools are on About you, under Benefits at work and Health coverage and plans.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Taxes when you work for yourself",
+    l: [
+      "Working for yourself, Taxes first: the safe harbor, the least to send in estimates so no underpayment penalty applies, a quarter at each date, and what is still to send by the next one.",
+      "My floor: tap what an app or a gig pays an hour and see it next to your floor, with the hours a month each takes.",
+      "Retirement odds and Ratios: the share of today's pay Social Security would replace.",
+      "In the web app: the Tax command center, the floor next to a gig's pay, and when each app pays out, with the money still on its way.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

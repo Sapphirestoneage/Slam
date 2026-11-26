@@ -12,6 +12,7 @@ import { RULES } from '../registry/assumptions.js';
 import { paperGaps } from '../math/taxreturn.js';
 import { onFile } from '../journey.js';
 import { BUCKET_KIND } from '../sharpen.js';
+import { raSsReplace } from '../math/ratios.js';
 
 export const DEFAULTS = { strategy: 'fixed', rate: 0.04, claimAge: 67, fill: 'none', stocks: 0.8, health: 0, eras: true, blocks: [], retireAge: null, target: 0.95, aca: true, partnerGap: null, partnerSs: 0 };
 // partnerGap: the second person's age less yours (null: planning for one). partnerSs: their benefit a month, today's dollars.
@@ -136,9 +137,11 @@ export function taxNowOf(plan, doc, ref) {
   const taxable = Math.max(0, gross - (m.pretaxSaving ?? 0) * 12 - (ref.tax.standardDeduction[key] ?? 0));
   return { taxable, filingStatus: fs, ...bracketRoom(taxable, fs, ref) };
 }
-// Social Security: the same plan claiming at 62, 67 and 70.
+// Social Security: the same plan claiming at 62, 67 and 70, each with the share of today's pay it replaces (Part 14,
+// raSsReplace, the same function as Ratios).
 export function claimsOf(plan, doc, ref, hist, settings = {}) {
-  return [62, 67, 70].map(claimAge => { const l = lifeOf(plan, doc, ref, hist, { ...settings, claimAge, retireAge: null }); return { claimAge, yearly: l.ssYearly ?? 0, age: l.age, need: l.need ?? null }; });
+  const gross = plan?.m?.inputs?.income?.[0]?.gross ?? null;
+  return [62, 67, 70].map(claimAge => { const l = lifeOf(plan, doc, ref, hist, { ...settings, claimAge, retireAge: null }); return { claimAge, yearly: l.ssYearly ?? 0, replace: raSsReplace({ ssYear: l.ssYearly ?? null, grossYear: gross, claimAge, levels: ['Guess'] }), age: l.age, need: l.need ?? null }; });
 }
 
 // The lifetime choices a plan carries (the Lifetime screen keeps them in the plan): the settings lifeOf takes.

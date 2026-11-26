@@ -65,6 +65,13 @@ by hand (Social Security up to the wage base across both, Medicare, the extra 0.
 income tax, New York and the city on top); the Solo 401(k), the SEP, the IRA and which first from the IRS rules;
 invoice dates with Python's own date library; and the apps, tips and the Profit First split added up.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 14) it also covers the Tax Command Center, Pricing your
+power and the platform P&L (`js/math/gig.js`, M8G): the safe harbor from the IRS 2026 Form 1040-ES rules as written
+(the smaller of 90% of this year and 100% or 110% of last year, less withholding; none with no tax last year over 12
+months or under $1,000 due), a quarter by each date and what is owed by the next one; the payout window of each app
+(its own tap first, else the platform's own help page) and the money still on its way; a gig's pay an hour next to the
+floor; and the Social Security replacement ratio (`js/math/ratios.js`) from its definition.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 8) it also covers family money (`js/math/family.js`, M8F): the
 sandwich years checked month by month (what each month takes from the flows, the months both run at once, the total
 over the years), living at home with the moving-out goal reached by stepping a balance month by month, tuition years

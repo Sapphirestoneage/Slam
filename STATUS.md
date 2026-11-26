@@ -143,7 +143,7 @@ is missing. The details and the questions of each part are in `PROGRESS.md` and 
 | 11 | Estate and marriage | Not started | |
 | 12 | Households | Not started | |
 | 13 | Investing | Not started | |
-| 14 | Taxes and self-employed | Not started | |
+| 14 | Taxes and self-employed | Done; the platform P&L partly (web only; timing sourced for Uber, DoorDash, Upwork; not joined to Tips and shifts; QUESTIONS 632) | Tax command center: web `setaside.html` (set-aside %, the four dates, safe harbor from the IRS 2026 Form 1040-ES rules, what is owed by the next date, to owe nothing in April), game Working for yourself › Taxes first (a safe harbor card; this year's tax is a Guess from the set-aside share). Pricing your power: `freelance.html` and the game's My floor, a gig's pay an hour next to the floor (`gigVsFloorOf`). Platform P&L: `gigapps.html`, each app's fee, payout timing and money still on its way (`gigPayoutsOf`). Social Security replacement: the Lifetime plan's Social Security choice (start.html), Report › Ratios, the game's Retirement odds and Ratios (`raSsReplace`, one function). |
 | 15 | Safety nets | Not started | |
 | 16 | Giving | Not started | |
 | 17 | Asking fewer questions | Not started | |
