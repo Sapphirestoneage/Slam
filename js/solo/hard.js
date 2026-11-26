@@ -8,7 +8,7 @@
 // page: one tap (or Shift three times) and the page is gone, replaced by a weather site, and off the Back button.
 import { h, btn, chip, money, numBox, copyLink } from './shell.js';
 import { calcPage } from './calc.js';
-import { quickExit, exitButton, keepCard } from './private.js';
+import { quickExit, exitButton, keepCard } from './keepthis.js';
 import { hmUntangle, hmChecklist, hmFill, hmParkMonths, HM_PLANS, HM_SPLIT } from '../math/hard.js';
 import { roommateExit } from '../math/hardplan.js';
 import { SINS } from '../quiz/skins/sins.js';
@@ -19,7 +19,7 @@ const opt = (list, f = String) => list.map(v => [f(v), v]);
 const mo = v => `${v} ${v === 1 ? 'month' : 'months'}`;
 const dateWords = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
-// Leave this page and Keep this are shared with Your own path (run Not built, Part 6): js/solo/private.js.
+// Leave this page and Keep this are shared with Your own path (run Not built, Part 6): js/solo/keepthis.js.
 
 // ---------- the shared cards ----------
 const sourceLine = (x, D) => h('div.st-small.st-soft', { style: { marginTop: '4px' } }, 'Source: ', h('a', { href: x.url, target: '_blank', rel: 'noopener' }, x.source), `. Checked ${dateWords(x.checked ?? D.checked)}.`);

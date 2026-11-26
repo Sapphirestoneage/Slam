@@ -2,11 +2,11 @@
 // Your own path (run Not built, groups 1 to 5, Part 6): nine small private pages drawn by the one renderer
 // (js/solo/calc.js), plus the chosen-family summary (js/solo/kin.js, its own page because it holds names).
 // Every page is private (spec.private, boot's private mode shared with the hard moments): nothing is kept unless the
-// person turns on Keep this, the tab title is neutral, and Leave this page sits in the top bar (js/solo/private.js). The math is in js/math/ownpath.js (M8P) with tests;
+// person turns on Keep this, the tab title is neutral, and Leave this page sits in the top bar (js/solo/keepthis.js). The math is in js/math/ownpath.js (M8P) with tests;
 // the dated fees in data/reference-2026.json; the dated resource lists in js/ownpath-sources.js. No cost here is a
 // guess: a box for a cost has no amounts to tap and asks for the person's own quote.
 import { h, money } from './shell.js';
-import { keepCard, withExit } from './private.js';
+import { keepCard, withExit } from './keepthis.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opOwnWayOf, opSearchFundOf, opPlanCheckOf, opFamilyOf, opAgeCareOf, OP_CHECKS } from '../math/ownpath.js';
 import { HAVE } from '../benefits.js';
 import { money as moneyOf } from '../format.js';

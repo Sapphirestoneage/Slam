@@ -137,12 +137,12 @@ test('the pages: private by default, a neutral title, no amounts to tap on a cos
   if (OWN_SPECS) assert.deepEqual(Object.keys(OWN_SPECS), PAGES);
 });
 
-test('one private mode and one quick exit, shared with the hard moments (js/solo/private.js)', () => {
-  const shell = read('js/solo/shell.js'), priv = read('js/solo/private.js'), hard = read('js/solo/hard.js');
+test('one private mode and one quick exit, shared with the hard moments (js/solo/keepthis.js)', () => {
+  const shell = read('js/solo/shell.js'), priv = read('js/solo/keepthis.js'), hard = read('js/solo/hard.js');
   assert.match(shell, /wrote = priv && mine\(\)\.keep === true/, 'boot writes nothing until Keep this');
   assert.match(priv, /export function keepCard/); assert.match(priv, /export function exitButton/); assert.match(priv, /location\.replace\(D\.exit\.to\)/);
   assert.match(priv, /NEUTRAL_TITLE = 'Money tools: Stress Less About Money'/);
-  assert.match(hard, /from '\.\/private\.js'/, 'the hard moments use the same parts');
+  assert.match(hard, /from '\.\/keepthis\.js'/, 'the hard moments use the same parts');
   assert.doesNotMatch(hard, /function keepCard|function exitButton/, 'no second copy');
   for (const f of ['js/solo/ownpath.js', 'js/solo/kin.js']) assert.doesNotMatch(read(f), /location\.replace|function keepCard/, `${f}: no copy of its own`);
 });

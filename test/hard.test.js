@@ -132,7 +132,7 @@ test('kept is still private: the person sees it, a coach only when let in, a par
 });
 
 test('eight pages, each private, each with Leave this page, on the one renderer and on the shelf', async () => {
-  const hard = read('js/solo/hard.js') + read('js/solo/private.js'), calc = read('js/solo/calc.js'), hub = read('js/solo/hub.js'), layout = read('tools/e2e/layout.cjs');
+  const hard = read('js/solo/hard.js') + read('js/solo/keepthis.js'), calc = read('js/solo/calc.js'), hub = read('js/solo/hub.js'), layout = read('tools/e2e/layout.cjs');
   for (const [id, page] of Object.entries(PAGES)) {
     assert.ok(existsSync(new URL(page, root)), page);
     const html = read(page);

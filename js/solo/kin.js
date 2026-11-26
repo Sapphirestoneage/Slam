@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The chosen-family summary page (kin.html, run Not built, groups 1 to 5, Part 6): who decides, who hears, who
 // handles money and who gets what, in plain English for a lawyer. Private like the other Your own path pages: nothing
-// is kept unless the person turns on Keep this (js/solo/private.js, boot's private mode). The words are built by js/kin.js; this page only asks and shows.
+// is kept unless the person turns on Keep this (js/solo/keepthis.js, boot's private mode). The words are built by js/kin.js; this page only asks and shows.
 import { boot, h, btn, foot } from './shell.js';
-import { keepCard, withExit } from './private.js';
+import { keepCard, withExit } from './keepthis.js';
 import { KIN_SECTIONS, kinSummaryOf } from '../kin.js';
 import { sourcesCard } from './ownpath.js';
 import { OP_KIN_RULES } from '../ownpath-sources.js';
