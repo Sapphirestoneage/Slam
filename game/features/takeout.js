@@ -482,7 +482,12 @@ function tkoAca(c) {
     A = TAKEOUT_2026.aca,
     I = {
       prem: kitValue(c, "tko", "prem", 600),
-      size: kitValue(c, "tko", "size", P.filing === "joint" ? 2 : 1),
+      size: kitValue(
+        c,
+        "tko",
+        "size",
+        (P.filing === "joint" ? 2 : 1) + (c.kidCount != null ? +c.kidCount : 0)
+      ) /* the kids counted in setup (amounts.js) */,
       other: kitValue(c, "tko", "other", 0),
       conv: kitValue(c, "tko", "conv", 0),
     },

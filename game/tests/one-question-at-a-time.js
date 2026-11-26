@@ -175,7 +175,7 @@
   chk(
     "after the last one: what you did, what changed, what comes next",
     W.kind === "askdone" &&
-      ov().includes("2 of 2 numbers here are real now") &&
+      /💳<\/span> <b>You owe: \$/.test(ov()) /* UX pass item 23: the plain total and its tag */ &&
       ov().includes("What that changed") &&
       ov().includes("What comes next") &&
       isSharp(c, "debt") &&
@@ -199,7 +199,7 @@
     W.kind === "askdone" &&
       c.cashes[0].s === true &&
       c.cashes[1].s === false &&
-      ov().includes("1 of 2 numbers here is real now") &&
+      ov().includes("<b>Cash: $") &&
       ov().includes("Still a guess: Savings") &&
       ov().includes("That is fine") &&
       !isSharp(c, "cash") &&

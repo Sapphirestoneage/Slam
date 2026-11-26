@@ -479,7 +479,7 @@ function numq(k, label, rk, opt) {
   const gh = isGhost(k);
   if (opt.compact && !open)
     return `<div class="row between numrow"><span class="small">${label}${gh ? `<div class="tiny muted">Guess</div>` : ""}</span><span class="row"><b class="${gh ? "guess" : ""}">${money(v)}</b><button class="ghost slim" data-a="padopen" data-k="${k}">Change</button></span></div>`;
-  return `<div class="field ${opt.compact ? "numopen" : ""}"><div class="small">${label}</div><div class="val ${gh ? "guess" : ""}">${money(v)}${gh ? ` <span class="tiny muted">guess</span>` : ""}</div>${rs.length ? `<div class="chips">${rs.map(r => `<button class="chip ${v === r[0] ? "on" : ""}" data-a="rng" data-k="${k}" data-v="${r[0]}">${r[1]}</button>`).join("")}</div>` : ""}${open ? keypad(k) + (opt.compact ? `<button class="ghost slim" data-a="padclose">Done with this one</button>` : "") : `<button class="ghost slim" data-a="padopen" data-k="${k}">${rs.length ? "Type the exact number instead" : "Type the number"}</button>`}${opt.help ? `<div class="tiny muted">${opt.help}</div>` : ""}</div>`;
+  return `<div class="field ${opt.compact ? "numopen" : ""}"><div class="small">${label}</div><div class="val ${gh ? "guess" : ""}">${money(v)}${gh ? ` <span class="tiny muted">guess</span>` : ""}</div><div class="chips">${rs.map(r => `<button class="chip ${v === r[0] ? "on" : ""}" data-a="rng" data-k="${k}" data-v="${r[0]}">${r[1]}</button>`).join("")}<button class="chip know ${open ? "on" : ""}" data-a="padopen" data-k="${k}">I know it</button></div>${open ? keypad(k) + (opt.compact ? `<button class="ghost slim" data-a="padclose">Done with this one</button>` : "") : ""}${opt.help ? `<div class="tiny muted">${opt.help}</div>` : ""}</div>`;
 }
 function rowsBlock(pf, rows, rk) {
   return rows.length === 1
@@ -1279,6 +1279,7 @@ function meTab() {
   let h = meTabBase();
   if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
   if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
+  if (typeof meTabHousehold === "function") h = meTabHousehold(h); /* amounts.js: how many roommates and kids */
   if (typeof meTabJobs === "function") h = meTabJobs(h); /* jobs.js: the block "Your unpaid jobs" */
   if (typeof meTabQuiz === "function") h = meTabQuiz(h); /* quizzes.js: the row "Quizzes" */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
@@ -1684,8 +1685,9 @@ function setupSheet() {
 function setupSheetBase() {
   const w = W,
     st = SETUP[w.step],
-    at = SM_ORDER.indexOf(w.step),
-    n = SM_ORDER.length,
+    L = typeof smLive === "function" ? smLive(w) : SM_ORDER,
+    at = L.indexOf(w.step),
+    n = L.length,
     sp = typeof spHead === "function" ? spHead(w) : null /* spiral.js: the meter and the round */,
     ok = st.req(w);
   return (
@@ -1703,6 +1705,7 @@ function finishSetup() {
   const door = !!(W && W.door); /* okay.js: the setup came from the front door */
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
   if (typeof finishSetupTax === "function") finishSetupTax(); /* smart.js: the answers of the taxes round */
+  if (typeof finishSetupAm === "function") finishSetupAm(); /* amounts.js: the amounts of the rounds become rows */
   const r = finishSetupBase();
   if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
   if (door && typeof finishSetupOkay === "function") finishSetupOkay(); /* okay.js: the answer to "Am I okay?" */

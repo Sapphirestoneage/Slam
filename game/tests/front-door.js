@@ -146,7 +146,7 @@
   chk("Start: the visitor plays with no account", doorGuest() && store.slam_guest === "1");
   chk("Start opens the setup by taps", W && W.kind === "setup" && W.door === true);
   let h = ov();
-  chk("the first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of 9/.test(h));
+  chk("the first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of \d+/.test(h));
   chk("page 1 has no typing that is required", /How old are you\?/.test(h));
   /* the taps of a person, through the five rounds (spiral.js) to the answer */
   let taps = 0;
@@ -167,11 +167,13 @@
   T("agedec", "30s", "ageDec");
   T("setn", "34", "age");
   P(0);
+  P(9); /* amounts.js: the cards, Next leaves them a guess */
   chk("page 5 from the door has no fast finish", W.step === 4 && !/speedfin/.test(ov()), W.step);
   T("tog", "Credit card balance", "debtKinds");
   P(4);
   R();
   P(5);
+  P(11);
   chk("the gut checks are in round 2 (Assets)", W.step === 7 && /A \$1,000 surprise bill/.test(ov()));
   T("set", "No", "can1k");
   T("set", "Less than a month", "cover");
@@ -182,6 +184,7 @@
   P(1);
   T("set", "Steady", "steady");
   P(1);
+  P(12);
   R();
   T("set", "I don't know", "taxQ");
   T("set", "I don't know", "matchQ");
@@ -194,6 +197,7 @@
   T("set", "None", "deps");
   T("set", "No one", "share");
   P(3);
+  P(13);
   P(6);
   R();
   h = ov();

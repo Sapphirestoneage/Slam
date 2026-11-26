@@ -507,3 +507,6 @@ button.st-hubcard { width: 100%; text-align: left; font: inherit; cursor: pointe
 .st-quizspecline { position: relative; height: 10px; margin: 8px 6px 4px; border-radius: 999px; border: 2px solid var(--primary); background: var(--card); }
 .st-quizspecline i { position: absolute; top: -7px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card); }
 .st-quizspecends { display: flex; justify-content: space-between; gap: 8px; }
+/* Hard moments (run Not built, Part 7): Leave this page, always in the same place at the top right */
+.st-top .st-exit { background: #fff; color: var(--primary-dark); border: 2px solid #fff; min-height: 44px; white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 520px) { .st-top:has(.st-exit) .st-solostep { display: none; } .st-top:has(.st-exit) .st-brand { white-space: normal; line-height: 1.15; } }

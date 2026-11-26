@@ -16,6 +16,8 @@ import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qc
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
 import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf } from '../../js/math/gig.js';
 import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
+import { hmUntangle, hmParkMonths } from '../../js/math/hard.js';
+import { roommateExit } from '../../js/math/hardplan.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
@@ -155,6 +157,11 @@ for (let i = 0; i < N; i++) {
   { const apps = Array.from({ length: whole(1, 3) }, () => ({ earned: money(20, 5000), tips: pick([0, 50, 300]), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]) })), x = { apps, cash: pick([0, 60, 400]) }, r = gigAppsOf(x);
     const pcts = { profit: pick([0.01, 0.05, 0.1]), owner: pick([0.3, 0.5]), tax: pick([0.15, 0.25]), opex: pick([0.1, 0.2, 0.3]) }, income = money(100, 20000), pf = gigProfitFirstOf({ income, pcts });
     add('gigApps', { ...x, pcts, income }, { all: r.all, tips: r.tips, gap: r.gap, owner: pf.ready ? pf.of.owner : null, left: pf.ready ? pf.left : null }); }
+  // Hard moments (js/math/hard.js and hardplan.js, M8H): a roommate leaving, untangling, money that waits
+  { const n = whole(2, 4), people = Array.from({ length: n }, (_, i) => ({ id: i ? `P${i + 1}` : 'Me', size: money(60, 300), income: money(500, 15000) })), x = { rent: money(800, 8000), bills: pick([0, 150, 400]), how: pick(['size', 'income', 'equal']), billsHow: pick(['equal', 'same']), people, leaver: people[whole(0, n - 1)].id, monthsLeft: whole(0, 12), cover: pick([0, 1, 2, 3, 20]), deposit: pick([0, money(500, 6000)]), damage: pick([0, 0, money(50, 900)]) };
+    const r = roommateExit(x); add('hmRoommateExit', x, { toEnd: r.rows.map(p => p.toEnd), now: r.rows.map(p => p.now), later: r.rows.map(p => p.later), deposit: r.rows.map(p => p.deposit), uncovered: r.uncovered, total: r.total }); }
+  { const items = Array.from({ length: whole(1, 8) }, (_, k) => ({ id: `i${k}`, kind: pick(['have', 'owe']), amount: rnd() < 0.15 ? null : money(50, 60000), names: pick(['both', 'me', 'them']), plan: pick(['me', 'them', 'split', 'sell', null, 'none']) })), share = pick([0.5, 0.3, 0.6, 1]), U = hmUntangle(items, { share }), park = [money(1, 300000), money(500, 12000)], P = hmParkMonths({ amount: park[0], spending: park[1] });
+    add('hmUntangle', { items, share, park }, { mine: [U.mine.have, U.mine.owe, U.mine.net], theirs: [U.theirs.have, U.theirs.owe, U.theirs.net], open: U.open, openAmount: U.openAmount, stillBoth: U.stillBoth, stillBothAmount: U.stillBothAmount, park: P.months }); }
   // Eli's frameworks and the canon (js/math/frameworks.js, M8W): SWAN, the peak, 0% tax, the Baby Steps, the stages, 1a, step 9, the wins
   { const x = { monthly: money(800, 15000), months: pick([1, 2, 3, 6, 9, 12]), worry: pick([0, 0, 500, 2500]), cash: rnd() < 0.2 ? null : pick([0, money(1, 90000)]) }, S = fwSwan(x); add('fwSwan', x, { number: S.number, gap: S.gap, monthsHave: S.monthsHave }); }
   { const age = whole(22, 75), x = { age, worth: pick([0, money(1000, 3000000)]), saveYear: pick([0, money(1000, 90000)]), growth: pick([0, 0.02, 0.04, 0.07]), spendYear: money(12000, 200000), endAge: pick([85, 90, 95, 100]), leave: pick([0, 0, 100000]) }, P = fwPeak(x); add('fwPeak', x, { peakAge: P.peakAge, peak: P.peak, canSpend: P.canSpend }); }

@@ -582,6 +582,7 @@ const INC_KINDS = [
   "Unemployment or benefits",
   "Help from family",
   "Retirement income",
+  "Other income",
 ];
 const CASH_K = ["Checking", "Savings", "Cash at home"],
   CASH_W = { Checking: 0.3, Savings: 0.65, "Cash at home": 0.05, Cash: 1 },
@@ -786,6 +787,19 @@ function syncAll(c) {
 function isEmployee(c) {
   return !["Student", "Between jobs", "Self-employed", "Retired"].includes(c.work);
 }
+/* The people who live with the player and share the household (UX pass, item 21): the player, a partner, the
+   kids (c.kidCount, 4 means 4 or more) and the roommates (c.roommateCount). taxSide: only the people of one tax
+   household (no roommates), for the health-plan credit. A count that was skipped counts as 1 when the kind was
+   picked. */
+function hhSize(c, taxSide) {
+  const live = c.live || [],
+    has = k => live.includes(k),
+    n = (v, on) => (!on ? 0 : v != null && isFinite(+v) ? +v : 1),
+    partner = has("A partner") || c.rel === "Married" ? 1 : 0,
+    kids = n(c.kidCount, has("Kids") || c.deps === "Kids"),
+    mates = taxSide ? 0 : n(c.roommateCount, has("Roommates"));
+  return 1 + partner + kids + mates;
+}
 function isSharp(c, k) {
   return k === "take"
     ? c.incs.length > 0 && c.incs.every(x => x.s)
@@ -825,11 +839,10 @@ function applyTypical(c) {
   const iw = ik.reduce((a, k) => a + (INC_W[k] || 0.3), 0);
   c.incs = ik.map(k => c.incs.find(x => x.k === k) || { k, amt: r50((t[0] * (INC_W[k] || 0.3)) / iw), s: false });
   if (!s.low) c.low = Math.round((rsum(c.incs) * 0.6) / 100) * 100;
-  const TS = fam ? Math.round((t[1] * 0.5) / 100) * 100 : t[1],
-    sp = fam ? SPLIT_FAM : SPLIT;
+  const TS = fam ? Math.round((t[1] * 0.5) / 100) * 100 : t[1];
   if (fam && !c.spends.some(x => x.s)) c.moveOut = t[1] - TS;
   c.spends = SPEND_K.map(
-    (k, i) => c.spends.find(x => x.k === k && (x.s || x.h)) || { k, amt: r50(TS * sp[i]), s: false }
+    (k, i) => c.spends.find(x => x.k === k && (x.s || x.h)) || { k, amt: typSpend(c, i), s: false }
   );
   c.spend = Math.max(1, rsum(c.spends));
   let T = (c.can1k === "No" ? 0.1 : COVER[c.cover] || 0.5) * c.spend;
@@ -851,7 +864,11 @@ function applyTypical(c) {
           ? yr * Math.min(2, Math.max(0.1, a / 25))
           : 2000,
     W = vk.reduce((x, k) => x + INV_W[k], 0);
-  c.invs = vk.map(k => c.invs.find(x => x.k === k) || { k, amt: Math.round((V * INV_W[k]) / W / 500) * 500, s: false });
+  /* every line of a kind stays: an IRA and a Roth IRA are two lines of the kind "IRA or Roth IRA" (x.nick) */
+  c.invs = vk.flatMap(k => {
+    const old = c.invs.filter(x => x.k === k);
+    return old.length ? old : [{ k, amt: Math.round((V * INV_W[k]) / W / 500) * 500, s: false }];
+  });
   /* every line of a kind stays: a player can have several credit cards (mycards.js) */
   c.debts = c.debtKinds.flatMap(k => {
     const old = c.debts.filter(x => x.k === k),
@@ -862,6 +879,13 @@ function applyTypical(c) {
     c.match = !isEmployee(c) ? "no match offered" : c.accts.includes("Retirement plan at work") ? "yes" : "no";
   if (!s.tax) c.tax = c.invest === "Every month" && c.accts.includes("IRA or Roth IRA") ? "some" : "no";
   syncAll(c);
+}
+/* The typical amount of spending group i (SPEND_K) for this profile: the stock number of applyTypical. */
+function typSpend(c, i) {
+  const t = TYP[c.work] || TYP["First job"],
+    fam = c.home === "With family",
+    TS = fam ? Math.round((t[1] * 0.5) / 100) * 100 : t[1];
+  return Math.round((TS * (fam ? SPLIT_FAM : SPLIT)[i]) / 50) * 50;
 }
 function rowsFromNumbers(c, inc) {
   c.led = true;
