@@ -435,3 +435,33 @@ body.walking { padding-bottom: var(--walk-room, 88px); }
 a.btn { text-decoration: none; }
 .export-panel .btn { white-space: normal; text-align: left; padding-top: 6px; padding-bottom: 6px; }
 .fire-blank a.btn::after { content: "\2197"; margin-left: 4px; }
+
+/* The plan report (run Finish everything partly built, Part 18): one printout of the one-pager, the next steps, the
+   statements and the FOO. On screen, the parts read top to bottom; printed, each part starts a new page. */
+.plan-report { display: flex; flex-direction: column; gap: var(--s5); }
+.plan-report .recap-wrap, .plan-report .tie-panel { display: none; }
+.report-part-title { margin: 0 0 var(--s3); font-size: 1.25rem; }
+.report-part > .card + .card, .report-part > .section { margin-top: var(--s3); }
+@media print {
+  .plan-report .report-part + .report-part { break-before: page; }
+  .plan-report .statement, .plan-report .foo-step, .plan-report .metric { break-inside: avoid; }
+  .plan-report .foo-card { display: none !important; }
+  .plan-report .st-group > .more-wrap > .caret { display: inline-flex !important; border: 0; background: none; box-shadow: none; padding: 0; min-height: 0; font-weight: 600; color: #000; }
+  .plan-report .st-group > .more-wrap > .caret svg { display: none; }
+  .plan-report textarea:placeholder-shown { display: none; }
+}
+
+/* Plan › FIRE (run Finish everything partly built, Part 18): the board's rows are one grid, the name then three cells. */
+.fire-pace { display: flex; flex-direction: column; gap: var(--s3); margin: var(--s4) 0; }
+.fire-pace h2, .fire-board h2 { margin: 0; font-size: 1.125rem; }
+.fire-board { display: flex; flex-direction: column; gap: var(--s3); }
+.fire-rows { display: flex; flex-direction: column; gap: var(--s3); }
+.fire-row { display: grid; grid-template-columns: minmax(200px, 2fr) repeat(3, minmax(120px, 1fr)); gap: var(--s3); align-items: start; padding: var(--s3) 0; border-top: 1px solid var(--border-row); }
+.fire-name { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.fire-cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; align-items: flex-start; }
+.fire-cell .rung-bar { align-self: stretch; }
+.fire-mine { background: var(--primary-light); border-radius: var(--r-input); padding-left: var(--s3); padding-right: var(--s3); }
+.fire-explain { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s4); }
+.fire-ex p { margin: 4px 0 0; }
+.fire-quiz { margin: var(--s3) 0; }
+@media (max-width: 640px) { .fire-row { grid-template-columns: 1fr 1fr; } .fire-name { grid-column: 1 / -1; } }

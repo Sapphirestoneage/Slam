@@ -15,7 +15,7 @@ const short = v => (v >= 1000 ? `$${v / 1000}k` : `$${v}`);
 const span = n => (n == null ? null : n === 0 ? 'now' : n < 24 ? `${n} ${n === 1 ? 'month' : 'months'}` : `${(n / 12).toFixed(1)} years`);
 // Guess, Close or Exact: how sure the numbers behind the date are (the FI date's own confidence).
 const LEVEL = { Low: ['Guess', 'Some numbers behind this are still guesses. It will move as they firm up.'], Medium: ['Close', 'Most numbers behind this are estimates or better.'], High: ['Exact', 'The numbers behind this are ones you know.'] };
-const levelTag = gate => { const L = LEVEL[gate?.confidence?.word] ?? LEVEL.Low; return h('span.tag.plain.dest-level', { title: L[1] }, L[0]); };
+export const levelTag = gate => { const L = LEVEL[gate?.confidence?.word] ?? LEVEL.Low; return h('span.tag.plain.dest-level', { title: L[1] }, L[0]); };
 const pick = ctx => ctx.store.doc.program?.destinations || {};
 
 function viewCard(ctx, v, V, gate) {

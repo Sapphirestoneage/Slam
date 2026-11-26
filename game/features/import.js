@@ -4,8 +4,10 @@
                file goes nowhere. The game keeps only the monthly totals that the player accepts.
    INPUT       The game: G.demo. The profile: c.x.imp. The open sheet (W.kind): import. The taps of the
                player (the actions in OUTPUT).
-   OUTPUT      7 functions. Parts of functions in other files: lootTextImport, moneyTabImport. Actions
-               (ACT): import2, imtog, imcat, imapply, imundo.
+   OUTPUT      9 functions, with imAppCat and imAppCols (Rocket Money's own export: its columns and its
+               categories, run Finish everything partly built, Part 18). Parts of functions in other files:
+               lootTextImport, moneyTabImport, imAppCols (csvRows in games2.js). Actions (ACT): import2, imtog,
+               imcat, imapply, imundo.
    DEPENDS ON  core/engine.js, screens/ui.js, features/games2.js.
    RULES       The game asks each time before it reads a file (a rule from the owner). The rows of the
                file are dropped when the sheet closes.
@@ -51,9 +53,86 @@ function imKey(n) {
     .slice(0, 2)
     .join(" ");
 }
-function imCat(n, over) {
+/* Rocket Money's export (run Finish everything partly built, Part 18). The columns are the header row as Rocket
+   Money writes it, from data/reference-2026.json (importFormats, "rocket"; sources: help.rocketmoney.com, article
+   10296106 "Exporting transactions", and the converter linked there; checked 2026-11-06). Spending is a positive
+   amount in this file. The categories are Rocket Money's own names (importCategories, "rocket", same date), each to a
+   line of the game. A name with null goes to the word rules. test/rocket-game.test.js of the main app checks that
+   these lists and the reference file agree. */
+const IM_ROCKET_COLS = [
+  "Date",
+  "Original Date",
+  "Account Type",
+  "Account Name",
+  "Account Number",
+  "Institution Name",
+  "Name",
+  "Custom Name",
+  "Amount",
+  "Description",
+  "Category",
+  "Note",
+  "Ignored From",
+  "Tax Deductible",
+  "Transaction Tags",
+];
+const IM_ROCKET_DETECT = ["Date", "Original Date", "Account Name", "Custom Name", "Amount", "Category"];
+const IM_ROCKET_CATS = {
+  "Auto & Transport": "Getting around",
+  "Bills & Utilities": "Bills and subscriptions",
+  "Software & Tech": "Bills and subscriptions",
+  "Dining & Drinks": "Food",
+  Groceries: "Food",
+  "Home & Garden": "Home",
+  "Credit Card Payment": "_move",
+  "Internal Transfers": "_move",
+  Investment: "_move",
+  "Loan Payment": "_debt",
+  "Charitable Donations": "Fun and everything else",
+  Education: "Fun and everything else",
+  "Entertainment & Rec.": "Fun and everything else",
+  "Family Care": "Fun and everything else",
+  Fees: "Fun and everything else",
+  Gifts: "Fun and everything else",
+  "Health & Wellness": "Fun and everything else",
+  Legal: "Fun and everything else",
+  Medical: "Fun and everything else",
+  "Personal Care": "Fun and everything else",
+  Pets: "Fun and everything else",
+  Shopping: "Fun and everything else",
+  "Travel & Vacation": "Fun and everything else",
+  Income: null,
+  Business: null,
+  "Cash & Checks": null,
+  Taxes: null,
+  Uncategorized: null,
+};
+/* Part of csvRows() in games2.js. The header row (in lower case) to the columns of a known app export, or null for any
+   other file (the generic reader of csvRows takes it). */
+function imAppCols(H) {
+  const at = n => H.indexOf(n.toLowerCase());
+  if (!IM_ROCKET_DETECT.every(n => at(n) >= 0)) return null;
+  return {
+    app: "rocket",
+    di: at("Date"),
+    ni: [at("Custom Name"), at("Name")],
+    ai: at("Amount"),
+    ci: at("Category"),
+    ig: at("Ignored From"),
+    flip: true,
+  };
+}
+/* The line of the game for an app's own category name, or null (the word rules decide). */
+function imAppCat(app, cat) {
+  if (app !== "rocket" || !cat) return null;
+  const v = IM_ROCKET_CATS[String(cat).trim()];
+  return v === undefined ? null : v;
+}
+function imCat(n, over, app, cat) {
   const k = imKey(n);
   if (over && over[k]) return over[k];
+  const own = imAppCat(app, cat);
+  if (own) return own;
   if (IM_MOVE.test(n)) return "_move";
   if (IM_DEBT.test(n)) return "_debt";
   for (const r of IM_RULES) if (r[1].test(n)) return r[0];
@@ -76,7 +155,7 @@ function imRead(rows, over) {
   rows.forEach(r => {
     const out = r.a * sign > 0,
       a = Math.abs(r.a),
-      cat = imCat(r.n, over);
+      cat = imCat(r.n, over, r.app, r.cat);
     if (cat === "_move") {
       move += a;
       return;
@@ -91,7 +170,7 @@ function imRead(rows, over) {
       return;
     }
     tot[cat] += a;
-    if (cat === "Fun and everything else" && !(over && over[imKey(r.n)])) {
+    if (cat === "Fun and everything else" && !(over && over[imKey(r.n)]) && !imAppCat(r.app, r.cat)) {
       const k = imKey(r.n);
       if (k.length >= 3) {
         unsure[k] = unsure[k] || { k, n: k.charAt(0) + k.slice(1).toLowerCase(), a: 0, c: 0 };
@@ -105,6 +184,7 @@ function imRead(rows, over) {
   IM_CATS.forEach(c => (avg[c[0]] = Math.round(tot[c[0]] / months / 10) * 10));
   return {
     n: rows.length,
+    app: rows.some(r => r.app === "rocket") ? "Rocket Money" : null,
     nOut,
     months,
     first: ms[0],
@@ -142,7 +222,7 @@ function imSheet() {
   if (!w.rows || !w.rows.length)
     return (
       head("My Money", "Fill it in from a statement") +
-      `<div class="small muted">Download a file from your bank or card and the game adds up your spending for you.</div><div class="tile stack" style="gap:6px"><b class="small">How to get the file</b><div class="small mrow k-note">Open your bank or card's website or app.</div><div class="small mrow k-note">Find Download or Export on your list of transactions.</div><div class="small mrow k-note">Pick CSV and the last 3 months.</div></div>${pick("Choose a statement file")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
+      `<div class="small muted">Download a file from your bank or card and the game adds up your spending for you.</div><div class="tile stack" style="gap:6px"><b class="small">How to get the file</b><div class="small mrow k-note">Open your bank or card's website or app.</div><div class="small mrow k-note">Find Download or Export on your list of transactions.</div><div class="small mrow k-note">Pick CSV and the last 3 months.</div><div class="small mrow k-note">Rocket Money: on the web, Transactions, then Export. The file comes by email.</div></div>${pick("Choose a statement file")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
     );
   const R = imRead(w.rows, w.over),
     use = w.use,
@@ -154,6 +234,9 @@ function imSheet() {
     oneInc = (c.incs || []).length === 1;
   return (
     head("My Money", "What the file showed") +
+    (R.app
+      ? `<div class="small">Read as a ${R.app} export: its own categories sort the lines, and card payments and moves between accounts stay out.</div>`
+      : "") +
     `<div class="small muted">${R.n} lines over ${R.months} month${R.months === 1 ? "" : "s"} (${imMonthName(R.first)}${R.last !== R.first ? " to " + imMonthName(R.last) : ""})${w.files > 1 ? ", from " + w.files + " files" : ""}. Tap a line to switch it.</div><div class="tiny muted">One card or account rarely shows everything, so lines you already made real stay as they are unless you switch them.</div>` +
     `<div class="stack" style="gap:6px">${rows
       .map(x => {

@@ -528,6 +528,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Session summary, plan report and FIRE",
+    l: [
+      "The statement import now knows a Rocket Money export: its own categories sort your spending, and card payments and transfers stay out.",
+      "In the web app, the one-pager drafts a session summary: the top takeaways from what changed and the next steps, to edit before it goes out.",
+      "Plan report, from the one-pager: the one-pager, your next steps, your statements and your order of operations as one printout or PDF.",
+      "Plan, FIRE: every way to financial independence (Lean, Coast, Barista, FIRE, Chubby and Fat) with its number and date, a tap for a faster pace, and each type in plain words.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Testing and the math checked twice",
     l: [
       "Testers can run a think-aloud test on their own: a panel at the bottom of every screen shows one task at a time, counts the taps, and keeps Report this open with the screen name filled in.",

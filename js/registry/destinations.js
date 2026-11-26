@@ -47,3 +47,18 @@ export const FOO_BY_DESTINATION = {
     taxadv: 'A Fat number takes more years of full pay, so every account with a tax break is filled first, each year.',
     '7': 'A Fat number needs the full paycheck for longer, so the leap waits until the number is reached.' } },
 };
+
+// The FIRE dashboard (Plan › FIRE, run Finish everything partly built, Part 18). The pace taps: more a month into
+// investing, a what-if on the same path (choices to tap, not typical amounts). The return taps are the plan's own pace
+// presets (Reference data presets.pace).
+export const FIRE_PACES = [0, 100, 250, 500, 1000];
+// The FIRE types in plain words: what each one is, who it tends to fit, and what it asks. The names are the ones the
+// FIRE community uses; the words are SLAM's own. Coast has no number of its own here: it is a moment on the way.
+export const FIRE_EXPLAIN = [
+  { key: 'Lean FI', name: 'Lean FIRE', what: 'Enough invested to pay for the basics for good: food, housing and getting around.', fits: 'You want the soonest exit and are fine living simply.', asks: 'A small cushion for surprises, and fun paid from work you choose.' },
+  { key: 'Coast', name: 'Coast FIRE', what: 'Enough invested that growth alone gets you to your FI number by the age you set, with nothing more added.', fits: 'You saved early and want to take your foot off the gas now.', asks: 'Your work still pays today\'s bills; you just stop saving for later.' },
+  { key: 'Barista FI', name: 'Barista FIRE', what: 'Part-time work you like pays part of the bills, so the number you need invested is smaller.', fits: 'You like some work and want to leave full-time work sooner.', asks: 'Steady part-time pay, and a plan for health insurance.' },
+  { key: 'Regular FI', name: 'FIRE', what: 'Enough invested to pay for the life you live today, for good. Work becomes optional.', fits: 'You want today\'s life without a paycheck.', asks: 'The full number, at your withdrawal rate.' },
+  { key: 'Chubby FI', name: 'Chubby FIRE', what: 'Halfway between FIRE and Fat FIRE: today\'s life with some room.', fits: 'You want a bit more than today, without the years Fat takes.', asks: 'A bigger number than FIRE, so a later date.' },
+  { key: 'Fat FI', name: 'Fat FIRE', what: 'Enough invested for today\'s life plus your list of extras: travel, help at home, giving.', fits: 'You want room to spare and are willing to work longer for it.', asks: 'The biggest number, so the most years of full pay.' },
+];

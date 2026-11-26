@@ -16,7 +16,7 @@ import { fastTrackDone } from './fasttrack.js';
 import { budgetScreen, calendarScreen, closeScreen } from './ui/spending-ui.js';
 import { homeScreen } from './ui/home-ui.js';
 import { listsScreen, sessionScreen, discoveryScreen } from './ui/tools-ui.js';
-import { overviewScreen, onePagerScreen, historyScreen } from './ui/report-ui.js';
+import { overviewScreen, onePagerScreen, historyScreen, planReportScreen } from './ui/report-ui.js';
 import { statementsScreen } from './ui/statements-ui.js';
 import { layersCard } from './ui/layers-ui.js';
 import { layersOf } from './math/layers.js';
@@ -27,6 +27,7 @@ import { institutionsCard } from './ui/institutions-ui.js';
 import { metrics as metricsOf } from './math/metrics.js';
 import { personLabels, modeOf, MODES, viewsOf, bothScreen, offersBoth, bothPreviewOn, bothLabel, validPerson, multiAdult, manyAdults, adultsOf } from './registry/couples.js';
 import { fooScreen } from './ui/foo-ui.js';
+import { fireScreen } from './ui/fire-ui.js';
 import { exercisesScreen, EX_ROUTE } from './ui/exercises-ui.js';
 import { scorecardScreen } from './ui/scorecard-ui.js';
 import { reviewScreen } from './ui/review-ui.js';
@@ -263,6 +264,7 @@ export const SCREENS = {
 
   'plan/goals': (app, ctx) => (app.hasClient ? goalsScreen(app, ctx) : [head('Goals'), noClient(app)]),
   'plan/foo': (app, ctx) => (app.hasClient ? fooScreen(app, ctx, { flags: app.flags }) : [head('FOO'), noClient(app)]),
+  'plan/fire': (app, ctx) => (app.hasClient ? fireScreen(app, ctx) : [head('FIRE'), noClient(app)]), // run Finish everything partly built, Part 18: the FIRE dashboard
   'plan/scorecard': (app, ctx) => (app.hasClient ? scorecardScreen(app, ctx) : [head('Scorecard'), noClient(app)]),
   'plan/timeline': (app, ctx) => (app.hasClient ? timelineScreen(app, ctx) : [head('Timeline'), noClient(app)]),
   'plan/debt-payoff': (app, ctx) => (app.hasClient ? payoffScreen(app, ctx) : [head('Debt payoff'), noClient(app)]),
@@ -274,6 +276,7 @@ export const SCREENS = {
   'report/overview': (app, ctx) => (app.hasClient ? overviewScreen(app, ctx) : [head('Overview'), noClient(app)]),
   'report/statements': (app, ctx) => (app.hasClient ? statementsScreen(app, ctx) : [head('Statements'), noClient(app)]),
   'report/one-pager': (app, ctx) => (app.hasClient ? onePagerScreen(app, ctx) : [head('One-pager'), noClient(app)]),
+  'report/plan-report': (app, ctx) => (app.hasClient ? planReportScreen(app, ctx) : [head('Plan report'), noClient(app)]), // run Finish everything partly built, Part 18
   'report/history': (app, ctx) => (app.hasClient ? historyScreen(app, ctx) : [head('History'), noClient(app)]),
   'report/lender': (app, ctx) => (app.hasClient ? lenderScreen(app, ctx) : [head('What a lender sees'), noClient(app)]), // batch 42
 
