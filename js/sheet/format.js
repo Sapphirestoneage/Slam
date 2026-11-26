@@ -102,7 +102,8 @@ export const FORMATS = [
   { version: 59, shape: '61df938d' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 2): M8Q the quick calculators, app-only, and the NY unemployment rule on the assumptions list
   { version: 60, shape: '44be8865' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 5): M8G gig and self-employed, app-only, two limits and five rules on the assumptions list
   { version: 61, shape: '63d5dbd3' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 4): M8W Eli's frameworks and the canon, app-only
-  { version: 62, shape: '3876531e' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 7): M8H hard moments, app-only, and settings.hard (kept only when the person chooses)
+  { version: 62, shape: '12c85188' }, // Nov 25 2026 (run Finish everything partly built, Part 5): M8S refinance and M8L the stepladder, app-only; Household size for student loans on About you; SL_rates and three rules on the assumptions list
+  { version: 63, shape: '72ee4b9b' }, // Nov 25 2026 (run Not built, groups 1 to 5, Part 7): M8H hard moments, app-only, and settings.hard (kept only when the person chooses)
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

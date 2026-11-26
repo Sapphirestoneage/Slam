@@ -54,6 +54,7 @@ const BOOK_PARTS = [
   offerBook,
   careerBook,
   tripBook,
+  slBook,
   nxaBook,
   frontBook,
   quotaBook,

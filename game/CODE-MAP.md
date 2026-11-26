@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-25. Files: 162. Lines: 98,109. Top-level functions: 2313. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 162. Lines: 98,333. Top-level functions: 2319. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -79,7 +79,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 65 | `features/ask2.js` | 389 | 9 | 4 | 0 | The same pattern as ask.js for three more places: the details of one debt, the questions of Key numbers, and the questions about the job match and the... |
 | 66 | `features/sign.js` | 250 | 5 | 2 | 0 | Before you sign. The true cost of a new loan, asked one small question at a time, then shown in the terms of the player |
 | 67 | `features/owed.js` | 128 | 4 | 2 | 0 | What each debt costs you: the interest in dollars, and the same amount as months of living costs |
-| 68 | `features/study.js` | 508 | 13 | 4 | 0 | Student loan plans, side by side |
+| 68 | `features/study.js` | 721 | 19 | 4 | 0 | Student loan plans, side by side |
 | 69 | `features/together.js` | 215 | 7 | 3 | 0 | The Money Chart for more than two persons: the player, their person, up to four more persons who answer the same 10 statements on this phone, and othe... |
 | 70 | `features/people.js` | 319 | 7 | 3 | 0 | Your people, one layer at a time |
 | 71 | `features/fold.js` | 65 | 4 | 1 | 0 | One list on Next Steps. The mission board and the older card "Ready to plan" showed the same steps |
@@ -158,7 +158,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 144 | `features/quizzes.js` | 322 | 14 | 4 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
 | 145 | `features/sins.js` | 601 | 30 | 8 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
 | 146 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 147 | `data/patchnotes.js` | 318 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 147 | `data/patchnotes.js` | 328 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 148 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 149 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 150 | `features/look.js` | 529 | 24 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
@@ -170,10 +170,10 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 156 | `features/canon.js` | 961 | 12 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
 | 157 | `features/enough.js` | 350 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
 | 158 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
-| 159 | `features/book.js` | 609 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 159 | `features/book.js` | 610 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 160 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 161 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 162 | `features/built.js` | 1,411 | 4 | 11 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 162 | `features/built.js` | 1,411 | 4 | 12 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

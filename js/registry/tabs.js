@@ -27,7 +27,7 @@ export const SCREEN_TABS = [
     blocks: [
       { math: 'Where this stands', rows: ['M73=Picture', 'M73_answered=Answered', 'M73_solid=Solid', 'M9Q_ask=Ask next'] },
       { form: 'profile', title: 'About you', fields: [P('client.name'), ...['firstName', 'lastName', 'birthMonth', 'birthYear', 'age', 'state', 'nyc', 'nycArea', 'partnerName', 'partnerBirthYear', 'kidAges', 'healthCoverage', 'email', 'phone'].map(P)], cols: ['ageUsed'] },
-      { form: 'profile', title: 'What applies to me', fields: ['hasCar', 'dependents', 'hasPets', 'housing', 'workSituation', 'hsaEligible', 'fsa', 'equityPay', 'mode', 'household'].map(P) },
+      { form: 'profile', title: 'What applies to me', fields: ['hasCar', 'dependents', 'loanFamilySize', 'hasPets', 'housing', 'workSituation', 'hsaEligible', 'fsa', 'equityPay', 'mode', 'household'].map(P) },
       { form: 'profile', title: 'Why now', fields: [P('whyNow'), P('worry'), P('goalWords'), ...keys('chips', ['whyNow', 'worry', 'goalWords']), ...keys('chipStar', ['whyNow', 'worry', 'goalWords']), ...keys('chipOther', ['whyNow', 'worry', 'goalWords'])] },
       { table: 'people', title: 'People' },
       { form: 'profile', title: 'Work and home', fields: ['worstCase', 'bigEMultiplier', 'incomeStability'].map(P) },

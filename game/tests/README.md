@@ -99,7 +99,7 @@ Each file has the name of its feature.
 | `spending-plan-and-audit-score.js` | The Conscious Spending Plan and the money audit score | `features/csp.js` |
 | `stars.js` | The Galaxy: star states, lanes from real links, gateway stars, Do this | `features/stars.js` |
 | `stress-testing.js` | The stress test: real history and random markets as one result (one check waits for the engine) | `features/stress.js` |
-| `student-loan-plans.js` | Student loan plans | `features/study.js` |
+| `student-loan-plans.js` | Student loan plans; since Nov 25 2026 (run Finish everything partly built, Part 5) also the household size tap, the PSLF card (counted, to go, years left, forgiven), the private refinance at a tapped rate with what it gives up, and the spreadsheet rows | `features/study.js` |
 | `spiral-onboarding.js` | Setup as a spiral: the rounds D, A, I, T, E, one number each, the chain, the route strip, the level change, the 50/30/20 summary, the first plan and what it depends on | `features/spiral.js`, `screens/smart.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |

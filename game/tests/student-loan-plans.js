@@ -138,6 +138,54 @@
       slPlans({ bal: 30000, apr: 6, agi: 60000, first: SL_FIRST[1], mar: false, dep: 0, pslf: "yes", made: 48 })
         .left === 72
   );
+  // Part 5 of the run of Nov 25 2026: the PSLF card, the household size and a private refinance.
+  o = ov();
+  const PP = slPlans({ bal: 30000, apr: 6, agi: 60000, first: SL_FIRST[1], mar: false, dep: 0, pslf: "yes", made: 48 }),
+    KK = slPslf(PP, { pslf: "yes", made: 48 });
+  chk(
+    "PSLF card: 48 counted, 72 to go, 6 years, the forgiven amount of the row that pays least",
+    KK.counted === 48 &&
+      KK.left === 72 &&
+      Math.abs(KK.years - 6) < 1e-9 &&
+      KK.row.paid ===
+        Math.min.apply(
+          null,
+          PP.rows.filter(r => r.pslf).map(r => r.paid)
+        ) &&
+      o.includes("Payments to go") &&
+      o.includes(money(Math.round(KK.forgiven))) &&
+      o.includes("PSLF Help Tool") &&
+      o.includes("Nov 25, 2026")
+  );
+  chk("household size is on the page with a tap", o.includes("Your household") && o.includes('data-k="size"'));
+  X("slset", "3", "size");
+  chk("a tapped household size is used", c.x.sl.size === 3 && ov().includes("A household of 3"));
+  X("slset", "3", "size");
+  chk("a second tap goes back to the count", c.x.sl.size === null && ov().includes("A household of 1"));
+  chk("refinance: no default rate", ov().includes("There is no default rate") && !ov().includes("Private a month"));
+  X("slset", "5", "refi");
+  X("slset", "10", "refiy");
+  const FF = slRefi(PP, 30000, 5, 10),
+    pm = (30000 * (0.05 / 12)) / (1 - Math.pow(1 + 0.05 / 12, -120));
+  o = ov();
+  chk(
+    "refinance: a level payment at the tapped rate, next to the federal plans, with what is given up",
+    Math.abs(FF.pay - pm) < 1e-9 &&
+      Math.abs(FF.paid - pm * 120) < 0.05 &&
+      o.includes("Private a month") &&
+      o.includes(money(Math.round(pm))) &&
+      o.includes("What you give up") &&
+      o.includes("cannot be undone") &&
+      FF.gives[0].indexOf("Public service forgiveness") === 0 &&
+      clean(o),
+    junk(o)
+  );
+  const SB = slBook(c);
+  chk(
+    "spreadsheet: the PSLF and refinance rows",
+    SB.rows.some(r => r.id === "sl_left" && r.v === 72) &&
+      SB.rows.some(r => r.id === "sl_refipay" && Math.abs(r.v - pm) < 1e-9)
+  );
   const PN = slPlans({ bal: 60000, apr: 6, agi: 60000, first: SL_FIRST[2], mar: true, dep: 1, pslf: "no", made: null });
   chk(
     "new borrowers: tiered standard, no IBR, household counted",

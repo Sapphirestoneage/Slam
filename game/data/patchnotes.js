@@ -311,6 +311,16 @@ const PATCH_NOTES = [
       "On the web: five small pages (sleep-at-night cash, trust this advice, the net worth peak, 0% tax, every dollar earned), and the Baby Steps and the Advice translator on the FOO.",
     ],
   },
+  {
+    d: "2026-11-25",
+    t: "Student loans: PSLF, refinancing and each year's rate",
+    l: [
+      "Student loan plans now shows your household size, and you can tap the size on your loan papers.",
+      "A PSLF card: the payments counted, the payments and years left, and what is forgiven, tax-free.",
+      "Tap a rate a private lender offers you and see it next to the federal plans, with what you give up in plain words.",
+      "On the web page Which student loan plan costs least?, the stepladder: each school year's loan at its own rate, and the interest it gathers before your first payment.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
