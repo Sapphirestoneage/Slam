@@ -1364,6 +1364,43 @@ def run(cases, ref, il=None):
             unknown = any(st(i, now)[0] is None for i in range(6))
             ck('where you are', o['here'], first if first is not None else (None if unknown else 6), 0)
             ck('from cash', o['fromCash'], fc); ck('months of saving', o['shift'], shift, 1e-9)
+        elif fn == 'fwSwan':
+            # months of spending plus the worry; the gap and the months of cash past the worry
+            n = round(x['monthly'] * x['months'] + x['worry']); ck('number', o['number'], n, 0)
+            if x['cash'] is not None:
+                ck('gap', o['gap'], max(0, n - x['cash'])); ck('months', o['monthsHave'], max(0, x['cash'] - x['worry']) / x['monthly'], 1e-6)
+        elif fn == 'fwPeak':
+            # year by year: the first age the level payment to the last age (at the start of each year) covers the spending
+            b, found = x['worth'], None
+            for a in range(x['age'], x['endAge']):
+                if b > 0 and spend_down(max(0, b), x['leave'], x['endAge'] - a, x['growth']) >= x['spendYear']:
+                    found = (a, b); break
+                b = b * (1 + x['growth']) + x['saveYear']
+            ck('peak age', o['peakAge'], None if found is None else found[0], 0); ck('peak', o['peak'], None if found is None else found[1])
+        elif fn == 'fwZeroTax':
+            # taxable income = ordinary + gains - deduction stays inside the 0% band; a sale's cash = gains / its gain share
+            ordi = x['ordinary']; room = x['gainTop'] + x['std'] - ordi if ordi <= x['std'] else max(0, x['gainTop'] - (ordi - x['std']))
+            ck('gain room', o['gainRoom'], room); ck('sale cash', o['saleCash'], room / x['gainShare']); reach = min(ordi, x['std']) + room / x['gainShare']
+            ck('reach', o['reach'], reach); ck('fits', o['fits'], x['spend'] <= reach + 0.5)
+        elif fn == 'fwBaby':
+            g = lambda k: x[k]
+            d = [None if g('cash') is None else g('cash') >= 1000, None if g('debt') is None else g('debt') <= 0,
+                 None if g('cash') is None or g('monthly') is None else g('cash') >= g('monthly') * 3, None if g('retireShare') is None else g('retireShare') >= 0.1495,
+                 True if not x['kids'] else x['college'], None if g('mortgage') is None else g('mortgage') <= 0]
+            for i in range(6): ck(f'step {i + 1}', o['done'][i], d[i])
+            first = next((i for i in range(6) if d[i] is not True), None)
+            ck('here', o['here'], 6 if first is None else (None if d[first] is None else first))
+        elif fn == 'fwStage':
+            w = x['worth']; i = 0 if w < 25000 else 1 if w < 100000 else 2; to = [25000, 100000, None][i]
+            left = None if to is None else max(0, to - w); ck('stage', o['i'], i, 0); ck('left', o['left'], left)
+            ck('months', o['months'], math.ceil(left / x['monthly']) if left is not None and x['monthly'] else None, 0)
+        elif fn == 'fwLifetime':
+            sp = x['spans']; ck('total', o['total'], sum(q['years'] * q['pay'] for q in sp))
+            ck('hours', o['hours'], sum(q['years'] * q['hours'] * 52 for q in sp) if all(q['hours'] for q in sp) else None)
+        elif fn == 'fwStep9':
+            cu = x['monthly'] * 6; ck('income', o['income'], x['invested'] * x['rate'] / 12); ck('cushion left', o['cushionLeft'], max(0, cu - x['cash'])); ck('cache', o['cache'], max(0, x['cash'] - cu))
+        elif fn == 'fwWins':
+            m = sum(w['save'] for w in x['wins'].values() if w['save'] is not None); ck('month', o['month'], m); ck('fi days', o['fiDays'], m * 12 / (x['yearSpend'] / 365), 1e-6)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]
@@ -1506,6 +1543,45 @@ def run(cases, ref, il=None):
             ck('household', o['total'], sum(got), 1e-9)
             ck('value', o['value'], None if rate is None else sum(got) / 60 * rate, 1e-6)
             for n, m in enumerate(got): ck('value of ' + x['keys'][n], o['val'][n], None if rate is None else m / 60 * rate, 1e-6)
+        elif fn == 'slRefi':
+            # the annuity formula, and the total as payment x months (a level payment clears the loan in its last month)
+            r, n, B = x['rate'] / 12, x['years'] * 12, x['balance']
+            pay = B * r / (1 - (1 + r) ** -n)
+            ck('payment', o['payment'], pay, 0.01); ck('paid', o['paid'], pay * n, 0.05); ck('months', o['months'], n, 0)
+            ck('against the federal plan', o['diff'], pay * n - (x['fed'] + x['tax']), 0.05)
+        elif fn == 'slLadder':
+            L = ref['studentLoans']; table = dict((y, v) for y, v in L['rates'])
+            def rate_of(g):
+                if g['rate'] is not None: return g['rate']
+                if g['year'] not in table: return None
+                return round(table[g['year']] + (L['gradAdd'] if g['level'] == 'grad' else L['plusAdd'] if g['level'] == 'plus' else 0), 6)
+            if any(rate_of(g) is None for g in x['rungs']):
+                ck('needs a rate', o.get('needs', 0) > 0, True)
+            else:
+                gap = L['grace'] if x['gap'] is None else x['gap']
+                last = max(int(g['year'][:4]) for g in x['rungs'])
+                tot_before = tot_pay = tot_paid = 0.0
+                for g in x['rungs']:
+                    rt, y = rate_of(g), int(g['year'][:4])
+                    months = max(0, (last + 1 - y) * 12 + (5 - 9) + gap)  # September of its year to May after the last year, plus the gap
+                    before = 0 if (g['subsidized'] and g['level'] == 'ug') else g['amount'] * rt * months / 12
+                    i = rt / 12; n = L['standardYears'] * 12
+                    X = (g['amount'] + before) * i / (1 - (1 + i) ** -n) if i > 0 else (g['amount'] + before) / n
+                    # the waiting interest goes first and earns nothing; once it is gone the rest is a plain annuity
+                    P, A, k, paid = g['amount'], before, 0, 0.0
+                    while A > 0.005 and k < n:
+                        k += 1; it = P * i; p_ = min(X, P + A + it); paid += p_
+                        A += it; t = min(p_, A); A -= t; P = max(0, P - (p_ - t))
+                    if P > 0.005 and k < n:
+                        m = -math.log(1 - P * i / X) / math.log(1 + i) if i > 0 else P / X
+                        full = min(n - k, int(math.floor(m + 1e-9)))
+                        Bf = P * (1 + i) ** full - X * ((1 + i) ** full - 1) / i if i > 0 else P - X * full
+                        paid += X * full + (min(max(0, Bf * (1 + i)), X) if full < n - k and Bf > 0.005 else 0)
+                    tot_before += before; tot_pay += X; tot_paid += paid
+                principal = sum(g['amount'] for g in x['rungs'])
+                ck('interest before payments', o['before'], tot_before, 0.01); ck('owed', o['owed'], principal + tot_before, 0.01)
+                ck('payment', o['payment'], tot_pay, 0.01); ck('paid', o['paid'], tot_paid, 0.05)
+                ck('blended rate', o['blended'], sum(g['amount'] * rate_of(g) for g in x['rungs']) / principal, 1e-9)
         elif fn == 'jobWire':
             t = 12 if x['day'] in ('d1', 'd15') else 24 if x['day'] == '1and15' else (x['pay'] if x['pay'] > 0 else 12)
             ck('deposits a year', o['times'], t, 0)

@@ -85,6 +85,13 @@ spending growth, the income growth from the ledger or the tapped guess, the aler
 year and this year, what it grew past inflation and whether it counts as faster than prices); the Pareto (the fewest
 biggest lines that reach 80%, by a running total); the enough number and the room for error; the Rough numbers range of
 any amount, built as text a second way from the digits; and the game's creep check between two looks.
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
+(`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
+plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own
+spend-down payment), 0% tax in early retirement (the gains that keep taxable income inside the 0% band, the cash a sale
+gives, whether the spending fits), the six Baby Steps that can be read from numbers and where the person is, the wealth
+stage with the dollars and months to the next line, lifetime earnings and their hours (step 1a of Your Money or Your
+Life), capital, cushion and cash (step 9), and the quick wins (the tapped amounts and the days of freedom).
 
 Since Nov 25 2026 it also covers the ways to take money out (`js/math/withdraw.js`, the rules behind "Compare the
 ways" in the web app and in the game): every way in the list, the ones that are switched off on screen too, each
@@ -106,6 +113,14 @@ Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (t
 withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:
 the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a
 working year month by month; SLAM and the sheet use one factor for the year.
+
+Added Nov 25 2026 (student loans, run "Finish everything partly built", Part 5): a private refinance at the person's
+own rate (`refiOf`: the payment by the annuity formula, the total as payment × months, and the difference from the
+federal plan that pays least with its tax), and the stepladder (`stepladderOf`): each school year's loan at its own
+rate (the table, the graduate and PLUS add-ons, or the person's own rate), the interest before payments start, the
+payment on each rung and what it pays in all. For the total the second engine steps only until the waiting interest is
+paid, then uses the annuity formula for the rest. The federal plans themselves (M9S, IBR and RAP) are not worked out a
+second time yet.
 
 Not covered yet: the coach app's month-by-month projection (`js/math/projection.js`), debts with a 0% offer, the
 household tax across several jobs, the Child Tax Credit, the benefits cliff, Social Security benefit amounts, and the

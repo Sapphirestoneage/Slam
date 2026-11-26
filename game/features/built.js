@@ -472,6 +472,22 @@ const WB = [
   ],
   [
     "plan",
+    "Eli's frameworks and the canon",
+    "b",
+    () =>
+      WB_HAS("ymoyl") &&
+      WB_HAS("fwwins") &&
+      WB_FN("fwSwan") &&
+      WB_FN("fwPeak") &&
+      WB_FN("homeNextDollar") &&
+      ["swan", "mouse", "trust", "advice", "baby", "stages", "dwz", "peak"].every(
+        id => typeof IG !== "undefined" && !!IG[id]
+      ),
+    "The SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator, the Baby Steps next to the game's order, the wealth stages, Die With Zero time buckets and the designed week, the net worth peak, Your Money or Your Life as nine steps in order, the quick wins to tick, and the next dollar on Home. One math file with the web app.",
+    "ymoyl",
+  ],
+  [
+    "plan",
     "Retirement engine by Zack (MIT license), through one adapter",
     "b",
     () => typeof RetireEngine === "object" && WB_FN("retireScenario") && WB_FN("retireSummary"),
@@ -972,8 +988,8 @@ const WB = [
     "slam",
     "Student loan plans compared",
     "b",
-    () => WB_HAS("study") && WB_FN("slPlans"),
-    "Standard, IBR, RAP and the public service versions, on rules checked Nov 6, 2026. Tax on a forgiven balance is named, not priced.",
+    () => WB_HAS("study") && WB_FN("slPlans") && WB_FN("slPslf") && WB_FN("slRefi"),
+    "Standard, IBR, RAP and the public service versions, on rules checked Nov 6, 2026. Tax on a forgiven balance is named, not priced. Since Nov 25, 2026: your household size, a PSLF card (payments counted, to go, years left, forgiven) and a private refinance rate you tap, with what it gives up. The stepladder of school-year loans is on the web page only.",
     "study",
   ],
   ["biz", "Career and city atlases", "n", null, "Not built. Waiting on public data files.", null],

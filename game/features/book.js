@@ -28,6 +28,8 @@
                The copy is text with tabs. The file is CSV. Nothing is sent anywhere.
    ========================================================================= */
 const BOOK_PARTS = [
+  spiralBook,
+  amountsBook,
   taxvBook,
   oddsBook,
   coverBook,
@@ -53,6 +55,7 @@ const BOOK_PARTS = [
   offerBook,
   careerBook,
   tripBook,
+  slBook,
   nxaBook,
   frontBook,
   quotaBook,
@@ -65,6 +68,7 @@ const BOOK_PARTS = [
   trBook,
   xrBook,
   cardsBook,
+  fwBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */
 function bookSections(c) {

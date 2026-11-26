@@ -479,7 +479,7 @@ function numq(k, label, rk, opt) {
   const gh = isGhost(k);
   if (opt.compact && !open)
     return `<div class="row between numrow"><span class="small">${label}${gh ? `<div class="tiny muted">Guess</div>` : ""}</span><span class="row"><b class="${gh ? "guess" : ""}">${money(v)}</b><button class="ghost slim" data-a="padopen" data-k="${k}">Change</button></span></div>`;
-  return `<div class="field ${opt.compact ? "numopen" : ""}"><div class="small">${label}</div><div class="val ${gh ? "guess" : ""}">${money(v)}${gh ? ` <span class="tiny muted">guess</span>` : ""}</div>${rs.length ? `<div class="chips">${rs.map(r => `<button class="chip ${v === r[0] ? "on" : ""}" data-a="rng" data-k="${k}" data-v="${r[0]}">${r[1]}</button>`).join("")}</div>` : ""}${open ? keypad(k) + (opt.compact ? `<button class="ghost slim" data-a="padclose">Done with this one</button>` : "") : `<button class="ghost slim" data-a="padopen" data-k="${k}">${rs.length ? "Type the exact number instead" : "Type the number"}</button>`}${opt.help ? `<div class="tiny muted">${opt.help}</div>` : ""}</div>`;
+  return `<div class="field ${opt.compact ? "numopen" : ""}"><div class="small">${label}</div><div class="val ${gh ? "guess" : ""}">${money(v)}${gh ? ` <span class="tiny muted">guess</span>` : ""}</div><div class="chips">${rs.map(r => `<button class="chip ${v === r[0] ? "on" : ""}" data-a="rng" data-k="${k}" data-v="${r[0]}">${r[1]}</button>`).join("")}<button class="chip know ${open ? "on" : ""}" data-a="padopen" data-k="${k}">I know it</button></div>${open ? keypad(k) + (opt.compact ? `<button class="ghost slim" data-a="padclose">Done with this one</button>` : "") : ""}${opt.help ? `<div class="tiny muted">${opt.help}</div>` : ""}</div>`;
 }
 function rowsBlock(pf, rows, rk) {
   return rows.length === 1
@@ -689,6 +689,8 @@ function home() {
   if (typeof homeAddonAsk === "function") homeAddonAsk(); /* addon.js: ask about an add-on that waits */
   if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
   if (typeof homeAccountLine === "function") h = homeAccountLine(h); /* eras.js: the account recommendation */
+  if (typeof homeNextDollar === "function")
+    h = homeNextDollar(h); /* canon.js: the one line of the next dollar, at the top */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeReportFixed === "function") h = homeReportFixed(h); /* fbreport.js: "You reported this. It's fixed." */
   if (typeof homeSleptRow === "function")
@@ -749,7 +751,7 @@ function homeBase() {
   }
   const isNew = Date.now() - NEWAT < 15000;
   return `<div class="stack">
- ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">About 15 taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">${TRUST_LINE}</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
+ ${G.demo ? `<div class="card next pulse"><div class="eyebrow">Start here</div><h2 class="glow" style="margin:6px 0 4px">Make your own character</h2><div class="small"><b>SLAM the Game: your money, one small step at a time.</b> Free, and your numbers stay on this phone.</div><div class="small" style="margin-top:6px">Five short rounds of taps to your first plan. No numbers and no typing. What you see below is a sample person, so you can look around first.</div><div class="tiny muted" style="margin-top:6px">${TRUST_LINE}</div><button class="primary wide" style="margin-top:10px" data-a="start">Now let's do you</button><button class="ghost wide slim" style="margin-top:8px" data-a="nextsample">Show me a different sample</button></div>` : ""}
  <div class="row between"><div><h1>${esc(c.name)}</h1><div class="small muted">${esc(chapterOf(c))}</div></div>${real && !gt ? `<span class="row"><span class="pill ${d.realm === "Underground" ? "under" : "surface"}">${realmN(d.realm)}</span>${ib("term:realm")}</span>` : ""}</div>
  <div class="card ${G.demo ? "" : "next pulse"} ${isNew ? "pop" : ""}"><div class="row between"><div class="eyebrow">${G.demo ? esc(c.name) + "'s next step" : V("next", "Your next step")}</div>${isNew ? `<span class="pill new">New</span>` : ""}</div><h2 class="glow" style="margin:6px 0 4px">${ns.best && ns.id ? stepHTML(ns.id, ns.t) : esc(ns.t)}</h2><div class="small">${esc(ns.s)}</div>${
    !real && ns.a === "sharp"
@@ -1277,6 +1279,7 @@ function meTab() {
   let h = meTabBase();
   if (typeof meTabHead === "function") h = meTabHead(h); /* ux.js: the tab title, Beginner or Expert, the color */
   if (typeof meTabReveal === "function") h = meTabReveal(h); /* reveal.js: the row for the character sheet */
+  if (typeof meTabHousehold === "function") h = meTabHousehold(h); /* amounts.js: how many roommates and kids */
   if (typeof meTabJobs === "function") h = meTabJobs(h); /* jobs.js: the block "Your unpaid jobs" */
   if (typeof meTabQuiz === "function") h = meTabQuiz(h); /* quizzes.js: the row "Quizzes" */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
@@ -1669,6 +1672,9 @@ function openSetup(mode) {
    setupSheet() makes the full sheet. It calls each part by name. setupSheetBase() is the part from this file. */
 function setupSheet() {
   const w = W;
+  /* spiral.js: between two rounds, the number of the round and the level change; the pick for a beat */
+  const sp = typeof spSetupSheet === "function" ? spSetupSheet(w) : null;
+  if (sp) return sp;
   let h = setupSheetBase();
   /* planner.js: questions left, what the game knows, the fast finish */
   if (typeof setupSheetPlan === "function") h = setupSheetPlan(h, w);
@@ -1679,11 +1685,16 @@ function setupSheet() {
 function setupSheetBase() {
   const w = W,
     st = SETUP[w.step],
-    last = SETUP.length - 1,
+    L = typeof smLive === "function" ? smLive(w) : SM_ORDER,
+    at = L.indexOf(w.step),
+    n = L.length,
+    sp = typeof spHead === "function" ? spHead(w) : null /* spiral.js: the meter and the round */,
     ok = st.req(w);
   return (
-    head("Getting started · page " + (w.step + 1) + " of " + SETUP.length, st.t) +
-    `<div><div class="tiny muted">All taps. No numbers yet.</div>${bar((w.step / SETUP.length) * 100)}</div>${st.b(w)}${w.err && !ok ? `<div class="err">One question still needs an answer. It's outlined above.</div>` : ""}<div class="row between">${w.step > 0 ? `<button class="ghost" data-a="wback">Back one</button>` : "<span></span>"}<button class="${ok ? "primary go" : "ghost"}" data-a="wnext">${w.step === last ? "See where I stand" : "Next: page " + (w.step + 2) + " of " + SETUP.length}</button></div>`
+    (sp ||
+      head("Getting started · page " + (at + 1) + " of " + n, st.t) +
+        `<div><div class="tiny muted">All taps. No numbers yet.</div>${bar((at / n) * 100)}</div>`) +
+    `${st.b(w)}${w.err && !ok ? `<div class="err">One question still needs an answer. It's outlined above.</div>` : ""}<div class="row between">${at > 0 ? `<button class="ghost" data-a="wback">Back one</button>` : "<span></span>"}<button class="${ok ? "primary go" : "ghost"}" data-a="wnext">${(typeof spNextLabel === "function" && spNextLabel(w)) || (smIsLast(w) ? "See where I stand" : "Next: page " + (at + 2) + " of " + n)}</button></div>`
   );
 }
 /* FINISH THE SETUP: make the profile from the answers, or change it.
@@ -1693,6 +1704,8 @@ function finishSetup() {
   const pl = typeof finishSetupPlanStart === "function" ? finishSetupPlanStart() : null;
   const door = !!(W && W.door); /* okay.js: the setup came from the front door */
   if (typeof finishSetupPay === "function") finishSetupPay(); /* smart.js: keep how often each income comes */
+  if (typeof finishSetupTax === "function") finishSetupTax(); /* smart.js: the answers of the taxes round */
+  if (typeof finishSetupAm === "function") finishSetupAm(); /* amounts.js: the amounts of the rounds become rows */
   const r = finishSetupBase();
   if (pl) finishSetupPlanEnd(pl.w, pl.isNew); /* planner.js, step 2 of 2: lay out the first week */
   if (door && typeof finishSetupOkay === "function") finishSetupOkay(); /* okay.js: the answer to "Am I okay?" */
@@ -3124,7 +3137,8 @@ const ACT = {
     );
   },
   wback: () => {
-    W.step--;
+    if (W.kind === "setup") smStepBack(W);
+    else W.step--;
     drawSheet();
   },
   wnext: () => {
@@ -3136,9 +3150,9 @@ const ACT = {
         return;
       }
       w.err = false;
-      if (w.step === SETUP.length - 1) finishSetup();
+      if (smIsLast(w) && !(typeof spRoundEnd === "function" && spRoundEnd(w))) finishSetup();
       else {
-        w.step++;
+        if (!smIsLast(w)) smStepOn(w);
         drawSheet();
       }
     } else if (w.kind === "month") {

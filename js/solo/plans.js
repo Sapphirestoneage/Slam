@@ -10,6 +10,7 @@ import { answer, onFile } from '../journey.js';
 import { affordOf } from '../math/afford.js';
 import { trueCostOf } from '../math/truecost.js';
 import { studentLoanPlans } from '../math/studentloan.js';
+import { familyCard, pslfCard, refiCard, ladderCard } from './studentcards.js';
 import { ymOf, addMonths, monthName } from '../month.js';
 import { pack } from '../start/link.js';
 
@@ -107,8 +108,14 @@ function student(api) {
   const swap = () => { const fresh = card(); result.replaceWith(fresh); result = fresh; };
   $('main').replaceChildren(hero('Which student loan plan costs least?', 'Federal loans come with a menu of repayment plans. Each one is priced here on your loan and your pay: the monthly payment, the total, and what is forgiven.'),
     h('div.st-card', {}, h('h2', { style: { marginTop: 0 } }, 'Your student loans'), bookUI({ store: api.store, book: DEBT_BOOK, only: ['student'], pulse: true, btn, chip, onState: () => { if (result?.isConnected) { swap(); api.save(); } } })),
-    basics(api, ['takeHome'], swap, 'Your pay'), result, carryOf(api, 'Your link keeps this answer. What is my debt really costing me? prices every debt you have, this one included.'));
+    basics(api, ['takeHome'], swap, 'Your pay'), result, ...extras(api), carryOf(api, 'Your link keeps this answer. What is my debt really costing me? prices every debt you have, this one included.'));
   if (!loans().length) document.querySelector('#main .st-bookhead .st-btn')?.classList.add('st-pulse');
+}
+
+// Part 5 of the run of Nov 25 2026: the household size, PSLF, a private refinance and the stepladder, under the answer.
+function extras(api) {
+  const R = got(api, 'takeHome') ? studentLoanPlans(api.store.doc, api.ref, {}) : null;
+  return [familyCard(api, R), pslfCard(api, R), refiCard(api, R), ladderCard(api)].filter(Boolean);
 }
 
 const PAGES = { afford, cost, student };

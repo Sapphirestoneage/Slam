@@ -92,6 +92,7 @@ export const AREAS = [
       pick('splitMethod', 'Shared bills split', ['50/50', 'By income']), // F2: By income uses each person's take-home as the share when none is typed
       f('partnerName', 'Partner first name'), f('partnerBirthYear', 'Partner birth year', 'number'),
       f('dependents', 'Dependents', 'number'), f('kidAges', 'Kids ages', 'list'),
+      f('loanFamilySize', 'Household size for student loans (blank: you, a spouse and dependents)', 'number'), // run of Nov 25 2026, Part 5: the family size on the income-driven plan papers
       pick('workSituation', 'Work situation', ['Employed (W-2)', 'Self-employed', 'Mixed', 'Between jobs', 'Student', 'Retired']),
       pick('incomeStability', 'Income stability', ['Steady', 'Varies', 'Unpredictable'], { named: 'Profile_incomeStability' }),
       f('bigEMultiplier', 'big e multiplier (blank: from income stability)', 'number', { named: 'Profile_bigEMultiplier' }), // answer 172: age / 5 x this
