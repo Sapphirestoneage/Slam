@@ -1326,6 +1326,23 @@ const WB = [
     "enough",
   ],
   [
+    "see",
+    "Joy and enough: joy per dollar, the fulfillment curve and the Enough meter, the rich-life list, subscriptions in days",
+    "b",
+    () =>
+      WB_HAS("joy") &&
+      WB_HAS("jyrate") &&
+      WB_HAS("jycurve") &&
+      WB_HAS("jyset") &&
+      WB_FN("enJoy") &&
+      WB_FN("enCurve") &&
+      WB_FN("enRich") &&
+      WB_FN("enSubs") &&
+      WB_FN("joyHomeLine"),
+    "A joy tap on each spending line, with its share of your joy, joy per dollar and joy per hour of work. Each line placed on survival, comforts, luxuries or past enough, and the Enough meter from that. Your rich-life list with prices, joy, memory dividends and a regret view. Every subscription as the days it adds to the day work becomes optional.",
+    "joy",
+  ],
+  [
     "plan",
     "Hard moments: a breakup, a roommate leaving, a death, a partner who died, medical bills, saying no to lending, a fire, a flood or an eviction, a private money plan",
     "b",

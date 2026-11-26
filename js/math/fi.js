@@ -57,17 +57,20 @@ export function fiDate({ invested, monthlyInvesting, realReturn, target }, { fro
   const m = missing({ invested, 'monthly investing': monthlyInvesting, 'return': realReturn, 'FI number': target });
   if (m.length) return needs('M53', m, { unit: 'months' });
   const g = (1 + realReturn) ** (1 / 12);
-  let b = invested, n = 0;
+  let b = invested, n = 0, was = b;
   const points = [b];
   const going = k => (before && k < before.months ? before.monthly : monthlyInvesting + changeAt(changes, k));
-  while (b < target && n < MAX_MONTHS) { b = b * g + going(n); n += 1; if (path) points.push(b); }
+  while (b < target && n < MAX_MONTHS) { was = b; b = b * g + going(n); n += 1; if (path) points.push(b); }
   if (b < target) {
     return { id: 'M53', value: null, needs: [], never: true, unit: 'months', guess: false,
       text: 'Not on this path within 70 years. Try the solver to see what would get there.', points: path ? points : undefined };
   }
   const later = (changes || []).filter(c => c.monthly && c.at > 0);
   const lead = before && before.months > 0 ? `adding ${fmt.money(before.monthly)} a month for the ${before.months} ${before.months === 1 ? 'month' : 'months'} ${waitWords(before)}, then ${fmt.money(monthlyInvesting)} a month` : `adding ${fmt.money(monthlyInvesting)} a month`;
-  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.${later.length ? ` Known changes ahead are in: ${later.map(c => `${c.monthly < 0 ? 'less' : 'more'} ${fmt.money(Math.abs(c.monthly))} a month from month ${c.at + 1}${c.name ? ` (${c.name})` : ''}`).join(', ')}.` : ''}`, { unit: 'months' }), points: path ? points : undefined };
+  // fine: the same date as a fraction of a month (the last month split where the balance crosses the target), so a
+  // small change (a $12 subscription, Part 8 of the run of Nov 25 2026) moves it by days, not by whole months.
+  const fine = n === 0 ? 0 : n - 1 + (b > was ? Math.min(1, Math.max(0, (target - was) / (b - was))) : 1);
+  return { ...ok('M53', n, `Starting at ${fmt.money(invested)}, growing ${fmt.pct(realReturn)} a year after inflation and ${lead}, investments reach ${fmt.money(target)} in ${duration(n, from)}.${later.length ? ` Known changes ahead are in: ${later.map(c => `${c.monthly < 0 ? 'less' : 'more'} ${fmt.money(Math.abs(c.monthly))} a month from month ${c.at + 1}${c.name ? ` (${c.name})` : ''}`).join(', ')}.` : ''}`, { unit: 'months' }), fine, points: path ? points : undefined };
 }
 
 // What the months before the surplus is invested are for (batch 12, M79): heavy debt first, then big e.
@@ -242,12 +245,12 @@ export function fiStress({ invested, monthlyInvesting, annualSpending }, { rates
 }
 // M9Z (run of Nov 25 2026, Part 3): the FI date (M53) with a move in, next to the plan's own date. m is metrics(); a
 // move is { once (paid now, off what is invested), changes ([{ at, monthly }], more or less invested a month from month
-// at) } from js/math/career.js. Returns { before, after (months), days (negative is sooner), never } or null without a date.
+// at), fi (a change to the FI number: a cost that goes on after work too, Part 8) } from js/math/career.js. Returns { before, after (months), days (negative is sooner), never } or null without a date.
 export function fiMoveOf(m, move, { from = new Date() } = {}) {
   const x = m?.inputs, inv = m?.investing, target = m?.fiNumber?.value;
   if (!x || !inv || x.invested == null || inv.monthly == null || target == null || !move || move.needs?.length) return null;
-  const run = (once, ch) => fiDate({ invested: x.invested - once, monthlyInvesting: inv.monthly, realReturn: x.realReturn, target }, { from, before: inv.before ?? null, changes: [...(inv.changes ?? []), ...ch] });
-  const a = run(0, []), b = run(move.once ?? 0, move.changes ?? []);
+  const run = (once, ch, fi = 0) => fiDate({ invested: x.invested - once, monthlyInvesting: inv.monthly, realReturn: x.realReturn, target: target + fi }, { from, before: inv.before ?? null, changes: [...(inv.changes ?? []), ...ch] });
+  const a = run(0, []), b = run(move.once ?? 0, move.changes ?? [], move.fi ?? 0);
   if (a.value == null && !a.never) return null;
-  return { before: a.value, after: b.value, never: !!b.never, days: crDays(a.value, b.value) };
+  return { before: a.value, after: b.value, never: !!b.never, days: crDays(a.value, b.value), fineDays: crDays(a.fine ?? null, b.fine ?? null) };
 }

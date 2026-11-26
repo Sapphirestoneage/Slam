@@ -107,6 +107,13 @@ spending growth, the income growth from the ledger or the tapped guess, the aler
 year and this year, what it grew past inflation and whether it counts as faster than prices); the Pareto (the fewest
 biggest lines that reach 80%, by a running total); the enough number and the room for error; the Rough numbers range of
 any amount, built as text a second way from the digits; and the game's creep check between two looks.
+Since Nov 26 2026 (run Finish everything partly built, Part 8) it also covers Joy and enough, on the same engine:
+joy per dollar (each line's share of the joy, joy per $100, the hours of work at a wage and the joy per hour, the joy of
+an average dollar and the share on what is loved, with lines that have no tap left out); the fulfillment curve (the
+spending on each step, the Enough meter and the share of today's life the curve calls enough); the rich-life list (joy
+per $100 of a price, the memory years and dividends of an experience, the same 10 years later, the days on the FI date,
+the totals and the order of the regret view); and every subscription as days (the total shared out by each one's month,
+and the hours of work a year).
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
 (`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
 plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own

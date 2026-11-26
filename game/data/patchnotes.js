@@ -386,6 +386,17 @@ const PATCH_NOTES = [
       "Path packs through the skills, and graduating: pick your finish line and read your story so far.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Joy and enough",
+    l: [
+      "Menu has Joy and enough: tap how much joy each spending line brings you, and see joy per dollar and joy per hour of work.",
+      "Place each line on the fulfillment curve (survival, comforts, luxuries, past enough) and read your Enough meter.",
+      "A rich-life list: the things you want, with a price and a joy, the memory dividends of an experience, and a regret view.",
+      "Every subscription shows the days it adds to the day work becomes optional.",
+      "In the web app the same tools are on the Budget (Joy per dollar, Subscriptions in days) and on Goals.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

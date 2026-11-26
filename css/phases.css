@@ -812,3 +812,9 @@ table.rows.mini.dest-stress td.dest-cur { font-weight: 700; outline: 2px solid v
 .pareto-bar i { display: block; height: 100%; background: var(--primary); }
 .rough-btn { white-space: nowrap; }
 @media (max-width: 520px) { .pareto-row { grid-template-columns: 1fr auto auto; } .pareto-bar { grid-column: 1 / -1; grid-row: 2; } .creep-table td, .creep-table th { padding: 6px 4px; } .creep-table .creep-mutant { display: flex; width: max-content; margin: 4px 0 0 !important; } }
+/* Joy and enough (run Finish everything partly built, Part 8): the curve rows and the rich-life cards. */
+.curve-row { display: grid; grid-template-columns: minmax(120px, 1fr) auto auto; gap: 6px 12px; align-items: center; }
+.curve-row .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.joy-table .seg button { min-width: 32px; }
+.rich-item { padding: 12px; }
+@media (max-width: 520px) { .curve-row { grid-template-columns: 1fr auto; } .curve-row .seg { grid-column: 1 / -1; } }
