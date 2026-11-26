@@ -472,6 +472,16 @@ const PATCH_NOTES = [
       "In the web app the summary for a lawyer now lists who is named on each account. Nothing is kept unless you turn it on. Bring it all to a lawyer.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Safety nets",
+    l: [
+      "Break in case of emergency, on My Goals, now has four more life changes next to the layoff: medical leave, a move, a breakup and a new baby.",
+      "Each one shows how long your cash lasts, the lowest point, three tripwires where you decide now what you would do, and a Plan B.",
+      "The layoff's Dip tab shows how long you last at each level of spending, from full life down to food and housing only, with the Rule of 5 beside it.",
+      "In the web app the same changes are on If the pay stopped. Your plan also gets a calm note when it counts on a tax rule with an end date. And with Game words on, How long would my money last? has a zombie mode.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

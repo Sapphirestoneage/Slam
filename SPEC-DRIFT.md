@@ -2,9 +2,9 @@
 
 Written by `node --test` (test/coverage.test.js). Every spec row names what it is in code (the SLAM id column on the Fields tab), and every field is on a spec row. Any drift fails the run.
 
-## Drift (0)
+## Drift (1)
 
-None.
+- M8U Safety nets: medical leave, a move, a breakup and a new baby on the ladder (how long the money lasts, the lowest point, tripwires, Plan B), the months at each level of spending, the zombie days, and the rules with an end date the plan counts on: not on the spec's Math tab
 
 ## In the spec, not built yet (4)
 

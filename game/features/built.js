@@ -921,6 +921,14 @@ const WB = [
     "transit",
   ],
   [
+    "plan",
+    "Safety nets: medical leave, a move, a breakup and a new baby, each with its tripwires and Plan B",
+    "b",
+    () => WB_HAS("ntkind") && WB_FN("ntEvent") && WB_FN("ntLevels"),
+    "Inside Break in case of emergency, on My Goals: tap what is happening. How long the cash lasts, the lowest point, three tripwires, Plan B. The Dip tab of the layoff has How long at each level (full life, DRAFTT, FAT, food and housing only) with the Rule of 5.",
+    "transit",
+  ],
+  [
     "who",
     "Kids mode: short daily money lessons for a kid",
     "b",
