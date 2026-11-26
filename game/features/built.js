@@ -112,8 +112,8 @@ const WB = [
     "in",
     "One small question at a time, each with why we ask and where to look",
     "p",
-    () => WB_FN("askSheet") && WB_HAS("askyes") && WB_HAS("asknone") && WB_HAS("akskip"),
-    "Done for pay, spending, cash, investments, what you owe, each debt's details, Key numbers, your job's match and your tax accounts, each with a screen or a line after that says what changed. Setup, goals, the money log and the gig screens still ask the older way.",
+    () => WB_FN("askSheet") && WB_HAS("askyes") && WB_HAS("asknone") && WB_HAS("akskip") && WB_FN("fqSharpOrder"),
+    "Done for setup (count first, then one at a time), pay, spending, cash, investments, what you owe, each debt's details, Key numbers, your job's match and your tax accounts, each with a screen or a line after that says what changed. Make your numbers real asks the rows that could move your money most first, says what each could move, and offers to stop when the rest move little. Goals, the money log and the gig screens still ask several questions on one screen.",
     null,
   ],
   [
@@ -145,9 +145,9 @@ const WB = [
   [
     "in",
     "Setup tap counter",
-    "p",
-    () => WB_FN("finishSetup"),
-    "Setup counts your taps. It does not show the count as a score yet.",
+    "b",
+    () => WB_FN("finishSetup") && WB_FN("finishSetupTaps") && WB_FN("fqTapsNote"),
+    'Setup counts your taps and keeps the count. The payoff reveal says it as a plain fact ("You set this up in 54 taps"), never a score.',
     null,
   ],
   [
@@ -1327,7 +1327,14 @@ const WB = [
     "Inside Break in case of emergency, on My Goals.",
     "transit",
   ],
-  ["plan", "The cost of not knowing: a dollar figure on each blank", "n", null, "Not built.", null],
+  [
+    "plan",
+    "The cost of not knowing: a dollar figure on each blank",
+    "b",
+    () => WB_FN("fqBlanks") && WB_FN("arStop") && WB_HAS("fqstop") && WB_HAS("fqaskstop"),
+    "Each Guess or Close number gets what it could move your money a year from now. The blanks are ranked by it with the ranking of Ask me next, and the game stops asking once the ones asked cover 80% (the 80/20 rule): in setup's spending, in Make your numbers real, on the payoff reveal and in Close numbers.",
+    null,
+  ],
   [
     "plan",
     "The trade-off board: one move across money, time, stress and people",

@@ -240,16 +240,20 @@ const SP_INPUTS = [
   ["debt", "debts", "What you owe"],
   ["inv", "invs", "What you have invested"],
 ];
-/* It depends on: each input that is still a Guess, nudged down and up by a fifth. The ones that move the date
-   of the destination most come first. { k, n, months } with months Infinity when the nudge decides if there
-   is a date at all. */
+/* It depends on: the inputs ranked by what their open blanks could move your money a year from now (fewer.js
+   fqByKey, the one ranking of core/askrank.js), only the ones that cover 80% of it (the stopping rule). For each one,
+   the months it could move the date of the destination: each Guess or Close number nudged down and up by a fifth.
+   { k, n, months, dollars } with months Infinity when the nudge decides if there is a date at all. */
 function spDepends(c, i) {
   if (i == null) return [];
   const base = spMonthsTo(c, i),
+    F = typeof fqByKey === "function" ? fqByKey(c) : null,
     out = [];
   SP_INPUTS.forEach(([k, sec, n]) => {
     const rows = c[sec] || [];
-    if (!rows.length || isSharp(c, k)) return;
+    if (!rows.length || (!F && isSharp(c, k))) return;
+    const g = F ? F.ask.find(x => x.k === k) : null;
+    if (F && !g) return;
     let most = 0;
     [0.8, 1.2].forEach(f => {
       const p = clone(c);
@@ -259,9 +263,9 @@ function spDepends(c, i) {
         dm = m == null || base == null ? (m === base ? 0 : Infinity) : Math.abs(m - base);
       most = Math.max(most, dm);
     });
-    if (most >= 1) out.push({ k, n, months: most });
+    if (most >= 1 || g) out.push({ k, n, months: most, dollars: g ? g.value : null, at: g ? F.ask.indexOf(g) : 0 });
   });
-  return out.sort((a, b) => b.months - a.months).slice(0, 3);
+  return (F ? out.sort((a, b) => a.at - b.at) : out.sort((a, b) => b.months - a.months)).slice(0, 3);
 }
 const spWhen = m =>
   m == null
@@ -623,18 +627,23 @@ function spPlanSheet() {
       : "") +
     P.legs.map((s, k) => spLeg(k === 0 ? "Next stop" : s.i === 8 || k === 2 ? "Ultimately" : "Then", s)).join("") +
     (P.deps.length
-      ? `<b class="small">It depends on</b><div class="stack" style="gap:6px">${P.deps.map(x => `<div class="tile row between" style="gap:8px"><span class="small"><b>${esc(x.n)}</b><div class="tiny muted">${x.months === Infinity ? "Could decide whether there is a date at all" : "Could move your date by about " + rcSpan(x.months)}</div></span><button class="ghost slim" data-a="sharp" data-v="${x.k}">Sharpen</button></div>`).join("")}</div>`
+      ? `<b class="small">It depends on</b><div class="stack" style="gap:6px">${P.deps.map(x => `<div class="tile row between" style="gap:8px"><span class="small"><b>${esc(x.n)}</b><div class="tiny muted">${x.months === Infinity ? "Could decide whether there is a date at all" : x.months >= 1 ? "Could move your date by about " + rcSpan(x.months) : "Barely moves your date"}${x.dollars && typeof fqDollars === "function" ? ", and your money a year from now by " + esc(fqDollars(x.dollars)) : ""}</div></span><button class="ghost slim" data-a="sharp" data-v="${x.k}">Sharpen</button></div>`).join("")}</div>`
       : "") +
+    (typeof fqDependsRest === "function" ? fqDependsRest(c) : "") /* fewer.js: the inputs that move little */ +
     mathBox([
       "Each date: the money left each month (take-home pay less spending) goes to one stop at a time, in the order of the route.",
       "$1,000 cushion: what is missing ÷ the money left each month.",
       "Costly debt: the payoff order with the highest rate first, with the money left each month on top of the payments.",
       "Full emergency fund: (your age ÷ 5) months of spending, less the cash you have, ÷ the money left each month.",
-      "It depends on: each Guess number, made a fifth smaller and a fifth bigger. The ones that move the date most come first.",
+      "It depends on: each Guess or Close number at the low and the high end of its range, read as your money a year from now (net worth + 12 × money left each month). The ones that move it most come first, until they cover 80% of what could move. For each, the date with the number a fifth smaller and a fifth bigger.",
     ]);
   /* results.js: the payoff reveal (the lead number, the five result cards, "Start my first win") */
   if (typeof rsRevealBody === "function")
-    return head("Here's where you stand", "Here's where you stand") + rsRevealBody(c, route);
+    return (
+      head("Here's where you stand", "Here's where you stand") +
+      rsRevealBody(c, route) +
+      (typeof fqTapsNote === "function" ? fqTapsNote(c) : "") /* fewer.js: the taps of setup, a plain fact */
+    );
   return (
     head("Your first plan", "Your first plan") +
     route +

@@ -25,6 +25,7 @@ import { statusOf } from '../records.js';
 import { LEVELS } from '../registry/program.js';
 import { RULES } from '../registry/assumptions.js';
 import { fmt } from './result.js';
+import { arRank, arStop, AR_RULES } from './askrank.js';
 
 export const KEYS = Object.keys(OUTPUTS); // fi, debtFree, efMonths, surplus, netWorth
 export const WEIGHTS = () => ({ fi: RULES.certaintyWeightFi, debtFree: RULES.certaintyWeightDebtFree, surplus: RULES.certaintyWeightSurplus, efMonths: RULES.certaintyWeightEf, netWorth: RULES.certaintyWeightNetWorth, foo: RULES.certaintyWeightFoo });
@@ -144,16 +145,15 @@ export function askNextOf(doc, ref, { now = new Date(), person = null, m = null,
   }
   // M56: on a near tie, the input behind the assumption that moves the FI date most goes first (Spending: the spending input).
   const deal = base.bigDeals?.value === 'Spending' ? 'spending' : null;
-  out.sort((a, b2) => {
-    const tie = Math.abs(a.score - b2.score) <= 0.02 * Math.max(a.score, b2.score);
-    if (!tie) return b2.score - a.score;
-    if (deal && (a.kind === 'spending') !== (b2.kind === 'spending')) return a.kind === 'spending' ? -1 : 1;
-    return a.order - b2.order;
-  });
+  // The one ranking of both apps (js/math/askrank.js, M8Y): the score, then on a near tie the spending input, then the order.
+  const ranked = arRank(out, { tie: AR_RULES.tie, first: deal ? q => q.kind === 'spending' : null });
   // M73 first: an item the plan cannot run without (nothing typed yet) comes before any narrowing.
   const missing = small.filter(it => it.level === LEVELS.Missing && !knobs.some(k => k.id === it.id) && !(it.recId && SKIP.has(statusOf(recOf(it.recId) ?? {}, it.field))))
     .map(it => ({ id: it.id, recId: it.recId ?? null, field: it.field ?? null, route: it.route, focus: it.focus ?? (it.recId && it.field ? `${it.recId}:${it.field}` : null), kind: 'missing', label: it.label, level: it.level, prior: false,
       question: `${it.label} (nothing in yet)`, narrows: { key: it.group, missing: true }, why: whyWords({ missing: true }), ...addsOf('answered'), value: null, seconds: RULES.askSecondsNumber, answer: LEVELS.Rough, score: Infinity, order: order(it.id), missing: true }));
-  const questions = [...missing, ...out];
-  return { meter, guess, questions, top: questions[0] ?? null, runnerUp: questions[1] ?? null };
+  const questions = [...missing, ...ranked];
+  // The stopping rule (M8Y): the questions that cover RULES.askStopShare of what could still narrow the plan; the rest
+  // narrow it little, so Home can say the plan is sure enough without them.
+  const enough = arStop([...missing.map(q => ({ ...q, value: Infinity })), ...ranked], RULES.askStopShare);
+  return { meter, guess, questions, top: questions[0] ?? null, runnerUp: questions[1] ?? null, enough: { ask: enough.ask.length, rest: enough.rest.length, cover: enough.cover } };
 }

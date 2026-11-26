@@ -2041,6 +2041,34 @@ def run(cases, ref, il=None):
                     ck('past inflation', c['over'], over, 0.02)
                     mut = over is not None and is_ / was - 1 > infl and over >= 10 - 0.005
                     ck('faster than prices', c['mutant'], mut)
+        elif fn == 'arYearOn':
+            # your money a year from now = net worth + 12 x (in - out); the high end has the blank's width more net worth
+            if x['nw'] is None or x['inM'] is None or x['outM'] is None:
+                ck('no number', o['lo'], None); ck('no swing', o['swing'], None)
+            else:
+                lo = x['nw'] + 12 * (x['inM'] - x['outM'])
+                ck('low end', o['lo'], lo, 0.01); ck('high end', o['hi'], lo + x['w'], 0.01); ck('swing', o['swing'], x['w'], 0.01)
+        elif fn == 'arRank':
+            # a check of the order, worked out apart: the same questions, and no pair next to each other the wrong way round
+            its = {q['id']: q for q in x['items']}
+            ck('the same questions', sorted(o['ids']) == sorted(its), True)
+            sc = lambda q: q['value'] / (q['seconds'] if q['seconds'] > 0 else 1)
+            def before(a, b):
+                sa, sb = sc(a), sc(b)
+                if not (sa == sb or abs(sa - sb) <= x['tie'] * max(sa, sb)): return sa > sb
+                if x['pref'] and a['spending'] != b['spending']: return a['spending']
+                return a['order'] <= b['order']
+            ok = all(before(its[a], its[b]) for a, b in zip(o['ids'], o['ids'][1:]))
+            ck('top first', ok, True)
+        elif fn == 'arStop':
+            # ask until the questions asked cover the share of the total; a question with no number yet is always asked
+            V = x['values']; must = [v for v in V if v == 'must']; op = [v for v in V if v != 'must' and v >= 0]
+            tot = sum(op); asked = 0; n = 0
+            for v in op:
+                if tot > 0 and asked < x['share'] * tot: asked += v; n += 1
+            ck('asked', o['ask'], len(must) + n, 0); ck('left', o['rest'], len(op) - n, 0)
+            ck('total', o['total'], tot, 0.01); ck('covered', o['asked'], asked, 0.01); ck('the rest', o['restValue'], tot - asked, 0.01)
+            ck('stops', o['stop'], len(op) - n > 0)
         elif fn == 'enPareto':
             L = sorted([l['amt'] for l in x['lines'] if l['amt'] > 0], reverse=True)
             if len(L) < 3: ck('not ready', o['ready'], False)

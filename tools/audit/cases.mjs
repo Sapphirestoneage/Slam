@@ -44,6 +44,7 @@ import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comp
 import * as RA from '../../js/math/ratios.js';
 import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
+import { arYearOn, arSwing, arRank, arStop, AR_RULES } from '../../js/math/askrank.js'; // asking fewer questions (run Finish everything partly built, Part 17, M8Y)
 import { gfBackwards, gfPastSelf, gfBottleneck, GF_KINDS } from '../../js/math/feel.js'; // game feel (run Finish everything partly built, Part 20, M8J)
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
@@ -595,6 +596,22 @@ for (let i = 0; i < N; i++) {
   const r = spawnSync(process.execPath, [new URL('./game.cjs', import.meta.url).pathname, String(Math.max(20, Math.round(N * 0.6))), String(seedArg)], { encoding: 'utf8', maxBuffer: 1 << 28 });
   if (r.status !== 0) { console.error(r.stderr); process.exit(1); }
   for (const c of JSON.parse(r.stdout)) cases.push(c); }
+// Asking fewer questions (run Finish everything partly built, Part 17, M8Y): your money a year from now at both ends of a
+// blank and the swing; the one ranking (some scores within the 2% near tie on purpose, a preferred kind) and the
+// stopping rule on the ranked list (some must-ask questions with no number yet).
+for (let i = 0; i < N; i++) {
+  const mb = v => (rnd() < 0.05 ? null : v);
+  const y = { nw: mb(money(1, 900000) * (rnd() < 0.3 ? -1 : 1)), inM: mb(money(1, 15000)), outM: mb(money(1, 15000)), w: money(1, 50000) };
+  const lo = arYearOn(y.nw, y.inM, y.outM), hi = arYearOn(y.nw == null ? null : y.nw + y.w, y.inM, y.outM);
+  add('arYearOn', y, { lo, hi, swing: arSwing(lo, hi) });
+  const items = Array.from({ length: whole(0, 9) }, (_, k) => ({ id: k, value: rnd() < 0.15 ? 0 : money(1, 40000), seconds: pick([1, 1, 15, 60]), order: whole(0, 5), spending: rnd() < 0.3 }));
+  if (items.length > 1 && rnd() < 0.5) { items[1].value = items[0].value * between(0.99, 1.01); items[1].seconds = items[0].seconds; }
+  const pref = rnd() < 0.5, R = arRank(items, { tie: AR_RULES.tie, first: pref ? q => q.spending : null });
+  add('arRank', { items, pref, tie: AR_RULES.tie }, { ids: R.map(q => q.id) });
+  const must = Array.from({ length: whole(0, 2) }, (_, k) => ({ id: 100 + k, value: Infinity })), list = [...must, ...R];
+  const S = arStop(list, AR_RULES.stopShare);
+  add('arStop', { values: list.map(q => (q.value === Infinity ? 'must' : q.value)), share: AR_RULES.stopShare }, { ask: S.ask.length, rest: S.rest.length, total: S.total, asked: S.asked, restValue: S.restValue, stop: S.stop });
+}
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;
 console.log(`${cases.length} cases written to ${out}`, JSON.stringify(count));

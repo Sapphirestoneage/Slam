@@ -104,15 +104,26 @@ function askSheet() {
       })
     );
   }
+  /* fewer.js: the rows in the order of what they could move (the top one first), the dollars under each question,
+     and the stop tile when the rest move little */
+  const F = typeof fqSharpOrder === "function" ? fqSharpOrder(w, c, k, rows.length) : null;
+  if (F && !w.fqAt) {
+    w.fqAt = 1;
+    if (!(w.i > 0)) w.i = F.ord[0] || 0;
+  }
   const i = Math.min(w.i || 0, rows.length - 1),
+    pos = F && F.ord.includes(i) ? F.ord.indexOf(i) : i,
     x = rows[i],
     key = askKey(k, i),
     st = w.sti === i ? w.st || "amt" : "amt",
     v = x.amt || 0,
     top =
       (typeof allocBar === "function" ? allocBar(c, k, rows) : "") +
-      `<div class="tiny muted">Question ${i + 1} of ${rows.length}</div><div class="tile"><div class="eyebrow">${esc(k === "debt" && typeof debtName === "function" ? debtName(x, c) : x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>`,
-    back = i > 0 || st !== "amt" ? askBtn("askback", "Back one", "ghost slim") : "";
+      `<div class="tiny muted">Question ${pos + 1} of ${rows.length}</div>` +
+      (F && st === "amt" && typeof fqSharpStop === "function" ? fqSharpStop(w, i, rows) : "") +
+      `<div class="tile"><div class="eyebrow">${esc(k === "debt" && typeof debtName === "function" ? debtName(x, c) : x.k)}</div><h2 style="margin:4px 0 0">${st === "rate" ? "Does this one charge 8% or more a year?" : A.q(x)}</h2></div>` +
+      (F && st !== "rate" && typeof fqSharpLine === "function" ? fqSharpLine(w, i) : ""),
+    back = pos > 0 || st !== "amt" ? askBtn("askback", "Back one", "ghost slim") : "";
   w.sti = i;
   w.st = st;
   if (st === "rate") {
@@ -184,8 +195,13 @@ function askNext() {
     A = ASK[k],
     rows = w.o[A.rows];
   w.pad = null;
-  if (w.i < rows.length - 1) {
-    w.i++;
+  const ord =
+      w.fq && w.fq.k === k && w.fq.ord.includes(w.i)
+        ? w.fq.ord
+        : null /* fewer.js: the order of what the rows could move */,
+    pos = ord ? ord.indexOf(w.i) : w.i;
+  if (pos < rows.length - 1) {
+    w.i = ord ? ord[pos + 1] : w.i + 1;
     w.st = "amt";
     w.sti = w.i;
     drawSheet();
@@ -292,8 +308,12 @@ Object.assign(ACT, {
     if (w.st === "chg" || w.st === "rate") {
       w.st = "amt";
       w.sti = w.i;
-    } else if (w.i > 0) {
-      w.i--;
+    } else if ((w.fq && w.fq.k === w.q && w.fq.ord.includes(w.i) ? w.fq.ord.indexOf(w.i) : w.i) > 0) {
+      const ord =
+        w.fq && w.fq.k === w.q && w.fq.ord.includes(w.i)
+          ? w.fq.ord
+          : null; /* fewer.js: one back in the order of what moves most */
+      w.i = ord ? ord[ord.indexOf(w.i) - 1] : w.i - 1;
       w.st = "amt";
       w.sti = w.i;
     }
