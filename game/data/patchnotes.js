@@ -355,6 +355,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Ratios on Key numbers",
+    l: [
+      "Key numbers now ends with Ratios: about twenty of them in groups, one line each, closed until you open a group.",
+      "Each line says what it means in one sentence, how sure it is (Guess, Close or Exact) and, under Show the math, its formula.",
+      "A ratio that is missing a number says which one. It never shows a 0 in its place.",
+      "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
+      "In the web app the same ratios are on Report, Overview, under Ratios.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Quest mode",
     l: [
       "Menu has Quest mode (also on your character sheet): health, armor and six stats, each from your own numbers with its math.",
