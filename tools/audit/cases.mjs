@@ -46,6 +46,7 @@ import * as RA from '../../js/math/ratios.js';
 import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 import { arYearOn, arSwing, arRank, arStop, AR_RULES } from '../../js/math/askrank.js'; // asking fewer questions (run Finish everything partly built, Part 17, M8Y)
+import { gfBackwards, gfPastSelf, gfBottleneck, GF_KINDS } from '../../js/math/feel.js'; // game feel (run Finish everything partly built, Part 20, M8J)
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -591,6 +592,23 @@ for (let i = 0; i < N; i++) {
     x.levels = [x.burn, rnd() < 0.2 ? null : money(300, 12000), money(300, 9000), money(200, 6000)];
     const L = ntDegrade({ cash: x.cash, income: x.income, levels: x.levels.map((burn, j) => ({ id: String(j), burn })) });
     add('ntRun', x, { once: E.once, needs: E.needs, runway: R.runway, lowest: R.lowest, lowestK: R.lowestK, end: R.end, steady: R.steady, trips: T.map(t => [t.level, t.k, t.now]), planB: B.run.runway, more: B.more, levels: L.map(l => [l.burn, l.months, l.lasts]) });
+  }
+}
+// Game feel (run Finish everything partly built, Part 20, M8J): the finish line at each step (some answers blank, the
+// three ways to say the need), the race against your past self on random snapshots, and the bottleneck on random facts,
+// taps and picks.
+{ const isoOf = n => new Date(Date.UTC(2026, 10, 14) - n * 864e5).toISOString().slice(0, 10), mb = x => (rnd() < 0.15 ? null : x);
+  for (let i = 0; i < N; i++) {
+    const per = pick(['month', 'year', 'total']), x = { need: rnd() < 0.08 ? null : per === 'total' ? money(50000, 5000000) : per === 'year' ? money(12000, 200000) : money(800, 20000), per, years: rnd() < 0.08 ? null : pick([5, 10, 15, 20, 25, 30]), have: mb(rnd() < 0.1 ? 0 : money(1, 3000000)), takeHome: mb(money(800, 30000)), spending: mb(money(500, 25000)), wr: pick([0.03, 0.04, 0.047, 0.052]), r: pick([0.03, 0.05, 0.07, 0.08]) };
+    const B = gfBackwards({ ...x, now: NOW });
+    add('gfBackwards', x, { step: B.step, total: B.total ?? null, byYear: B.byYear ?? null, grown: B.grown ?? null, needed: B.needed ?? null, alreadyThere: B.alreadyThere ?? null, growsThere: B.growsThere ?? null, left: B.left ?? null, gap: B.gap ?? null, months: B.months ?? null, onPaceYear: B.onPaceYear ?? null, spendToClose: B.spendToClose ?? null, earnToClose: B.earnToClose ?? null });
+    const hist = Array.from({ length: whole(0, 8) }, () => ({ d: isoOf(whole(-5, 420)), nw: rnd() < 0.05 ? null : between(-50000, 400000) })), nw = rnd() < 0.05 ? null : between(-50000, 400000), win = pick([30, 60, 90]);
+    const P = gfPastSelf(hist, isoOf(0), nw, win);
+    add('gfPastSelf', { hist, today: isoOf(0), nw, win }, P.ready ? { ready: true, nowFrom: P.now.from, thenFrom: P.then.from, nowPace: P.now.pace, thenPace: P.then.pace, lead: P.lead } : { ready: false, daysToGo: P.daysToGo });
+    const facts = { left: rnd() < 0.2 ? null : between(-2000, 5000), need: rnd() < 0.3 ? null : between(0, 6000), late: pick([null, true, false]), rules: pick([null, null, true]) }, taps = {};
+    for (const k of GF_KINDS) if (rnd() < 0.4) taps[k] = pick(['yes', 'some', 'no']);
+    const pk = rnd() < 0.15 ? pick(GF_KINDS.concat(['other'])) : null, K = gfBottleneck({ facts, taps, pick: pk });
+    add('gfBottleneck', { facts, taps, pick: pk }, { top: K.top, asked: K.asked, scores: Object.fromEntries(K.ranked.map(r => [r.id, r.score])) });
   }
 }
 // the game's own numbers (derive, the debt planner, the time ledger, the cash calendar, goalSim and freeAt): its scripts

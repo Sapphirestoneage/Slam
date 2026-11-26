@@ -558,6 +558,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Game feel",
+    l: [
+      "Start at the finish line, in the Menu and on the life map: say what you need once work is optional and by when, and the game works back to today.",
+      "What's in the way: eight quick checks and your numbers find the bottleneck (money, time, energy, skill, knowledge, people, fear or rules). Is this really it? lets you push back.",
+      "Your rival race now has past you, from your own saved check-ins, and a typical path on the country's saving rate. Never a real person.",
+      "What if, People starts with made-up stories of people who got past each kind of bottleneck, labeled as made up.",
+      "When an answer moves a number, the top of the sheet shows what moved. Receipt lines have a bar that moves from before to after, and Replay plays it again.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Eight famous money ideas, finished",
     l: [
       "Famous money ideas has F-You money: the months you could walk away from a job, with what stops with the job and what health cover would cost. The web app's How long would my money last has it too.",

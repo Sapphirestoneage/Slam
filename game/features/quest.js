@@ -266,6 +266,10 @@ function qgCalls(c) {
       evidence: [Rk.line],
       change: "The call follows your net worth. An old number makes an old call.",
     });
+  if (typeof bnQuestCall === "function") {
+    const bn = bnQuestCall(c); /* feel.js: the bottleneck call */
+    if (bn) out.push(bn);
+  }
   return out;
 }
 /* The record: the taps on this screen, and the push-backs of the money read, in the order they came. */

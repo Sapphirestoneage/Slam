@@ -988,7 +988,7 @@ function routineLabel(c, r) {
 /* role model (someone to aim at) and rival (someone close enough to catch) */
 const RIVALS = {
   easy: { n: "Coasting Casey", r: 0.03, d: "Saves a little when it's easy." },
-  normal: { n: "Everyday Riley", r: 0.08, d: "Saves about what most people do." },
+  normal: { n: "Everyday Riley", r: 0.08, d: "Saves 8% of take-home, every month." },
   hard: { n: "Steady Jordan", r: 0.15, d: "Saves 15% and never misses a month." },
   expert: { n: "Relentless Morgan", r: 0.3, d: "Saves 30% and optimizes everything." },
   nepo: {

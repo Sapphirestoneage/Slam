@@ -16,6 +16,7 @@ import { yearsAtRate, MMM } from './math/simple.js';
 import { realHourlyWage } from './math/income.js';
 import { maxHomePayment, loanFromPayment } from './math/lender.js';
 import { RULES } from './registry/assumptions.js';
+import { gfBackwards, GF_NEED_MONTH, GF_WHEN_YEARS } from './math/feel.js';
 
 // The path: each page names the next. The last one is the whole plan (start.html), which opens a carried link.
 export const SOLO = [
@@ -80,26 +81,11 @@ export function runwayOf({ cash, spending, stillIn = 0, cut = 0, now = new Date(
 // The total is the yearly need divided by the withdrawal rate; growth is the plan's own return after inflation
 // (ref.presets), so every figure is in today's dollars. needed: the level monthly amount that gets `have` to `total`
 // in `years` (a savings annuity). onPace: the year today's left-over money gets there instead.
-export const NEED_MONTH = [2000, 3000, 4000, 5000, 6500, 8000, 10000], WHEN_YEARS = [5, 10, 15, 20, 25, 30];
-export function backwardsOf({ need = null, per = 'month', years = null, have = null, takeHome = null, spending = null, ref, now = new Date() } = {}) {
-  const wr = ref.presets.withdrawalRate.default, r = ref.presets.realReturn.default, i = (1 + r) ** (1 / 12) - 1; // a month at the plan's own pace (M53): 7% a year is 7% a year, not 7% / 12 compounded
-  const out = { step: 1, withdrawalRate: wr, realReturn: r };
-  if (!(need > 0)) return out;
-  const total = per === 'total' ? need : (per === 'year' ? need : need * 12) / wr;
-  Object.assign(out, { step: 2, total, aYear: total * wr, aMonth: total * wr / 12 });
-  if (!(years > 0)) return out;
-  Object.assign(out, { step: 3, years, byYear: now.getFullYear() + years });
-  if (have == null) return out;
-  const n = years * 12, grown = have * (1 + i) ** n, short = Math.max(0, total - grown);
-  const needed = short <= 0 ? 0 : short * i / ((1 + i) ** n - 1);
-  Object.assign(out, { step: 4, have, grown, alreadyThere: have >= total, growsThere: short <= 0, needed, share: Math.min(1, have / total) });
-  if (takeHome == null || spending == null) return out;
-  const left = takeHome - spending, gap = needed - left;
-  // months until today's left-over money gets there: solve have(1+i)^m + left((1+i)^m - 1)/i = total
-  let months = null; if (out.alreadyThere) months = 0; else if (left > 0 || have * i > 0) { const k = left / i, x = (total + k) / (have + k); months = x > 0 && have + k > 0 ? Math.log(x) / Math.log(1 + i) : null; if (!(months >= 0) || months > 1200) months = null; }
-  return Object.assign(out, { step: 5, takeHome, spending, left, gap, onTrack: gap <= 0, months, onPaceYear: months == null ? null : now.getFullYear() + Math.floor((now.getMonth() + months) / 12), savingsRateNeeded: takeHome > 0 ? needed / takeHome : null,
-    // the two honest ways to close a gap: spend less (which also lowers the need) or earn more
-    spendToClose: gap > 0 ? Math.max(0, spending - gap) : null, earnToClose: gap > 0 ? takeHome + gap : null });
+// Start at the finish line: ONE function, gfBackwards of js/math/feel.js (the game's Start at the finish line calls the
+// same one), with the plan's own withdrawal rate and return after inflation.
+export const NEED_MONTH = GF_NEED_MONTH, WHEN_YEARS = GF_WHEN_YEARS;
+export function backwardsOf({ ref, ...rest } = {}) {
+  return gfBackwards({ ...rest, wr: ref.presets.withdrawalRate.default, r: ref.presets.realReturn.default });
 }
 
 // ---------- What is done, and what carrying answers forward saved ----------

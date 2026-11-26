@@ -30,4 +30,5 @@ game/core/invest.js
 game/core/safetynet.js
 game/core/giving.js
 game/core/askrank.js
+game/core/feel.js
 game/core/canonmath.js
