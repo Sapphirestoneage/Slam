@@ -1485,6 +1485,45 @@ def run(cases, ref, il=None):
             ck('household', o['total'], sum(got), 1e-9)
             ck('value', o['value'], None if rate is None else sum(got) / 60 * rate, 1e-6)
             for n, m in enumerate(got): ck('value of ' + x['keys'][n], o['val'][n], None if rate is None else m / 60 * rate, 1e-6)
+        elif fn == 'slRefi':
+            # the annuity formula, and the total as payment x months (a level payment clears the loan in its last month)
+            r, n, B = x['rate'] / 12, x['years'] * 12, x['balance']
+            pay = B * r / (1 - (1 + r) ** -n)
+            ck('payment', o['payment'], pay, 0.01); ck('paid', o['paid'], pay * n, 0.05); ck('months', o['months'], n, 0)
+            ck('against the federal plan', o['diff'], pay * n - (x['fed'] + x['tax']), 0.05)
+        elif fn == 'slLadder':
+            L = ref['studentLoans']; table = dict((y, v) for y, v in L['rates'])
+            def rate_of(g):
+                if g['rate'] is not None: return g['rate']
+                if g['year'] not in table: return None
+                return round(table[g['year']] + (L['gradAdd'] if g['level'] == 'grad' else L['plusAdd'] if g['level'] == 'plus' else 0), 6)
+            if any(rate_of(g) is None for g in x['rungs']):
+                ck('needs a rate', o.get('needs', 0) > 0, True)
+            else:
+                gap = L['grace'] if x['gap'] is None else x['gap']
+                last = max(int(g['year'][:4]) for g in x['rungs'])
+                tot_before = tot_pay = tot_paid = 0.0
+                for g in x['rungs']:
+                    rt, y = rate_of(g), int(g['year'][:4])
+                    months = max(0, (last + 1 - y) * 12 + (5 - 9) + gap)  # September of its year to May after the last year, plus the gap
+                    before = 0 if (g['subsidized'] and g['level'] == 'ug') else g['amount'] * rt * months / 12
+                    i = rt / 12; n = L['standardYears'] * 12
+                    X = (g['amount'] + before) * i / (1 - (1 + i) ** -n) if i > 0 else (g['amount'] + before) / n
+                    # the waiting interest goes first and earns nothing; once it is gone the rest is a plain annuity
+                    P, A, k, paid = g['amount'], before, 0, 0.0
+                    while A > 0.005 and k < n:
+                        k += 1; it = P * i; p_ = min(X, P + A + it); paid += p_
+                        A += it; t = min(p_, A); A -= t; P = max(0, P - (p_ - t))
+                    if P > 0.005 and k < n:
+                        m = -math.log(1 - P * i / X) / math.log(1 + i) if i > 0 else P / X
+                        full = min(n - k, int(math.floor(m + 1e-9)))
+                        Bf = P * (1 + i) ** full - X * ((1 + i) ** full - 1) / i if i > 0 else P - X * full
+                        paid += X * full + (min(max(0, Bf * (1 + i)), X) if full < n - k and Bf > 0.005 else 0)
+                    tot_before += before; tot_pay += X; tot_paid += paid
+                principal = sum(g['amount'] for g in x['rungs'])
+                ck('interest before payments', o['before'], tot_before, 0.01); ck('owed', o['owed'], principal + tot_before, 0.01)
+                ck('payment', o['payment'], tot_pay, 0.01); ck('paid', o['paid'], tot_paid, 0.05)
+                ck('blended rate', o['blended'], sum(g['amount'] * rate_of(g) for g in x['rungs']) / principal, 1e-9)
         elif fn == 'jobWire':
             t = 12 if x['day'] in ('d1', 'd15') else 24 if x['day'] == '1and15' else (x['pay'] if x['pay'] > 0 else 12)
             ck('deposits a year', o['times'], t, 0)
