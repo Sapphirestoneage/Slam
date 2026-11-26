@@ -506,6 +506,8 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .dklegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:4px}.dklegend i,.dklist i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .dkdonut{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.dkdonut svg{flex:none}.dkdonut .dklist{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:4px}.dkdonut .dklist .row{gap:8px}.dkdonut .dklist b{flex:none}.dkdc{fill:var(--text);font-size:13px;font-weight:700}
 .dkprog{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.dkprog i{display:block;height:100%;background:var(--good);border-radius:99px}
+/* quizzes (features/quizzes.js): the picture tiles and the spectrum line */
+.qzcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qzcard{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:96px;border:2px solid var(--line);background:var(--panel2);border-radius:12px;padding:10px;font-weight:600;text-align:center;box-shadow:0 2px 0 var(--line)}.qzicon{font-size:30px;line-height:1}.qzspec{position:relative;height:8px;margin:8px 8px 4px;border-radius:99px;background:var(--panel2);border:1px solid var(--line)}.qzspec i{position:absolute;top:-6px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--sap);border:2px solid var(--panel)}
 .dkdays{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}.dkday{flex:0 0 46px;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}.dkday.on{border-color:var(--sap);color:var(--text)}.dkday.mk i{font-style:normal;font-size:10.5px;color:var(--good)}
 .dkgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
 .dkgoals{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}@media (min-width:700px){.dkgoals{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -574,15 +576,15 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/enough.js?v=869b33d0"></script>
 <script src="data/roles.js?v=d90d4899"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
-<script src="core/quizcore.js?v=fb301cab"></script>
+<script src="core/quizcore.js?v=fbfdf85e"></script>
 <script src="core/sins.js?v=0dea4dab"></script>
 <script src="core/frameworks.js?v=95d509ab"></script>
-<script src="data/quizskins.js?v=26830ea5"></script>
+<script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
 <script src="screens/ui.js?v=67716adf"></script>
 <script src="screens/dash.js?v=46243f0e"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=9ea0315f"></script>
+<script src="features/games2.js?v=0dff6807"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=442b6691"></script>
@@ -682,21 +684,21 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/element.js?v=ea52e168"></script>
 <script src="features/xray.js?v=bf512a9b"></script>
 <script src="features/transit.js?v=8ce21a47"></script>
-<script src="data/kidlessons.js?v=69134824"></script>
-<script src="features/kids.js?v=67bd9a89"></script>
+<script src="data/kidlessons.js?v=bdd65180"></script>
+<script src="features/kids.js?v=ee17bb0a"></script>
 <script src="data/metros.js?v=10acde40"></script>
-<script src="data/strategies.js?v=c50b230d"></script>
-<script src="features/strat.js?v=eec13414"></script>
+<script src="data/strategies.js?v=b8975c5b"></script>
+<script src="features/strat.js?v=1e78b443"></script>
 <script src="account/roles.js?v=347ce1b8"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
 <script src="features/recalc.js?v=86b5c421"></script>
 <script src="features/audit.js?v=d893fdb8"></script>
-<script src="features/quizzes.js?v=6b4cff5a"></script>
+<script src="features/quizzes.js?v=1d5da075"></script>
 <script src="features/sins.js?v=b2462a2d"></script>
 <script src="features/rings.js?v=7012818f"></script>
-<script src="features/quest.js?v=c4e931d2"></script>
-<script src="data/patchnotes.js?v=d96f41c6"></script>
+<script src="features/quest.js?v=4d933cb6"></script>
+<script src="data/patchnotes.js?v=8885569d"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/look.js?v=cf7c8eff"></script>
@@ -712,6 +714,6 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/book.js?v=d80ba7f2"></script>
 <script src="features/questlog.js?v=0cdb1fe4"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=e596bcd3"></script>
+<script src="features/built.js?v=de81d4c9"></script>
 </body>
 </html>

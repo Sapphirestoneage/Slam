@@ -738,6 +738,14 @@ async function runStart(browser) {
       for (let i = 0; i < 9; i++) { await solo.locator('#ask .st-quizrows .st-btn').first().click(); await settle(solo, 60); }
       await solo.waitForSelector('#answer'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: 'skin card' }, STILL);
       await solo.locator('#answer .st-btn', { hasText: 'All quizzes' }).click(); await settle(solo, 100);
+      // Part 6 of the run Finish everything partly built: the picture tiles, a percent for each trait, the spectrums
+      for (const [name, sel, n] of [['Build a Snack Plate', '#ask .st-quizcards .st-btn', 7], ['Money Scripts', '#ask .st-quizrows .st-btn', 12], ['The FIRE Community Quiz', '#ask .st-quizscale .st-chip', 14]]) {
+        await solo.locator('#lenses button.st-hubcard', { hasText: name }).click(); await solo.locator('#ask .st-btn.primary').click(); await settle(solo, 120);
+        await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: `${name} question` }, STILL);
+        for (let i = 0; i < n; i++) { await solo.locator(sel).nth(i % 3).click(); await settle(solo, 50); }
+        await solo.waitForSelector('#answer'); await scanHere(solo, { route: 'quiz.html', width, theme, client: 'Start', state: `${name} card` }, STILL);
+        await solo.locator('#answer .st-btn', { hasText: 'All quizzes' }).click(); await settle(solo, 100);
+      }
       await solo.goto(`${BASE}/skills.html`, { waitUntil: 'load' }); await settle(solo, 500);
       await scanHere(solo, { route: 'skills.html', width, theme, client: 'Start' }, STILL);
       for (const yes of [true, true, false, false, true, false]) { await solo.locator('.st-btn', { hasText: yes ? 'Yes, done' : 'Not yet' }).first().click(); await settle(solo, 80); }

@@ -716,7 +716,7 @@ function rvSheetQuest(h) {
 kitScreen(
   "qmode",
   "Quest mode",
-  "Your character sheet with health, armor and six stats, how much you can take on, weak spots, hidden costs, where you rank, opponents, the judge, questions, path packs and graduating.",
+  "Your character with health, armor and six stats, your room, weak spots, rivals, the judge and graduating.",
   "Every number comes from your plan and shows its math. Nothing leaves this device."
 );
 Object.assign(ACT, {

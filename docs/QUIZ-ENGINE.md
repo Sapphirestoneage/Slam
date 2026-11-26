@@ -96,6 +96,30 @@ them to `qzResult` as scores from outside, and adds what the engine does not dec
 agree over about 30 days of data, the top two of each family, Why we think this, the push-back and Test the fix.
 Web app: `js/quiz/sinsdata.js` (the ledger), `js/quiz/read.js` (the card). Game: `game/features/sins.js`.
 
+## The styles added in Part 6 of the run Finish everything partly built (Nov 25 2026)
+
+Six more skins, each a data file in `js/quiz/skins/`, all on the same engine:
+
+| Skin | Style | What is new in the engine or the renderer |
+|------|-------|-------------------------------------------|
+| `scripts` Money Scripts | 12 taps, four answers each | `bars: true`: a percent for each script on the card (`qzBars`) |
+| `enneagram` Money Enneagram (solo) | 12 taps, five or six answers each, nine types | `bars: true` |
+| `fire` The FIRE Community Quiz | 14 statements on a five-point agree scale (Likert) | `result.group: 'flavor'` (the card is the top flavor, not a preference); `bars: 'flavor'`; `spectrums` (`qzSpectrums`: a mark between two words) |
+| `snack` Build a Snack Plate | 7 picture taps, playful | the question style `cards` (a grid of picture tiles; each answer has an `icon`) |
+| `traits` Money Trait Percents | 24 quick statements, eight traits | `many: true` (24 taps are allowed); each trait its own percent, 0 to 100 |
+| `collapse` Quantum Collapse | 2 to 5 taps | `where: 'game'` (the web app asks it on its own first screen); the meter `qzPaths` (collapseOf uses it too); `measured`: the order of the five numbers from `tools/collapse/measure.mjs` |
+
+- `qzBars(def, answers, group)`: a percent for each trait on its own, its points out of the most it could get on the
+  path taken (a statement quiz: its average, already 0 to 100). Two traits can be high at once.
+- `qzSpectrums(def, answers)`: for each `def.spectrums` entry (`{ id, name, trait, left, right }`), where the person
+  sits from 0 (left) to 100 (right), and the word for it (the left word, the right word, or In the middle).
+- `qzPaths(def, answers)`: the paths still possible (the product of the choices not yet made), and the share settled.
+- The web app (`js/quiz/store.js` lensNow) and the game (`qzNow`) pass `bars` and `spectrums` to the card. The game
+  draws them with the dashboard kit (`dkCard`, `dkProgress`, `dkStatRow`).
+- Duolingo mode (game): the daily question, once answered, routes to the skill and the short read of the latest quiz
+  result (`qzLatest`, `qzDailyPart`), and Daily lessons is Kids mode's path for the player (`ADULT_LESSONS` in
+  `game/data/kidlessons.js`, kept in `c.x.lp`), with the lessons whose tree fits the latest result first.
+
 ## A new question style (for quiz.html)
 
 A question is drawn by a style: one function in `QUIZ_STYLES` in `js/quiz/page.js`, `(def, q, answer, pick)`, that
