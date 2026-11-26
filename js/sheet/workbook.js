@@ -119,7 +119,7 @@ export function buildWorkbook(doc, ref, { now = new Date(), coach = false, share
     aRows.push([{ v: a.label, s: 'text' }, { v: def, s: 'text', fmt: a.unit },
       a.client ? { v: mine, s: 'input', fmt: a.unit, key: `assumption:${a.client}` } : { v: null, s: 'na' },
       a.client ? { f: `IF(C${r}<>"",C${r},${fallback ? `${fallback}` : `B${r}`})`, s: 'formula', fmt: a.unit } : { f: `B${r}`, s: 'formula', fmt: a.unit },
-      { v: a.source, s: 'note' }, { v: a.date, s: 'note' }]);
+      { v: sourceOf(a, ref), s: 'note' }, { v: a.date, s: 'note' }]);
     define(a.name, absRange(aSheet.name, 'D', r));
     if (a.client) define(`${a.name}_mine`, absRange(aSheet.name, 'C', r)); // batch 63: the client's own box, blank when the default is used
   }

@@ -162,7 +162,7 @@ function retireAccounts(c, ret, monthly) {
       glide = r.kind === "td" || r.kind === "unk",
       share = total > 0 ? r.amt / total : n === 0 ? 1 : 0,
       alloc =
-        r.kind === "sp" || r.kind === "single" || r.kind === "crypto"
+        r.kind === "sp" || r.kind === "intl" || r.kind === "single" || r.kind === "crypto"
           ? retireAllocation(1, 0, 0)
           : r.kind === "bond"
             ? retireAllocation(0, 1, 0)

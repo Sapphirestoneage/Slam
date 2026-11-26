@@ -1019,6 +1019,71 @@ def quest_check(fn, x, o, ck):
         ck('beaten', o['beaten'], want)
 
 
+def invest_check(fn, x, o, ck):
+    """Investing (M8I): the mix added up dollar by dollar, each fee as value x rate, the grid square month by month and
+    year by year, and the Roth rule from its words (a dollar taxed now at the rate now or later at the rate later)."""
+    if fn == 'ivMix':
+        known, cls = 0.0, {}
+        for a in x['accts']:
+            p = a['parts']
+            if not p or not a['amt'] or a['amt'] <= 0: continue
+            s = sum(p.values())
+            if s <= 0: continue
+            known += a['amt']
+            for k, v in p.items(): cls[k] = cls.get(k, 0.0) + a['amt'] * v / s
+        total = sum(a['amt'] for a in x['accts'] if a['amt'] and a['amt'] > 0)
+        lead = x['ret'] - x['age']
+        guide = 0.9 if lead >= 25 else 0.5 + 0.4 * lead / 25 if lead >= 0 else max(0.3, 0.5 - 0.2 * min(1, -lead / 7))
+        ck('the age guide', o['guide'], guide, 1e-12)
+        ck('known', o['known'], known, 1e-6)
+        if known > 0:
+            stock = sum(cls.get(k, 0) for k in ('us', 'intl', 'stocks', 'single')) / known
+            ck('stocks', o['stock'], stock, 1e-9)
+            ck('inside the three', o['inside'], sum(cls.get(k, 0) for k in ('us', 'intl', 'stocks', 'bonds')) / known, 1e-9)
+            aim = x['target'] if x['target'] is not None else guide
+            ck('drift', o['drift'], stock - aim, 1e-9)
+        comp, emp = {}, 0.0
+        for a in x['accts']:
+            for hd in a['holdings']:
+                if hd['v'] <= 0: continue
+                if hd['kind'] == 'employer': emp += hd['v']
+                if hd['kind'] in ('employer', 'stock'): comp[hd['name'].lower()] = comp.get(hd['name'].lower(), 0) + hd['v']
+        if total > 0:
+            ck('employer share', o['employerShare'], emp / total, 1e-12)
+            if comp: ck('the biggest company', o['biggest'], max(comp.values()) / total, 1e-12)
+    elif fn == 'ivFees':
+        year, missing, loads = 0.0, 0, []
+        for a in x['accts']:
+            for f in a['funds']:
+                if f['er'] is None: missing += 1
+                else: year += f['v'] * f['er']
+                if f['load']: loads.append(1000 * f['load'])
+            year += a['accountFee'] or 0
+            if x['advisor']: year += a['amt'] * x['advisor']
+        ck('fees a year', o['year'], year, 1e-6)
+        ck('funds with no fee', o['missing'], missing, 0)
+        for i, l in enumerate(loads): ck('a load on $1,000', o['loads'][i], l, 1e-9)
+    elif fn == 'ivHeatCell':
+        b = 1000.0
+        for _ in range(60): b += b * x['apr'] / 12
+        g = 1000.0
+        for _ in range(5): g *= 1 + x['ret']
+        ck('interest the debt no longer charges', o['debt'], b - 1000, 1e-6)
+        ck('what investing grows', o['invest'], g - 1000, 1e-6)
+        gap = (g - 1000) - (b - 1000)
+        ck('the square', o['gap'], gap, 1e-6)
+        ck('which side', o['side'] == ('even' if abs(gap) < 0.5 else 'invest' if gap > 0 else 'debt'), True)
+    elif fn == 'ivRoth':
+        choice = x['type'] in ('401(k)', 'Roth IRA', 'Traditional IRA')
+        ck('a choice', o['ready'], choice)
+        if choice:
+            per = x['yearly'] if x['yearly'] else 1000
+            now = sum(x['now'].values()); later = sum(x['later'].values())
+            # traditional: the tax not paid now is invested, and the later rate is paid on it; Roth: the rate now is paid
+            trad_keep = per * (1 - later); roth_keep = per * (1 - now)
+            ck('traditional minus Roth, a year', o['yearGap'], trad_keep - roth_keep, 1e-6)
+
+
 def peers_check(fn, x, o, ck):
     """Comparing with peers (M8N): each row looked up again in data/priors-2026.json and each rule applied from its words."""
     rows = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'priors-2026.json')))['rows']
@@ -1352,6 +1417,12 @@ def play_check(fn, x, o, ck):
             if cur.day == x['day'] and not (x['after'] and cur == datetime.date(y, m, d)): break
             cur += datetime.timedelta(days=1)
         ck('the date', o['d'] == cur.isoformat(), True)
+
+
+# Households together, Same question (run Finish everything partly built, Part 12): each question's id, its number of
+# options and whether they have an order ('scale') or not ('pick'), written out here a second time.
+HH_Q = [('ask', 5, 'scale'), ('cushion', 4, 'scale'), ('split', 4, 'pick'), ('accounts', 3, 'scale'), ('stop', 5, 'scale'),
+        ('debt', 3, 'scale'), ('family', 3, 'scale'), ('invest', 3, 'scale'), ('talk', 4, 'scale'), ('big', 5, 'scale')]
 
 
 def run(cases, ref, il=None):
@@ -1721,6 +1792,8 @@ def run(cases, ref, il=None):
             quest_check(fn, x, o, ck)
         elif fn in ('peNetWorth', 'peIncome', 'peSaving'):
             peers_check(fn, x, o, ck)
+        elif fn in ('ivMix', 'ivFees', 'ivHeatCell', 'ivRoth'):
+            invest_check(fn, x, o, ck)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
@@ -2077,6 +2150,59 @@ def run(cases, ref, il=None):
                         if r[j] < best[j] - 1e-9: best = r
                     want = best[0]
                 ck('least ' + k, o['cheapest'][k], want)
+        elif fn == 'hhCompare':
+            # Households together, Same question: from the definition (the questions' order and kinds read from the source list)
+            QS = HH_Q
+            ppl = [p for p in x['people'] if str(p['n']).strip()]
+            want, talk = [], []
+            for order, (qid, nopt, kind) in enumerate(QS):
+                ix = [p['a'][qid] for p in ppl if isinstance(p['a'].get(qid), int) and 0 <= p['a'][qid] < nopt]
+                if len(ix) < 2: want.append((qid, 'open', None)); continue
+                sp = max(ix) - min(ix)
+                st = 'same' if sp == 0 else ('apart' if kind == 'pick' or sp > 1 else 'near')
+                spv = (0 if sp == 0 else nopt) if kind == 'pick' else sp
+                want.append((qid, st, spv))
+                if st in ('near', 'apart'): talk.append((-spv, order, qid))
+            for r, w in zip(o['rows'], want):
+                ck('the state of a question', r['state'] == w[1], True); ck('its spread', r['spread'], w[2], 0)
+            ck('the talk points in order', o['talk'] == [t[2] for t in sorted(talk)], True)
+            ck('ready', o['ready'], len(ppl) >= 2 and any(w[1] != 'open' for w in want))
+        elif fn == 'hhFiTogether':
+            def ym(sv):
+                y, m = sv.split('-'); return int(y) * 12 + int(m)
+            P = x['people']; nums = [p['fi'] for p in P if p['fi'] is not None and p['fi'] > 0]; ds = [ym(p['date']) for p in P if p['date']]
+            ck('the gap in the number', o['numGap'], max(nums) - min(nums) if len(nums) >= 2 else None)
+            ck('the gap in time', o['dateGap'], max(ds) - min(ds) if len(ds) >= 2 else None, 0)
+            ck('months from now', o['months'] == [ym(p['date']) - ym(x['now']) if p['date'] else None for p in P], True)
+            ck('who is missing', o['missing'] == [p['n'] for p in P if p['fi'] is None or p['date'] is None], True)
+        elif fn == 'hhEquity':
+            nz = lambda v_: v_ if v_ is not None and v_ >= 0 else None
+            paid = [(nz(p['put']) or 0) + (nz(p['monthly']) or 0) * (nz(p['months']) or 0) for p in x['people']]
+            tot = sum(paid); eq = x['value'] - x['owed'] if x['value'] is not None and x['owed'] is not None else None
+            ck('equity', o['equity'], eq); ck('everyone, put in', o['total'], tot)
+            ck('ready', o['ready'], eq is not None and tot > 0 and len(paid) >= 2)
+            for r, pd in zip(o['rows'], paid):
+                ck('put in, all of it', r['paid'], pd)
+                sh = pd / tot if tot > 0 else None
+                ck('share', r['share'], sh, 1e-9)
+                ck('part by contributions', r['byPaid'], eq * sh if eq is not None and sh is not None else None)
+                ck('part split equally', r['equal'], eq / len(paid) if eq is not None else None)
+        elif fn == 'hhMarryGap':
+            P = x['people']
+            if len(P) < 2 or any(p['gross'] is None for p in P): ck('not ready', o['ready'], False)
+            else:
+                one = [law.federal(p['gross'], 0, 'Single')[0] for p in P]; alls = sum(one)
+                ck('everyone single', o['allSingle'], alls)
+                pairs = []
+                for i in range(len(P)):
+                    for j in range(i + 1, len(P)):
+                        mar = law.federal(P[i]['gross'] + P[j]['gross'], 0, 'Married jointly')[0] + alls - one[i] - one[j]
+                        pairs.append((mar - alls, i, j, mar))
+                by = {(w[1], w[2]): w for w in pairs}
+                ck('every pair once', sorted((r['i'], r['j']) for r in o['pairs']) == sorted(by), True)
+                ck('the lowest tax first', all(o['pairs'][k]['gap'] <= o['pairs'][k + 1]['gap'] + 1e-6 for k in range(len(o['pairs']) - 1)), True)
+                for r in o['pairs']:
+                    w = by[(r['i'], r['j'])]; ck('married', r['married'], w[3]); ck('the gap', r['gap'], w[0])
         elif fn == 'enStepCreep':
             a, b = x['a'], x['b']; sg = b['spend'] / a['spend'] - 1; tg = b['take'] / a['take'] - 1 if a['take'] > 0 else None
             ck('creep between two looks', o['up'], sg >= 0.05 and (tg is None or tg < sg))

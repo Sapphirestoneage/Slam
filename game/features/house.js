@@ -260,7 +260,8 @@ function hsSheet() {
     ]
       .map(x => `<button class="${t === x[0] ? "on" : ""}" data-a="hstab" data-v="${x[0]}">${x[1]}</button>`)
       .join("")}</div>` +
-    (t === "docs" ? hsPapers() : t === "ag" ? hsAgBody() : hsPicture())
+    (t === "docs" ? hsPapers() : t === "ag" ? hsAgBody() : hsPicture()) +
+    (typeof hxSheetRow === "function" ? hxSheetRow() : "") /* hhold.js: the row of Households together */
   );
 }
 /* one page for a planner */

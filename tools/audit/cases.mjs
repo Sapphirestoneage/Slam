@@ -32,10 +32,12 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
 import { bpRules, bpHsa, bpDcfsa, bpEspp, bpCommuter, bpCoverage, bpPlans } from '../../js/math/benefitsplan.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
+import { ivMix, ivFees, ivHeatCell, ivRoth, ivGuide } from '../../js/math/invest.js'; // investing (run Finish everything partly built, Part 13, M8I)
 import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comparing with peers (run Finish everything partly built, Part 9, M8N)
 import * as RA from '../../js/math/ratios.js';
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
@@ -144,6 +146,22 @@ for (let i = 0; i < N; i++) {
     add('peIncome', x, { where: r.where, ratio: r.ratio, middle: r.middle }); }
   { const x = { rate: pick([-0.3, 0, 0.05, 0.2, 0.55]) * rnd() * 2 }, r = peSaving({ ...x, data: priorsAll });
     add('peSaving', x, { gap: r.gap, country: r.country }); }
+  // Investing (js/math/invest.js, M8I): the household mix, the fee X-ray, invest or pay debt, Roth or traditional
+  { const K = ['us', 'intl', 'stocks', 'bonds', 'cash', 'single', 'crypto'], n = whole(1, 4), accts = [];
+    for (let k = 0; k < n; k++) { const parts = rnd() < 0.15 ? null : Object.fromEntries(K.filter(() => rnd() < 0.5).map(c => [c, whole(1, 9) / 10])); const amt = money(500, 400000);
+      accts.push({ name: `A${k}`, amt, parts: parts && Object.keys(parts).length ? parts : null, holdings: rnd() < 0.5 ? [{ name: pick(['ACME', 'ZZZ']), v: Math.round(amt * between(0, 0.4)), kind: pick(['employer', 'stock', 'fund']) }] : [] }); }
+    const age = whole(20, 75), ret = pick([55, 60, 65, 67]), target = rnd() < 0.5 ? null : pick([0.6, 0.7, 0.8, 0.9]), r = ivMix(accts, { target, guide: ivGuide(age, ret) });
+    add('ivMix', { accts, age, ret, target }, { known: r.known, stock: r.stock, drift: r.drift, inside: r.inside, employerShare: r.conc.employerShare, biggest: r.conc.biggest ? r.conc.biggest.share : null, guide: ivGuide(age, ret).stock }); }
+  { const n = whole(1, 3), accts = [];
+    for (let k = 0; k < n; k++) { const f = whole(0, 3), funds = []; for (let j = 0; j < f; j++) funds.push({ name: `F${j}`, v: money(100, 200000), er: rnd() < 0.2 ? null : pick([0.0003, 0.0005, 0.002, 0.005, 0.01]), load: pick([null, 0, 0.03, 0.0575]) });
+      accts.push({ name: `A${k}`, amt: funds.reduce((t, x) => t + x.v, 0) || money(500, 50000), accountFee: pick([null, 0, 25, 50]), funds }); }
+    const advisor = pick([null, 0, 0.005, 0.01]), r = ivFees(accts, { advisor });
+    add('ivFees', { accts, advisor }, { year: r.year, missing: r.missing.length, loads: r.loads.map(l => l.per1000) }); }
+  { const x = { apr: pick([0.03, 0.05, 0.0699, 0.1, 0.15, 0.2299, 0.2999]), ret: pick([0.03, 0.05, 0.06, 0.07, 0.09]) }, r = ivHeatCell(x.apr, x.ret);
+    add('ivHeatCell', x, { debt: r.debt, invest: r.invest, gap: r.gap, side: r.side }); }
+  { const rate = () => ({ fed: pick([0.1, 0.12, 0.22, 0.24, 0.32]), state: pick([0, 0.04, 0.055, 0.0625, 0.0685]), local: pick([0, 0, 0.03876]) }), x = { type: pick(['401(k)', 'Roth IRA', 'Traditional IRA', 'HSA', 'Brokerage']), yearly: pick([null, money(500, 23000)]), now: rate(), later: rate() };
+    const r = ivRoth([{ name: 'A', type: x.type, yearly: x.yearly, now: x.now }], { later: x.later }).rows[0];
+    add('ivRoth', x, { ready: r.ready, yearGap: r.ready ? r.yearGap : null, lead: r.ready ? r.M.lead : null }); }
   // Family money (js/math/family.js, M8F): the sandwich years, living at home, tuition and the NY 529
   { const yrs = () => pick([null, 0, 1, 3, 5, 10]), x = { parents: pick([0, money(50, 3000)]), kids: pick([0, money(50, 4000)]), parentsYears: yrs(), kidsYears: yrs(), parentsFrom: pick([0, 0, 2]), kidsFrom: pick([0, 0, 1, 5]), inSpending: rnd() < 0.2, takeHome: money(1500, 20000), spending: money(1000, 15000) }, r = fmSandwich(x);
     add('fmSandwich', x, { peak: r.peak, total: r.total, both: r.both, all: r.all, leftAfter: r.leftAfter, flows: r.flows.map(f => [f.at, f.monthly]) }); }
@@ -355,6 +373,26 @@ for (let i = 0; i < N; i++) {
     items: Rr.items.map(x => ({ id: x.id, per100: x.per100, memYears: x.memYears, dividend: x.dividend, laterYears: x.laterYears, days: x.days })), regret: Rr.regret.map(x => x.id) });
   const subs = Array.from({ length: whole(0, 6) }, (_, k) => ({ name: `S${k}`, amt: rnd() < 0.1 ? 0 : money(1, 90) })), totalDays = rnd() < 0.15 ? null : money(1, 400);
   const P = enSubs(subs, totalDays, { wage }); add('enSubs', { subs, totalDays, wage }, P.ready ? { ready: true, total: P.total, days: P.days, rows: P.rows.map(r => ({ name: r.name, days: r.days, hoursYear: r.hoursYear })) } : { ready: false });
+}
+// Households together (run Finish everything partly built, Part 12): two to six people by name, some answers blank;
+// FI numbers and dates, some blank; a shared home with or without a loan typed; pay for the tax gap when two marry, on
+// the web's federal tax (M10).
+for (let i = 0; i < N; i++) {
+  const n = whole(1, 6), names = Array.from({ length: n }, (_, k) => `P${k}`);
+  const people = names.map(nm => ({ n: nm, a: Object.fromEntries(HH_QUESTIONS.filter(() => rnd() < 0.75).map(q => [q.id, rnd() < 0.05 ? q.opts.length : whole(0, q.opts.length - 1)])) }));
+  const K = hhCompare(people);
+  add('hhCompare', { people }, { rows: K.rows.map(r => ({ id: r.id, state: r.state, spread: r.spread })), talk: K.talk.map(r => r.id), ready: K.ready });
+  const now = '2026-11', fi = names.map(nm => ({ n: nm, fi: rnd() < 0.2 ? null : money(200000, 6000000), date: rnd() < 0.2 ? null : `${whole(2026, 2070)}-${String(whole(1, 12)).padStart(2, '0')}` }));
+  const F = hhFiTogether(fi, now);
+  add('hhFiTogether', { people: fi, now }, { numGap: F.numbers.gap, dateGap: F.dates.gap, months: F.rows.map(r => r.months), missing: F.missing });
+  const home = { value: rnd() < 0.1 ? null : money(80000, 2000000), owed: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(1000, 900000),
+    people: names.map(nm => ({ n: nm, put: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(500, 200000), monthly: rnd() < 0.15 ? null : rnd() < 0.2 ? 0 : money(50, 4000), months: rnd() < 0.15 ? null : whole(1, 240) })) };
+  const E = hhEquity(home);
+  add('hhEquity', home, { equity: E.equity, total: E.total, ready: E.ready, rows: E.rows.map(r => ({ paid: r.paid, share: r.share, byPaid: r.byPaid, equal: r.equal })) });
+  const pay = names.map(nm => ({ n: nm, gross: rnd() < 0.08 ? null : rnd() < 0.1 ? 0 : money(8000, 700000) }));
+  const fed = (g, st) => federalTax({ gross: g, filingStatus: st === 'joint' ? 'Married jointly' : 'Single' }, ref).value;
+  const M = hhMarryGap(pay, { compare: esCompare, taxOf: fed });
+  add('hhMarryGap', { people: pay }, { ready: M.ready, allSingle: M.allSingle ?? null, pairs: M.pairs.map(x => ({ i: x.i, j: x.j, married: x.married, gap: x.gap })) });
 }
 // Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): random households, some inputs missing (null), some
 // zero; each ratio from js/math/ratios.js, worked out again from its definition in the second engine.

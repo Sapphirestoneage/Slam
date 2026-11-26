@@ -19,6 +19,7 @@ import { CONTROL_KEYS } from './math/control.js';
 import { sharedExercises } from './exercises/calm-letter.js';
 import { sharedLenses, lensesForOthers } from './quiz/store.js';
 import { hardForAudience } from './hard.js';
+import { hhCanLeave, hhDraft } from './math/hhold.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -223,4 +224,13 @@ export function viewStore(store, aud, ref = null) {
     }
   }
   return v;
+}
+
+// Run "Finish everything partly built", Part 12 (Share by email, Nov 26 2026): one email draft for one person. The
+// items come from the shared view (shareCtx: private rows already folded into neutral words), and this is the same
+// rule for anything shared: only an item for everyone may leave (rowHidden with SHARE), and of those only the ones
+// picked for this person go in. Nothing is sent: the draft is text and a mailto: link for the person's own mail app.
+export const shareSees = seen => sees(SEEN.includes(seen) ? seen : 'Everyone', null, SHARE, null);
+export function emailDraft(items, picks, opts = {}) {
+  return hhDraft({ ...opts, items: (items || []).filter(it => it && shareSees(it.seen) && hhCanLeave(it.seen)), picks });
 }

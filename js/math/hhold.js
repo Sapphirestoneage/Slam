@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Households (run "Finish everything partly built", Part 12, Nov 26 2026, M8K). Four tools for a household of any
+// size, by each person's own name (a couple, a polycule, housemates, a chosen family):
+//   1. Same question (two-player mode): everyone answers the same money questions, on one phone or each on their own.
+//      Where the answers differ, the question becomes a talk point. Nobody is scored and no answer is right.
+//   2. FI together: each person's own FI number and date, side by side, with the gap in money and in time.
+//   3. A shared home: each person's contributions (what they put in at the start, and each month) and their part of
+//      the equity, by contributions and equally, side by side. The tax gap when only two of the people can marry:
+//      the federal tax with two of them married filing jointly next to everyone filing single, for each pair, on
+//      esCompare of js/math/estate.js (Married or partners?), so married next to not married is worked out once.
+//   4. Share by email: a draft the person sends themselves. Each recipient gets only the items picked for them, and an
+//      item that is not for everyone (js/privacy.js: Me and my coach, Coach only) never goes into any draft.
+// Pure, and with no import on purpose: tools/game_hhold_build.mjs copies this file word for word into
+// game/core/hhold.js, so the web app and the game have one function for each number. Every name starts with hh or HH_
+// because the game has one global scope. Empty is not zero: a blank answer, number or date is left out and said so.
+
+// ---------- 1. Same question ----------
+// Each question: id, q (the question), opts (in order: a near pick is one step away), kind 'scale' (ordered) or
+// 'pick' (no order: any difference is a talk point), money (opts are dollar amounts the screen formats), talk (the
+// talk point, in calm words). Every question and talk point is SLAM's own wording.
+export const HH_QUESTIONS = [
+  { id: 'ask', q: 'One of us can spend this much without checking in first', opts: [25, 100, 250, 500, 1000], kind: 'scale', money: true, talk: 'Pick one amount that feels easy for everyone, and a date to look at it again.' },
+  { id: 'cushion', q: 'A cushion that lets me sleep at night', opts: ['1 month of costs', '3 months', '6 months', 'A year or more'], kind: 'scale', talk: 'Talk about what the cushion is for, then pick the size that lets the most careful person rest.' },
+  { id: 'split', q: 'Shared bills are split', opts: ['Equally', 'By income', 'One person covers most', 'Each pays their own'], kind: 'pick', talk: 'Look at the ways side by side in Sharing costs fairly, then pick one to try for three months.' },
+  { id: 'accounts', q: 'Our accounts are', opts: ['All shared', 'Some shared, some our own', 'All our own'], kind: 'scale', talk: 'Say what each of you wants an account of your own for. Both can be true.' },
+  { id: 'stop', q: 'Paid work becomes optional for me', opts: ['Before 45', '45 to 54', '55 to 64', '65 or later', 'I want to keep working'], kind: 'scale', talk: 'Share the life each of you pictures after work. FI together puts the numbers side by side.' },
+  { id: 'debt', q: 'Debt feels', opts: ['Fine with a plan', 'Fine for a home, not much else', 'Something to pay off first'], kind: 'scale', talk: 'Say where the feeling comes from. Then pick one debt rule you can both keep.' },
+  { id: 'family', q: 'Helping family with money', opts: ['Often, it matters a lot', 'Sometimes', 'Rarely'], kind: 'scale', talk: 'Talk about who you each help and why. A set amount a month can make it calm.' },
+  { id: 'invest', q: 'When investments drop', opts: ['I want it steady', 'Some ups and downs are fine', 'Big swings are fine'], kind: 'scale', talk: 'Talk about a drop you lived through. The mix can sit where the calmest person can hold.' },
+  { id: 'talk', q: 'We talk about money', opts: ['Every week', 'Every month', 'Every season', 'When something comes up'], kind: 'scale', talk: 'Pick a money date that fits. The monthly money date of your guild is one way.' },
+  { id: 'big', q: 'A buy this size needs a talk first', opts: [100, 250, 500, 1000, 2500], kind: 'scale', money: true, talk: 'Pick one amount for a talk first, and how fast you answer each other.' },
+];
+export const hhQuestion = id => HH_QUESTIONS.find(q => q.id === id) || null;
+// An answer is the index of the option picked; anything else is no answer.
+export const hhAnswerOk = (q, v) => !!q && Number.isInteger(v) && v >= 0 && v < q.opts.length;
+
+// Everyone's answers, question by question. people: [{ n: name, a: { [question id]: index } }].
+// Each question: same (everyone who answered picked the same), near (a scale one step apart), apart (further apart, or
+// a different pick on a question with no order), open (fewer than two people answered). The talk points are the near
+// and apart questions, the furthest apart first; ties keep the order of the questions. No score: only counts.
+export function hhCompare(people, questions = HH_QUESTIONS) {
+  const P = (people || []).filter(p => p && String(p.n || '').trim());
+  const rows = questions.map((q, order) => {
+    const picks = P.filter(p => hhAnswerOk(q, p.a?.[q.id])).map(p => ({ n: p.n, i: p.a[q.id] }));
+    const waiting = P.filter(p => !hhAnswerOk(q, p.a?.[q.id])).map(p => p.n);
+    if (picks.length < 2) return { id: q.id, order, picks, waiting, state: 'open', spread: null };
+    const ix = picks.map(x => x.i), lo = Math.min(...ix), hi = Math.max(...ix), spread = hi - lo;
+    const state = spread === 0 ? 'same' : q.kind === 'pick' ? 'apart' : spread === 1 ? 'near' : 'apart';
+    return { id: q.id, order, picks, waiting, state, spread: q.kind === 'pick' ? (spread === 0 ? 0 : q.opts.length) : spread };
+  });
+  const talk = rows.filter(r => r.state === 'near' || r.state === 'apart').sort((a, b) => b.spread - a.spread || a.order - b.order);
+  const count = s => rows.filter(r => r.state === s).length;
+  return { people: P.length, rows, talk, same: count('same'), near: count('near'), apart: count('apart'), open: count('open'), ready: P.length >= 2 && rows.some(r => r.state !== 'open') };
+}
+
+// Two phones: a person's answers as a short code to send by any chat ("SLAM-SQ1 Ana|ask=2,cushion=1"), and the
+// reader for a code typed or pasted on the other phone. Only known questions and options are kept.
+export const HH_CODE_TAG = 'SLAM-SQ1 ';
+export function hhCode(name, answers, questions = HH_QUESTIONS) {
+  const n = String(name || '').replace(/[|,=\n]/g, ' ').trim().slice(0, 40);
+  const a = questions.filter(q => hhAnswerOk(q, answers?.[q.id])).map(q => `${q.id}=${answers[q.id]}`).join(',');
+  return `${HH_CODE_TAG}${n}|${a}`;
+}
+export function hhReadCode(text, questions = HH_QUESTIONS) {
+  const s = String(text || '').trim(), i = s.indexOf(HH_CODE_TAG.trim());
+  if (i < 0) return { err: `That does not look like an answer code. It starts with ${HH_CODE_TAG.trim()}` };
+  const body = s.slice(i + HH_CODE_TAG.trim().length).trim(), bar = body.indexOf('|');
+  if (bar < 1) return { err: 'The code has no name in it. Copy it again, all of it.' };
+  const n = body.slice(0, bar).trim().slice(0, 40), a = {};
+  for (const part of body.slice(bar + 1).split(',')) {
+    const [id, v] = part.split('='), q = questions.find(x => x.id === String(id || '').trim()), k = Number(v);
+    if (q && hhAnswerOk(q, k)) a[q.id] = k;
+  }
+  if (!n) return { err: 'The code has no name in it. Copy it again, all of it.' };
+  return { n, a, count: Object.keys(a).length };
+}
+
+// ---------- 2. FI together ----------
+// Months from a year-month ("2041-03") to another; null when either is missing.
+export function hhMonthsBetween(fromYm, toYm) {
+  const p = s => (/^\d{4}-\d{2}$/.test(String(s || '')) ? String(s).split('-').map(Number) : null), a = p(fromYm), b = p(toYm);
+  return a && b ? (b[0] - a[0]) * 12 + (b[1] - a[1]) : null;
+}
+// people: [{ n, fi: the FI number (dollars) or null, date: "YYYY-MM" or null }], now: "YYYY-MM".
+// Each row: the person's number and date and the months from now. The gap: the largest number less the smallest, and
+// the latest date less the earliest (in months), each over the people who wrote that one. ready: two or more wrote it.
+export function hhFiTogether(people, now) {
+  const rows = (people || []).filter(p => p && String(p.n || '').trim()).map(p => {
+    const fi = typeof p.fi === 'number' && Number.isFinite(p.fi) && p.fi > 0 ? p.fi : null;
+    const date = /^\d{4}-\d{2}$/.test(String(p.date || '')) ? p.date : null;
+    return { n: p.n, fi, date, months: date ? hhMonthsBetween(now, date) : null, from: p.from || null };
+  });
+  const nums = rows.filter(r => r.fi != null), dated = rows.filter(r => r.date != null);
+  const by = (L, k, f) => L.reduce((x, r) => (x == null || f(r[k], x[k]) ? r : x), null);
+  const hiN = by(nums, 'fi', (a, b) => a > b), loN = by(nums, 'fi', (a, b) => a < b);
+  const late = by(dated, 'months', (a, b) => a > b), early = by(dated, 'months', (a, b) => a < b);
+  return {
+    rows,
+    numbers: { ready: nums.length >= 2, gap: nums.length >= 2 ? hiN.fi - loN.fi : null, high: hiN, low: loN, total: nums.length ? nums.reduce((s, r) => s + r.fi, 0) : null },
+    dates: { ready: dated.length >= 2, gap: dated.length >= 2 ? late.months - early.months : null, earliest: early, latest: late },
+    missing: rows.filter(r => r.fi == null || r.date == null).map(r => r.n),
+  };
+}
+
+// ---------- 3. A shared home, and the tax gap when only two can marry ----------
+// value: what the home is worth today, owed: the loan left (0 when none; null = not entered). people: [{ n, put: what
+// they put in at the start, monthly: what they pay toward it each month, months: for how many months }]. A blank is
+// counted as nothing put in, and listed as blank. Each person: their contributions (put + monthly x months), their share
+// of all contributions, their part of the equity by that share, and their part split equally. No way is marked best.
+export function hhEquity({ value = null, owed = null, people = [] } = {}) {
+  const P = (people || []).filter(p => p && String(p.n || '').trim());
+  const num = v => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null);
+  const rows = P.map(p => {
+    const put = num(p.put), monthly = num(p.monthly), months = num(p.months);
+    const paid = (put ?? 0) + (monthly ?? 0) * (months ?? 0);
+    const blank = [put == null ? 'put' : null, monthly == null ? 'monthly' : null, monthly != null && monthly > 0 && months == null ? 'months' : null].filter(Boolean);
+    return { n: p.n, put, monthly, months, paid, blank };
+  });
+  const total = rows.reduce((s, r) => s + r.paid, 0);
+  const v = num(value), o = num(owed), equity = v != null && o != null ? v - o : null;
+  rows.forEach(r => {
+    r.share = total > 0 ? r.paid / total : null;
+    r.byPaid = equity != null && r.share != null ? equity * r.share : null;
+    r.equal = equity != null && rows.length ? equity / rows.length : null;
+  });
+  return { rows, total, value: v, owed: o, equity, ready: equity != null && total > 0 && rows.length >= 2 };
+}
+// The federal tax gap when two of the people marry and file jointly. people: [{ n, gross: pay before tax a year }].
+// One calculation of married next to not married, reused: compare is esCompare of js/math/estate.js (Married or
+// partners?, run Part 11; the game's copy is game/core/estate.js), and taxOf(gross, status) is the app's own federal
+// tax ('single' or 'joint'), so this file has no tax table of its own. For each pair (or only the pair asked for):
+// everyone filing single, next to the pair on one joint return and the others single. The others' tax is the same both
+// ways, so the gap of a pair is esCompare's taxDiff turned round. gap > 0: married costs more a year (a marriage
+// penalty); gap < 0: it costs less (a marriage bonus).
+export function hhMarryGap(people, { compare, taxOf } = {}, pair = null) {
+  const P = (people || []).filter(p => p && String(p.n || '').trim());
+  const ok = P.filter(p => typeof p.gross === 'number' && Number.isFinite(p.gross) && p.gross >= 0);
+  if (ok.length < 2 || ok.length !== P.length || typeof taxOf !== 'function' || typeof compare !== 'function') return { ready: false, pairs: [], missing: P.filter(p => !ok.includes(p)).map(p => p.n) };
+  const single = P.map(p => taxOf(p.gross, 'single')), allSingle = single.reduce((s, t) => s + t, 0);
+  const pairs = [];
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    if (pair && !(pair[0] === i && pair[1] === j)) continue;
+    const C = compare({ people: [{ name: P[i].n, pay: P[i].gross }, { name: P[j].n, pay: P[j].gross }] }, { taxOf });
+    if (!C || !C.ready) continue;
+    const gap = -C.taxDiff;
+    pairs.push({ i, j, names: [P[i].n, P[j].n], joint: C.joint, apart: C.apart, married: allSingle + gap, gap });
+  }
+  pairs.sort((a, b) => a.gap - b.gap || a.i - b.i || a.j - b.j);
+  return { ready: true, single, allSingle, pairs, missing: [] };
+}
+
+// ---------- 4. Share by email ----------
+// The same rule as js/privacy.js for anything shared (rowHidden with the SHARE audience): only what is for everyone
+// leaves. A blank mark is for everyone.
+export const hhCanLeave = seen => seen == null || seen === 'Everyone';
+// The draft for one person. items: [{ id, label, lines: [text], seen }], picks: { [item id]: true } for this person.
+// An item goes in only when it is picked for this person and may leave. The draft is text and a mailto: link; nothing
+// is sent. to: an email address or blank (the person adds it in their mail app).
+export function hhDraft({ items = [], picks = {}, to = '', who = '', from = '', subject = 'Our money, from SLAM' } = {}) {
+  const inn = items.filter(it => it && picks?.[it.id] === true && hhCanLeave(it.seen) && (it.lines || []).length);
+  const kept = items.filter(it => it && picks?.[it.id] === true && !hhCanLeave(it.seen)).length;
+  const body = [
+    who ? `Hi ${who},` : 'Hi,',
+    '',
+    inn.length ? 'Here is what I want to share with you from our plan:' : 'I have nothing picked to share yet.',
+    ...inn.flatMap(it => ['', it.label, ...it.lines.map(l => `- ${l}`)]),
+    '',
+    from ? `From ${from}` : null,
+    'Written in SLAM. I sent it myself; SLAM sends nothing.',
+  ].filter(x => x !== null).join('\n');
+  const addr = String(to || '').trim();
+  const mailto = `mailto:${/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr) ? encodeURIComponent(addr) : ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return { subject, body, mailto, ids: inn.map(it => it.id), kept };
+}

@@ -110,6 +110,8 @@ export const FORMATS = [
   { version: 67, shape: '165f14bc' }, // Nov 26 2026 (run Finish everything partly built, Part 8): the joy of a line (1 to 5) on the Budget lines, settings.richLife
   { version: 68, shape: 'b079931d' }, // Nov 26 2026 (run Finish everything partly built, Part 9): M8N comparing with peers, app-only math on dated rows
   { version: 69, shape: '535eb5a3' }, // Nov 26 2026 (run Finish everything partly built, Part 11): M8E estate and marriage, app-only, seven estate rules on the assumptions list
+  { version: 70, shape: 'c81300bf' }, // Nov 26 2026 (run Finish everything partly built, Part 12): M8K households together, game screens and the email draft
+  { version: 71, shape: '813fa1dd' }, // Nov 26 2026 (run Finish everything partly built, Part 13): M8I investing, app-only math, seven SLAM rules on the assumptions list
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

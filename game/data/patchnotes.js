@@ -482,6 +482,28 @@ const PATCH_NOTES = [
       "In the web app: the Tax command center, the floor next to a gig's pay, and when each app pays out, with the money still on its way.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Households together",
+    l: [
+      "Menu has Households together, for a couple, a polycule, housemates or a chosen family, by your own names.",
+      "Same question: everyone answers the same money questions, on one phone or each on their own. Where you differ, it becomes a talk point, never a score.",
+      "FI together: each person's FI number and date side by side, with the gap.",
+      "A shared home: what each person put in and their part of the equity, and the tax gap for each pair when only two of you can marry.",
+      "Share by email: pick what each person sees. The draft opens in your own mail app; SLAM sends nothing. The web app's one-pager has Share by email too.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Your investments, all together",
+    l: [
+      "Investment mix and fees now adds up every account: your stock share next to your own target or the age guide, and how far it has drifted.",
+      "A three-fund check sits next to it: how much is in US stocks, international stocks and bonds, and what sits outside them. A comparison, not advice.",
+      "One company: your employer's stock and any single company, as a share of all you invest.",
+      "Every fund and fee: add funds one by one with their own fee and any sales charge, plus account and advisor fees, all in dollars a year.",
+      "Two new tools: Invest or pay debt (one grid, your own debts marked) and Roth or traditional, by account. The web app has the same page.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

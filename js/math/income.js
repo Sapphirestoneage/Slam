@@ -210,7 +210,7 @@ export function householdTax(rows, { filingStatus = 'Single', place = null, year
     const f = fedTax(Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), u);
     const sTax = st ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), st.brackets[pk]) : { marginal: 0 };
     const cTax = st && place.nyc && ref.tax.local?.NYC ? byBrackets(Math.max(0, uState[u] - st.standardDeduction[pk]), ref.tax.local.NYC.brackets[pk]) : { marginal: 0 };
-    units[u] = { taxable: Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, base: uBase[u] ?? 0, tips: tipsDed[u] ?? null };
+    units[u] = { taxable: Math.max(0, taxable - std - (tipsDed[u]?.deduction ?? 0)), federalMarginal: f.marginal, stateMarginal: sTax.marginal + cTax.marginal, localMarginal: cTax.marginal, base: uBase[u] ?? 0, tips: tipsDed[u] ?? null };
   }
   const all = Object.values(out);
   const add = k => all.reduce((s2, x) => s2 + (x[k] ?? 0), 0);
@@ -289,7 +289,7 @@ export function householdRates(hh, ref, { person = 'Me' } = {}) {
   const all = ownRows ? ownRows.reduce((s2, r) => s2 + r.total, 0) : t.all, taxedGross = ownRows ? ownRows.reduce((s2, r) => s2 + (r.gross ?? 0), 0) : t.gross;
   const effective = taxedGross ? all / taxedGross : 0;
   return { ...ok('M14', effective, `All tax on ${ownRows ? 'their own return' : `the return${Object.keys(hh.units).length > 1 ? 's' : ''}`} (${fmt.money(all)}) over everything taxed (${fmt.money(taxedGross)}) = ${fmt.pct(effective)}. The next dollar of pay is taxed at ${fmt.pct(marginal)}: federal ${fmt.pct(u?.federalMarginal ?? 0)}${u?.stateMarginal ? ` + state and city ${fmt.pct(u.stateMarginal)}` : ''} + FICA ${fmt.pct(ficaMarginal)}.`, { unit: 'pct' }),
-    effective, marginal, federalMarginal: u?.federalMarginal ?? 0, stateMarginal: u?.stateMarginal ?? 0, ficaMarginal };
+    effective, marginal, federalMarginal: u?.federalMarginal ?? 0, stateMarginal: u?.stateMarginal ?? 0, localMarginal: u?.localMarginal ?? 0, ficaMarginal }; // stateMarginal holds state and city; localMarginal is the city part (run Finish everything partly built, Part 13)
 }
 
 // Quarterly estimates (batch 15, item 3): the tax self-employment income adds on top of everything else (its stacked
