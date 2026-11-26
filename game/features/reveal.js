@@ -237,6 +237,9 @@ Object.assign(ACT, {
 });
 /* ways in: a slim row on Me, and once on Home until it has been seen. On Home the row sits under the four main tiles and carries the class homerow, because collapsed Home shows only its first two children: a row put above the tiles would push them out of sight. */
 function homeRowAdd(h, row) {
+  /* results.js: under the four cards of results first */
+  const mk = "<!--homerows-->";
+  if (h.indexOf(mk) >= 0) return h.replace(mk, () => mk + row);
   let qd = "";
   try {
     qd = typeof homeQuad === "function" ? homeQuad(C(), D) : "";

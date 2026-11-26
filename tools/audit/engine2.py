@@ -1158,6 +1158,78 @@ def ratio_check(x, o, ck):
         ck('confidence, the read', o['confidence'][1] == read, True)
 
 
+def play_bonus(b):
+    # a bank bonus kept, worked month by month: the deposit's interest at each rate, the gap, its tax, the fees
+    bonus, m = b.get('bonus'), b.get('months')
+    dep = b.get('deposit') or 0
+    if not (bonus and bonus > 0) or not (m and m > 0) or (dep > 0 and b.get('hysaRate') is None):
+        return None
+    def grow(rate):
+        v = dep
+        for _ in range(m):
+            v += v * (rate or 0) / 12
+        return v - dep
+    lost = max(0.0, grow(b.get('hysaRate')) - grow(b.get('bankRate')))
+    t = b.get('taxRate')
+    tax = 0 if t is None else bonus * t
+    kept_lost = lost if t is None else lost * (1 - t)
+    return {'lost': lost, 'net': bonus - tax - kept_lost - (b.get('fees') or 0), 'tax': None if t is None else tax}
+
+
+def play_check(fn, x, o, ck):
+    if fn == 'plBonus':
+        w = play_bonus(x)
+        ck('ready', o['ready'], w is not None)
+        if w is not None:
+            ck('interest given up', o['lost'], w['lost'], 0.01); ck('kept', o['net'], w['net'], 0.02)
+            if w['tax'] is not None: ck('tax', o['tax'], w['tax'], 0.01)
+    elif fn == 'plHunt':
+        banked = lined = 0.0; opn = need = 0
+        for b in x['list']:
+            st = b.get('state') if b.get('state') in ('planned', 'open', 'paid') else 'planned'
+            w = play_bonus(b)
+            if w is None: need += 1
+            v = round(w['net'] * 100) / 100 if w else 0
+            if st == 'paid': banked += v
+            else: lined += v
+            if st == 'open': opn += 1
+        ck('kept', o['banked'], banked, 0.02); ck('lined up', o['lined'], lined, 0.02); ck('left', o['left'], max(0, 1000 - banked), 0.02)
+        ck('open at once', o['open'], opn, 0); ck('missing a term', o['needs'], need, 0); ck('there', o['there'], banked >= 1000)
+    elif fn == 'plChallenge':
+        c, cash, sp, apr = x['cost'], x['cash'], x['spendMonth'], x['cardApr']
+        ok = c is not None and c > 0 and cash is not None and cash >= 0 and sp is not None and sp > 0
+        ck('ready', o['ready'], ok)
+        if not ok: return
+        def card(amt):
+            if apr is None: return None
+            bal, paid, r = amt, 0.0, apr / 12
+            pmt = amt / 3 if r == 0 else amt * r / (1 - (1 + r) ** -3)
+            for _ in range(3):
+                bal = bal * (1 + r) - pmt; paid += pmt
+            return paid - amt
+        for k, fc, fk in (('cushion', c, 0), ('card', 0, c), ('half', c / 2, c / 2)):
+            short = max(0, fc - cash); oncard = fk + short
+            ck(k + ': cash left', o['ways'][k]['cashLeft'], max(0, cash - fc), 0.01)
+            ck(k + ': on the card', o['ways'][k]['fromCard'], oncard, 0.01)
+            ck(k + ': months after', o['ways'][k]['monthsAfter'], max(0, cash - fc) / sp, 0.006)
+            want = card(oncard) if oncard > 0 else None
+            got = o['ways'][k]['card']
+            ck(k + ': interest', None if got is None else got['interest'], want, 0.02)
+    elif fn == 'plFicoRound':
+        share = {'pay': 0.35, 'owed': 0.30, 'length': 0.15, 'new': 0.10, 'mix': 0.10}
+        want = sorted(share.values(), reverse=True)
+        right = [share[k] == want[i] for i, k in enumerate(x['order'])]
+        ck('places', o['places'], sum(right), 0); ck('weight placed right', o['points'], sum(share[k] for i, k in enumerate(x['order']) if right[i]), 0.001)
+    elif fn == 'plNextMonthly':
+        import datetime
+        y, m, d = map(int, x['t'].split('-'))
+        cur = datetime.date(y, m, d)
+        while True:
+            if cur.day == x['day'] and not (x['after'] and cur == datetime.date(y, m, d)): break
+            cur += datetime.timedelta(days=1)
+        ck('the date', o['d'] == cur.isoformat(), True)
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -1509,6 +1581,8 @@ def run(cases, ref, il=None):
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
         elif fn.startswith('op') and fn in ('opTransition', 'opPapers', 'opTwoSides', 'opPackage', 'opSearchFund', 'opFamily', 'opAgeCare'):
             own_check(fn, x, o, ck, law.ref)
+        elif fn in ('plBonus', 'plHunt', 'plChallenge', 'plFicoRound', 'plNextMonthly'):
+            play_check(fn, x, o, ck)
         elif fn == 'ratios':
             ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):
@@ -1631,6 +1705,21 @@ def run(cases, ref, il=None):
             cu = x['monthly'] * 6; ck('income', o['income'], x['invested'] * x['rate'] / 12); ck('cushion left', o['cushionLeft'], max(0, cu - x['cash'])); ck('cache', o['cache'], max(0, x['cash'] - cu))
         elif fn == 'fwWins':
             m = sum(w['save'] for w in x['wins'].values() if w['save'] is not None); ck('month', o['month'], m); ck('fi days', o['fiDays'], m * 12 / (x['yearSpend'] / 365), 1e-6)
+        elif fn == 'fwLead':
+            w = x['worth']; ck('lead', o['lead'] == ('debtfree' if (w is not None and w < 0) else ('fi' if x['fire'] else 'next')), True)
+        elif fn == 'fwDtiMonths':
+            g = x['gross']
+            if g is None: ck('no pay, no months', o['months'] is None, True)
+            else:
+                # month by month from 0: the first month where home plus the payments of the debts still open fit the target
+                want = None
+                for m in range(0, 121):
+                    if (x['home'] + sum(d['pay'] for d in x['debts'] if d['off'] is None or d['off'] > m)) / g <= x['target']: want = m; break
+                ck('months', o['months'] is None if want is None else o['months'], True if want is None else want, 0)
+        elif fn == 'fwMonthEnd':
+            ds = x['days']; t = x['today']; L = x['last']
+            asis = x['worth'] + sum(d['net'] for d in ds if t < d['day'] <= L)
+            ck('end as is', o['endAsIs'], asis, 1e-6); ck('end planned', o['endPlanned'], asis + (x['extra'] if L > t else 0), 1e-6); ck('days', o['n'], L - t + 1, 0)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]

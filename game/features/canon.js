@@ -9,7 +9,7 @@
    INPUT       The profile: c.spend, c.take, c.inv, c.debts, c.hist, c.spends, c.age, c.death, c.x.ig (the
                answers of the ideas), c.x.fw (the path, the steps, the wins, the buckets). The open sheet
                (W.kind): ymoyl, ymstep, fwwins.
-   OUTPUT      Math readers: fwNow, fwBabyOf, fwStepOf, fwPathOf, fwWinsOf, fwBook. Parts of functions in
+   OUTPUT      Math readers: fwNow, fwBabyOf, fwStepOf, fwNextDollarLine, fwPathOf, fwWinsOf, fwBook. Parts of functions in
                other files: homeNextDollar (home in ui.js). Sheets: fwPathSheet, fwStepSheet, fwWinsSheet.
                Actions (ACT): ymoyl, ymstep, ym1a, ym1b, ym4, ym5, ym6, ym7, ym9, fwset, fwdone, fwwins,
                fwwin, fwsave, fwbk. Menu: "Your Money or Your Life", "Quick wins".
@@ -69,24 +69,30 @@ function fwStepOf(c) {
     return { step: null, row: null, K: null };
   }
 }
-/* ---------- the one line of the next dollar, at the top of Home ---------- */
-/* Part of home() in ui.js. Adds one line under the tab title: where the next dollar goes, the match included. */
+/* ---------- the one line of the next dollar ---------- */
+/* The line "Your next dollar: ..." for this profile, or null. results.js shows it under "Why this one" of Your next
+   win on Home. */
+function fwNextDollarLine(c) {
+  const S = fwStepOf(c);
+  if (!S.row) return null;
+  const r = S.row,
+    m = S.K.rows.find(x => x.k === "match"),
+    left = r.step ? r.need - r.put : r.cap === Infinity ? null : r.cap - r.put;
+  return fwNextDollar({
+    kind: r.k,
+    left,
+    perMonth: !r.step,
+    matchLeft: m && !m.full && !m.off ? m.roomY : null,
+    money,
+  });
+}
+/* Part of home() in ui.js. Adds one line under the tab title: where the next dollar goes, the match included. With
+   the four cards of results first (results.js) the line is inside Your next win, so this adds nothing. */
 function homeNextDollar(h) {
   try {
     const c = C();
     if (!c || !(c.placed || G.demo)) return h;
-    const S = fwStepOf(c);
-    if (!S.row) return h;
-    const r = S.row,
-      m = S.K.rows.find(x => x.k === "match"),
-      left = r.step ? r.need - r.put : r.cap === Infinity ? null : r.cap - r.put,
-      line = fwNextDollar({
-        kind: r.k,
-        left,
-        perMonth: !r.step,
-        matchLeft: m && !m.full && !m.off ? m.roomY : null,
-        money,
-      });
+    const line = fwNextDollarLine(c);
     if (!line) return h;
     const top = '<div class="hqtop">';
     if (h.indexOf(top) < 0) return h;

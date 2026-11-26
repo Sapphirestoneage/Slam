@@ -7,7 +7,7 @@
 // Each call to the database address is answered here as the real one answers before the database file of the
 // reports has run: "no such table".
 // Walk 1, the visitor of the slide link (?ref=abc123): the landing, What is this? open and closed, Start, each tap of
-// the setup to the answer of "Am I okay?", the offer to save, Report (Confusing, a note, Send, what the person is
+// the setup to the payoff reveal ("Here's where you stand"), the offer to save, Report (Confusing, a note, Send, what the person is
 // told), the sign-up screen, Sign in ("Forgot your password? Contact Eli."), a new account, Home, the Menu rows
 // What's new, Share SLAM, Privacy, Export, Am I okay?.
 // Walk 2, a client with a coach's invite link (?coach=1): the sign-up line says that sharing starts on.
@@ -147,8 +147,8 @@ async function setup(page, tap, step) {
     const taps = await setup(page, tap, step);
     await page.waitForTimeout(400);
     const ans = await step('the answer');
-    chk(`${tag}: the answer to "Am I okay?" after ${taps} taps, as a Guess with no grade`, /From your taps/.test(ans) && /This is a Guess/.test(ans) && /No grade/.test(ans));
-    chk(`${tag}: one offer to save, as the one filled button`, (await page.locator('#ov button.primary:visible').count()) === 1 && (await page.locator('#ov [data-a=doorsave]').isVisible()));
+    chk(`${tag}: the payoff reveal after ${taps} taps, as a Guess with no grade`, /Here's where you stand/.test(ans) && /Guess/.test(ans) && /typical/.test(ans));
+    chk(`${tag}: one filled button (Start my first win), and the offer to save`, (await page.locator('#ov button.primary:visible').count()) === 1 && (await page.locator('#ov [data-a=doorsave]').isVisible()));
     chk(`${tag}: the answer has a Report button`, await page.locator('#ov [data-a=flag]').isVisible());
     // Report from the answer
     await page.locator('#ov [data-a=flag]').scrollIntoViewIfNeeded();
@@ -164,7 +164,7 @@ async function setup(page, tap, step) {
     const said = await step('report sent');
     chk(`${tag}: before the database file runs, the person is told "Saved on this device"`, /Saved on this device\. It sends itself when the report inbox is ready\./.test(said), said.slice(0, 200));
     await tap('#rp-dialog [data-rp=done]');
-    chk(`${tag}: Done returns to the answer`, !(await page.locator('#rp-dialog').count()) && /From your taps/.test(await page.locator('#ov').innerText()));
+    chk(`${tag}: Done returns to the answer`, !(await page.locator('#rp-dialog').count()) && /Here's where you stand/.test(await page.locator('#ov').innerText()));
     chk(`${tag}: the address still has ?ref=abc123`, /\?ref=abc123/.test(page.url()));
     // The account
     await page.locator('#ov [data-a=doorsave]').scrollIntoViewIfNeeded();

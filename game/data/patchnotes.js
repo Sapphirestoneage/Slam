@@ -388,6 +388,28 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Results first: see where you stand",
+    l: [
+      "Setup now ends on Here's where you stand: your lead number and five result cards, each with its target and the time to get there.",
+      "The five: debt-to-income, months of cushion, savings rate, net worth and FI progress.",
+      "Below zero, the lead number is your debt-free date. Building toward FI, it is your FI date.",
+      "Home is four cards: your next win, net worth by the end of this month, where you are on the route, and your numbers.",
+      "A Home button sits at the top of every screen, next to Back. The money calendar is in the Menu.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Daily challenges, the bonus hunt, guilds and App lock",
+    l: [
+      "After the daily question: a daily challenge. One surprise cost at your level, sized in days of your own spending, and three ways to meet it. Practice only.",
+      "The first thousand-dollar bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest given up, the fees). And the credit score game, with no real score fetched.",
+      "Roots and branches, proof you can keep on a done step, a book for each step from the library, and a second voice to blend into your theme.",
+      "Your guild: a private group of the people in your game, with mentors who finished a track and a monthly money date. Nothing shows until each person turns it on.",
+      "App lock: a PIN or your device's own lock each time the game opens. On this device only.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Joy and enough",
     l: [
       "Menu has Joy and enough: tap how much joy each spending line brings you, and see joy per dollar and joy per hour of work.",

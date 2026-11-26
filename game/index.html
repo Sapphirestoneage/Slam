@@ -533,6 +533,26 @@ body,body[data-look],body[data-color]{--bad:var(--warn)}
 button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;font-weight:400;cursor:pointer}button.dkgoal:hover{border-color:var(--sap)}
 .dkgicon{width:32px;height:32px;border-radius:10px;background:var(--hl);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700}
 .dkgname{font-size:17px}
+/* results first (features/results.js): the payoff reveal and Home as four cards in a priority grid */
+.rscards{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.rscard{display:flex;flex-direction:column;gap:6px;min-width:0}.rsval{font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.rsmeta{display:flex;flex-direction:column;gap:2px}.rsmeta .muted{display:inline-block;min-width:96px}
+.pill.rstyp{border-style:dashed;color:var(--muted)}
+.rstop{display:flex;flex-direction:column;gap:10px;column-span:all;margin-bottom:10px}
+.rsgrid{display:grid;gap:10px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:stretch}
+.rsgrid>.rsq{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rswin{border-color:var(--sap)}.rswint{font-size:21px;line-height:1.2}
+.rsnums{display:flex;gap:16px;flex-wrap:wrap}.rsnums span{display:flex;flex-direction:column}.rsnums b{font-size:22px;font-variant-numeric:tabular-nums}
+.rswin>button.go{min-height:48px;margin-top:4px}
+button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.rsroute:hover{border-color:var(--sap)}
+.rsstrip{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:4px 0}.rsstrip i{height:12px;border-radius:6px;background:var(--line);opacity:.6}.rsstrip i.done{background:var(--good);opacity:1}.rsstrip i.here{background:var(--sap);opacity:1;box-shadow:0 0 0 2px var(--text)}
+@media (prefers-reduced-motion:no-preference){.rsstrip i.here{animation:pulse 1.6s ease-in-out infinite}}
+.rsgo{color:var(--sap);text-decoration:underline}
+.rstgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.rstgrid .dktile{min-height:76px;padding:8px 10px}.rstgrid .dknum{font-size:18px;overflow-wrap:anywhere}
+.rskey{display:flex;gap:14px;flex-wrap:wrap}.rsk{display:inline-block;width:18px;height:0;border-top:3px solid var(--sap);margin-right:6px;vertical-align:middle}.rsk.dot{border-top:3px dotted var(--muted)}
+.hq.rs.less2>.homerow{display:none!important}.hq.rs.less2>.homerow.rskeep{display:flex!important}
+.rshome{flex:none;min-height:44px;min-width:44px;font-weight:700}@media (max-width:480px){.rshw{display:none}.nvhead>.row{gap:4px!important}.nvhead .rshome{min-width:40px;padding-left:8px;padding-right:8px}}
+@media (max-width:700px){.rsgrid{grid-template-columns:minmax(0,1fr)}}
 .hqtop{display:flex;flex-direction:column;gap:10px}.ledsort{margin-top:6px}.ledsort .chip{padding:6px 12px;font-size:13.5px}
 /* UX pass, phase 2: the tab bar and the menu stay on every screen, also over a sheet, and the menu in groups */
 nav.tabs{z-index:30}
@@ -546,6 +566,10 @@ details.mng>summary{min-height:48px;padding:8px 12px}
 details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{content:"Close"}
 .mngh{display:flex;align-items:center;gap:10px;min-width:0}.mnico{font-size:20px;width:26px;text-align:center;flex:none}
 .mnrows{padding:0 10px 10px;gap:8px}
+.lkcover{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}.lkcover[hidden]{display:none}
+.lkin{max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+.lkdots{font-size:22px;letter-spacing:8px;text-align:center}.lkpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lkkey{min-height:52px;min-width:44px;font-size:20px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.25)}.lkkey:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -559,6 +583,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
 <script src="account/door.js?v=29500834"></script>
+<script src="account/lock.js?v=1a52a1d9"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
@@ -575,6 +600,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/quest.js?v=405ce1b4"></script>
 <script src="core/trip.js?v=0152603f"></script>
 <script src="core/quick.js?v=914d9a44"></script>
+<script src="core/play.js?v=708ae829"></script>
 <script src="core/gigcore.js?v=baa39c64"></script>
 <script src="core/hardcore.js?v=ae053a47"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
@@ -585,27 +611,27 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/reportcore.js?v=6a3377b4"></script>
 <script src="core/quizcore.js?v=fbfdf85e"></script>
 <script src="core/sins.js?v=0dea4dab"></script>
-<script src="core/frameworks.js?v=95d509ab"></script>
+<script src="core/frameworks.js?v=29cc8402"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=c4af192e"></script>
-<script src="screens/dash.js?v=2acc35d5"></script>
+<script src="screens/ui.js?v=015736d4"></script>
+<script src="screens/dash.js?v=fe4d3586"></script>
 <script src="features/games.js?v=f3991fbd"></script>
-<script src="features/games2.js?v=c0aef9c8"></script>
+<script src="features/games2.js?v=462fb773"></script>
 <script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
-<script src="screens/profiles.js?v=442b6691"></script>
+<script src="screens/profiles.js?v=d0f900aa"></script>
 <script src="screens/smart.js?v=96e07bbd"></script>
-<script src="screens/planner.js?v=07970ef2"></script>
+<script src="screens/planner.js?v=faa57f9c"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
-<script src="screens/ux.js?v=6a598e0a"></script>
+<script src="screens/ux.js?v=cfcddd02"></script>
 <script src="core/metrics.js?v=6a4cfb0a"></script>
 <script src="features/debts.js?v=1018cceb"></script>
 <script src="features/import.js?v=b3dfd30e"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=b4b761ff"></script>
-<script src="features/reveal.js?v=5251e75f"></script>
+<script src="features/reveal.js?v=eff3bca3"></script>
 <script src="features/moneylog.js?v=889f9b8b"></script>
 <script src="features/drills.js?v=d9bf675b"></script>
 <script src="features/gig.js?v=582592eb"></script>
@@ -629,7 +655,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/together.js?v=24e8dfb2"></script>
 <script src="features/people.js?v=f590e4e5"></script>
 <script src="features/fold.js?v=8028f031"></script>
-<script src="screens/nav.js?v=b0e1cb0e"></script>
+<script src="screens/nav.js?v=88b3808e"></script>
 <script src="features/home.js?v=6abaee87"></script>
 <script src="screens/tidy.js?v=a7a7677f"></script>
 <script src="account/addon.js?v=3c9c00fb"></script>
@@ -669,7 +695,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/paths.js?v=14d4a153"></script>
 <script src="features/plan.js?v=593a2507"></script>
 <script src="features/ask3.js?v=d3d2d516"></script>
-<script src="features/okay.js?v=a8180aa1"></script>
+<script src="features/okay.js?v=9976bcd2"></script>
 <script src="features/quota.js?v=8912307a"></script>
 <script src="data/takeout2026.js?v=e0194656"></script>
 <script src="features/takeout.js?v=c13f3d0d"></script>
@@ -700,31 +726,36 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="account/roles.js?v=347ce1b8"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
-<script src="features/recalc.js?v=86b5c421"></script>
+<script src="features/recalc.js?v=6199bbbd"></script>
 <script src="features/audit.js?v=d893fdb8"></script>
 <script src="features/quizzes.js?v=1d5da075"></script>
 <script src="features/sins.js?v=b2462a2d"></script>
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=4d933cb6"></script>
-<script src="data/patchnotes.js?v=291a4325"></script>
+<script src="data/patchnotes.js?v=d463a071"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
 <script src="features/look.js?v=5c00967f"></script>
-<script src="features/spiral.js?v=16924257"></script>
+<script src="features/spiral.js?v=bc4070ec"></script>
 <script src="features/amounts.js?v=e5284838"></script>
 <script src="features/jobs.js?v=0484b2a7"></script>
 <script src="features/goalwire.js?v=637af823"></script>
 <script src="features/careq.js?v=03516e5a"></script>
 <script src="features/rolemap.js?v=5e50a14d"></script>
-<script src="features/canon.js?v=96c55b47"></script>
+<script src="features/canon.js?v=f2a5a93c"></script>
 <script src="features/enough.js?v=8c38fb32"></script>
 <script src="features/joy.js?v=1ee7adf7"></script>
 <script src="features/ratios.js?v=d7a1b45b"></script>
 <script src="features/hard.js?v=9bf92c41"></script>
-<script src="features/book.js?v=43e9b6c1"></script>
+<script src="features/life.js?v=a2f569dc"></script>
+<script src="features/hunt.js?v=8116f378"></script>
+<script src="features/guild.js?v=8029feae"></script>
+<script src="features/lockset.js?v=ded305f7"></script>
+<script src="features/results.js?v=b1d7cc30"></script>
+<script src="features/book.js?v=6b4294dd"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=46fc6e36"></script>
+<script src="features/built.js?v=9f44ba2e"></script>
 </body>
 </html>

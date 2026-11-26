@@ -824,9 +824,11 @@ const MENU_GROUPS = [
       "book",
       "onepage",
       "sins",
+      "roots",
+      "proofs",
     ],
   ],
-  ["people", "🏠", "People and home", ["people", "house", "fair", "jobs", "rolemap", "care", "kids"]],
+  ["people", "🏠", "People and home", ["people", "house", "fair", "jobs", "rolemap", "care", "kids", "guild"]],
   [
     "plans",
     "🔀",
@@ -856,9 +858,9 @@ const MENU_GROUPS = [
     "Tools and calculators",
     ["quick", "gig", "sign", "owed", "taxv", "cover", "mix", "study", "lever", "mult", "xray", "acwhy", "nxa"],
   ],
-  ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew"]],
-  ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode"]],
-  ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag"]],
+  ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
+  ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode", "lsopen", "crg", "hunt"]],
+  ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag", "lock"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
   ["admin", "🛠️", "Admin", ["built", "testkit"], "admin"],
 ];
@@ -966,7 +968,7 @@ function whoBtn() {
 function topbarHTML() {
   const nb = NAV.back.length,
     nf = NAV.fwd.length;
-  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button></span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
+  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button>${typeof topbarHome === "function" ? topbarHome() : "" /* results.js: Home, always in view */}</span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
 }
 function tabsHTML() {
   const c = C(),

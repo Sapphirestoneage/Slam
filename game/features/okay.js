@@ -131,6 +131,8 @@ function finishSetupOkay() {
     if (typeof doorKept === "function") doorKept();
     if (typeof closeSheetNav === "function")
       closeSheetNav(); /* nav.js: the answer is the first screen, with no trail */
+    /* results.js and spiral.js: the one payoff reveal, with the offer to keep the game; "Am I okay?" stays in the Menu */
+    if (typeof rsRevealBody === "function" && typeof spPlanOpen === "function" && spPlanOpen(C())) return;
     W = { kind: "okay", first: true };
     sheet(okSheet);
   } catch (e) {
@@ -143,7 +145,7 @@ function homeDoorRow(h) {
     if (G.demo || typeof doorGuest !== "function" || !doorGuest() || typeof homeRowAdd !== "function") return h;
     return homeRowAdd(
       h,
-      `<div class="homerow"><button class="rowbtn" data-a="doorsave"><span><b>Keep this game: make a free account</b><div class="tiny muted">Right now it is saved on this device only.</div></span><span class="caret">›</span></button></div>`
+      `<div class="homerow rskeep"><button class="rowbtn" data-a="doorsave"><span><b>Keep this game: make a free account</b><div class="tiny muted">Right now it is saved on this device only.</div></span><span class="caret">›</span></button></div>`
     );
   } catch (e) {
     report(e, "okay.js: homeDoorRow");

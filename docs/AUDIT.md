@@ -94,6 +94,11 @@ after the last one, with the end of a month moved to its last day); and a date t
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10b) it also covers the game's play math (`js/math/play.js`): a bank
+bonus kept (the deposit's interest at each rate grown month by month, the gap after its tax, the fees), the hunt toward
+$1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
+month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
 one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked
 out again from its definition (the short-term and revolving debts sorted by type a second way, the interest month by

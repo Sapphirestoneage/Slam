@@ -101,7 +101,7 @@
   );
   chk(
     "a new profile opens the first plan (spiral.js) in place of the old card",
-    finishSetupReveal(g) === true && W.kind === "firstplan" && ov().includes("Your first plan")
+    finishSetupReveal(g) === true && W.kind === "firstplan" && ov().includes("Here's where you stand")
   );
   X("close");
   const B = elBook(c);

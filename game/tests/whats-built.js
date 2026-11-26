@@ -66,14 +66,14 @@
   X("btf", "n");
   chk(
     "filter to not yet",
-    W.f === "n" && !ov().includes("Built ✓") && ov().includes("Show everything") && ov().includes("Guilds")
+    W.f === "n" && !ov().includes("Built ✓") && ov().includes("Show everything") && ov().includes("Benefits cliff map")
   );
   X("btf", "all");
   const tx = btText();
   chk(
     "copies as plain text with the counts",
     tx.includes("Built " + c.b + ", partly " + c.p + ", not yet " + c.n) &&
-      tx.includes("[Not yet] Guilds") &&
+      tx.includes("[Not yet] Benefits cliff map") &&
       tx.includes("[Built] Two moves side by side"),
     tx.slice(0, 200)
   );

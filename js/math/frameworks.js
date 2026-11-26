@@ -320,3 +320,40 @@ export function fwWins(wins = {}, yearSpend = null) {
   return { done: done.length, total: FW_WINS.length, unpriced: done.length - priced.length, month, year: month * 12,
     fiDays: fwHas(yearSpend) && yearSpend > 0 ? month * 12 / (yearSpend / 365) : null };
 }
+
+// ---------- results first (run Results-first Home, Nov 26 2026) ----------
+// The lead number of the payoff reveal and of Home: the debt-free date while net worth is below zero, the FI date for
+// a player who builds toward FI (their own answers: they invest every month or turned on the freedom date), else the
+// next stop of the route. worth null: not known, so it never picks the debt-free date on its own.
+export function fwLead({ worth = null, fire = false } = {}) {
+  if (fwHas(worth) && worth < 0) return 'debtfree';
+  return fire ? 'fi' : 'next';
+}
+// Debt-to-income at a target: the months until home cost plus the payments of the debts still open, over pay before
+// taxes, is at or under the target. Each debt is { pay, off } with off the month its payoff run ends (null: no end).
+// 0 when it is there now; null with no pay, or when the run never gets there (a debt with no end, or the home alone).
+export function fwDtiMonths({ home = 0, gross = null, debts = [], target = 0.36 } = {}) {
+  if (!fwHas(gross) || gross <= 0) return null;
+  const at = m => (home + debts.filter(d => d.off == null || d.off > m).reduce((s, d) => s + (d.pay || 0), 0)) / gross;
+  if (at(0) <= target) return 0;
+  const offs = [...new Set(debts.filter(d => fwHas(d.off)).map(d => d.off))].sort((a, b) => a - b);
+  for (const m of offs) if (at(m) <= target) return m;
+  return null;
+}
+// Net worth to the last day of this month, day by day. days: [{ day, net }] the money in less the money out of each
+// day of the month (the cash calendar); today: the day of the month now; last: the last day of the month; extra: what
+// the planned moves add over the rest of the month, spread evenly over the days left. asIs is the line if nothing
+// planned happens, planned the line if it does. Both start at today's net worth.
+export function fwMonthEnd({ worth = null, days = [], today = 1, last = 30, extra = 0 } = {}) {
+  if (!fwHas(worth)) return null;
+  const left = Math.max(0, last - today), per = left > 0 ? (extra || 0) / left : 0, net = {};
+  days.forEach(d => { net[d.day] = (net[d.day] || 0) + (d.net || 0); });
+  const out = { days: [today], asIs: [worth], planned: [worth] };
+  let a = worth, p = worth;
+  for (let k = today + 1; k <= last; k++) {
+    a += net[k] || 0;
+    p += (net[k] || 0) + per;
+    out.days.push(k); out.asIs.push(a); out.planned.push(p);
+  }
+  return Object.assign(out, { endAsIs: a, endPlanned: p });
+}
