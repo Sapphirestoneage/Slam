@@ -3,8 +3,8 @@
 // gets what, written in plain English for a lawyer to turn into the real papers (a will, a health care proxy, a power
 // of attorney, a HIPAA release). Pure: no DOM. It is not a legal document and says so.
 //
-// Built to be extended: the estate basics of run 1 Part 11 add a section to KIN_SECTIONS (a key, a title, its boxes
-// and the sentence it writes) and kinSummaryOf picks it up. Each box is a short text; empty boxes write nothing.
+// Built to be extended: the estate basics of run 1 Part 11 add a section (kinAccountsSection, below: who is named on
+// each account) and kinSummaryOf picks it up. Each box is a short text; empty boxes write nothing.
 export const KIN_SECTIONS = [
   { key: 'you', title: 'About me', paper: null,
     boxes: [{ key: 'name', label: 'Your name, as you want it on the papers' }, { key: 'state', label: 'The state you live in', help: 'The papers follow your state\'s rules.' }],
@@ -27,6 +27,19 @@ export const KIN_SECTIONS = [
     words: a => [a.called ? `Use this name and these pronouns for me, in care and after I die: ${a.called}.` : null, a.notThem ? `I do not want ${a.notThem} to make decisions for me.` : null, a.wishes ? `My wishes: ${a.wishes}.` : null] },
 ];
 export const KIN_NOTE = 'This is a summary of what I want, for a lawyer to turn into the real papers. It is not a will or a legal document by itself.';
+
+// The estate basics (run Finish everything partly built, Part 11): one more section, made from the plan's own
+// accounts. Each account with a beneficiary line in Life admin (js/lifeadmin.js lifeAdminItems: the retirement and
+// investment accounts, their "Beneficiary named" answer) gets a box for the person you want named on its form. The
+// form on the account, not the will, decides who gets it (data/sources/estate-2026.json, beneficiaryWins), so the
+// summary lists each one apart. accounts: the life admin items with an accountId.
+export function kinAccountsSection(accounts = []) {
+  const list = accounts.filter(x => x.accountId);
+  const nameOf = x => x.label.replace(/^Beneficiary on /, '');
+  return { key: 'accounts', title: 'Who is named on each account', paper: 'Beneficiary forms',
+    boxes: list.map(x => ({ key: x.accountId, label: `On ${nameOf(x)}, the person you want named`, help: x.status === 'Done' ? 'Life admin says a beneficiary is named. Check it is still the person you want.' : x.status === 'Not yet' ? 'Life admin says no one is named yet.' : 'Life admin does not say yet.' })),
+    words: a => list.map(x => (a[x.accountId] ? `On my ${nameOf(x)}, I want ${a[x.accountId]} named as the beneficiary${x.status === 'Done' ? ' (someone is named now; I will check it is them)' : x.status === 'Not yet' ? ' (no one is named yet)' : ''}.` : null)) };
+}
 const clean = v => (typeof v === 'string' ? v.trim().replace(/[.\s]+$/, '') : '');
 
 // answers: { 'proxy.agent': 'Sam', ... }. Returns the sections that have words, each with its sentences and the paper

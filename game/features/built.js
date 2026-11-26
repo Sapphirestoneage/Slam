@@ -1527,6 +1527,23 @@ const WB = [
   ],
   [
     "plan",
+    "Estate and marriage: estate basics, what your people would receive (the step-up, the 10 years of an inherited account, the federal and New York lines), married or partners, New York first",
+    "b",
+    () =>
+      WB_HAS("estate") &&
+      WB_HAS("estab") &&
+      WB_FN("esHeirs") &&
+      WB_FN("esTenYear") &&
+      WB_FN("esCompare") &&
+      WB_FN("spousalExcess") &&
+      WB_FN("estateSheet") &&
+      typeof ES_REF !== "undefined" &&
+      typeof ES_RULES !== "undefined",
+    "One engine with the web app (heirs.html, married.html). The private summary with names for a lawyer stays in the web app (kin.html), which now has who is named on each account from Life admin.",
+    "estate",
+  ],
+  [
+    "plan",
     "Hard moments: a breakup, a roommate leaving, a death, a partner who died, medical bills, saying no to lending, a fire, a flood or an eviction, a private money plan",
     "b",
     () =>
