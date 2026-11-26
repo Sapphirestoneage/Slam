@@ -16,7 +16,7 @@ function jobRun(c, x) {
     gross = N.gross * 12,
     gain = (x.pay * N.f) / 12 + x.benefits / 12 - x.commuteCost,
     match = ((gross + x.pay) * x.match) / 100 / 12,
-    rr = R / 12;
+    rr = RM;
   const A = [0],
     B = [0];
   let v = 0;

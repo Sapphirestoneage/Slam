@@ -33,6 +33,13 @@ test('one engine: no screen reads the unshown projection engine, and money grows
   // the year and makes two tools disagree (the finish line did, until Nov 14 2026). Debt interest is apr / 12 and is fine.
   const twelfth = files.filter(f => /(realReturn|\breturn\w*)\s*\/\s*12\b(?!\s*\*\s*\()/.test(readFileSync(f, 'utf8').replace(/\/\/.*$/gm, ''))).map(f => f.slice(root.length + 1));
   assert.deepEqual(twelfth, [], 'a yearly return divided by 12');
+  // The game the same way: its month is RM, 1.07 to the power 1/12 (core/engine.js). R / 12 compounded to 7.23% a
+  // year in goalSim, the sims and the quick calculators until Nov 26 2026 (the second engine found it).
+  const gameRoot = fileURLToPath(new URL('../game', import.meta.url)), gfiles = [];
+  const gwalk = d => { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? (!/vendor|unused|tests/.test(f) && gwalk(p)) : p.endsWith('.js') && gfiles.push(p); } };
+  gwalk(gameRoot);
+  const gtwelfth = gfiles.filter(f => /\bR\s*\/\s*12\b/.test(readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, ''))).map(f => f.slice(gameRoot.length + 1));
+  assert.deepEqual(gtwelfth, [], 'the game: a yearly return divided by 12');
 });
 
 test('the FIRE canon, replicated: the famous numbers come out of SLAM\'s own math and history', async () => {

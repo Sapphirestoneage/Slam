@@ -88,7 +88,7 @@ function qmHome(gross, debt, apr) {
 function qmDollar(amt, yrs, how) {
   if (how === "month") {
     let v = 0;
-    for (let m = 0; m < yrs * 12; m++) v = v * (1 + R / 12) + amt;
+    for (let m = 0; m < yrs * 12; m++) v = v * (1 + RM) + amt;
     return { v, put: amt * 12 * yrs };
   }
   return { v: amt * Math.pow(1 + R, yrs), put: amt };

@@ -15,6 +15,9 @@
 const R = 0.07,
   SWR = 0.04,
   ROTH = 7500;
+/* A month of growth: 1.07 to the power 1/12, so twelve months make the same 7% as one year (M53 of the main app).
+   R / 12 a month compounds to 7.23% a year. The second engine (tools/audit) found it in goalSim on Nov 26 2026. */
+const RM = Math.pow(1 + R, 1 / 12) - 1;
 
 const ERAS = [
   {
@@ -2605,14 +2608,20 @@ function safeSpend(c, d, amt, monthly, today) {
   return { amt, monthly: !!monthly, light, head, lines, alt, math, left: fl.left, real: fl.real };
 }
 /* time ledger: what an hour is worth, to your money and to you */
-const APR_MID = { "Under 8%": 5, "8% to 15%": 12, "15% to 25%": 20, "Over 25%": 28, "No interest": 0 };
+/* THE ONE RATE OF A DEBT, in % a year, for every screen (the debt planner, the heavy-debt card, the time ledger):
+   the rate typed in, else the middle of the band tapped, else a guess by kind. Before Nov 26 2026 the debt planner
+   (features/debts.js) and this file had two tables: 8% to 15% was 11.5 there and 12 here, a typed rate without a band
+   counted only there, and a debt with no answer was 20% or 5% there and 22% or 6% here. The second engine
+   (tools/audit) found it. real: the rate is the player's own (typed or a band), not a guess. */
+const APR_MID = { "Under 8%": 5, "8% to 15%": 11.5, "15% to 25%": 20, "Over 25%": 28, "No interest": 0 };
+function debtRateGuess(x) {
+  return /payday|cash advance/i.test(x.k || "") ? 300 : /famil|medical/i.test(x.k || "") ? 0 : x.high ? 20 : 5;
+}
 function debtRate(x) {
-  if (x.apr && APR_MID[x.apr] != null)
-    return { r: x.rate != null && x.rate >= 0 ? x.rate : APR_MID[x.apr], real: true };
-  return {
-    r: /payday|cash advance/i.test(x.k || "") ? 300 : /famil|medical/i.test(x.k || "") ? 0 : x.high ? 22 : 6,
-    real: false,
-  };
+  if (x.rate != null && x.rate !== "" && isFinite(+x.rate) && +x.rate >= 0)
+    return { r: +x.rate, real: x.ratecf == null || +x.ratecf > 0, typed: true };
+  if (x.apr && APR_MID[x.apr] != null) return { r: APR_MID[x.apr], real: true, typed: false };
+  return { r: debtRateGuess(x), real: false, typed: false };
 }
 function hoursOf(c) {
   const h = c.hrs || {};
@@ -2643,7 +2652,7 @@ function timeLedger(c, d) {
       }
     });
   else {
-    dy = c.debt * (c.high === "yes" ? 0.22 : 0.06);
+    dy = (c.debt * debtRateGuess({ high: c.high === "yes" })) / 100; /* the one guess (debtRate) */
     dreal = false;
   }
   const dc = dy / 8760;
@@ -2823,10 +2832,10 @@ function fiNeed(c, age, opt) {
   return need;
 }
 function hiRate(c) {
-  if (!c.led) return 22;
+  if (!c.led) return debtRateGuess({ high: true }); /* the one guess for heavy debt (debtRate) */
   const hs = c.debts.filter(x => x.high && x.amt > 0),
     t = hs.reduce((a, x) => a + x.amt, 0);
-  if (!t) return 22;
+  if (!t) return debtRateGuess({ high: true });
   return Math.max(8, Math.min(400, hs.reduce((a, x) => a + x.amt * debtRate(x).r, 0) / t));
 }
 function goalSim(c, opt) {
@@ -2909,7 +2918,7 @@ function goalSim(c, opt) {
         cash = 0;
       }
       if (runway === null && cash <= 0) runway = m;
-      inv *= 1 + R / 12;
+      inv *= 1 + RM;
       if (m > lastEnd && (runway !== null || m > 240)) break;
       continue;
     }
@@ -2941,7 +2950,7 @@ function goalSim(c, opt) {
     u = Math.min(Math.max(0, target - cash), rest);
     cash += u;
     rest -= u;
-    inv = inv * (1 + R / 12) + rest;
+    inv = inv * (1 + RM) + rest;
     const e = chain(m);
     if (e > era) {
       for (let k = era + 1; k <= e; k++) eraAt[k] = m;
@@ -3768,7 +3777,7 @@ function shapes(c) {
         hi -= u;
         s -= u;
       }
-      inv = inv * (1 + R / 12) + s;
+      inv = inv * (1 + RM) + s;
     }
   out.push({
     id: "sprint",

@@ -120,6 +120,40 @@
     "months of cushion on the reveal use the same division",
     near(elStats(a, d).find(x => x.id === "cushion").v, 2, 1e-9)
   );
+  /* Found by the second engine (tools/audit, Nov 26 2026). (1) A month of growth is 1.07 to the power 1/12: twelve
+     months make 7%, not the 7.23% of 7% / 12. (2) One rate for a debt everywhere. */
+  chk("twelve months of RM make exactly 7%", near(Math.pow(1 + RM, 12), 1.07, 1e-12), RM);
+  const one = (o, r, real) => {
+    const x = Object.assign({ k: "Personal loan", amt: 1000, high: true }, o),
+      a1 = debtRate(x),
+      b1 = dbRate(x);
+    return a1.r === r && b1.v === r && a1.real === real;
+  };
+  chk("a typed rate counts with no band, in the planner and everywhere", one({ rate: 9.9 }, 9.9, true));
+  chk("8% to 15% is 11.5% in both places", one({ apr: "8% to 15%" }, 11.5, true));
+  chk("a typed rate wins over the band", one({ apr: "Over 25%", rate: 26.5 }, 26.5, true));
+  chk(
+    "the one guess: heavy 20%, other 5%, payday 300%, family or medical 0%",
+    one({}, 20, false) &&
+      one({ high: false }, 5, false) &&
+      one({ k: "Payday loan" }, 300, false) &&
+      one({ k: "Medical bills" }, 0, false)
+  );
+  chk(
+    "a heard rate (a live session, level 0) is not the player's own yet",
+    debtRate({ k: "Car loan", rate: 7, ratecf: 0 }).real === false &&
+      dbRate({ k: "Car loan", rate: 7, ratecf: 0 }).cf === 0
+  );
+  const tl = mk({
+    debts: [R0({ k: "Personal loan", amt: 10000, rate: 9.9, high: true })],
+    invs: [],
+    incs: [R0({ k: "A main job", amt: 4000 })],
+  });
+  syncAll(tl);
+  chk(
+    "the time ledger and the debt plan use the same typed rate",
+    near(timeLedger(tl, derive(tl)).dy, 990, 1e-9) && near(dbPlan(tl, "avalanche", 0).debts[0].apr, 0.099, 1e-12)
+  );
   G.chars.length = n0;
   G.active = 0;
   save();

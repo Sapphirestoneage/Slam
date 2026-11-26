@@ -1038,6 +1038,14 @@ const WB = [
   ["who", "Test with a friend", "b", () => WB_HAS("testkit"), "", "testkit"],
   [
     "who",
+    "Tester drives: a think-aloud test with a tap counter and Report this pinned open",
+    "b",
+    () => WB_HAS("thinkaloud") && WB_FN("taDock") && WB_FN("taNoteFor"),
+    "Admin menu, or the game's address with ?think=1. Three tasks by default, a tap counter for each, Report this open on every screen with the screen name filled in; the reports go to the Report inbox.",
+    "thinkaloud",
+  ],
+  [
+    "who",
     "Money together as a household",
     "p",
     () => WB_HAS("pmode"),
