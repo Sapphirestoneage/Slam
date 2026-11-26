@@ -8,7 +8,7 @@
 // an hour, a day and a unit, so a gig's own pay can be put next to it; gigSetAside returns the rate, the year's tax,
 // the four due dates (tax.quarterlyDue) and the tax so far, so safe harbor and the dates can be added on top.
 import { grossFromTakeHome, householdTax, quarterlySetAside, fica } from './income.js';
-import { gigNeedOf, gigHoursOf, gigFloorFrom, gigSoFarFrom, gigRetireOf, gigLimitsOf } from './gig.js';
+import { gigNeedOf, gigHoursOf, gigFloorFrom, gigSoFarFrom, gigRetireOf, gigLimitsOf, gigSafeHarborOf, gigVsFloorOf } from './gig.js';
 
 // place: 'nyc' (New York City), 'ny' (New York State) or anything else (federal only).
 export const GIG_PLACES = { nyc: { state: 'NY', nyc: true }, ny: { state: 'NY', nyc: false } };
@@ -36,7 +36,30 @@ export function gigSetAside({ profit = null, wages = 0, pretax = 0, filingStatus
   const q = quarterlySetAside(hh, ref, { year: year ?? new Date().getFullYear() });
   const g = hh.rows.gig, soFar = gigSoFarFrom({ rate: q.rate, earned, set });
   return { ready: true, profit, wages: wages ?? 0, rate: q.rate, yearly: q.yearly, quarterly: q.quarterly, due: q.due, per100: q.rate * 100,
-    parts: { income: g.federal, selfEmployment: g.fica, state: g.state + g.local }, soFar, place: pl, filingStatus, text: q.text };
+    parts: { income: g.federal, selfEmployment: g.fica, state: g.state + g.local }, soFar, place: pl, filingStatus, text: q.text,
+    jobFederal: hh.rows.job?.federal ?? 0, federal: (hh.rows.job?.federal ?? 0) + g.federal + g.fica };
+}
+
+// The Tax Command Center (run Finish everything partly built, Part 14): the set-aside above, and on top of it the safe
+// harbor on this year's federal tax (a job's income tax, the work's income tax and its self-employment tax; state tax
+// has rules of its own and is not in the safe harbor), the four dates and what is owed by the next one.
+// set: set aside and not paid yet; paid: estimates paid so far this year (both count toward what is owed so far).
+// withheld: what a job withholds this year; left empty, the job's own income tax is taken as withheld (as above).
+// lastYear, lastAgiOver, lastFull: last year's total tax, AGI over the line (true, false, or null for not sure), and
+// whether last year's return covered 12 months. today: YYYY-MM-DD.
+export function gigTaxCenter({ lastYear = null, lastAgiOver = null, lastFull = true, withheld = null, paid = 0, set = 0, today = null, ...rest } = {}, ref) {
+  const S = gigSetAside({ ...rest, set: (set ?? 0) + (paid ?? 0) }, ref);
+  if (!S.ready) return S;
+  const day = today ?? new Date().toISOString().slice(0, 10), w = withheld ?? S.jobFederal;
+  const harbor = gigSafeHarborOf({ thisYear: S.federal, lastYear, lastAgiOver, lastFull, withheld: w, paid, due: S.due, today: day, rule: ref.tax.safeHarbor });
+  return { ...S, harbor, withheld: w, withheldGuess: withheld == null, today: day };
+}
+
+// Pricing your power (Part 14): the floor an hour (gigRate) next to what a gig or app pays an hour.
+export function gigPricing({ gigPay = null, ...rest } = {}, ref) {
+  const R = gigRate(rest, ref);
+  if (!R.ready) return R;
+  return { ...R, vs: gigVsFloorOf({ floor: R.hourly, pay: gigPay, month: R.month }) };
 }
 
 // Retirement: the base (profit less half the self-employment tax, from M11) and what each account holds.

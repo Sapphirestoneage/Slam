@@ -14,7 +14,7 @@ import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
 import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
-import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf } from '../../js/math/gig.js';
+import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf, gigSafeHarborOf, gigPayoutsOf, gigVsFloorOf } from '../../js/math/gig.js';
 import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opSearchFundOf, opFamilyOf, opAgeCareOf } from '../../js/math/ownpath.js';
 import { hmUntangle, hmParkMonths } from '../../js/math/hard.js';
@@ -229,6 +229,16 @@ for (let i = 0; i < N; i++) {
   { const apps = Array.from({ length: whole(1, 3) }, () => ({ earned: money(20, 5000), tips: pick([0, 50, 300]), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]) })), x = { apps, cash: pick([0, 60, 400]) }, r = gigAppsOf(x);
     const pcts = { profit: pick([0.01, 0.05, 0.1]), owner: pick([0.3, 0.5]), tax: pick([0.15, 0.25]), opex: pick([0.1, 0.2, 0.3]) }, income = money(100, 20000), pf = gigProfitFirstOf({ income, pcts });
     add('gigApps', { ...x, pcts, income }, { all: r.all, tips: r.tips, gap: r.gap, owner: pf.ready ? pf.of.owner : null, left: pf.ready ? pf.left : null }); }
+  // Part 14 (run Finish everything partly built): safe harbor, payout timing, a gig next to the floor.
+  { const due = ['2026-04-15', '2026-06-15', '2026-09-15', '2027-01-15'], x = { thisYear: money(200, 200000), lastYear: pick([null, 0, money(200, 200000)]), lastAgiOver: pick([null, true, false]), lastFull: pick([true, true, false]),
+      withheld: pick([0, 0, money(100, 80000)]), paid: pick([0, money(50, 40000)]), due, today: pick(['2026-02-01', '2026-05-01', '2026-11-26', '2027-03-01']), rule: ref.tax.safeHarbor }, r = gigSafeHarborOf(x);
+    add('gigSafeHarbor', x, { need: r.need, required: r.required, none: r.none, byNow: r.byNow, toNext: r.toNext, fullYear: r.fullYear }); }
+  { const names = ['Uber', 'DoorDash', 'Upwork', 'Etsy', 'Patreon', 'Other'], apps = Array.from({ length: whole(1, 3) }, () => ({ name: pick(names), earned: money(20, 5000), fee: pick([0, 0, 40]), landed: pick([null, money(20, 5000)]), payout: pick([null, null, 'day', 'week', 'month']), hold: pick([null, null, 0, 2, 5]) }));
+    const platforms = Object.fromEntries(Object.entries(ref.platforms).map(([k, p]) => [k, p.own ? { own: { holdDays: p.own.holdDays, payout: p.own.payout } } : {}]));
+    const x = { apps, stretchDays: pick([7, 14, 30]), platforms }, r = gigPayoutsOf({ apps, stretchDays: x.stretchDays }, ref.platforms);
+    add('gigPayouts', x, { rows: r.rows.map(q => ({ name: q.name, earned: q.earned, window: q.window, onWayMax: q.onWayMax, state: q.state })), onWayMax: r.onWayMax });
+    const f = { floor: between(5, 200), pay: pick([null, between(5, 200)]), month: money(500, 20000) }, V = gigVsFloorOf(f);
+    add('gigVsFloor', f, V.ready ? { gap: V.gap, share: V.share, hoursMonth: V.hoursMonth, floorHoursMonth: V.floorHoursMonth } : { gap: null }); }
   // Hard moments (js/math/hard.js and hardplan.js, M8H): a roommate leaving, untangling, money that waits
   { const n = whole(2, 4), people = Array.from({ length: n }, (_, i) => ({ id: i ? `P${i + 1}` : 'Me', size: money(60, 300), income: money(500, 15000) })), x = { rent: money(800, 8000), bills: pick([0, 150, 400]), how: pick(['size', 'income', 'equal']), billsHow: pick(['equal', 'same']), people, leaver: people[whole(0, n - 1)].id, monthsLeft: whole(0, 12), cover: pick([0, 1, 2, 3, 20]), deposit: pick([0, money(500, 6000)]), damage: pick([0, 0, money(50, 900)]) };
     const r = roommateExit(x); add('hmRoommateExit', x, { toEnd: r.rows.map(p => p.toEnd), now: r.rows.map(p => p.now), later: r.rows.map(p => p.later), deposit: r.rows.map(p => p.deposit), uncovered: r.uncovered, total: r.total }); }
@@ -415,7 +425,7 @@ for (let i = 0; i < N; i++) {
     growth: maybe(between(-0.1, 0.2), 0.3), inflation: maybe(pick([0.02, 0.027, 0.04]), 0.1), spendYear: maybe(z(5000, 200000)), invested: maybe(z(100, 3000000)), age: maybe(whole(18, 80)), retireAge: whole(40, 75),
     realReturn: pick([0, 0.03, 0.05, 0.07]), financial: maybe(z(100, 3000000)), advantaged: maybe(z(10, 500000)), planAge: pick([85, 90, 95]), debts: rnd() < 0.1 ? null : debts,
     rows: Array.from({ length: whole(0, 16) }, (_, k) => ({ d: `${2025 + Math.floor(k / 12)}-${String((k % 12) + 1).padStart(2, '0')}`, amt: money(100, 9000), kind: rnd() < 0.15 ? 'in' : 'out' })),
-    rating: maybe(whole(1, 10), 0.3), good: whole(0, 6), of: whole(0, 8), wind: maybe(money(500, 50000), 0.2), toTax: z(10, 5000), toFun: z(10, 2000), toCash: z(10, 5000), toDebt: z(10, 9000), toInv: z(10, 20000) };
+    rating: maybe(whole(1, 10), 0.3), good: whole(0, 6), of: whole(0, 8), wind: maybe(money(500, 50000), 0.2), toTax: z(10, 5000), toFun: z(10, 2000), toCash: z(10, 5000), toDebt: z(10, 9000), toInv: z(10, 20000), ssYear: maybe(z(2000, 60000), 0.2) };
   x.good = Math.min(x.good, x.of);
   const v = r => r.value;
   add('ratios', x, {
@@ -429,7 +439,7 @@ for (let i = 0; i < N; i++) {
     discretionary: v(RA.raDiscretionary({ takeHome: x.takeHome, fixed: x.fixed })), fixedvar: v(RA.raFixedShare({ fixed: x.fixed, variable: x.variable })),
     volatility: v(RA.raVolatility({ rows: x.rows })), side: v(RA.raSideShare({ side: x.side, total: x.total })),
     totalcomp: v(RA.raTotalComp({ base: x.base, bonus: x.bonus, match: x.match })), realwage: v(RA.raRealWage({ growth: x.growth, inflation: x.inflation })),
-    replace: v(RA.raReplacement({ spendYear: x.spendYear, grossYear: x.grossYear })), investnw: v(RA.raInvestNw({ invested: x.invested, netWorth: x.netWorth })),
+    replace: v(RA.raReplacement({ spendYear: x.spendYear, grossYear: x.grossYear })), ssreplace: v(RA.raSsReplace({ ssYear: x.ssYear, grossYear: x.grossYear })), investnw: v(RA.raInvestNw({ invested: x.invested, netWorth: x.netWorth })),
     nwincome: v(RA.raNwIncome({ netWorth: x.netWorth, grossYear: x.grossYear })),
     human: v(RA.raHumanCapital({ grossYear: x.grossYear, age: x.age, retireAge: x.retireAge, realReturn: x.realReturn, financial: x.financial })),
     shelter: v(RA.raTaxShelter({ advantaged: x.advantaged, invested: x.invested })),

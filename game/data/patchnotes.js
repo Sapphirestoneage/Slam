@@ -470,6 +470,16 @@ const PATCH_NOTES = [
       "What your people receive: who gets what, the gain the step-up in basis wipes out, and the 10 years of an inherited IRA, with the tax three ways.",
       "Married or partners?: two single returns or one joint one, the tax on partner health cover, the Social Security spousal and survivor benefits, and what changes in New York.",
       "In the web app the summary for a lawyer now lists who is named on each account. Nothing is kept unless you turn it on. Bring it all to a lawyer.",
+      ],
+    },
+    {
+      d: "2026-11-26",
+    t: "Taxes when you work for yourself",
+    l: [
+      "Working for yourself, Taxes first: the safe harbor, the least to send in estimates so no underpayment penalty applies, a quarter at each date, and what is still to send by the next one.",
+      "My floor: tap what an app or a gig pays an hour and see it next to your floor, with the hours a month each takes.",
+      "Retirement odds and Ratios: the share of today's pay Social Security would replace.",
+      "In the web app: the Tax command center, the floor next to a gig's pay, and when each app pays out, with the money still on its way.",
     ],
   },
   {

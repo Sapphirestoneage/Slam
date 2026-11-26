@@ -17,10 +17,12 @@ const HEAD = `/* ===============================================================
                invoices and how late they are, apps and tips added up, and a Profit First split. The
                sheet "Working for yourself" (features/gig.js) uses it.
    INPUT       Numbers, dates (YYYY-MM-DD) and lists. No profile, no screen.
-   OUTPUT      Constants: GIG_OWNER_RATE, GIG_TERMS, GIG_AGES, GIG_NUDGES, GIG_PF_KEYS, GIG_PF_SAMPLE.
+   OUTPUT      Constants: GIG_OWNER_RATE, GIG_TERMS, GIG_AGES, GIG_NUDGES, GIG_CYCLE_DAYS, GIG_PF_KEYS,
+               GIG_PF_SAMPLE, and two from data/reference-2026.json: GIG_SAFE_HARBOR (tax.safeHarbor,
+               the IRS rules with their source and date) and GIG_DUE (tax.quarterlyDue, month-day).
                Functions: gigNeedOf, gigHoursOf, gigFloorFrom, gigProfitFlat, gigSoFarFrom,
                gigLimitsOf, gigRetireOf, gigInvoiceOf, gigInvoicesOf, gigNudgeOf, gigAppsOf,
-               gigProfitFirstOf.
+               gigPayoutsOf, gigSafeHarborOf, gigVsFloorOf, gigProfitFirstOf.
    DEPENDS ON  Nothing.
    RULES       GENERATED FILE. Do not edit it. The source is js/math/gig.js of the main SLAM app, so
                the small pages of the web app and the game have one copy of each rule. To change a
@@ -32,7 +34,9 @@ export function built() {
   const src = readFileSync(from, 'utf8');
   const body = src.split('\n').filter(l => !l.startsWith('// SPDX-License-Identifier')).join('\n').replace(/^export /gm, '');
   if (/^\s*import /m.test(body) || /\bexport\b/.test(body.replace(/\/\/.*$/gm, ''))) throw new Error('js/math/gig.js must stay free of imports, and export only at the start of a line.');
-  return HEAD + body;
+  const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url), 'utf8'));
+  const data = `\n/* From data/reference-2026.json, written by tools/game_gig_build.mjs (run Finish everything partly built, Part 14). */\nconst GIG_SAFE_HARBOR = ${JSON.stringify(ref.tax.safeHarbor)};\nconst GIG_DUE = ${JSON.stringify(ref.tax.quarterlyDue)};\n`;
+  return HEAD + body + data;
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const text = built();

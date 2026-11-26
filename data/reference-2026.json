@@ -412,6 +412,15 @@
       "09-15",
       "01-15"
     ],
+    "safeHarbor": {
+      "current": 0.9,
+      "prior": 1,
+      "priorHigh": 1.1,
+      "highAgi": 150000,
+      "highAgiSeparate": 75000,
+      "owe": 1000,
+      "source": "IRS 2026 Form 1040-ES (irs.gov/pub/irs-pdf/f1040es.pdf): pay the smaller of 90% of the 2026 tax or 100% of the 2025 tax (110% when 2025 AGI was more than $150,000, $75,000 married filing separately); the 2025 return must cover all 12 months. IRS Estimated tax FAQ (irs.gov/faqs/estimated-tax) and Publication 505 (2026, dated Mar 31 2026): no estimated tax is needed when you expect to owe less than $1,000 after withholding and refundable credits, or when the prior year had no tax liability, was a 12-month year and you were a U.S. citizen or resident all year. Read through web search Nov 26 2026 (irs.gov itself does not open from here)"
+    },
     "tips": {
       "deductionCap": 25000,
       "phaseOutSingle": 150000,
@@ -3386,18 +3395,21 @@
       "source": "Etsy Fees and Payments Policy: 6.5% transaction fee plus US payment processing 3% + $0.25 (the $0.25 and the $0.20 listing fee are left out). Deposit hold: unverified; etsy.com/legal/fees could not be opened tonight"
     },
     "Uber": {
+      "own": { "holdDays": 1, "payout": "week", "url": "help.uber.com (Receiving earnings; Direct deposit late or missing)", "read": "2026-11-26", "says": "The week closes Monday 4 am; the deposit starts Monday and lands as early as Tuesday; banks can take 1 to 5 business days" },
       "fee": 0,
       "holdDays": 2,
       "payout": "week",
       "source": "Uber shows driver earnings after its service fee, so type the earnings and the fee is 0. Weekly pay with a short hold: unverified"
     },
     "DoorDash": {
+      "own": { "holdDays": 3, "payout": "week", "url": "help.doordash.com (When do Dashers get paid?)", "read": "2026-11-26", "says": "Weekly direct deposit, usually 2 to 3 days to show up in the bank; a Monday bank holiday adds a day" },
       "fee": 0,
       "holdDays": 3,
       "payout": "week",
       "source": "DoorDash shows Dasher pay after its cut and passes tips on in full, so the fee is 0. Weekly deposit: unverified"
     },
     "Upwork": {
+      "own": { "holdDays": 10, "payout": "week", "url": "support.upwork.com (Get paid for hourly and fixed-price contracts)", "read": "2026-11-26", "says": "Hourly: the week is invoiced Monday, the client reviews to Friday, and the money is available the following Wednesday; fixed-price: a 5-day security hold. Available to withdraw, then the bank transfer on top" },
       "fee": 0.1,
       "holdDays": 10,
       "payout": "week",
