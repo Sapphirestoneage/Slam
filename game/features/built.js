@@ -597,6 +597,14 @@ const WB = [
     "keynums",
   ],
   [
+    "see",
+    "Ratios on Key numbers: one line each, in groups, each with its formula",
+    "b",
+    () => WB_FN("knSheetRatios") && WB_FN("raGameRead") && WB_FN("raCurrent") && WB_FN("raConfidence"),
+    "Twenty ratios from the numbers you already have, each with Guess, Close or Exact, one plain sentence and Show the math. Financial confidence: rate it with a tap, next to what your numbers say.",
+    "keynums",
+  ],
+  [
     "feel",
     "You can stop sprinting: the day you reach your Coast number",
     "b",

@@ -347,6 +347,7 @@ export function metrics(doc, ref, { now = new Date(), person = null } = {}) {
   const mt = job ? matchFromTiers({ contributionPct: pctIn, tiers: x.link.incomeTiers, gross: jobGross }) : null;
   const match = mt ? mt.dollars / 12 : 0;
   out.savingsRate = savingsRate({ takeHome: x.takeHome, surplus: out.surplus.value, pretaxSaving, match });
+  out.matchMonthly = mt ? match : null; // the job's match a month (null: no job, or no match tiers in), for Total comp to base (Ratios, Part 9)
   out.pretaxSaving = pretaxSaving;
   out.flow = flowOf(x, { pretaxSaving });
   out.housingPct = housingPct({ housing: x.housing, takeHome: x.takeHome });

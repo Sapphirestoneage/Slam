@@ -927,6 +927,71 @@ def quick_check(fn, x, o, ck, law):
         ck('left', o['left'], left); ck('kept', o['rate'], left / x['takeHome'], 1e-12)
 
 
+def ratio_check(x, o, ck):
+    """Ratios on Key numbers (Part 9), each worked out again from its definition: None when an input is missing or
+    there is nothing to measure (a zero below the line), never a 0 in its place."""
+    def has(*vs): return all(v is not None for v in vs)
+    def div(a, b): return a / b if has(a, b) and b > 0 else None
+    import re
+    short = lambda k: re.search(r'card|later|payday|cash advance|medical|personal|famil|friend', k, re.I) is not None
+    revol = lambda k: re.search(r'card|line of credit|heloc', k, re.I) is not None
+    D = x['debts']
+    ck('current ratio', o['current'], div(x['cash'], None if D is None else sum(d['balance'] for d in D if short(d['type']))))
+    ck('healthcare reserve', o['health'], div(None if x['cash'] is None else x['cash'] + x['hsa'], x['oopMax']))
+    ck('self-insurance threshold', o['selfins'], x['cash'] - x['target'] if has(x['cash'], x['target']) else None)
+    ck('solvency', o['solvency'], div(x['netWorth'], x['assets']))
+    ck('revolving vs installment', o['revolving'], None if D is None else div(sum(d['balance'] for d in D if revol(d['type'])), sum(d['balance'] for d in D)))
+    if D is None: ck('credit mix', o['mix'], None)
+    else:
+        mort = any('mortgage' in d['type'].lower() for d in D); rv = any(revol(d['type']) and 'mortgage' not in d['type'].lower() for d in D)
+        inst = any(not revol(d['type']) and 'mortgage' not in d['type'].lower() for d in D)
+        ck('credit mix', o['mix'], mort + rv + inst, 0)
+    if D is None or not D or any(d['apr'] is None or d['payment'] is None for d in D): ck('interest to principal', o['intprin'], None)
+    else:
+        i = sum(d['balance'] * d['apr'] / 12 for d in D); p = sum(d['payment'] for d in D) - i
+        ck('interest to principal', o['intprin'], i / p if p > 0 else None, 1e-6)
+    ck('home equity', o['equity'], x['homeValue'] - x['mortgage'] if has(x['homeValue'], x['mortgage']) else None)
+    ck('loan to value', o['ltv'], div(x['mortgage'], x['homeValue']))
+    ck('price to income', o['priceinc'], div(x['homeValue'], x['grossYear']))
+    ck('real estate concentration', o['realestate'], div(x['homeValue'], x['assets']))
+    ck('discretionary income', o['discretionary'], x['takeHome'] - x['fixed'] if has(x['takeHome'], x['fixed']) else None)
+    ck('fixed vs variable', o['fixedvar'], div(x['fixed'], None if not has(x['fixed'], x['variable']) else x['fixed'] + x['variable']))
+    by = {}
+    for r in x['rows']:
+        if r['kind'] == 'out': by[r['d'][:7]] = by.get(r['d'][:7], 0) + r['amt']
+    vals = [by[k] for k in sorted(by)][-12:]
+    if len(vals) < 3: ck('spending volatility', o['volatility'], None)
+    else:
+        mu = sum(vals) / len(vals); sd = (sum((v - mu) ** 2 for v in vals) / len(vals)) ** 0.5
+        ck('spending volatility', o['volatility'], sd / mu, 1e-9)
+    ck('side income share', o['side'], div(x['side'], x['total']) if has(x['side'], x['total']) else None)
+    ck('total comp to base', o['totalcomp'], None if x['base'] is None or x['match'] is None or x['base'] <= 0 else (x['base'] + x['bonus'] + x['match']) / x['base'], 1e-9)
+    ck('real wage growth', o['realwage'], (1 + x['growth']) / (1 + x['inflation']) - 1 if has(x['growth'], x['inflation']) else None, 1e-12)
+    ck('income replacement', o['replace'], div(x['spendYear'], x['grossYear']))
+    ck('investment to net worth', o['investnw'], div(x['invested'], x['netWorth']))
+    ck('net worth to income', o['nwincome'], div(x['netWorth'], x['grossYear']))
+    if not has(x['grossYear'], x['age'], x['financial']): ck('human capital', o['human'], None)
+    else:
+        n = max(0, x['retireAge'] - x['age']); r = x['realReturn']
+        pv = sum(x['grossYear'] / (1 + r) ** k for k in range(1, n + 1))  # the same annuity, year by year
+        ck('human capital', o['human'], pv / x['financial'] if x['financial'] > 0 else None, 1e-6)
+    ck('tax efficiency', o['shelter'], div(x['advantaged'], x['invested']) if has(x['advantaged'], x['invested']) else None)
+    if not has(x['invested'], x['spendYear'], x['age']): ck('longevity cover', o['longevity'], None)
+    else:
+        yrs = x['planAge'] - max(x['age'], x['retireAge'])
+        ck('longevity cover', o['longevity'], x['invested'] / x['spendYear'] / yrs if x['spendYear'] > 0 and yrs > 0 else None, 1e-9)
+    if x['wind'] is None: ck('windfall allocation', o['windfall'], None)
+    else:
+        yours = x['wind'] - x['toTax']
+        ck('windfall allocation', o['windfall'], (x['toCash'] + x['toDebt'] + x['toInv']) / yours if yours > 0 else None, 1e-9)
+    if x['rating'] is None: ck('confidence', o['confidence'], None)
+    else:
+        me = (x['rating'] - 1) / 9
+        ck('confidence, your rating', o['confidence'][0], me, 1e-12)
+        read = 'numbers' if x['of'] <= 0 else ('near' if abs(x['good'] / x['of'] - me) <= 0.2 + 1e-12 else ('ahead' if x['good'] / x['of'] > me else 'feeling'))
+        ck('confidence, the read', o['confidence'][1] == read, True)
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -1276,6 +1341,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn == 'ratios':
+            ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):
             hard_check(fn, x, o, ck)
         elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):

@@ -30,6 +30,7 @@ import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
+import * as RA from '../../js/math/ratios.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -257,6 +258,41 @@ for (let i = 0; i < N; i++) {
   const v = (rnd() < 0.2 ? -1 : 1) * (rnd() < 0.1 ? whole(0, 99) : money(100, 9000000)); add('enRough', { v }, { text: enRough(v) });
   const a = { spend: money(500, 9000), take: rnd() < 0.1 ? 0 : money(500, 12000) }, b = { spend: a.spend * between(0.9, 1.3), take: a.take * between(0.9, 1.3) };
   add('enStepCreep', { a, b }, { up: enStepCreep(a, b) });
+}
+// Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): random households, some inputs missing (null), some
+// zero; each ratio from js/math/ratios.js, worked out again from its definition in the second engine.
+for (let i = 0; i < N; i++) {
+  const maybe = (v, p = 0.1) => (rnd() < p ? null : v), z = (lo, hi) => (rnd() < 0.15 ? 0 : money(lo, hi));
+  const kinds = ['Credit card', 'Car loan', 'Student loan', 'Mortgage', 'Medical', 'Personal loan', 'Line of credit'];
+  const debts = Array.from({ length: whole(0, 4) }, () => ({ type: pick(kinds), balance: money(100, 300000), apr: maybe(pick([0, 0.03, 0.07, 0.2, 0.29]), 0.1), payment: maybe(money(25, 3000), 0.1) }));
+  const x = { cash: maybe(z(10, 90000)), hsa: z(10, 9000), oopMax: maybe(pick([0, 3000, 5000, 9200])), target: maybe(money(1000, 60000)), netWorth: maybe((rnd() < 0.2 ? -1 : 1) * money(100, 2000000)),
+    assets: maybe(z(100, 3000000)), homeValue: maybe(money(80000, 1500000), 0.3), mortgage: maybe(z(10000, 900000), 0.3), grossYear: maybe(z(5000, 400000)), takeHome: maybe(z(500, 25000)),
+    fixed: maybe(z(100, 9000)), variable: maybe(z(100, 9000)), side: maybe(z(10, 5000)), total: maybe(z(100, 30000)), base: maybe(z(10000, 300000)), bonus: z(100, 40000), match: maybe(z(100, 15000)),
+    growth: maybe(between(-0.1, 0.2), 0.3), inflation: maybe(pick([0.02, 0.027, 0.04]), 0.1), spendYear: maybe(z(5000, 200000)), invested: maybe(z(100, 3000000)), age: maybe(whole(18, 80)), retireAge: whole(40, 75),
+    realReturn: pick([0, 0.03, 0.05, 0.07]), financial: maybe(z(100, 3000000)), advantaged: maybe(z(10, 500000)), planAge: pick([85, 90, 95]), debts: rnd() < 0.1 ? null : debts,
+    rows: Array.from({ length: whole(0, 16) }, (_, k) => ({ d: `${2025 + Math.floor(k / 12)}-${String((k % 12) + 1).padStart(2, '0')}`, amt: money(100, 9000), kind: rnd() < 0.15 ? 'in' : 'out' })),
+    rating: maybe(whole(1, 10), 0.3), good: whole(0, 6), of: whole(0, 8), wind: maybe(money(500, 50000), 0.2), toTax: z(10, 5000), toFun: z(10, 2000), toCash: z(10, 5000), toDebt: z(10, 9000), toInv: z(10, 20000) };
+  x.good = Math.min(x.good, x.of);
+  const v = r => r.value;
+  add('ratios', x, {
+    current: v(RA.raCurrent({ cash: x.cash, shortDebt: x.debts && x.debts.filter(d => RA.raIsShort(d.type)).reduce((t, d) => t + d.balance, 0) })),
+    health: v(RA.raHealth({ cash: x.cash, hsa: x.hsa, oopMax: x.oopMax })), selfins: v(RA.raSelfInsure({ cash: x.cash, target: x.target })),
+    solvency: v(RA.raSolvency({ netWorth: x.netWorth, assets: x.assets })),
+    revolving: v(RA.raRevolving({ revolving: x.debts && x.debts.filter(d => RA.raIsRevolving(d.type)).reduce((t, d) => t + d.balance, 0), total: x.debts && x.debts.reduce((t, d) => t + d.balance, 0) })),
+    mix: v(RA.raCreditMix({ kinds: x.debts && x.debts.map(d => d.type) })), intprin: v(RA.raInterestPrincipal({ debts: x.debts })),
+    equity: v(RA.raHomeEquity({ homeValue: x.homeValue, mortgage: x.mortgage })), ltv: v(RA.raLtv({ mortgage: x.mortgage, homeValue: x.homeValue })),
+    priceinc: v(RA.raPriceIncome({ homeValue: x.homeValue, grossYear: x.grossYear })), realestate: v(RA.raRealEstate({ realEstate: x.homeValue, assets: x.assets })),
+    discretionary: v(RA.raDiscretionary({ takeHome: x.takeHome, fixed: x.fixed })), fixedvar: v(RA.raFixedShare({ fixed: x.fixed, variable: x.variable })),
+    volatility: v(RA.raVolatility({ rows: x.rows })), side: v(RA.raSideShare({ side: x.side, total: x.total })),
+    totalcomp: v(RA.raTotalComp({ base: x.base, bonus: x.bonus, match: x.match })), realwage: v(RA.raRealWage({ growth: x.growth, inflation: x.inflation })),
+    replace: v(RA.raReplacement({ spendYear: x.spendYear, grossYear: x.grossYear })), investnw: v(RA.raInvestNw({ invested: x.invested, netWorth: x.netWorth })),
+    nwincome: v(RA.raNwIncome({ netWorth: x.netWorth, grossYear: x.grossYear })),
+    human: v(RA.raHumanCapital({ grossYear: x.grossYear, age: x.age, retireAge: x.retireAge, realReturn: x.realReturn, financial: x.financial })),
+    shelter: v(RA.raTaxShelter({ advantaged: x.advantaged, invested: x.invested })),
+    longevity: v(RA.raLongevity({ invested: x.invested, spendYear: x.spendYear, age: x.age, retireAge: x.retireAge, planAge: x.planAge })),
+    windfall: v(RA.raWindfall({ amount: x.wind, toTax: x.toTax, toFun: x.toFun, toCash: x.toCash, toDebt: x.toDebt, invested: x.toInv })),
+    confidence: (() => { const r = RA.raConfidence({ rating: x.rating, good: x.good, of: x.of }); return r.value == null ? null : [r.value, r.read]; })(),
+  });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

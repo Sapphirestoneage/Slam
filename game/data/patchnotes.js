@@ -320,6 +320,16 @@ const PATCH_NOTES = [
       "Tap a rate a private lender offers you and see it next to the federal plans, with what you give up in plain words.",
       "On the web page Which student loan plan costs least?, the stepladder: each school year's loan at its own rate, and the interest it gathers before your first payment.",
     ],
+  },  {
+    d: "2026-11-26",
+    t: "Ratios on Key numbers",
+    l: [
+      "Key numbers now ends with Ratios: about twenty of them in groups, one line each, closed until you open a group.",
+      "Each line says what it means in one sentence, how sure it is (Guess, Close or Exact) and, under Show the math, its formula.",
+      "A ratio that is missing a number says which one. It never shows a 0 in its place.",
+      "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
+      "In the web app the same ratios are on Report, Overview, under Ratios.",
+    ],
   },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
