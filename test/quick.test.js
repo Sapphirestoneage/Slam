@@ -111,6 +111,9 @@ test('the W-4 check: refund or owed against the tax engine, and the line that ev
   assert.equal(short.owe, federalTax({ gross: 85000, filingStatus: 'Single' }, ref).value); near(short.owed, short.owe - 8050, 1e-9); near(short.extra, short.owed / 3, 1e-9);
   const over = P.qcW4({ gross: 85000, withheld: 9000, perCheck: 400, checksLeft: 4, checksYear: 26, ref });
   near(over.refund, 10600 - over.owe, 1e-9); near(over.deductions * over.marginal / 26 * 4, over.refund, 1e-6, 'the deduction lowers the paychecks left by the refund');
+  const big = P.qcW4({ gross: 85000, withheld: 20000, perCheck: 400, checksLeft: 3, checksYear: 26, ref }); // more refund than three paychecks hold
+  near(big.deductions * big.marginal / 26, 400, 1e-6, 'the most a paycheck can cut is what it withholds'); near(big.stillRefund, big.refund - 1200, 1e-6);
+  assert.equal(over.stillRefund, 0);
   const kids = P.qcW4({ gross: 85000, kids: 2, withheld: 7000, perCheck: 350, checksLeft: 3, ref }); assert.ok(kids.credit > 0 && kids.owe < short.owe);
 });
 

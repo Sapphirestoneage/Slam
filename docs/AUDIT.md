@@ -76,6 +76,10 @@ over the years), living at home with the moving-out goal reached by stepping a b
 summed one by one with the level amount to put away found by bisection on a month-by-month balance, and the New York
 529 deduction from the limit.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 9) it also covers comparing with peers (`js/math/peers.js`,
+M8N): the SCF 2025 middle for an age looked up again in the data file, below, about or above it by the 10% rule, the
+quarter and the 90th of all households, the pay next to the Census middle, and the gap to the BEA saving rate.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10a) it also covers the game's Quest mode (`js/math/quest.js`,
 M8Z): the health, armor and six stat scores from their definitions, the capacity steps from the margin, the cushion,
 the plate and a challenge, the weak spots and their room in order, the hidden costs added up and turned into days of

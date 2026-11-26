@@ -180,7 +180,7 @@ function raValue(l) {
   const r = l.r;
   if (r.value == null) return r.needs.length ? "Needs " + r.needs.join(" and ") : r.none;
   if (l.id === "mix") return r.value + " of 3 kinds";
-  if (l.id === "selfins" && r.value < 0) return money(Math.round(-r.value)) + " to go first";
+  if (l.id === "selfins" && r.value < 0) return money(Math.round(-r.value)) + " to fill your fund first";
   if (l.id === "discretionary" && r.share != null) return money(Math.round(r.value)) + " a month";
   if (l.id === "confidence")
     return (

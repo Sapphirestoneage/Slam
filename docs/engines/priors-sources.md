@@ -236,6 +236,17 @@ Tax and benefits (the source lines on Assumptions; data/reference-2026.json valu
 | HUD 4000.1 self-employment decline | No | | [HUD 4000.1 page](https://www.hud.gov/hud-partners/single-family-handbook-4000-1); the attachment read (2020-31, the defect taxonomy) has no decline rule | Nothing (still the lender summaries) |
 | Marketplace benchmark, 2027 (QUESTIONS 395) | Yes | US $703 a month (2026: $625); New York $1,041 (2026: $817) | [KFF, Marketplace Average Benchmark Premiums, 2027](https://www.kff.org/affordable-care-act/state-indicator/marketplace-average-benchmark-premiums/) | Every state's benchmark; Lena and Marco's help $16,399.20 (was $11,023.20) |
 
+## Comparing with peers (run Finish everything partly built, Part 9, Nov 26 2026)
+
+The peers screen (`peers.html`, the game's You and people like you, `js/math/peers.js`) reads the rows above and one new
+row. bea.gov and census.gov were not reachable from the session; both were read through a web search on Nov 26 2026.
+
+| Target | Value | Source | Check | Note |
+|---|---|---|---|---|
+| Personal saving rate, the whole country | 3.8% (September 2026; personal saving $911.1 billion) | [BEA, Personal Income and Outlays, September 2026](https://www.bea.gov/news/2026/personal-income-and-outlays-september-2026), released Oct 29 2026 | Primary (the release's own words, read through a web search) | In the file as `savingRate`. The October 2026 release (scheduled Nov 25 2026) was not checked |
+| Savings rate by age | | none found | Not found | The screen says "not yet" |
+| Household income by age of householder, 2025, and its percentiles (Census HINC-02) | | [HINC-02, 2025](https://www.census.gov/data/tables/time-series/demo/income-poverty/cps-hinc/hinc-02.2025.html) | Not found (the page could not be read; two secondary figures for under 25 disagree, $47,638 and $60,870) | The screen says "not yet" |
+
 ## Next steps
 
 Batch 54 left these for one approved look (each URL is in the table above).

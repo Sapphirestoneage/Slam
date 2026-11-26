@@ -1,6 +1,6 @@
 # SLAM roadmap
 
-Updated Nov 14 2026. This file replaces the Nov 6 roadmap (kept in `docs/archive/ROADMAP-2026-11-06.md`).
+Updated Nov 14 2026 (the run Not built, groups 1 to 5 added Nov 26 2026). This file replaces the Nov 6 roadmap (kept in `docs/archive/ROADMAP-2026-11-06.md`).
 
 ## What SLAM is now
 
@@ -91,6 +91,26 @@ after Run 1.
 | For coaches and planners (client plans, one page, tax depth) | On main | pro.html | Walked in practice mode with the handoff (Run 4). Blocked on a person: a real planner using it while someone watches. | M |
 | Life Transitions (turn panic into a number) | Partly on main | ladder.html, js/math/transitions.js | ladder.html, If the pay stopped, what would I use first? is built: the ladder in order, what each rung costs, the month it runs out. Not on the page yet: unemployment, family help, side income, a card, tripwires and Plan B (they are in the coach app). | M |
 | Aliyah Math (US vs Israel) | Built, working tree (Nov 24 2026) | aliyah.html, js/solo/aliyah.js, js/math/aliyah.js, data/sources/israel-2026.json | aliyah.html, US vs Israel: what does the move do to my money? One month in both countries in D.A.I.T.E. order (Food, Accommodation, Transportation first, a kosher toggle), five ways to earn by taps, Israeli income tax (2026 bands, credit points, the new immigrant schedule, the 0% rate and its ceilings, the 10-year foreign income exemption) and salaried National Insurance from the dated file, the US side from js/math/income.js. Every starting amount is a Guess shown faded; every row shows its math; in the second engine (ilTax, aliyah). Not priced, typed by the person and listed on the page: the US return of a citizen living in Israel (exclusion against credit, totalization), National Insurance for the self-employed and for pay from abroad, arnona, health add-ons, Israeli credit points for children, what kosher adds, and what things cost in Israel (Eli's figures). No exchange rate is filled in: there is no rate rule yet. Marked "confirm" in the data and still to be read at the Tax Authority: the top band, the surtax rate, the 0% ceilings and end date, the resident's points for a man. | M |
+
+### Run: Not built, groups 1 to 5 (Nov 25 to 26 2026)
+
+Eleven parts from Eli's list of tools that were not built anywhere. Details: STATUS.md (the run's table), PROGRESS.md,
+QUESTIONS.md 581 to 625.
+
+| Tool or job | Status | Where it lives | What is left, and what done means | Size |
+|---|---|---|---|---|
+| Recalculating and the Mistake audit (Part 1) | Done | Home, Budget, Debt, Report › History; the game's Home, Money tab, menu | Left: a Recalculating card on the small pages of one.html; the creditor scripts wait for Eli's read (`RC_SCRIPTS_REVIEWED`). | M |
+| Quick calculators (Part 2) | Done, one item not built | 18 pages on one.html ("Eighteen quick calculators"); 6 cards in the game's Quick math | Not built: the $30k/$90k rule (what is it?), unemployment outside New York, typical costs for kids, pets and apartments. | M |
+| Lifestyle creep and enough (Part 3) | Done | Budget, Plan › Goals, the More menu (Rough numbers); the game's menu | One engine (`js/math/enough.js`), shared with run 1 Part 8. | M |
+| Eli's frameworks and the canon (Part 4) | Done | one.html "Five frameworks"; Home's next dollar; Plan › FOO; the game's Famous money ideas, YMOYL, Quick wins | Left: YMOYL as one web page, time buckets and Second Mouse in the web app; YMOYL step 3 waits for run 1 Part 21. | M |
+| Gig and self-employed (Part 5) | Done | one.html "Working for yourself"; the game's Working for yourself | The game has no tax engine: retirement, the engine's set-aside and the apps are web only. | M |
+| LGBTQ+ money tools (Part 6) | Done (web app) | one.html "LGBTQ+ money tools, private" (10 pages) | Not in the game until a coach-hidden area exists. Costs no official page gives are typed by the person. | M |
+| Hard moments (Part 7) | Done | one.html "Hard moments" (8 pages); the game's Hard moments | Every phone number dated in `data/sources/hard-2026.json`; Eli to open each once. | M |
+| Family (Part 8) | Done, data waits | one.html "Family money"; Plan › Goals (Yeshiva tuition); the game's Family money | The community presets (`data/community-tuition.json`) and childcare outside New York wait for sources. | M |
+| Ratios on Key numbers (Part 9) | Done | Report › Overview › Ratios; the game's Key numbers | Tax drag in neither app; four home ratios and the healthcare reserve not in the game. | M |
+| The game: Quest mode and the second half (Part 10a, 10b) | Done, two switches off | The game's menu (Games and quizzes, People and home, Settings) | Guilds between accounts: SQL NOT APPLIED. Passkeys: built and off (`docs/PASSKEYS.md`). No Home tile yet (Home was rebuilt in parallel). | L |
+| Quiz engine, many skins (Part 11) | Done | quiz.html "More quizzes"; the game's Me › Quizzes | How to add a skin: `docs/QUIZ-ENGINE.md`. | M |
+| END: tests, layout check, Krug walk | Done Nov 26 2026 | STATUS.md (the END line) | The layout tool runs whole again (it waited 30 s on each hidden chip). | S |
 
 ### Alongside the runs: testing
 

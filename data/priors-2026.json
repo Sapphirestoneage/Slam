@@ -48,6 +48,13 @@
    "publisher": "U.S. Census Bureau",
    "link": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
    "released": "2026-09"
+  },
+  "bea202609": {
+   "name": "Personal Income and Outlays, September 2026 (news release)",
+   "publisher": "Bureau of Economic Analysis",
+   "link": "https://www.bea.gov/news/2026/personal-income-and-outlays-september-2026",
+   "released": "2026-10-29",
+   "read": "read through a web search on Nov 26 2026 (bea.gov was not reachable from the session); the October 2026 release was not checked"
   }
  },
  "rows": [
@@ -2469,6 +2476,19 @@
    "link": "https://www.census.gov/library/publications/2026/demo/p60-289.html",
    "year": 2025,
    "among": "all households"
+  },
+  {
+   "field": "savingRate",
+   "band": "all ages",
+   "ages": null,
+   "who": "The whole country",
+   "share": 0.038,
+   "unit": "rate",
+   "source": "bea202609",
+   "table": "personal saving as a percentage of disposable personal income",
+   "link": "https://www.bea.gov/news/2026/personal-income-and-outlays-september-2026",
+   "year": 2026,
+   "period": "September 2026"
   }
  ],
  "place": [
@@ -2512,7 +2532,9 @@
   "Household income by age (Census H-10 and its percentiles): Secondary",
   "Average card debt by generation (Experian) and student loans by age (FSA portfolio by age: only an xls, portfolio-by-age.xls on data.ed.gov, batch 54): Secondary",
   "CE one-person households by age: no published cross-table; the one-person row is scaled by the age band's ratio to all ages (QUESTIONS 336, batch 46)",
-  "CE all consumer units, shelter and utilities for 2024: not in the release's Table A; those two categories use the totals for the age ratio (batch 54)"
+  "CE all consumer units, shelter and utilities for 2024: not in the release's Table A; those two categories use the totals for the age ratio (batch 54)",
+  "Savings rate by age: no dated official table reachable (run Finish everything partly built, Part 9); the BEA personal saving rate is the whole country's",
+  "Household income percentiles by age (Census HINC-02 for 2025): census.gov not reachable from the session and the secondary figures disagree (run Finish everything partly built, Part 9)"
  ],
  "shapes": [
   {
