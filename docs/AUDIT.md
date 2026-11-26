@@ -48,6 +48,12 @@ point and cash next to redeem, a group split in whole cents checked against each
 line among the people in on it) and adding up to the whole, and the six stages of the journey with the trip taken from
 cash first, then investments).
 
+Since Nov 25 2026 (run Not built, groups 1 to 5, Part 7) it also covers the hard moments (`js/math/hard.js` and
+`js/math/hardplan.js`, M8H): a roommate leaving, with each share worked out by hand (room size, income or equal), the
+person leaving paying the months agreed and the people staying taking the whole rent after, the whole lease paid and the
+deposit back by the rent shares; and untangling after a breakup, item by item (who keeps it, what is open, the debts
+still in both names), with money that waits as months of spending.
+
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 5) it also covers gig and self-employed work (`js/math/gig.js`
 and `js/math/gigplan.js`, M8G): the price floor's profit checked by giving back the need through the second engine's
 own tax, and the floor an hour and a job from their definitions; the set-aside with the profit stacked on a job's pay

@@ -13,6 +13,7 @@
                ux.js). Menu: "Break in case of emergency".
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, features/drills.js (ldOf, fdBase),
                features/kit.js.
+   USES LATER  features/hard.js (trHardRow: the row Other hard moments), behind a typeof test.
    RULES       The player sees plain labels. With the gamer switch, each slot shows its game word next
                to the plain word (Economic / Money, Military / Time, Diplomatic / People, Wildcard /
                Flex). Unemployment pay has no typical value: the amount is different in each state, so
@@ -308,6 +309,7 @@ function trSheet() {
           : "";
       })();
   }
+  if (typeof trHardRow === "function") body += trHardRow(); /* hard.js: the other hard moments */
   return top + body;
 }
 /* Part of goalsTab() in ux.js. Adds the row "Break in case of emergency" at the end of My Goals. */
