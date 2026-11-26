@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 163. Lines: 99,550. Top-level functions: 2356. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 163. Lines: 99,566. Top-level functions: 2357. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -172,7 +172,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 158 | `features/canon.js` | 961 | 12 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
 | 159 | `features/enough.js` | 350 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
 | 160 | `features/book.js` | 612 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 161 | `features/questlog.js` | 531 | 29 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 161 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 162 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
 | 163 | `features/built.js` | 1,393 | 4 | 11 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
