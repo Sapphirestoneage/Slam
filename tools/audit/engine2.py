@@ -871,6 +871,58 @@ def gig_check(fn, x, o, ck, law):
         ck('pay to you', o['owner'], x['income'] * P['owner'] if tot <= 1 + 1e-9 else None); ck('no place yet', o['left'], x['income'] * (1 - tot) if tot <= 1 + 1e-9 else None)
 
 
+def quest_check(fn, x, o, ck):
+    """Quest mode (M8Z), worked out again from the rules as written in words (QS_RULES)."""
+    clamp = lambda v, lo, hi: max(lo, min(hi, v))
+    js_round = lambda v: math.floor(v + 0.5)  # Math.round
+    score = lambda h, f: None if f is None or f <= 0 or h is None else int(js_round(clamp(h / f * 100, 0, 100)))
+    if fn == 'qsStats':
+        months = x['cash'] / x['spend'] if x['spend'] > 0 else None
+        ck('health', o['health'], score(months, x['target']), 0); ck('armor', o['armor'], score(x['protDone'], x['protMax']), 0)
+        S = o['stats']; rate = (x['take'] - x['spend']) / x['take']
+        ck('margin', S['margin'], score(max(0, rate), 0.5), 0)
+        ck('reach', S['reach'], score(max(0, x['nw'] / x['fi']), 1), 0)
+        ck('lightness', S['light'], int(js_round(100 * (1 - min(1, x['hiDebt'] / (x['take'] * 12))))), 0)
+        ck('coast', S['coast'], score(x['inv'] / x['coast'], 1), 0); ck('clarity', S['clarity'], score(x['sharp'], x['sharpOf']), 0); ck('rhythm', S['rhythm'], score(x['streak'], 12), 0)
+    elif fn == 'qsCapacity':
+        free = x['take'] - x['spend']; share = free / x['take']
+        n = 0 if free <= 0 else 1 if share < 0.05 else 2 if share < 0.15 else 3
+        if n > 1 and x['cushionMonths'] is not None and x['cushionMonths'] < 1: n = 1
+        if x['plate'] == 'full' and n > 0: n -= 1
+        if x['felt'] == 'less' and n > 0: n -= 1
+        if x['felt'] == 'more' and free > 0 and n < 3: n += 1
+        ck('steps', o['slots'], n, 0)
+    elif fn == 'qsFails':
+        sp = x['spend']; months = x['cash'] / sp; rooms = [('paycheck', months / 3)]
+        rate = (x['take'] - sp) / x['take']; rooms.append(('margin', 0 if rate <= 0 else rate / 0.1))
+        if x['hiDebt'] > 0: rooms.append(('debt', 1 - min(1, x['hiDebt'] / (x['take'] * 12))))
+        if x['incomes'] == 1 and 3 <= months < 6: rooms.append(('oneIncome', months / 6))
+        if x['protDone'] < x['protMax']: rooms.append(('cover', (1 + x['protDone'] / x['protMax']) / 2))
+        if x['lowGap'] > 0: rooms.append(('bumpy', x['cash'] / (x['lowGap'] * 3)))
+        weak = sorted([r for r in rooms if r[1] < 1], key=lambda r: r[1])
+        ck('how many weak spots', len(o['order']), len(weak), 0)
+        for i, (k, room) in enumerate(weak):
+            if i < len(o['rooms']): ck(f'room of spot {i + 1}', o['rooms'][i], room, 1e-9)
+    elif fn == 'qsHidden':
+        known = [i for i in x['items'] if i['year'] is not None and i['year'] > 0]
+        tot = sum(i['year'] for i in known) if known else None
+        ck('a year in all', o['total'], tot, 1e-9)
+        day = x['spend'] * 12 / 365 if x['spend'] else None
+        ck('days of spending', o['days'], None if tot is None or not day else tot / day, 1e-9)
+    elif fn == 'qsRank':
+        rows = [r for r in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'priors-2026.json')))['rows'] if r['field'] == 'netWorth']
+        band = next((r for r in rows if r.get('ages') and (r['ages'][0] is None or x['age'] >= r['ages'][0]) and (r['ages'][1] is None or x['age'] <= r['ages'][1])), None)
+        allr = next(r for r in rows if r['band'] == 'all ages')
+        m = band['median']; nw = x['nw']
+        ck('the middle', o['median'], m, 0)
+        ck('where', o['where'] == ('below' if nw < m * 0.9 else 'above' if nw > m * 1.1 else 'near'), True)
+        ck('quarter', o['quarter'], 1 if nw < allr['p25'] else 2 if nw < allr['median'] else 3 if nw < allr['p75'] else 4, 0)
+    elif fn == 'qsDuel':
+        P = x['pull'] in x['values']; T = x['test'] in x['values']
+        want = (x['choice'] != 'no') if P and not T else (x['choice'] != 'yes') if T and not P else True
+        ck('beaten', o['beaten'], want)
+
+
 def family_check(fn, x, o, ck):
     """Family money (M8F), worked out month by month instead of by stretches and formulas."""
     if fn == 'fmSandwich':
@@ -1465,6 +1517,8 @@ def run(cases, ref, il=None):
             gig_check(fn, x, o, ck, law)
         elif fn in ('fmSandwich', 'fmBoomerang', 'fmTuition'):
             family_check(fn, x, o, ck)
+        elif fn in ('qsStats', 'qsCapacity', 'qsFails', 'qsHidden', 'qsRank', 'qsDuel'):
+            quest_check(fn, x, o, ck)
         elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':

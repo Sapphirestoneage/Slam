@@ -13,7 +13,7 @@
    OUTPUT      Functions: sngData, sngSt, sngRead, sngSeen, snSheet, snCheckSheet, snAfterLog, snCardRow,
                and Part 2: sngVoice (the add-on hook, SNG_VOICE), sngCard, sngFrame, sngFrameTile,
                sngCardPart, snShareSheet, sngPlainCard, sngRetakePart, sngHist, sngGrowthPart,
-               sngMates, sngCouplePart, snDateSheet, sngGradStory (for the graduation story, not built).
+               sngMates, sngCouplePart, snDateSheet, sngGradStory (for the graduation story, features/quest.js).
                Parts of functions in other files: snAfterLog (the action fsave in ui.js), snCardRow
                (qzSheet in quizzes.js), rvSheetSins (rvSheet in reveal.js), snRetakeNudge (questNudge
                in questlog.js), snHistKeep and snRetakeKeep (the actions qzans and qzagain in
@@ -449,8 +449,8 @@ function snRetakeKeep(c, id) {
   const st = sngSt(c);
   return snRetake(st, sngRead(c).read);
 }
-/* The graduation story is not built yet (game/features/built.js: "Graduating: a win state and your story"). It will
-   call this for the part the read gives: where the player started, how the pull moved, what the defenses did. */
+/* The graduation story (features/quest.js, qgGrad) calls this for the part the read gives: where the player started,
+   how the pull moved, what the defenses did. It shows only when the player turns on "Show my read". */
 function sngGradStory(c) {
   const st = c && c.x && c.x.qz && c.x.qz.sins;
   return st && sngSeen(c) ? snGradStory(qzSkin("sins"), { ...(st.sn || {}), hist: sngHist(c) }) : [];

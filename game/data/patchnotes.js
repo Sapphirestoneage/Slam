@@ -363,7 +363,8 @@ const PATCH_NOTES = [
       "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
       "In the web app the same ratios are on Report, Overview, under Ratios.",
     ],
-  },  {
+  },
+  {
     d: "2026-11-26",
     t: "LGBTQ+ money tools, private by default",
     l: [
@@ -372,6 +373,17 @@ const PATCH_NOTES = [
       "Two jobs side by side with benefits in dollars, an emergency fund for a longer job search, and a runway without family help.",
       "What each side costs you, in your own numbers. Growing your family, care later in life, and a chosen-family summary for a lawyer.",
       "Nothing on these pages is kept unless you turn on Keep this. The tab shows a plain title, and Leave this page opens a weather page.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Quest mode",
+    l: [
+      "Menu has Quest mode (also on your character sheet): health, armor and six stats, each from your own numbers with its math.",
+      "How much you can take on right now, the weak spots of your plan, and the three moves that stop them.",
+      "Hidden costs your life charges you, and where you think you rank next to where you are.",
+      "Opponents that test your values, a judge that keeps a record you can challenge, and questions answered from your plan.",
+      "Path packs through the skills, and graduating: pick your finish line and read your story so far.",
     ],
   },
   {

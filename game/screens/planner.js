@@ -857,7 +857,7 @@ const MENU_GROUPS = [
     ["quick", "gig", "sign", "owed", "taxv", "cover", "mix", "study", "lever", "mult", "xray", "acwhy", "nxa"],
   ],
   ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew"]],
-  ["games", "🎲", "Games and quizzes", ["qz", "galaxy"]],
+  ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode"]],
   ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
   ["admin", "🛠️", "Admin", ["built", "testkit"], "admin"],
