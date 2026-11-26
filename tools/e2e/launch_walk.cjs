@@ -114,14 +114,16 @@ async function setup(page, tap, step) {
       }
       const all = vis.find(b => /^That's all$/.test(b.innerText.trim()));
       if (all) return mark(all, "That's all");
-      const nx = vis.find(b => b.dataset.a === 'wnext');
+      // the spiral (game/features/spiral.js) moves on with spnext and spgo between the rounds
+      const nx = vis.find(b => ['wnext', 'spnext', 'spgo'].includes(b.dataset.a));
       return nx ? mark(nx, 'Next') : 'STUCK';
     }, WANT);
     if (pick === 'STUCK') { chk('the setup always has a next tap', false); break; }
     await tap('#ov [data-robot="1"]');
     taps++;
     await page.evaluate(() => document.querySelectorAll('[data-robot]').forEach(b => b.removeAttribute('data-robot')));
-    if (pick === 'Next') await page.waitForTimeout(650);
+    // the game ignores a second Next that comes at once, and an answer draws the next question after a moment
+    await page.waitForTimeout(650);
   }
   return taps;
 }
@@ -189,7 +191,11 @@ async function setup(page, tap, step) {
     // The Menu rows
     for (const [row, want] of [["What's new", /What's new/], ['Share SLAM', /ref=/], ['Privacy', null], ['Export', /Excel or Google Sheets/], ['Am I okay?', /From your taps/]]) {
       await tap('[data-a=menu]');
-      const btn = page.locator('#ov .menurow', { hasText: row }).first();
+      // the Menu is in groups (UX pass, phase 2): the robot finds the row with "Find a tool", as a person can
+      await page.waitForTimeout(400);
+      await page.locator('#ov #mnfind').fill(row);
+      await page.waitForTimeout(400);
+      const btn = page.locator('#ov #mnres .menurow', { hasText: row }).first();
       const there = await btn.count();
       chk(`${tag}: the Menu has the row "${row}"`, there > 0);
       if (!there) { await page.evaluate(() => closeSheet()); continue; }
