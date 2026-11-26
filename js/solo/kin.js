@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The chosen-family summary page (kin.html, run Not built, groups 1 to 5, Part 6): who decides, who hears, who
 // handles money and who gets what, in plain English for a lawyer. Private like the other Your own path pages: nothing
-// is kept unless the person taps Keep (js/solo/shell.js). The words are built by js/kin.js; this page only asks and shows.
-import { boot, h, btn, foot, keepCard } from './shell.js';
+// is kept unless the person turns on Keep this (js/solo/private.js, boot's private mode). The words are built by js/kin.js; this page only asks and shows.
+import { boot, h, btn, foot } from './shell.js';
+import { keepCard, withExit } from './private.js';
 import { KIN_SECTIONS, kinSummaryOf } from '../kin.js';
 import { sourcesCard } from './ownpath.js';
 import { OP_KIN_RULES } from '../ownpath-sources.js';
 
 const $ = id => document.getElementById(id);
 function draw(api) {
-  foot(); const step = $('step'); if (step) step.style.display = 'none';
+  foot();
   const k = (s, b) => `kin_${s}.${b}`, mine = () => api.mine();
   const answers = () => Object.fromEntries(KIN_SECTIONS.flatMap(s => s.boxes.map(b => [`${s.key}.${b.key}`, mine()[k(s.key, b.key)] ?? b.start ?? ''])));
   const out = h('span.st-small', { role: 'status', style: { marginLeft: '8px' } }, '');
@@ -29,5 +30,6 @@ function draw(api) {
   $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'Chosen family'), h('h1', {}, 'Who decides for me, and who gets what?'),
     h('p', { style: { marginBottom: 0 } }, 'The law\'s default list is family by blood or marriage. Write down your people in plain words, and take the summary to a lawyer to make it real.')),
   ...inputs, card, sourcesCard('Why the papers matter, in the rules\' words', OP_KIN_RULES, 'kinrules'), keepCard(api));
+  withExit({ neutral: true });
 }
 boot('kin', draw, { private: true });

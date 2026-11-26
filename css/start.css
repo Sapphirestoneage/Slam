@@ -496,3 +496,6 @@ button.st-hubcard { width: 100%; text-align: left; font: inherit; cursor: pointe
 .hb-years th, .hb-years td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--line, rgba(0, 0, 0, .12)); vertical-align: bottom; }
 .hb-years th:first-child { text-align: left; }
 .hb-years thead th { font-weight: 600; white-space: normal; }
+/* Hard moments (run Not built, Part 7): Leave this page, always in the same place at the top right */
+.st-top .st-exit { background: #fff; color: var(--primary-dark); border: 2px solid #fff; min-height: 44px; white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 520px) { .st-top:has(.st-exit) .st-solostep { display: none; } .st-top:has(.st-exit) .st-brand { white-space: normal; line-height: 1.15; } }

@@ -951,7 +951,7 @@ const WB = [
     "LGBTQ+ money tools: care costs, ID papers, the plan check, chosen family",
     "n",
     null,
-    "Not ported, by choice for now. They live in the web app, where nothing is kept unless you tap Keep. A game profile is kept and a coach can see it.",
+    "Not ported, by choice for now. They live in the web app, where nothing is kept unless you turn on Keep this. A game profile is kept and a coach can see it.",
     null,
   ],
   [
@@ -1225,6 +1225,24 @@ const WB = [
       typeof EN_CPI === "object",
     "Each category of your money log, this year next to last year and next to your income, with the lines that grow faster than prices (the CPI figure or your own rate) and one quiet Recalculating card. The few lines that make 80% of your spending. Your enough number with room for error. Rough numbers shows ranges in place of exact amounts, one switch on Me.",
     "enough",
+  ],
+  [
+    "plan",
+    "Hard moments: a breakup, a roommate leaving, a death, a partner who died, medical bills, saying no to lending, a fire, a flood or an eviction, a private money plan",
+    "b",
+    () =>
+      WB_HAS("hard") &&
+      WB_HAS("hmkeep") &&
+      WB_HAS("hmexit") &&
+      WB_FN("hmUntangle") &&
+      WB_FN("hmRoommateExit") &&
+      WB_FN("hmChecklist") &&
+      WB_FN("hmFill") &&
+      WB_FN("hmLeave") &&
+      WB_FN("trHardRow") &&
+      typeof HM_REF === "object",
+    "Calm steps by when they are due, words to copy with your own numbers, and a dated list of who can help for each one. Untangling shows what each of you ends up with and the debts still in both names; a roommate leaving runs on the same split as sharing costs. Nothing is kept unless you turn on Keep this, a coach sees it only if you let them, and Leave this page goes to a weather site at once (or press Shift three times).",
+    "hard",
   ],
   [
     "see",

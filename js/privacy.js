@@ -18,6 +18,7 @@ import { platformOf } from './math/earnings.js';
 import { CONTROL_KEYS } from './math/control.js';
 import { sharedExercises } from './exercises/calm-letter.js';
 import { sharedLenses, lensesForOthers } from './quiz/store.js';
+import { hardForAudience } from './hard.js';
 
 export const SEEN = LISTS.privacy.seen;
 export const SHARE_NAMES = LISTS.privacy.shareNames;
@@ -135,6 +136,9 @@ export function foldDoc(doc, aud, ref = null) {
     // (Part 2: a partner's own read, 'sinsPartner', is theirs in their own view; each read follows its own switch)
     const own = aud.who !== 'client' ? null : !aud.couple || aud.person === 'Me' ? 'sins' : aud.person === 'Partner' ? 'sinsPartner' : null, start = out.settings?.start, kept = lensesForOthers(start, own);
     if (kept !== start) out = { ...out, settings: { ...out.settings, start: kept } };
+    // the hard-moment tools (js/hard.js): the person's own; a coach sees one only when the person turned that on
+    const hard = hardForAudience(out.settings, aud);
+    if (hard !== out.settings) out = { ...out, settings: hard };
     return controlSeen(aud) ? out : withoutControl(out);
   }
   const { privateNotes, feedback, timer, ...session } = doc.session || {};
@@ -143,6 +147,7 @@ export function foldDoc(doc, aud, ref = null) {
   if (settings.recalc?.audit) settings.recalc = { ...settings.recalc, audit: null }; // the opt-in audit that looks back is the person's own
   if (settings.start?.lenses) settings.start = { ...settings.start, lenses: sharedLenses(settings.start.lenses) }; // a quiz result marked Me only (the default) stays home
   if (settings.exercises) settings.exercises = sharedExercises(settings.exercises); // an exercise answer marked Me only (the letter from your calm self) stays home
+  delete settings.hard; // the hard-moment tools never leave in anything shared (js/hard.js)
   // Batch 55: a snapshot keeps a copy of every row, so a shared copy folds those too (a private row by its neutral name).
   const snapshots = (doc.snapshots || []).map(sn => (sn.records ? { ...sn, records: sn.records.filter(r => !rowLeftOut(r, aud, mode)).map(r => (rowHidden(r, aud, mode) ? foldRecord(r, ref, { share: true }) : { ...r, notes: notesHidden(r, aud, mode) ? null : r.notes, privateNote: null })) } : sn));
   return withoutControl({ ...doc, records, session, spending, settings, parking: [], sharedCopy: true, snapshots,

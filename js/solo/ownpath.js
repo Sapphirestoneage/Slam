@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Your own path (run Not built, groups 1 to 5, Part 6): nine small private pages drawn by the one renderer
 // (js/solo/calc.js), plus the chosen-family summary (js/solo/kin.js, its own page because it holds names).
-// Every page is private (spec.private): nothing is kept unless the person taps Keep, the tab title is neutral, and a
-// Leave page button sits in the top bar (js/solo/shell.js). The math is in js/math/ownpath.js (M8P) with tests;
+// Every page is private (spec.private, boot's private mode shared with the hard moments): nothing is kept unless the
+// person turns on Keep this, the tab title is neutral, and Leave this page sits in the top bar (js/solo/private.js). The math is in js/math/ownpath.js (M8P) with tests;
 // the dated fees in data/reference-2026.json; the dated resource lists in js/ownpath-sources.js. No cost here is a
 // guess: a box for a cost has no amounts to tap and asks for the person's own quote.
 import { h, money } from './shell.js';
+import { keepCard, withExit } from './private.js';
 import { opTransitionOf, opPapersOf, opTwoSidesOf, opPackageOf, opOwnWayOf, opSearchFundOf, opPlanCheckOf, opFamilyOf, opAgeCareOf, OP_CHECKS } from '../math/ownpath.js';
 import { HAVE } from '../benefits.js';
 import { money as moneyOf } from '../format.js';
@@ -24,7 +25,7 @@ export function sourcesCard(title, list, id = null) {
     h('ul.st-list', {}, list.map(r => h('li', {}, h('span.dot', {}, ''), h('span', { style: { minWidth: 0, overflowWrap: 'anywhere' } }, r.who ?? r.name, h('small', {}, r.said || r.what), r.phone ? h('small', { style: { fontWeight: 700 } }, r.phone) : null, h('small', {}, r.where)))))));
 }
 const saveRow = S => (S?.ready && S.left > 0 ? [['Still to find', S.saved ? `after the ${money(S.saved)} saved` : null, big(S.left)], ...(S.months != null ? [['At your monthly amount', `${money(S.monthly)} a month`, months(S.months)]] : [])] : S?.there ? [['Saved already covers it', null, 'already there']] : []);
-const PRIVATE_FOLD = ['What this page keeps', 'Nothing, unless you tap Keep at the bottom. The answers stay in this open page only: not in the address, not on the device, not with a coach or a shared plan. Leave page, at the top, opens a weather page in this tab.'];
+const PRIVATE_FOLD = ['What this page keeps', 'Nothing, unless you turn on Keep this at the bottom. The answers stay in this open page only: not in the address, not on the device, not with a coach or a shared plan. Kept, a coach sees it only if you let them, and a partner\'s view and anything shared never do. Leave this page, at the top (or Shift three times), opens a weather page in this tab.'];
 
 const STEP_WORDS = { court: 'The court petition', orderCopies: 'Certified copies of the court order', birth: 'The birth certificate', ssa: 'Social Security card', dmv: 'Driver license or ID', passport: 'Passport', other: 'Anything else you added' };
 const STEP_SMALL = { court: { nyc: 'NYC Civil Court', ny: 'Supreme or County Court, New York State', other: 'your state\'s court, your number' }, orderCopies: 'the county clerk sets this fee: your number', ssa: 'a new card with the new name', other: 'your number' };
@@ -50,7 +51,7 @@ const CHECK = {
 };
 export const OWN_SPECS = {
   carecost: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What would my care cost me?', why: 'Your quotes, your plan\'s deductible and share, and any help from a fund. It shows what the plan pays, what is yours, and how long saving for it takes.',
     fields: [{ key: 'covered', label: 'Quotes for care your plan covers', picks: [], help: QUOTE },
       { key: 'coinsurance', label: 'Your share after the deductible', options: [0, 0.1, 0.2, 0.3, 0.4, 0.5].map(v => [pct(v), v]), help: 'Coinsurance, on your plan\'s summary of benefits.' },
@@ -66,7 +67,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('Help paying for care', OP_CARE_HELP, 'carehelp'), sourcesCard('What the rules say about plans', OP_PLAN_RULES)],
   },
   idpapers: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What does changing my name and marker cost?', why: 'Each step, who sets it, and its fee. New York first: the court, the birth certificate, Social Security, the DMV and the passport.',
     fields: [{ key: 'court', label: 'Where you file', options: [['New York City', 'nyc'], ['New York, outside the city', 'ny'], ['Another state', 'other']] },
       { key: 'courtFee', label: 'Your state\'s court fee', picks: [], when: v => v.court === 'other', help: 'From your court\'s own page. The other states\' fees are not in here yet.' },
@@ -85,7 +86,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('Who sets each step, in their own words', OP_PAPERS_RULES, 'papersrules'), sourcesCard('Help paying for it', OP_CARE_HELP.filter(o => /Microgrants/.test(o.name)))],
   },
   twosides: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What does each side cost me?', why: 'Only your numbers: what staying quiet costs you, next to what being out could cost you. Money is one side of this; the timing and the choice are yours.',
     fields: [{ key: 'quietMonthly', label: 'What staying quiet costs you a month', picks: [], help: 'A second phone, a place to be yourself, travel to see people, things paid in cash so nobody sees, care paid outside insurance. $0 is an answer.' },
       { key: 'quietOnce', label: 'And once', picks: [], start: 0, optional: true },
@@ -99,7 +100,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('People to talk to', OP_TALK)],
   },
   package: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What is my whole package worth?', why: 'An inclusive employer\'s benefits are money too. Put both jobs side by side, pay and benefits in dollars, before a move.',
     fields: [{ key: 'payNow', label: 'Pay now, a year before taxes', picks: [40000, 60000, 80000, 100000, 150000] },
       { key: 'healthNow', label: 'What your employer pays toward your health cover, a month', picks: [], start: 0, optional: true, help: 'On your benefits statement or pay stub.' },
@@ -120,7 +121,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('What the rules say about plans', OP_PLAN_RULES)],
   },
   ownway: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'How long could I stand on my own?', why: 'If family money stopped, how many months your own money carries you, and a quiet Plan B. The timing stays yours.',
     fields: [{ key: 'cash', label: 'Money you control yourself', picks: [0, 500, 1000, 2500, 5000], help: 'In an account only you can see or reach.' },
       { key: 'ownCosts', label: 'What life would cost you a month, paid by you alone', picks: [], help: 'Rent, food, phone, insurance, school, getting around. Your own numbers.' },
@@ -136,7 +137,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('What the rules say', OP_OWN_RULES), sourcesCard('People to talk to', OP_TALK, 'talk')],
   },
   searchfund: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'How big an emergency fund, for a longer search?', why: 'The usual target, with the extra months you add because a job search can take you longer. How many is yours to set.',
     fields: [{ key: 'age', label: 'Your age', options: AGES.map(a => [String(a), a]) }, { key: 'spending', plan: 'spending', label: 'What you spend in a month, all in', picks: [2000, 3000, 4000, 5000, 6500] },
       { key: 'cash', label: 'Cash set aside for emergencies', picks: [0, 1000, 5000, 10000, 20000], optional: true },
@@ -147,7 +148,7 @@ export const OWN_SPECS = {
       fold: [['Where the target comes from', 'The whole plan uses the Rule of 5 for the big emergency fund: your age divided by 5, in months of spending. This page adds the months you choose on top, and the rest of the plan is unchanged.'], PRIVATE_FOLD] }),
   },
   plancheck: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'Does this health plan cover transition care?', why: 'Eight things to look for in a plan, tapped as you find them. What is left is your list of questions for HR or the insurer.',
     fields: OP_CHECKS.map(k => ({ key: k, label: CHECK[k][0], options: HAVE.map(a => [a, a]), optional: true, help: CHECK[k][2] ?? null })),
     waiting: 'Tap an answer above and your list builds here.',
@@ -157,7 +158,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('Where this list comes from', OP_PLAN_RULES)],
   },
   family: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What would growing our family cost?', why: 'IVF, surrogacy, adoption or fostering, on your quotes: what insurance and an employer pay, the adoption credit, and the months to save.',
     fields: [{ key: 'path', label: 'The path', options: [['IVF', 'ivf'], ['Surrogacy', 'surrogacy'], ['Adoption', 'adoption'], ['Fostering', 'foster']] },
       { key: 'cost', label: 'The whole cost from your quotes', picks: [], help: 'Clinic or agency, legal fees, medicine, travel. ' + QUOTE },
@@ -171,7 +172,7 @@ export const OWN_SPECS = {
     more: () => [sourcesCard('What the rules say', OP_FAMILY_RULES)],
   },
   agecare: {
-    private: true,
+    private: true, keep: keepCard, drawn: () => withExit({ neutral: true }),
     title: 'What could care later in life cost me?', why: 'A month of care for some years, less what cover pays, in today\'s dollars, and what to set aside each month to have it.',
     fields: [{ key: 'monthly', label: 'Care a month, from a quote', picks: [], help: 'Home care, assisted living or a nursing home near you. ' + QUOTE },
       { key: 'years', label: 'For how many years', options: [1, 2, 3, 5, 10].map(n => [String(n), n]) },

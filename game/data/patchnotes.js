@@ -292,6 +292,16 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-25",
+    t: "Hard moments",
+    l: [
+      "Eight calm tools: untangling after a breakup, a roommate moving out, the first 90 days after a death, when a partner has died, medical bills, saying no to lending, and a fire, flood or eviction.",
+      "Each has steps by when they are due, words to copy with your own numbers, and who can help, checked on Nov 25, 2026 on each organization's own page.",
+      "A money plan kept private, for when someone controls the money: hotlines, quiet steps, and Leave this page, which goes to a weather site at once (or press Shift three times).",
+      "Nothing is kept unless you turn on Keep this. Kept, it stays yours: a coach sees it only if you let them.",
+    ],
+  },
+  {
+    d: "2026-11-25",
     t: "Frameworks, and your next dollar",
     l: [
       "Home starts with one line: where your next dollar goes, with the match at work included.",
@@ -319,7 +329,7 @@ const PATCH_NOTES = [
       "A name and gender marker change step by step, New York first, each fee from the office's own page.",
       "Two jobs side by side with benefits in dollars, an emergency fund for a longer job search, and a runway without family help.",
       "What each side costs you, in your own numbers. Growing your family, care later in life, and a chosen-family summary for a lawyer.",
-      "Nothing on these pages is kept unless you tap Keep. The tab shows a plain title, and Leave page opens a weather page.",
+      "Nothing on these pages is kept unless you turn on Keep this. The tab shows a plain title, and Leave this page opens a weather page.",
     ],
   },
 ];

@@ -4,23 +4,27 @@
 // spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
 // A field with `unit` is a count, not money; one with `when` shows only for some answers.
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
-import { boot, h, btn, chip, money, numBox, copyLink, foot, keepCard } from './shell.js';
+// A private spec (the hard moments, js/solo/hard.js) keeps nothing until the person turns on Keep this (boot's private
+// mode); its `keep(api)` card stands in for the link card, `first(api)` cards come before the boxes, and a spec with no
+// boxes or no run shows only its own cards.
+import { boot, h, btn, chip, money, numBox, copyLink, foot } from './shell.js';
 import { answer, onFile } from '../journey.js';
-import { pack } from '../start/link.js';
 
 const $ = id => document.getElementById(id);
 const PLAN = { takeHome: ['income', 'takeHome'], spending: ['spending', 'gut'], invested: ['invested', 'invested'] };
 export function calcPage(id, spec) {
   function draw(api) {
-    foot(); const step = $('step'); if (step) { step.textContent = api.private ? '' : 'On its own'; step.style.display = api.private ? 'none' : ''; }
+    foot(); const step = $('step'); if (step) step.textContent = 'On its own';
     const key = k => `${id}_${k}`, mem = () => api.mine();
     const get = f => (f.plan ? onFile(api.store.doc, PLAN[f.plan][0], { ref: api.ref })[PLAN[f.plan][1]] ?? null : mem()[key(f.key)] ?? f.start ?? null);
     const put = (f, v) => { if (f.plan) answer(api.store, PLAN[f.plan][0], { [PLAN[f.plan][1]]: v }); else api.remember({ [key(f.key)]: v }); };
     const values = (over = {}) => ({ ...Object.fromEntries(spec.fields.map(f => [f.key, get(f)])), ...Object.fromEntries((spec.picks || []).map(p => [p.key, mem()[key(p.key)] ?? p.start])), ...over });
     const answerCard = (over = {}) => {
+      if (!spec.run) return null;
       const V = values(over), R = spec.run(V, api.ref);
       if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'Your answer shows here'), h('p.st-soft', { style: { marginBottom: 0 } }, spec.waiting ?? 'Fill in the boxes above and it appears. Rough numbers are fine.'));
       const A = spec.answer(R, V);
+      if (!A) return null;
       return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, A.lead), h('div.st-big', {}, A.big), h('p', { style: { fontWeight: 700 } }, A.line),
         (spec.picks || []).map(p => h('div.st-field', {}, h('div.st-flabel', {}, p.label), h('div.st-chips', {}, p.options.map(([label, v]) => chip(label, V[p.key] === v, () => { api.remember({ [key(p.key)]: v }); api.render(); }))))),
         A.rows?.length ? h('ul.st-list', {}, A.rows.map(([label, small, value]) => h('li', {}, h('span.dot', {}, ''), h('span', {}, label, small ? h('small', {}, small) : null), h('span.when', {}, value)))) : null,
@@ -29,16 +33,17 @@ export function calcPage(id, spec) {
     };
     const shown = () => { const V = values(); return spec.fields.filter(f => !f.when || f.when(V)); }; // when: a field that only shows for some answers (roommates: the third room)
     let card = answerCard();
-    const set = f => (v, typing) => { put(f, v); if (!typing) return api.render(); api.save(); const fresh = answerCard({ [f.key]: v }); card.replaceWith(fresh); card = fresh; };
+    const set = f => (v, typing) => { put(f, v); if (!typing) return api.render(); api.save(); const fresh = answerCard({ [f.key]: v }); if (card && fresh) { card.replaceWith(fresh); card = fresh; } spec.typed?.(api); };
     const field = f => (f.options
       ? h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([label, v]) => chip(label, get(f) === v, () => { put(f, v); api.render(); }))), f.help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, f.help) : null)
       : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values()) : f.picks, set(f), { id: `f_${f.key}`, help: f.help, unit: f.unit }));
-    const inputs = h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
-      h('h2', { style: { marginTop: 0 } }, spec.fields.length === 1 ? 'One number' : 'A few numbers'), shown().map(field));
-    const carry = spec.private ? keepCard(api) : h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
-      h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await pack(api.store.doc)}`; }, 'slim')));
-    $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), inputs, card, ...(spec.more ? spec.more(api) : []), carry); // more: a page's own cards after the answer (home.html: buying and renting)
-    const empty = shown().find(f => !f.options && !f.optional && get(f) == null);
+    const inputs = !spec.fields.length ? null : h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
+      h('h2', { style: { marginTop: 0 } }, spec.boxes ?? (spec.fields.length === 1 ? 'One number' : 'A few numbers')), shown().map(field));
+    const carry = spec.keep ? spec.keep(api) : h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),
+      h('div.st-row', {}, copyLink(api), btn('All the steps', async () => { location.href = `one.html#/d/${await api.packed()}`; }, 'slim')));
+    $('main').replaceChildren(h('div.st-card.hero', {}, h('div.st-eyebrow', {}, spec.eyebrow ?? 'One thing, done right'), h('h1', {}, spec.title), h('p', { style: { marginBottom: 0 } }, spec.why)), ...(spec.first ? spec.first(api) : []), ...[inputs, card].filter(Boolean), ...(spec.more ? spec.more(api) : []), carry); // more: a page's own cards after the answer (home.html: buying and renting)
+    spec.drawn?.(api);
+    const empty = inputs && shown().find(f => !f.options && !f.optional && get(f) == null);
     if (empty) inputs.querySelector(`#f_${empty.key}`)?.closest('.in')?.classList.add('st-pulse');
   }
   return boot(id, draw, { private: !!spec.private });

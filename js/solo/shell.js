@@ -10,6 +10,7 @@ import { soloOf, carryUrl, SOLO } from '../solo.js';
 import { deviceAdapter, activeSpace } from '../accounts.js';
 import { cloudConfig, cloudOf } from '../cloud.js';
 import { pusher } from '../sync.js';
+import { keptOnly, hardOf, HARD_PART } from '../hard.js';
 export const device = deviceAdapter();
 // signed in: every save on the device follows to the server a beat later
 let up = null; cloudConfig().then(cfg => { const cloud = cloudOf(cfg); if (cloud?.signedIn()) up = pusher(device, cloud); }).catch(() => {});
@@ -20,13 +21,10 @@ export const btn = (label, onClick, kind = '') => h(`button.st-btn${kind ? '.' +
 export const chip = (label, on, onClick) => h('button.st-chip', { type: 'button', 'aria-pressed': on ? 'true' : 'false', onClick }, label);
 const HERE = '#/d/';
 
-// A private page (run Not built, groups 1 to 5, Part 6, the tools of Your own path): nothing is kept unless the person
-// chooses to. The answers live in the open page only: the address is not rewritten, nothing goes to the device or the
-// server, and the tab shows a neutral title. api.keep(true) turns on the usual saving for this page (the answers then
-// ride in the link and, with an account, in the plan); api.keep(false) takes this page's answers out of the plan and
-// the link again, then stops keeping. A "Leave page" button in the top bar opens a neutral site in this tab.
-export const PRIVATE_TITLE = 'Money tools: Stress Less About Money', LEAVE_TO = 'https://www.weather.gov/';
-export async function boot(id, draw, { private: priv = false } = {}) {
+// opts.private (the hard-moment pages, js/solo/hard.js): the page's answers live in settings.hard[id], and nothing is
+// written (not the address, not this device) until the person turns on Keep this; every save and every link carries
+// only the tools that are kept (keptOnly, js/hard.js), so turning it off takes the kept copy away again.
+export async function boot(id, draw, opts = {}) {
   // a page off the path (cards.html) boots the same way: the plan in the address, no next step
   const me = soloOf(id) ?? { id, title: document.title.split(':')[0].trim(), next: null }, ref = await fetch('data/reference-2026.json').then(r => r.json());
   let doc = null;
@@ -35,22 +33,18 @@ export async function boot(id, draw, { private: priv = false } = {}) {
   const acct = device.loadAccount(), space = activeSpace(acct);
   if (!doc && space) { const kept = device.loadSpace(space.id); if (kept) { try { doc = await unpack(kept); } catch { doc = null; } } }
   const store = new Store(doc ?? newHousehold({ name: 'My plan' }));
-  const mine = () => store.doc.settings?.start || {}, remember = patch => store.setDoc('settings', { start: { ...mine(), ...patch } });
-  let timer = null, packed = null, kept = !priv || mine()[`${id}_keep`] === true;
-  // the address follows the answers, a beat behind the typing (a private page: only once the person keeps them)
-  const write = async () => { packed = await pack(store.doc); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } };
-  const save = () => { if (!kept) return; clearTimeout(timer); timer = setTimeout(async () => { packed = await pack(store.doc); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } }, 250); };
-  const link = async () => { packed = await pack(store.doc); return `${location.origin}${location.pathname}${HERE}${packed}`; };
-  const nextUrl = async () => carryUrl(me.next, await pack(store.doc));
-  const keep = async on => {
-    if (on) { kept = true; remember({ [`${id}_keep`]: true }); await write(); return; }
-    const left = Object.fromEntries(Object.entries(mine()).filter(([k]) => !k.startsWith(`${id}_`)));
-    store.setDoc('settings', { start: left }); clearTimeout(timer); await write(); kept = false;
-  };
-  const api = { store, ref, me, mine, remember, save, link, nextUrl, private: priv, kept: () => kept, keep, render: () => { draw(api); save(); } };
+  const priv = !!opts.private;
+  const mine = priv ? () => hardOf(store.doc, id) : () => store.doc.settings?.start || {};
+  const remember = priv ? patch => store.setDoc('settings', { [HARD_PART]: { ...(store.doc.settings?.[HARD_PART] || {}), [id]: { ...mine(), ...patch } } }) : patch => store.setDoc('settings', { start: { ...mine(), ...patch } });
+  let timer = null, packed = null, wrote = priv && mine().keep === true; // a private page writes nothing until something is kept
+  const out = () => pack(keptOnly(store.doc));
+  // the address follows the answers, a beat behind the typing
+  const save = () => { if (priv && !wrote && mine().keep !== true) return; wrote = true; clearTimeout(timer); timer = setTimeout(async () => { packed = await out(); history.replaceState(null, '', `${location.pathname}${location.search}${HERE}${packed}`); const sp = activeSpace(device.loadAccount()); if (sp) { device.saveSpace(sp.id, packed); up?.push(sp.id); } }, 250); };
+  const link = async () => { packed = await out(); return `${location.origin}${location.pathname}${HERE}${packed}`; };
+  const nextUrl = async () => carryUrl(me.next, await out());
+  const api = { store, ref, me, mine, remember, save, link, nextUrl, packed: out, private: priv, render: () => { draw(api); save(); } };
   store.subscribe?.(() => save());
-  document.title = priv ? PRIVATE_TITLE : `${me.title}: Stress Less About Money`;
-  if (priv) { const top = document.getElementById('top'); if (top && !top.querySelector('#leave')) top.append(h('button.st-btn.slim', { type: 'button', id: 'leave', title: 'Opens a weather page in this tab', style: { whiteSpace: 'nowrap', marginLeft: 'auto' }, onClick: () => location.replace(LEAVE_TO) }, 'Leave page')); }
+  document.title = `${me.title}: Stress Less About Money`;
   api.render();
   return api;
 }
@@ -75,16 +69,8 @@ export function carryCard(api, { ready = true, pulse = true } = {}) {
   const next = btn(`Next: ${api.me.nextLabel} ›`, async () => { location.href = await api.nextUrl(); }, 'primary big');
   next.disabled = !ready; if (ready && pulse) next.classList.add('st-pulse');
   const card = h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'The next step opens with these answers already in it. Nothing to type twice.'),
-    h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), btn('All the steps', async () => { location.href = `one.html${HERE}${await pack(api.store.doc)}`; }, 'slim')));
+    h('div.st-row', {}, next), h('div.st-row', { style: { marginTop: '10px' } }, copyLink(api), btn('All the steps', async () => { location.href = `one.html${HERE}${await api.packed()}`; }, 'slim')));
   card.setReady = on => { next.disabled = !on; next.classList.toggle('st-pulse', on && pulse); };
   return card;
-}
-// The last card of a private page, in place of the link card: nothing is kept until the person taps Keep. In a plan
-// shared with a coach or a partner, the button says so before anything goes there.
-export function keepCard(api) {
-  const shared = activeSpace(device.loadAccount())?.kind === 'shared';
-  return h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Kept only if you choose'),
-    api.kept() ? [h('p.st-small', {}, `Your answers on this page are kept: they ride in this page's link${shared ? ' and in the plan you share, so the others in it can see them' : ', and with an account in your plan'}.`), h('div.st-row', {}, btn('Stop keeping them', async () => { await api.keep(false); api.render(); }, 'slim'))]
-      : [h('p.st-small', {}, 'Nothing you put on this page is kept. Close or refresh it and it is gone. It goes to no coach, partner or shared plan.'), h('div.st-row', {}, btn(shared ? 'Keep them in the shared plan' : 'Keep my answers', async () => { await api.keep(true); api.render(); }, 'slim'))]);
 }
 export const foot = () => document.getElementById('foot').replaceChildren(trustFoot('Your answers stay in your browser and in the link you choose to share.'));

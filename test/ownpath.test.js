@@ -128,7 +128,8 @@ test('the pages: private by default, a neutral title, no amounts to tap on a cos
     assert.match(page, /no-referrer/, `${id}: the address is not sent on`);
   }
   assert.equal((src.match(/private: true/g) || []).length, PAGES.length, 'every spec is private');
-  assert.match(read('js/solo/kin.js'), /boot\('kin', draw, \{ private: true \}\)/);
+  assert.equal((src.match(/private: true, keep: keepCard, drawn: \(\) => withExit\(\{ neutral: true \}\)/g) || []).length, PAGES.length, 'every spec keeps nothing until Keep this, with Leave this page and a neutral title');
+  assert.match(read('js/solo/kin.js'), /boot\('kin', draw, \{ private: true \}\)/); assert.match(read('js/solo/kin.js'), /keepCard\(api\)\);\n  withExit\(\{ neutral: true \}\);/);
   for (const key of ['covered', 'deductible', 'oopMax', 'notCovered', 'help', 'quietMonthly', 'outMonthly', 'ownCosts', 'cost', 'insurance', 'monthly\', label: \'Care'])
     assert.match(src, new RegExp(`key: '${key}[^}]*picks: \\[\\]`), `${key}: a cost box has no amounts to tap`);
   assert.doesNotMatch(src, /dysphoria|disorder|patient|should|must\b(?! cover)/i, 'plain and warm, nothing clinical, no verdict');
@@ -136,11 +137,12 @@ test('the pages: private by default, a neutral title, no amounts to tap on a cos
   if (OWN_SPECS) assert.deepEqual(Object.keys(OWN_SPECS), PAGES);
 });
 
-test('a private page keeps nothing until the person taps Keep', () => {
-  const shell = read('js/solo/shell.js');
-  assert.match(shell, /kept = !priv \|\| mine\(\)\[`\$\{id\}_keep`\] === true/, 'off by default');
-  assert.match(shell, /const save = \(\) => \{ if \(!kept\) return;/, 'no address, device or server write while not kept');
-  assert.match(shell, /document\.title = priv \? PRIVATE_TITLE/);
-  assert.match(shell, /location\.replace\(LEAVE_TO\)/, 'Leave page replaces this page in the history');
-  assert.match(shell, /startsWith\(`\$\{id\}_`\)/, 'Stop keeping takes the page\'s answers out of the plan');
+test('one private mode and one quick exit, shared with the hard moments (js/solo/private.js)', () => {
+  const shell = read('js/solo/shell.js'), priv = read('js/solo/private.js'), hard = read('js/solo/hard.js');
+  assert.match(shell, /wrote = priv && mine\(\)\.keep === true/, 'boot writes nothing until Keep this');
+  assert.match(priv, /export function keepCard/); assert.match(priv, /export function exitButton/); assert.match(priv, /location\.replace\(D\.exit\.to\)/);
+  assert.match(priv, /NEUTRAL_TITLE = 'Money tools: Stress Less About Money'/);
+  assert.match(hard, /from '\.\/private\.js'/, 'the hard moments use the same parts');
+  assert.doesNotMatch(hard, /function keepCard|function exitButton/, 'no second copy');
+  for (const f of ['js/solo/ownpath.js', 'js/solo/kin.js']) assert.doesNotMatch(read(f), /location\.replace|function keepCard/, `${f}: no copy of its own`);
 });
