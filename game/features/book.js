@@ -76,6 +76,7 @@ const BOOK_PARTS = [
   fieldsBook,
   stgBook,
   trBook,
+  ntBook,
   xrBook,
   cardsBook,
   hmBook,
@@ -83,6 +84,7 @@ const BOOK_PARTS = [
   qvBook,
   peBook,
   ivBook,
+  gxBook,
   fewerBook,
 ];
 /* The sections of the spreadsheet: { title, rows: [{ id, label, v, f, note }] }. */

@@ -53,6 +53,7 @@ export const RA_LINES = [
   { id: 'totalcomp', g: 'earn', n: 'Total comp to base', f: '(Base pay + bonus + the job\'s match) ÷ base pay, a year', s: 'What the job pays in all, for each dollar of base pay.' },
   { id: 'realwage', g: 'earn', n: 'Real wage growth', f: '(1 + income growth) ÷ (1 + price growth) − 1', s: 'How much your pay grew after prices.' },
   { id: 'replace', g: 'earn', n: 'Income replacement', f: 'Spending after work a year ÷ pay before taxes a year', s: 'The share of today\'s pay your plan needs to replace after work.' },
+  { id: 'ssreplace', g: 'grow', n: 'Social Security replacement', f: 'Social Security a year (the estimate, at the claim age) ÷ pay before taxes a year', s: 'The share of today\'s pay that Social Security would replace.' },
   { id: 'investnw', g: 'grow', n: 'Investment to net worth', f: 'Invested ÷ net worth', s: 'How much of your net worth is invested and growing.' },
   { id: 'nwincome', g: 'grow', n: 'Net worth to income', f: 'Net worth ÷ pay before taxes a year', s: 'Your net worth in years of pay.' },
   { id: 'human', g: 'grow', n: 'Human capital to financial capital', f: 'Pay before taxes until your stop age, in today\'s money at your return ÷ (cash + invested)', s: 'Your future pay next to the money you already have.' },
@@ -228,6 +229,15 @@ export function raReplacement({ spendYear = null, grossYear = null, levels = [] 
 }
 
 // ---------- wealth and later ----------
+// Social Security replacement (run Finish everything partly built, Part 14): the estimate a year (each app's own Social
+// Security estimate, at the claim age) over today's pay before taxes. On the retirement screens and in Ratios.
+export function raSsReplace({ ssYear = null, grossYear = null, claimAge = null, levels = [] } = {}) {
+  const m = raWant({ ssYear, grossYear }, { ssYear: 'a Social Security estimate', grossYear: 'your pay before taxes' });
+  if (m.length) return raNeed('ssreplace', 'pct', m);
+  const parts = [['Social Security a year' + (claimAge ? `, claimed at ${claimAge}` : ''), ssYear, 'money'], ['Pay before taxes a year', grossYear, 'money']];
+  if (!(grossYear > 0)) return raNone('ssreplace', 'pct', 'No pay coming in to compare with', parts, levels);
+  return raRes('ssreplace', ssYear / grossYear, 'pct', parts, levels, { gap: Math.max(0, grossYear - ssYear) });
+}
 export function raInvestNw({ invested = null, netWorth = null, levels = [] } = {}) {
   const m = raWant({ invested, netWorth }, { invested: 'what you have invested', netWorth: 'your net worth' });
   if (m.length) return raNeed('investnw', 'pct', m);

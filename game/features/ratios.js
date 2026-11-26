@@ -10,7 +10,7 @@
                fiSpend. knMetrics(c, d) (the income growth, the zones), knNet(c) (pay before taxes),
                spendParts(c) (fixed and variable), dbRate/dbPay (each debt's rate and payment),
                windCalc(c) (the windfall steps), enRows(c) (the money log as rows).
-   OUTPUT      Math: raGameRead, raBook. Views: knSheetRatios, raLineHtml, raShow. Actions (ACT):
+   OUTPUT      Math: raGameRead, raSsGame, raBook. Views: knSheetRatios, raLineHtml, raShow. Actions (ACT):
                raconf. Parts of functions in other files: knSheetRatios (knSheet in core/metrics.js).
    DEPENDS ON  core/ratios.js (the math, a copy of js/math/ratios.js), core/engine.js (derive, R, SWR,
                spendParts, todayISO), core/metrics.js (knMetrics, knNet, knSt, knPct), screens/ui.js
@@ -38,6 +38,21 @@ const RA_GAME_GO = {
   volatility: ["Open the money log", "mlog", ""],
   intprin: ["Fill in each debt", "debtplan", ""],
 };
+/* Social Security replacement (run Finish everything partly built, Part 14): the game's own estimate at 67
+   (passives in core/engine.js, the whole household, before the share the player counts) over the pay before
+   taxes (knNet). Null when nothing is estimated (retired, or 67 and older): the line is left out then.
+   The Ratios card and the sheet Retirement odds (odds.js) both read it. */
+function raSsGame(c) {
+  const P = passives(c),
+    N = knNet(c);
+  if (!(P.full > 0)) return null;
+  return raSsReplace({
+    ssYear: P.full * 12,
+    grossYear: N.gross * 12,
+    claimAge: 67,
+    levels: ["Guess", knSt(c.incs || [], N.row)],
+  });
+}
 /* Every ratio the game can work out, from the numbers it already has. */
 function raGameRead(c, d) {
   d = d || derive(c);
@@ -133,6 +148,7 @@ function raGameRead(c, d) {
       planAge: Math.max((c.ret || 0) + 1, c.death || 90) /* the same plan-to age as features/retire.js */,
       levels: [stInv, stSpend],
     }),
+    ssreplace: raSsGame(c),
     confidence: raConfidence({
       rating: conf,
       min: 1,
@@ -141,6 +157,7 @@ function raGameRead(c, d) {
       of: lit.length,
     }),
   };
+  if (!out.ssreplace) delete out.ssreplace;
   if (typeof windCalc === "function" && c.x && c.x.wind) {
     const w = windCalc(c);
     out.windfall = raWindfall({
@@ -260,6 +277,7 @@ function raBook(c) {
   two("ra_discretionary", "Discretionary income", A.out.discretionary, 0, 1, "=A-B");
   two("ra_side", "Side income share", A.out.side, 0, 1, "=A/B");
   two("ra_replace", "Income replacement", A.out.replace, 0, 1, "=A/B");
+  two("ra_ssreplace", "Social Security replacement", A.out.ssreplace, 0, 1, "=A/B");
   two("ra_shelter", "Tax efficiency", A.out.shelter, 0, 1, "=A/B");
   two("ra_realwage", "Real wage growth", A.out.realwage, 0, 1, "=(1+A)/(1+B)-1");
   return { title: "Ratios on Key numbers", rows };

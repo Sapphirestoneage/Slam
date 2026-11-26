@@ -928,6 +928,43 @@ def gig_check(fn, x, o, ck, law):
         ck('gap to the bank', o['gap'], sum(max(0, a['earned'] - a['fee']) - a['landed'] for a in landed) if landed else None)
         P = x['pcts']; tot = sum(P.values())
         ck('pay to you', o['owner'], x['income'] * P['owner'] if tot <= 1 + 1e-9 else None); ck('no place yet', o['left'], x['income'] * (1 - tot) if tot <= 1 + 1e-9 else None)
+    elif fn == 'gigSafeHarbor':
+        # IRS 2026 Form 1040-ES: the smaller of 90% of this year and 100% (110% over the AGI line, or not sure) of last
+        # year, less withholding, a quarter by each date; none with $0 tax last year (12 months) or under $1,000 due.
+        R, T, w, p = x['rule'], x['thisYear'], x['withheld'], x['paid']
+        full = x['lastFull'] is not False
+        share = R['prior'] if x['lastAgiOver'] is False else R['priorHigh']
+        prior = share * x['lastYear'] if x['lastYear'] is not None and full else None
+        none = 'zero' if (x['lastYear'] == 0 and x['lastYear'] is not None and full) else ('small' if T - w < R['owe'] else None)
+        req = 0 if none == 'zero' else (R['current'] * T if prior is None else min(R['current'] * T, prior))
+        need = 0 if none else max(0.0, req - w)
+        passed = sum(1 for d in x['due'] if d < x['today'])
+        by_next = need * (passed + 1) / 4 if passed < 4 else need
+        ck('safe harbor need', o['need'], need); ck('required', o['required'], req); ck('none', o['none'] == none, True)
+        ck('by now', o['byNow'], need * passed / 4); ck('to the next date', o['toNext'], max(0.0, by_next - p)); ck('to owe nothing', o['fullYear'], max(0.0, T - w - p))
+    elif fn == 'gigPayouts':
+        cyc = {'day': 1, 'week': 7, 'month': 30}
+        rows = sorted([a for a in x['apps'] if a['earned'] > 0], key=lambda a: -a['earned'])
+        tot = None
+        for i, a in enumerate(rows):
+            own = x['platforms'].get(a['name'], {}).get('own')
+            hold = a['hold'] if a['hold'] is not None else (own['holdDays'] if own else None)
+            pay = a['payout'] or (own['payout'] if own else None)
+            win = hold + cyc[pay] if hold is not None and pay in cyc else None
+            exp = max(0, a['earned'] - a['fee'])
+            mx = exp * min(1, win / x['stretchDays']) if win is not None else None
+            gap = None if a['landed'] is None else exp - a['landed']
+            st = 'waiting' if gap is None else 'matches' if abs(gap) < 1 else ('onway' if gap > 0 and mx is not None and gap <= mx + 0.5 else 'short' if gap > 0 else 'over')
+            q = o['rows'][i]
+            ck(f'row {i} earned', q['earned'], a['earned']); ck(f'row {i} window', q['window'], win, 0); ck(f'row {i} on its way', q['onWayMax'], mx); ck(f'row {i} state', q['state'] == st, True)
+            if mx is not None: tot = (tot or 0) + mx
+        ck('on its way in all', o['onWayMax'], tot)
+    elif fn == 'gigVsFloor':
+        if x['pay'] is None:
+            ck('no gig pay, no answer', o['gap'], None)
+        else:
+            ck('gap an hour', o['gap'], x['pay'] - x['floor'], 1e-9); ck('share of the floor', o['share'], x['pay'] / x['floor'], 1e-12)
+            ck('paid hours at the gig', o['hoursMonth'], x['month'] / x['pay'], 1e-9); ck('paid hours at the floor', o['floorHoursMonth'], x['month'] / x['floor'], 1e-9)
 
 
 def quest_check(fn, x, o, ck):
@@ -1285,6 +1322,7 @@ def ratio_check(x, o, ck):
     ck('total comp to base', o['totalcomp'], None if x['base'] is None or x['match'] is None or x['base'] <= 0 else (x['base'] + x['bonus'] + x['match']) / x['base'], 1e-9)
     ck('real wage growth', o['realwage'], (1 + x['growth']) / (1 + x['inflation']) - 1 if has(x['growth'], x['inflation']) else None, 1e-12)
     ck('income replacement', o['replace'], div(x['spendYear'], x['grossYear']))
+    ck('Social Security replacement', o['ssreplace'], div(x['ssYear'], x['grossYear']))
     ck('investment to net worth', o['investnw'], div(x['invested'], x['netWorth']))
     ck('net worth to income', o['nwincome'], div(x['netWorth'], x['grossYear']))
     if not has(x['grossYear'], x['age'], x['financial']): ck('human capital', o['human'], None)
@@ -1746,7 +1784,7 @@ def run(cases, ref, il=None):
             hard_check(fn, x, o, ck)
         elif fn in ('esHeirs', 'esTenYear', 'esCompare'):
             estate_check(fn, x, o, ck, law)
-        elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps'):
+        elif fn in ('gigRate', 'gigSetAside', 'gigRetire', 'gigInvoices', 'gigApps', 'gigSafeHarbor', 'gigPayouts', 'gigVsFloor'):
             gig_check(fn, x, o, ck, law)
         elif fn in ('fmSandwich', 'fmBoomerang', 'fmTuition'):
             family_check(fn, x, o, ck)
@@ -2124,6 +2162,72 @@ def run(cases, ref, il=None):
                     lo = up
                 cost = min(bench, pct * magi); want = ('aca', cost, bench - cost)
             ck('coverage', o['on'] == want[0], True); ck('coverage cost', o['cost'], want[1], 0.01); ck('the credit', o['help'], want[2], 0.01)
+        elif fn == 'ntRun':
+            # Safety nets, worked a second way: each change as (amount a month, start week, end week) in WEEKS, then each
+            # month of the run as 52/12 weeks; a one-time cost lands in the first month.
+            k, t, b, L = x['kind'], dict(x['taps']), x['base'], ref['limits']['leave']['NY']
+            start = {'medical': {'weeks': 6, 'paid': 'none', 'once': 0}, 'move': {'housing': 0, 'moving': 1500, 'deposit': 1, 'overlap': 0},
+                     'breakup': {'lost': 0, 'housing': 0, 'once': 1000}, 'baby': {'weeks': 12, 'paid': 'none', 'monthly': 500, 'once': 1000}}[k]
+            for key, v in start.items(): t.setdefault(key, v)
+            wk = 52 / 12  # weeks in a month
+            spans, once, needs = [], 0.0, []  # spans: (per month, from week, to week)
+            pay, weekly = b['pay'], b['weekly'] if b['weekly'] is not None else (b['pay'] * 12 / 52 if b['pay'] else None)
+            def leave(weeks, paid, rule):
+                if not weeks: return
+                if pay is None: needs.append('pay'); return
+                spans.append((-pay, 0, weeks))
+                if paid == 'full': spans.append((pay, 0, weeks))
+                elif paid == 'half': spans.append((pay / 2, 0, weeks))
+                elif paid == 'ny' and weekly:
+                    wait = rule['waitWeeks']; paid_weeks = max(0, min(weeks, rule['weeks']) - wait)
+                    if paid_weeks > 0: spans.append((min(rule['weeklyMax'], rule['rate'] * weekly) * wk, wait, wait + paid_weeks))
+            if k == 'medical':
+                leave(t['weeks'], t['paid'], L['dbl']); once += t['once']
+            elif k == 'move':
+                nxt = None if b['housing'] is None else max(0, b['housing'] + t['housing'])
+                if t['housing']: spans.append((-t['housing'], t['overlap'] * wk, math.inf))
+                once += t['moving']
+                if t['deposit']:
+                    if nxt is None: needs.append('housing')
+                    else: once += nxt * t['deposit']
+                if t['overlap']:
+                    if nxt is None: needs.append('housing')
+                    else: once += nxt * t['overlap']  # one month of both places, at the start
+            elif k == 'breakup':
+                if t['lost']: spans.append((-t['lost'], 0, math.inf))
+                if t['housing']: spans.append((-t['housing'], 0, math.inf))
+                once += t['once']
+            else:
+                leave(t['weeks'], t['paid'], L['pfl'])
+                if t['monthly']: spans.append((-t['monthly'], 0, math.inf))
+                once += t['once']
+            ck('one-time costs', o['once'], once, 0.01); ck('what it needs', sorted(set(o['needs'])) == sorted(set(needs)), True)
+            def run(burn):
+                left, low, lowk, out = x['cash'], x['cash'], 0, None
+                lefts = [left]
+                for m in range(x['max']):
+                    a, z = m * wk, (m + 1) * wk
+                    net = x['income'] - burn - (once if m == 0 else 0) + sum(v * max(0, min(z, e) - max(a, f)) / wk for v, f, e in spans)
+                    if out is None and left + net < 0: out = m + (left / -net if net < 0 and left > 0 else 0)
+                    left += net; lefts.append(left)
+                    if left < low: low, lowk = left, m + 1
+                return out, low, lowk, left, lefts
+            out, low, lowk, end, lefts = run(x['burn'])
+            ck('runway', o['runway'], out, 1e-6); ck('lowest point', o['lowest'], low, 0.01); ck('lowest month', o['lowestK'], lowk, 0)
+            ck('left at the end', o['end'], end, 0.05)
+            ck('steady month', o['steady'], x['income'] - x['burn'] + sum(v for v, f, e in spans if e == math.inf), 0.01)
+            for i, n in enumerate((3, 2, 1)):
+                lvl = n * x['basics']; at = next((j for j, v in enumerate(lefts) if v <= lvl), None)
+                ck('tripwire level', o['trips'][i][0], lvl, 0.01); ck('tripwire month', o['trips'][i][1], at, 0); ck('tripwire now', o['trips'][i][2], x['cash'] <= lvl)
+            b_out = run(x['planBurn'])[0]
+            ck('Plan B runway', o['planB'], b_out, 1e-6); ck('Plan B more', o['more'], None if out is None or b_out is None else b_out - out, 1e-6)
+            above = None
+            for i, raw in enumerate(x['levels']):
+                burn = None if raw is None else (raw if above is None else min(raw, above))
+                if burn is not None: above = burn
+                gap = None if burn is None else burn - x['income']
+                months = None if gap is None or gap <= 0 else x['cash'] / gap
+                ck('level burn', o['levels'][i][0], burn, 0.01); ck('level months', o['levels'][i][1], months, 1e-6); ck('level lasts', o['levels'][i][2], gap is not None and gap <= 0)
         elif fn == 'bpPlans':
             rows = []
             for i, p in enumerate(x['plans'][:3]):

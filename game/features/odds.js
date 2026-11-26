@@ -291,6 +291,7 @@ function oddsBook(c) {
       { id: "od_month", label: "Invested each month", v: P.monthly, note: "Take-home minus spending" },
       { id: "od_spend", label: "Spending a year in retirement", v: P.spend, note: "Today's dollars" },
       { id: "od_ss", label: "Social Security a year, from 67", v: P.ss, note: "Your Social Security answer" },
+      ...oddsSsBook(c),
       { id: "od_stock", label: "Share in stocks", v: P.stock, note: "Your mix, or the age guide" },
       {
         id: "od_ok",
@@ -308,6 +309,46 @@ function oddsBook(c) {
       { id: "od_worst", label: "Worst start year", v: O.worst ? O.worst.year : "", note: "Worked out by the game" },
     ],
   };
+}
+/* Social Security next to your pay (run Finish everything partly built, Part 14). The ratio is raSsGame in
+   features/ratios.js (the same line as Ratios on Key numbers). Part of oddsSheet() and oddsBook(). */
+function oddsSsCard(c) {
+  const r = typeof raSsGame === "function" ? raSsGame(c) : null;
+  if (!r || r.value == null) return "";
+  const ss = r.parts[0][1],
+    pay = r.parts[1][1],
+    sh = passives(c).sh;
+  return dkCard(
+    "Social Security next to your pay",
+    dkStatRow([
+      dkTile("Social Security", money(Math.round(ss / 12)), { sub: "a month from 67", guess: true }),
+      dkTile("Replaces", Math.round(r.value * 100) + "%", { sub: "of your pay today", guess: true }),
+    ]) +
+      `<div class="small">At 67, Social Security could replace about ${Math.round(r.value * 100)}% of your pay before taxes. Savings and other income cover the other ${money(Math.round(r.gap / 12))} a month of today's pay${sh < 1 ? ", and your plan counts " + Math.round(sh * 100) + "% of the benefit, to be careful" : ""}.</div>` +
+      mathBox([
+        "Social Security a year, from 67: " +
+          money(Math.round(ss)) +
+          " (the game's estimate from your pay, the best 35 years, the 2026 bend points; a Guess).",
+        "Pay before taxes a year: " + money(Math.round(pay)) + ".",
+        money(Math.round(ss)) + " ÷ " + money(Math.round(pay)) + " = " + Math.round(r.value * 100) + "%.",
+        "Your real number is on your statement at ssa.gov (my Social Security).",
+      ]),
+    { cap: "The share of today's pay it would replace" }
+  );
+}
+function oddsSsBook(c) {
+  const r = typeof raSsGame === "function" ? raSsGame(c) : null;
+  if (!r || r.value == null) return [];
+  return [
+    {
+      id: "od_ssfull",
+      label: "Social Security a year from 67, before the share you count",
+      v: r.parts[0][1],
+      note: "The game's estimate (Guess)",
+    },
+    { id: "od_gross", label: "Pay before taxes a year", v: r.parts[1][1] },
+    { id: "od_ssr", label: "Social Security replacement", v: r.value, f: "={od_ssfull}/{od_gross}" },
+  ];
 }
 function oddsSheet() {
   const c = C(),
@@ -355,6 +396,7 @@ function oddsSheet() {
     mark: worst ? { x: worst.year, y: worst.end, label: "Worst: " + worst.year } : null,
     caption: "Real history: each point is one start year. Higher is more left over.",
   });
+  h += oddsSsCard(c);
   h += kitAsk(c, "odds", "stock", "How much of your money is in stocks?", ODDS_STOCK, P.stock, {
     term: "stockshare",
     help: "The rest is in bonds. The game uses your investment mix when you have filled it in.",
