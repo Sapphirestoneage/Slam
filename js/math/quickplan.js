@@ -59,9 +59,14 @@ export function qcW4({ gross = null, pretax = 0, filingStatus = 'Single', kids =
   const ctc = childTaxCredit({ kids: kids ?? 0, magi: gross - (pretax ?? 0), incomeTax: fed.value, earned: gross, joint: filingStatus === 'Married jointly' }, ref);
   const owe = Math.max(0, fed.value - ctc.nonrefundable) - ctc.refundable, total = withheld + perCheck * checksLeft, diff = total - owe;
   const left = Math.max(1, checksLeft);
-  const extra = diff < 0 ? -diff / left : 0, deductions = diff > 0 && fed.marginal > 0 ? diff * checksYear / (left * fed.marginal) : 0;
+  // A paycheck cannot hold back less than nothing: the cut a paycheck is at most what it withholds now, and what the
+  // paychecks left cannot take back still comes as a refund (stillRefund). Before Nov 26 2026 the line asked for any
+  // amount (a $261,733 deduction for a $3,020 refund with three paychecks left).
+  const cut = diff > 0 ? Math.min(diff / left, perCheck) : 0;
+  const extra = diff < 0 ? -diff / left : 0, deductions = cut > 0 && fed.marginal > 0 ? cut * checksYear / fed.marginal : 0;
+  const stillRefund = diff > 0 ? (deductions > 0 ? diff - cut * left : diff) : 0;
   return { ready: true, gross, filingStatus, tax: fed.value, credit: ctc.nonrefundable + ctc.refundable, owe, marginal: fed.marginal, withheld, perCheck, checksLeft, checksYear, total, diff,
-    refund: diff > 0 ? diff : 0, owed: diff < 0 ? -diff : 0, extra, deductions, even: Math.abs(diff) < 1 };
+    refund: diff > 0 ? diff : 0, owed: diff < 0 ? -diff : 0, extra, deductions, stillRefund, even: Math.abs(diff) < 1 };
 }
 
 // Cash flow at a glance: in, out, left, the share kept and what a day costs, on the plan's own surplus and savings rate.

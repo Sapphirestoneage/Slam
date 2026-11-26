@@ -145,7 +145,7 @@ function gdSheet() {
   if (few)
     return (
       head("People", "Your guild") +
-      `<div class="tile small">A guild is the people in this game. Add another person first (People, Add another person). Sharing with other accounts comes later.</div><button class="ghost wide slim" data-a="close">Done</button>`
+      `<div class="tile small">A guild is the people in this game. Add another person first: a partner, a kid or someone you help. Sharing with other accounts comes later.</div><button class="primary wide" data-a="addperson">Add another person</button><button class="ghost wide slim" data-a="close">Done</button>`
     );
   const me = dkCard(
     "You in the guild",

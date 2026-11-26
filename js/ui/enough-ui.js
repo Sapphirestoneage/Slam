@@ -100,7 +100,7 @@ function enoughBody(ctx) {
     h('div.row-line', { style: { gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' } },
       h('div', {}, h('span.label', {}, 'Your enough number'), h('div.creep-big', {}, money(N.value)), h('span.muted.small', {}, N.sameAsFi ? 'The same as your FI number' : `Your FI number × ${Math.round(N.share * 100)}%`)),
       N.withRoom != null ? h('div', {}, h('span.label', {}, `With ${Math.round(N.room * 100)}% room for error`), h('div.creep-big', {}, money(N.withRoom))) : null,
-      h('div', {}, h('span.label', {}, 'Enough by'), h('div.small', { style: { fontWeight: 700 } }, whenWords(N.at, ctx)), N.withRoom != null ? h('span.muted.small', {}, `With the room: ${whenWords(N.atRoom, ctx)}`) : null)),
+      h('div', {}, h('span.label', {}, 'Enough in'), h('div.small', { style: { fontWeight: 700 } }, whenWords(N.at, ctx)), N.withRoom != null ? h('span.muted.small', {}, `With the room: ${whenWords(N.atRoom, ctx)}`) : null)),
     N.have != null ? h('p', { style: { margin: 0 } }, N.past ? `You have ${money(N.margin)} past enough. Past it, more is a choice.` : `You have ${pct(N.pct)} of enough today: ${money(N.left)} to go${N.withRoom != null ? ', with the room' : ''}.`) : null,
     S.moreBlock('goals:enough:math', () => h('div.stack.small', { style: { gap: '4px' } },
       h('span', {}, `Enough number: your FI number ${money(ctx.metrics().fiNumber.value)} × ${Math.round(N.share * 100)}% = ${money(N.value)}. The FI number is spending a year ÷ the withdrawal rate, so this is the same as working it out on the life you call enough.`),

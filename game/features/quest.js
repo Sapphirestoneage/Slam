@@ -723,7 +723,8 @@ kitScreen(
 );
 Object.assign(ACT, {
   qmode: t => {
-    W = { kind: "qmode", tab: (t && t.dataset && t.dataset.v) || "sheet", o: {} };
+    const v = t && t.dataset && t.dataset.v; // the menu row passes its own data-v ("qmode"): only a real tab counts
+    W = { kind: "qmode", tab: QG_TABS.some(x => x[0] === v) ? v : "sheet", o: {} };
     sheet(qvSheet);
   },
   qxtab: t => {

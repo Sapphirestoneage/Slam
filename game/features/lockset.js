@@ -51,7 +51,7 @@ function lsetSheet() {
   );
   const pk = dkCard(
     "Sign in with a passkey",
-    `<button class="ghost wide" data-a="lkpk" ${PASSKEY_READY ? "" : 'disabled aria-describedby="pkwhy"'}>Add a passkey to my account</button><div class="tiny muted" id="pkwhy">${PASSKEY_READY ? "Your fingerprint or face signs you in on this device, in place of the password." : "Coming soon: Eli switches passkeys on in the sign-in service first, so nobody gets locked out while it is tested."}</div>${w.pkmsg ? `<div class="tiny muted">${esc(w.pkmsg)}</div>` : ""}`
+    `<button class="ghost wide" data-a="lkpk" ${PASSKEY_READY ? "" : 'disabled aria-describedby="pkwhy"'}>Add a passkey to my account</button><div class="tiny muted" id="pkwhy">${PASSKEY_READY ? "Your fingerprint or face signs you in on this device, in place of the password." : "Coming soon. Passkeys switch on after a test, so nobody gets locked out. Use the PIN or the device lock for now."}</div>${w.pkmsg ? `<div class="tiny muted">${esc(w.pkmsg)}</div>` : ""}`
   );
   return (
     head("Settings", "App lock") +

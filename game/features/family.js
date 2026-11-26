@@ -491,7 +491,8 @@ kitScreen(
 );
 Object.assign(ACT, {
   family: t => {
-    W = { kind: "family", tab: (t && t.dataset && t.dataset.v) || "sand", o: {} };
+    const v = t && t.dataset && t.dataset.v; // the menu row passes its own data-v ("family"): only a real tab counts
+    W = { kind: "family", tab: FAM_TABS.some(x => x[0] === v) ? v : "sand", o: {} };
     sheet(familySheet);
   },
   famtab: t => {
