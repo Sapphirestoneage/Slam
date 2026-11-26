@@ -464,6 +464,19 @@ const WB = [
   ],
   [
     "plan",
+    "Family money: parents and kids at once, living at home, kids and tuition",
+    "b",
+    () =>
+      WB_HAS("family") &&
+      WB_FN("fmSandwich") &&
+      WB_FN("famSand") &&
+      WB_FN("famKids") &&
+      GOAL_K.some(g => g[0] === "Yeshiva tuition"),
+    "One engine with the web pages (sandwich, boomerang and tuition .html): money to parents and kids at once next to the freedom date and your first goal; the rent saved living at home next to the time to a moving-out goal; childcare (New York from the State Comptroller, Feb 2025), school or yeshiva tuition, what to put away a month, the New York 529 deduction and the K-12 rule. Yeshiva tuition is a goal type; its community presets wait for Eli.",
+    "family",
+  ],
+  [
+    "plan",
     "Which account next, up to each limit",
     "b",
     () => WB_HAS("nxa") && WB_FN("nxaCalc") && WB_FN("nxaRows"),
@@ -774,7 +787,36 @@ const WB = [
     "Not built. The character sheet is the first piece of it.",
     null,
   ],
-  ["feel", "Quantum Collapse quiz and a deeper type test", "n", null, "Not built.", null],
+  [
+    "feel",
+    "More quizzes: Money Scripts, the Enneagram solo, the FIRE Community Quiz, a picture quiz, trait percents, and the Quantum Collapse quiz",
+    "b",
+    () =>
+      WB_HAS("qz") &&
+      WB_FN("qzBars") &&
+      WB_FN("qzSpectrums") &&
+      WB_FN("qzPaths") &&
+      WB_FN("qzBarsPart") &&
+      WB_FN("qzMeterPart") &&
+      typeof QZ_SKINS !== "undefined" &&
+      ["scripts", "enneagram", "fire", "snack", "traits", "collapse"].every(id => QZ_SKINS.some(s => s.id === id)),
+    "Skins of the one quiz engine. Each ends on one card with a skill and a read. A percent for each trait, spectrums on the FIRE quiz, picture tiles, and for Quantum Collapse the plans still possible and the measured order of the next five numbers. Under Me, Quizzes.",
+    "qz",
+  ],
+  [
+    "feel",
+    "Duolingo mode: the daily question routes by your quiz, and a daily lesson path for you",
+    "b",
+    () =>
+      WB_HAS("lp") &&
+      WB_HAS("dq") &&
+      WB_FN("qzDailyPart") &&
+      WB_FN("lpLessons") &&
+      typeof ADULT_LESSONS !== "undefined" &&
+      ADULT_LESSONS.length >= 12,
+    "After the daily question, a skill and a short read from your latest quiz result. Daily lessons: the Kids mode path for you, 12 lessons, the ones that fit your quiz first, each ending on its skill. In the menu.",
+    "lp",
+  ],
   [
     "feel",
     "Your strengths and weak spots, as plain numbers",

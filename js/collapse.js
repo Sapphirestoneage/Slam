@@ -2,7 +2,7 @@
 // Quantum collapse (Eli's intake idea): the fewest questions, each one path-changing. Every answer either branches the
 // flow, gates a later question, or ends it early with the one move that matters. Nothing is asked for context alone.
 // The meter is honest arithmetic: the plans still possible are the product of the choices not yet made.
-import { qzFlow, qzRule } from './math/quizcore.js';
+import { qzFlow, qzRule, qzPaths } from './math/quizcore.js';
 
 // Each `when` is a condition of the one quiz engine (js/math/quizcore.js): data, not a function.
 export const COLLAPSE = [
@@ -12,7 +12,7 @@ export const COLLAPSE = [
   { id: 'match', ask: 'Does your job add money to a retirement plan when you do?', when: { work: ['job', 'both'], press: { not: 'behind' } }, options: [['all', 'Yes, and I get all of it'], ['some', 'Yes, but not all of it'], ['no', 'No'], ['unsure', 'Not sure']] },
   { id: 'want', ask: 'What do you want most from your money?', when: { press: ['none', 'forgive'] }, options: [['date', 'To stop having to work'], ['safe', 'To feel safe'], ['enjoy', 'To enjoy more of it now'], ['guide', 'Just tell me what to do']] },
 ];
-const MOVES = {
+export const MOVES = {
   stabilize: { title: 'Steady the month first', why: 'Past-due bills come before everything else. Seeing how long the money lasts, and what to call about first, is the move.', page: 'runway', label: 'How long would my money last?' },
   bridge: { title: 'Stretch what you have', why: 'With no paycheck, the plan is a bridge: how many months are covered and what makes them longer.', page: 'runway', label: 'How long would my money last?' },
   debt: { title: 'Get the expensive debt gone', why: 'Card and payday interest outruns anything investing earns. A date for the last payment is the move.', page: 'debt', label: 'When am I debt free?' },
@@ -36,11 +36,10 @@ export const COLLAPSE_QUIZ = {
 // answers: { work, press, cushion, match, want }. Returns the next question, the plans still possible, and (when the
 // answers already settle it) the first move, with the page to open. Early exits skip the questions that no longer matter.
 export function collapseOf(answers = {}) {
-  const total = COLLAPSE.reduce((n, q) => n * q.options.length, 1);
-  // the flow and the rules are the engine's: what is asked, what is open, and which rule the answers meet first
+  // the flow, the meter and the rules are the engine's: what is asked, what is open, the plans still possible, and
+  // which rule the answers meet first
   const a = answers, F = qzFlow(COLLAPSE_QUIZ, answers), asked = F.asked, open = F.open, early = F.early;
-  const done = F.done, next = done ? null : COLLAPSE.find(q => q.id === F.next.id);
-  const left = done ? 1 : open.reduce((n, q) => n * q.options.length, 1);
+  const done = F.done, next = done ? null : COLLAPSE.find(q => q.id === F.next.id), P = qzPaths(COLLAPSE_QUIZ, answers), total = P.total, left = P.left;
   let move = null;
   if (done) { const key = qzRule(COLLAPSE_QUIZ, answers, true).result; move = { id: key, ...MOVES[key] }; }
   const notes = [];
@@ -48,5 +47,5 @@ export function collapseOf(answers = {}) {
   if (done && a.press === 'cards' && move.id !== 'debt') notes.push(move.id === 'match' ? 'Then the card debt: once the full match is coming in, every spare dollar goes there.' : 'Then the card debt: once one month of bills is set aside, every spare dollar goes there.');
   if (done && a.match === 'unsure') notes.push('Ask HR one question: "Is there a match, and what do I put in to get all of it?" It is often the best return you will ever be offered.');
   if (done && (a.work === 'self' || a.work === 'both')) notes.push('Working for yourself, set tax money aside from every payment before it feels like yours.');
-  return { total, left, share: 1 - Math.log(left) / Math.log(total), asked: asked.length, answered: asked.length - open.length, next, done, shortened: done && !!early, move, notes, mirror: a.want ?? (move?.id === 'debt' || move?.id === 'stabilize' ? 'guide' : move?.id === 'cushion' || move?.id === 'bridge' ? 'safe' : null) };
+  return { total, left, share: P.share, asked: asked.length, answered: asked.length - open.length, next, done, shortened: done && !!early, move, notes, mirror: a.want ?? (move?.id === 'debt' || move?.id === 'stabilize' ? 'guide' : move?.id === 'cushion' || move?.id === 'bridge' ? 'safe' : null) };
 }

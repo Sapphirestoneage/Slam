@@ -2,7 +2,8 @@
 // One renderer for the small calculators (docs/KIT.md): the question, a few boxes with amounts to tap, the answer card
 // (redrawn while typing; the boxes are not), what changes it, the fold, and the link to take away. A calculator is a
 // spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
-// A field with `unit` is a count, not money; one with `when` shows only for some answers.
+// A field with `unit` is a count, not money; one with `when` shows only for some answers. `picks` and `help` may be
+// functions of the answers and the reference data (tuition.html: the dated childcare row of the state tapped).
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
 // A private spec (the hard moments, js/solo/hard.js) keeps nothing until the person turns on Keep this (boot's private
 // mode); its `keep(api)` card stands in for the link card, `first(api)` cards come before the boxes, and a spec with no
@@ -36,7 +37,7 @@ export function calcPage(id, spec) {
     const set = f => (v, typing) => { put(f, v); if (!typing) return api.render(); api.save(); const fresh = answerCard({ [f.key]: v }); if (card && fresh) { card.replaceWith(fresh); card = fresh; } spec.typed?.(api); };
     const field = f => (f.options
       ? h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([label, v]) => chip(label, get(f) === v, () => { put(f, v); api.render(); }))), f.help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, f.help) : null)
-      : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values()) : f.picks, set(f), { id: `f_${f.key}`, help: f.help, unit: f.unit }));
+      : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values(), api.ref) : f.picks, set(f), { id: `f_${f.key}`, help: typeof f.help === 'function' ? f.help(values(), api.ref) : f.help, unit: f.unit }));
     const inputs = !spec.fields.length ? null : h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
       h('h2', { style: { marginTop: 0 } }, spec.boxes ?? (spec.fields.length === 1 ? 'One number' : 'A few numbers')), shown().map(field));
     const carry = spec.keep ? spec.keep(api) : h('div.st-card', { id: 'carry' }, h('h2', { style: { marginTop: 0 } }, 'Take it with you'), h('p.st-small', {}, 'Your link keeps this answer.'),

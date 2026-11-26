@@ -25,7 +25,9 @@ import { addMonths, ymOf, monthName, dateOf, monthsBetween } from '../month.js';
 import { winSources } from './spending-ui.js';
 import { money, pct } from '../format.js';
 import { yearItems, usualDates, sinkingOf, takingOver } from '../year.js';
-import { TUITION_GOAL } from '../community.js';
+import { TUITION_GOAL, YESHIVA_GOAL } from '../community.js';
+import { fmPresetRows } from '../math/family.js';
+import { FM_COMMUNITY } from '../data/community-tuition.js';
 import { holidayYm } from '../math/holidays.js';
 import { fiGate } from './report-ui.js';
 import { fiWordsOf } from '../math/picture.js';
@@ -258,8 +260,8 @@ function milestoneList() {
   return {
     kind: 'milestone', area: 'goals', title: 'Milestones', thing: { one: 'milestone', plural: 'milestones' },
     filter: r => r.kind === 'milestone',
-    picker: ctx => ({ top: ['Coast FI', 'Regular FI', 'Debt free', 'Lean FI'], other: ctx.store.doc.session?.community ? [...MILESTONES, TUITION_GOAL] : MILESTONES }),
-    newValues: type => ({ name: type === 'Custom' ? null : type, values: { mode: type === 'Custom' || type === TUITION_GOAL ? 'date' : 'when' } }),
+    picker: ctx => ({ top: ['Coast FI', 'Regular FI', 'Debt free', 'Lean FI'], other: ctx.store.doc.session?.community ? [...MILESTONES, TUITION_GOAL, YESHIVA_GOAL] : MILESTONES }),
+    newValues: type => ({ name: type === 'Custom' ? null : type, values: { mode: type === 'Custom' || type === TUITION_GOAL || type === YESHIVA_GOAL ? 'date' : 'when' } }),
     coreFields: ['name'],
     columns: [
       { label: 'Milestone', render: (ctx, r, m, up) => S.textInput(r.name, v => up({ name: v }), { hint: r.type || 'Name it', width: 170, key: `${r.id}:name` }) },
@@ -280,10 +282,20 @@ function milestoneList() {
       { label: 'Need, want or wish', render: (ctx, r, m, up) => S.toggle(['Need', 'Want', 'Wish'], r.values.tag ?? null, v => up({ tag: v }), { label: 'Need, want or wish', clearable: true, key: `${r.id}:tag` }) },
       { label: 'Whose', couple: true, render: (ctx, r, m, up) => S.ownerToggle(ctx, r, up) }, // F2
     ],
-    secondary: (ctx, r) => [
+    secondary: (ctx, r, up) => [
+      r.type === YESHIVA_GOAL ? yeshivaPresets(r, up) : null, // run Not built, groups 1 to 5, Part 8: the community presets, a tap each
       r.type === 'Barista FI' ? S.labelled('Part-time income a month', S.moneyInput(ctx.store.doc.assumptions.partTimeIncome ?? null, v => ctx.store.setDoc('assumptions', { partTimeIncome: v }), { hint: 'Add income' }), { note: 'Barista FI only' }) : null,
       fiTargets(ctx.metrics(), ctx.store.doc)[r.type]?.value != null ? S.labelled('Target', h('span.computed', {}, money(fiTargets(ctx.metrics(), ctx.store.doc)[r.type].value))) : null],
   };
+}
+
+// The Yeshiva tuition goal's community presets (data/community-tuition.json, Eli's to fill in): a tap puts a range's
+// low or high in as the amount. With no rows filled in yet, one line points to the school's own sheet and the
+// tuition page, which works out a year times the children times the years.
+function yeshivaPresets(r, up) {
+  const rows = fmPresetRows(FM_COMMUNITY);
+  if (!rows.length) return S.labelled('The amount', h('span.muted', {}, 'A year from your school\'s tuition sheet, times the children and the years. '), { note: h('a', { href: 'tuition.html' }, 'Kids and tuition works it out') });
+  return S.labelled('Community presets, a year for one child', S.toggle(rows.flatMap(p => [[p.low, `${p.label}: ${money(p.low)}`], [p.high, `${p.label}: ${money(p.high)}`]]), r.amount ?? null, v => up({ amount: v }), { label: 'Community presets', clearable: true }), { note: FM_COMMUNITY.source ? `${FM_COMMUNITY.source}${FM_COMMUNITY.date ? `, ${FM_COMMUNITY.date}` : ''}` : 'Community presets' });
 }
 
 // ---------- Timeline ----------

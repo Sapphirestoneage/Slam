@@ -7,11 +7,12 @@
    INPUT       The skins: QZ_SKINS, QZ_ROUTES. The profile: c.x.qz[skin id] = { ans, go, at, show, ok,
                kept }. The open sheet (W.kind): qz (the list), qzq (one quiz). The taps of the player
                (the actions in OUTPUT).
-   OUTPUT      Functions: qzSkin, qzStore, qzMine, qzNow, qzElement, qzShown, qzAskPart, qzCardPart,
-               qzListSheet, qzSheet. Parts of functions in other files: meTabQuiz (meTab in ui.js),
+   OUTPUT      Functions: qzSkin, qzStore, qzMine, qzNow, qzLatest, qzTreesOf, qzElement, qzShown, qzAskPart,
+               qzMeterPart, qzBarsPart, qzMeasuredPart, qzCardPart, qzListSheet, qzSheet. Parts of functions in
+               other files: qzDailyPart (dqSheet in games2.js), meTabQuiz (meTab in ui.js),
                rvSheetQuiz (rvSheet in reveal.js), rvTextQuiz (rvText in reveal.js). Actions (ACT):
                qz, qzopen, qzgo, qzans, qzback, qzagain, qzel, qzshow, qzok. Menu: "Quizzes".
-   DEPENDS ON  core/report.js, core/quizcore.js, data/quizskins.js, core/engine.js, screens/ui.js,
+   DEPENDS ON  core/report.js, core/quizcore.js, data/quizskins.js, core/engine.js, screens/ui.js, screens/dash.js,
                features/kit.js, features/element.js (elOf, elStore), features/exletter.js
                (exLetterMine), features/reveal.js.
    RULES       A quiz is a game lens, never a diagnosis. A result is private by default: it shows on
@@ -49,7 +50,43 @@ function qzNow(c, id) {
     R = qzResult(def, st.ans || {}, null, { confirmed: !!st.ok }),
     /* The card shows when each question has its answer (a code quiz can be ready before that). */
     card = R.done ? qzCard(def, R) : null;
-  return { def, st, R, card, feed: card ? qzFeed(def, R, qzElement(c)) : null, taps: qzTaps(def) };
+  return {
+    def,
+    st,
+    R,
+    card,
+    feed: card ? qzFeed(def, R, qzElement(c)) : null,
+    taps: qzTaps(def),
+    /* A percent for each trait and the spectrums, on a skin that asks for them. The meter of Quantum Collapse. */
+    bars:
+      card && def.bars
+        ? qzBars(def, st.ans || {}, def.bars === true ? null : def.bars).sort((a, b) => b.pct - a.pct)
+        : null,
+    spectrums: card && def.spectrums ? qzSpectrums(def, st.ans || {}) : null,
+    paths: def.result && def.result.by === "rules" ? qzPaths(def, st.ans || {}) : null,
+  };
+}
+/* The latest result of the player that has a card (the quiz taken last), or null. The daily question and the daily
+   lessons route by it. */
+function qzLatest(c) {
+  const all = (c.x && c.x.qz) || {};
+  let best = null;
+  Object.keys(all).forEach(id => {
+    const def = qzSkin(id);
+    if (!def || def.soon || !all[id] || !all[id].at) return;
+    const N = qzNow(c, id);
+    if (N.card && (!best || String(all[id].at) >= String(best.at))) best = { id, at: all[id].at, def, card: N.card };
+  });
+  return best;
+}
+/* The skill trees a card points to: its own trees, and the tree of each skill it names. */
+function qzTreesOf(card) {
+  const R = typeof QZ_ROUTES !== "undefined" ? QZ_ROUTES : { skills: {} };
+  return [
+    ...new Set(
+      [...(card.trees || []), ...(card.skills || []).map(id => R.skills[id] && R.skills[id].tree)].filter(Boolean)
+    ),
+  ];
 }
 /* The results that the player chose to show: [{ label, value }]. */
 function qzShown(c) {
@@ -64,12 +101,83 @@ function qzShown(c) {
 }
 /* One question: the words, a bar, and one button for each answer. */
 function qzAskPart(def, q, n, of, back) {
-  const opts = q.options ? q.options.map(o => [o.id, o.label]) : (def.scale || []).map(s => [s[0], s[1]]);
+  const opts = q.options ? q.options.map(o => [o.id, o.label, o.icon]) : (def.scale || []).map(s => [s[0], s[1]]),
+    /* the style 'cards': a grid of picture tiles, two across (the playful "pick a snack" style) */
+    taps =
+      q.style === "cards"
+        ? `<div class="qzcards">${opts.map(o => `<button class="qzcard" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span class="qzicon" aria-hidden="true">${esc(o[2] || "")}</span><span>${esc(o[1])}</span></button>`).join("")}</div>`
+        : `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span>${esc(o[1])}</span><span class="caret">›</span></button>`).join("")}</div>`;
   return (
-    `<div class="tile"><div class="tiny muted">${q.options ? "Tap the one closest to you" : "How true is this for you?"}</div><h2 style="margin:6px 0 0" data-fid="qz:q">${esc(q.ask || q.text)}</h2></div>${bar((n / of) * 100)}` +
-    `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span>${esc(o[1])}</span><span class="caret">›</span></button>`).join("")}</div>` +
+    `<div class="tile"><div class="tiny muted">${q.style === "cards" ? "Tap the one you like best" : q.options ? "Tap the one closest to you" : "How true is this for you?"}</div><h2 style="margin:6px 0 0" data-fid="qz:q">${esc(q.ask || q.text)}</h2></div>${bar((n / of) * 100)}` +
+    taps +
     (back ? `<button class="ghost wide slim" data-a="qzback">Back one</button>` : "")
   );
+}
+/* The meter of Quantum Collapse: the plans still possible, from the engine (qzPaths). */
+function qzMeterPart(N) {
+  const P = N.paths;
+  if (!P) return "";
+  return dkCard(
+    "Plans still possible",
+    dkStatRow([
+      dkTile("Still possible", String(P.left), { sub: "of " + P.total + " paths in all" }),
+      dkTile("Settled", Math.round(P.share * 100) + "%", { sub: "a question that does not apply drops out" }),
+    ]) + dkProgress(P.share * 100),
+    { cap: "Every question changes the path. None is asked for context alone." }
+  );
+}
+/* A percent for each trait, and the spectrums: the engine's qzBars and qzSpectrums, in the dashboard look. */
+function qzBarsPart(N) {
+  let h = "";
+  if (N.bars && N.bars.length)
+    h += dkCard(
+      "A percent for each",
+      `<div class="stack" style="gap:8px" data-fid="qz:bars">${N.bars.map(b => `<div><div class="row between small"><span>${esc(b.name)}</span><b>${b.pct}%</b></div>${dkProgress(b.pct)}</div>`).join("")}</div>`,
+      {
+        cap: "Each percent is that trait's points out of the most it could get on your answers. Two can be high at once.",
+      }
+    );
+  const S = (N.spectrums || []).filter(x => x.pos != null);
+  if (S.length)
+    h += dkCard(
+      "Your preferences",
+      `<div class="stack" style="gap:10px" data-fid="qz:spectrums">${S.map(x => `<div><div class="small"><b>${esc(x.name)}:</b> ${esc(x.word)}</div><div class="qzspec" role="img" aria-label="${esc(x.name)}: ${x.pos} of 100"><i style="left:${x.pos}%"></i></div><div class="row between tiny muted"><span>${esc(x.left)}</span><span>${esc(x.right)}</span></div></div>`).join("")}</div>`,
+      { cap: "Where you sit between two ways. Neither end is better." }
+    );
+  return h;
+}
+/* Quantum Collapse: the five numbers that narrow the FI date most, in the measured order (docs/COLLAPSE.md). */
+function qzMeasuredPart(def) {
+  if (!def.measured) return "";
+  return dkCard(
+    "The numbers to give next",
+    `<ol class="small" style="margin:4px 0 0;padding-left:20px" data-fid="qz:measured">${def.measured.map(m => `<li>${esc(m.label)}</li>`).join("")}</ol>`,
+    { cap: "In the order that narrows your FI date the most, measured over 282 made-up households." }
+  );
+}
+/* Part of dqSheet() in games2.js. After the daily question: the next step from the latest quiz result (a skill and
+   a short read), and the way into the daily lessons. */
+function qzDailyPart(c) {
+  const L = qzLatest(c),
+    R = typeof QZ_ROUTES !== "undefined" ? QZ_ROUTES : { skills: {}, readings: {} };
+  let body = "";
+  if (L) {
+    const nx = L.card.next || {},
+      sk = nx.skill && R.skills[nx.skill],
+      rd = (L.card.readings || []).find(id => R.readings[id]);
+    body +=
+      `<div class="small">Your latest quiz, ${esc(L.def.name)}: <b>${esc(L.card.title)}</b></div>` +
+      (sk
+        ? `<button class="ghost wide" data-a="skill" data-v="${sk.tree}:${sk.level - 1}">${esc(nx.label)} ›</button>`
+        : "") +
+      (rd
+        ? `<div class="tile small"><div class="tiny muted">A short read. People say: "${esc(R.readings[rd].advice)}"</div>${esc(R.readings[rd].line)}</div>`
+        : "");
+  } else
+    body += `<div class="small">Take one short quiz, and the daily question points you to a skill and a read that fit you.</div><button class="ghost wide slim" data-a="qz">Pick a quiz</button>`;
+  return dkCard("For you today", body + `<button class="ghost wide slim" data-a="lp">Today's lesson</button>`, {
+    cap: L ? "Picked by your latest quiz. Take another quiz and this follows it." : "",
+  });
 }
 /* The next step of a card: a skill of the tree, a skill track, and the readings. */
 function qzRoutePart(card) {
@@ -127,6 +235,8 @@ function qzCardPart(c, N, mine) {
     (also ? `<div class="tiny muted" style="text-align:center">${esc(also)}</div>` : "") +
     `<div class="tile stack" style="gap:6px">${card.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}</div>` +
     `<div class="tile stack" style="gap:4px"><b class="small">The light side</b><div class="small">${esc(card.light)}</div></div>` +
+    qzBarsPart(N) +
+    qzMeasuredPart(def) +
     elPart +
     qzRoutePart(card) +
     math +
@@ -197,12 +307,13 @@ function qzSheet() {
   const q = N.R.next;
   return (
     head("Quizzes", def.name + " · " + (N.R.answered + 1) + " of " + N.R.of) +
+    qzMeterPart(N) +
     qzAskPart(def, q, N.R.answered, N.R.of, N.R.answered > 0)
   );
 }
 /* Part of meTab() in ui.js. Adds the row "Quizzes" below the row for the character sheet. */
 function meTabQuiz(h) {
-  const row = `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">Money houses, a money code, an avatar and more. Each is a game lens.</div></span><span class="caret">›</span></button>`;
+  const row = `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">Money scripts, the Enneagram, your FIRE flavor, Quantum Collapse and more. Each is a game lens.</div></span><span class="caret">›</span></button>`;
   return h.replace(/(<button class="rowbtn[^"]*" data-a="reveal">.*?<\/button>)/, m => m + row);
 }
 /* Part of rvSheet() in reveal.js. Adds the results that the player chose to show, and one row to the quizzes. */
@@ -238,7 +349,12 @@ kitScreen(
   "Tap the answer closest to you. There is no wrong answer.",
   "The card at the end shows your result, its light side and one next step."
 );
-kitMenu("Quizzes", "qz", "Money houses, a money code, an avatar and more. Each is a game lens", "chart");
+kitMenu(
+  "Quizzes",
+  "qz",
+  "Money scripts, the Enneagram, your FIRE flavor, Quantum Collapse and more. Each is a game lens",
+  "chart"
+);
 Object.assign(ACT, {
   qz: () => {
     W = { kind: "qz" };
