@@ -432,6 +432,17 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Receipts and your life map",
+    l: [
+      "Each move you finish and each amount you log now shows what moved: net worth, the days closer to FI or debt-free, any number that changed.",
+      "Right under it: how close you are to the next unlock, and the next thing to do, one tap away.",
+      "When a date moves later, it says Recalculating route and shows the new date.",
+      "Your life map: the eras from age 15 to FI. You start at your own age, with starting bonuses from the answers you gave.",
+      "Tap any era for what it is, why it matters, the money and time it takes, and a Go do it button.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Benefits and health",
     l: [
       "Menu has Benefits and health: what your HSA, dependent care FSA, ESPP and commuter benefit are worth to you in dollars a year.",

@@ -101,7 +101,8 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
       }
       const all = vis.find(b => /^That's all$/.test(b.innerText.trim()));
       if (all) return mark(all, "That's all");
-      const nx = vis.find(b => b.dataset.a === 'wnext');
+      // the spiral (game/features/spiral.js) moves on with spnext and spgo between the rounds
+      const nx = vis.find(b => ['wnext', 'spnext', 'spgo'].includes(b.dataset.a));
       return nx ? mark(nx, 'Next (page ' + (W.step + 1) + ')') : 'STUCK';
     }, WANT);
     if (pick === null) break;
@@ -109,7 +110,8 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
     await tap('#ov [data-robot="1"]');
     path2.push(pick);
     await page.evaluate(() => document.querySelectorAll('[data-robot]').forEach(b => b.removeAttribute('data-robot')));
-    if (/^Next/.test(pick)) await page.waitForTimeout(650); // the game ignores a second Next that comes at once
+    // the game ignores a second Next that comes at once, and an answer draws the next question after a moment
+    await page.waitForTimeout(650);
     if (path2.length === 6) await shot(page, '3b-setup-390');
   }
   console.log('     the taps: Start, ' + path2.join(', '));
@@ -121,7 +123,7 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   chk('the reveal marks typical numbers as a Guess', /Guess/.test(txt) && /typical/.test(txt));
   chk('the reveal offers to save by making an account', await page.locator('#ov [data-a=doorsave]').isVisible());
   chk('the answer: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
-  console.log(`     taps from Start to the answer: ${taps} (the robot waits 0.12 s after each tap: ${secs} s in all)`);
+  console.log(`     taps from Start to the answer: ${taps} (the robot waits 0.65 s after each tap: ${secs} s in all)`);
   await shot(page, '4-answer-390');
   // 3. the mark in the link is still there
   chk('the address still has ?ref=abc123', /\?ref=abc123/.test(page.url()), page.url());

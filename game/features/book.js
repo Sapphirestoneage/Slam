@@ -30,6 +30,7 @@
 const BOOK_PARTS = [
   spiralBook,
   rsBook,
+  ltBook,
   tallyBook,
   vlBook,
   amountsBook,

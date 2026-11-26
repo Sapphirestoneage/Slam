@@ -287,7 +287,7 @@ function wireSheet() {
       head("My Goals", esc(g.n)) +
       dkCaption("Wired up: the account, the amount and the day.") +
       (w.win
-        ? `<div class="levelup pop jbwin"><div class="eyebrow">A money win</div><div class="medal">+1</div><h2>${esc(w.win.title)}</h2>${w.win.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}</div>`
+        ? `<div class="levelup pop jbwin"><div class="eyebrow">A money win</div><div class="medal">+1</div><h2>${esc(w.win.title)}</h2>${w.win.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}</div>${typeof rcpInline === "function" ? rcpInline() : ""}`
         : w.moved
           ? `<div class="banner small jbmoved">${esc(w.moved.text)}</div>`
           : "") +

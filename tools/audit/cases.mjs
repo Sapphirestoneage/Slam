@@ -160,7 +160,7 @@ for (let i = 0; i < N; i++) {
   { const n = whole(2, 4), people = Array.from({ length: n }, (_, i) => ({ id: i ? `P${i + 1}` : 'Me', size: money(60, 300), income: money(500, 15000) })), x = { rent: money(800, 8000), bills: pick([0, 150, 400]), how: pick(['size', 'income', 'equal']), billsHow: pick(['equal', 'same']), people };
     const r = qcRoommates(x); add('qcRoommates', x, { totals: r.rows.map(p => p.total) }); }
   { const x = { gross: money(15000, 400000), pretax: pick([0, 0, 5000, 23500]), filingStatus: pick(STATUS), kids: pick([0, 0, 1, 3]), withheld: rnd() < 0.1 ? 0 : money(1, 60000), perCheck: rnd() < 0.1 ? 0 : money(1, 4000), checksLeft: whole(0, 26), checksYear: pick([52, 26, 24, 12]) }, r = qcW4({ ...x, ref });
-    add('qcW4', x, { owe: r.owe, diff: r.diff, extra: r.extra, deductions: r.deductions }); }
+    add('qcW4', x, { owe: r.owe, diff: r.diff, extra: r.extra, deductions: r.deductions, stillRefund: r.stillRefund }); }
   { const x = { takeHome: money(1000, 30000), spending: money(500, 30000), debtOutside: pick([0, 0, 300]) }, r = qcGlance(x); add('qcGlance', x, { left: r.left, rate: r.rate }); }
   // Travel (js/math/trip.js, M8T): a trip line by line, points, a group split by share and by item, the journey map
   { const opt = v => (rnd() < 0.15 ? null : v), x = { flights: opt(money(0, 4000)), lodging: opt(money(0, 500)), days: opt(whole(1, 21)), nights: rnd() < 0.3 ? whole(0, 20) : null, food: opt(money(0, 200)), visa: opt(pick([0, 25, 160])), insurance: opt(money(0, 500)), other: opt(money(0, 1500)),

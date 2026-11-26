@@ -953,6 +953,7 @@ function treeView() {
 function mapTab() {
   let h = mapTabBase();
   if (typeof mapTabStars === "function") h = mapTabStars(h); /* stars.js: the button "See it as a galaxy" */
+  if (typeof mapTabTree === "function") h = mapTabTree(h); /* lifemap.js: the life map from age 15, at the top */
   return h;
 }
 function mapTabBase() {
@@ -971,17 +972,6 @@ function mapTabBase() {
         : gardenCard());
   }
   return `<div class="stack"><h1>Skills</h1>
- ${
-   MP.r
-     ? ""
-     : `<details><summary>Your path through the 10 eras</summary><div class="inner"><div class="spine">${ERAS.map(
-         (e, i) => {
-           const cls = i < d.era ? "done" : i === d.era ? "cur" : i === d.era + 1 ? "" : "fog",
-             show = i <= d.era + 1;
-           return `<button class="era ${cls}" data-a="info" data-k="era:${i}"><div class="tiny muted">Era ${i}</div><div><b>${show ? eraT(i) : "???"}</b></div>${show && VO().eras ? `<div class="tiny muted">${e.n}</div>` : ""}<div class="tiny muted">${show ? e.p : "Hidden for now"}</div></button>`;
-         }
-       ).join("")}</div></div></details>`
- }
  <div class="row between">${crumbs}${MP.t ? "" : `<div class="seg"><button class="${mapMode === "orbit" ? "on" : ""}" data-a="mode" data-v="orbit">Orbit</button><button class="${mapMode === "list" ? "on" : ""}" data-a="mode" data-v="list">List</button></div>`}</div>
  ${body}${flagBtn()}</div>`;
 }
@@ -5436,7 +5426,9 @@ function celebrateBase(title, lines, sub, medal) {
   LASTWIN = { title, lines: lines.filter(Boolean) };
   sheet(() => {
     const ns = nextStep(C(), D),
-      bm = C().placed || G.demo ? bestMove(C(), D, todayISO()) : null;
+      bm = C().placed || G.demo ? bestMove(C(), D, todayISO()) : null,
+      /* receipt.js: what moved, the next unlock and the next action, in the place of the line "Up next" */
+      rc = typeof celebrateReceipt === "function" ? celebrateReceipt() : null;
     return `<div class="levelup pop"><div class="eyebrow">${V("done", "Done")}</div><div class="medal">${medal || "✓"}</div><h2>${esc(title)}</h2>${VO().praise ? `<div class="small" style="margin:6px 0"><i>${pick(VO().praise, title.length + lines.length)}</i></div>` : ""}${sub ? `<div class="small muted" style="margin:6px 0">${esc(sub)}</div>` : ""}<div class="stack" style="margin:10px 0;align-items:center">${(() => {
       const ls = lines.filter(Boolean),
         sh = ls.slice(0, 4);
@@ -5446,7 +5438,7 @@ function celebrateBase(title, lines, sub, medal) {
           ? `<span class="tiny muted">and ${ls.length - 4} more badge${ls.length - 4 === 1 ? "" : "s"}, saved under Me</span>`
           : "")
       );
-    })()}</div>${note ? `<div class="banner small" style="text-align:left;margin-bottom:10px">${esc(note)}</div>` : ""}<div class="tile" style="text-align:left;margin-bottom:10px"><div class="tiny muted">${V("upnext", "Up next")}</div><b>${esc(ns.t)}</b>${bm && !ns.best && bm.title ? `<div class="tiny muted" style="margin-top:6px">Now number 1 on your path</div><b>${esc(bm.title)}</b>` : ""}</div><button class="primary wide go" data-a="close">${V("go", "Keep going")}</button><button class="ghost wide slim" style="margin-top:8px" data-a="sharewin">Make a share card</button></div>`;
+    })()}</div>${note ? `<div class="banner small" style="text-align:left;margin-bottom:10px">${esc(note)}</div>` : ""}${rc || `<div class="tile" style="text-align:left;margin-bottom:10px"><div class="tiny muted">${V("upnext", "Up next")}</div><b>${esc(ns.t)}</b>${bm && !ns.best && bm.title ? `<div class="tiny muted" style="margin-top:6px">Now number 1 on your path</div><b>${esc(bm.title)}</b>` : ""}</div>`}<button class="${rc ? "ghost" : "primary go"} wide" data-a="close">${V("go", "Keep going")}</button><button class="ghost wide slim" style="margin-top:8px" data-a="sharewin">Make a share card</button></div>`;
   });
 }
 /* shareCard() opens the full share card. shareCardBase() is the part from this file. */
@@ -6331,7 +6323,9 @@ function lifeSheet() {
     b += `<div class="small muted">Nothing else to ask right now. New questions only show up when your answers call for them.</div>`;
   if (ans.length)
     b += `<details><summary>What you've told the game (${ans.length})</summary><div class="inner stack">${ans.map(a => `<div class="row between small"><span>${esc(a.q)}<div class="tiny muted">${esc(String(c.x.done[a.id]))}</div></span><button class="ghost slim" data-a="lifeedit" data-k="${a.id}">Change</button></div>`).join("")}</div></details>`;
-  return b + `<button class="${q ? "ghost" : "primary"} wide" data-a="close">Done</button>`;
+  /* receipt.js: with nothing left to ask, the next action, so the screen is not a dead end */
+  if (!q && typeof rcpNextRow === "function") b += rcpNextRow();
+  return b + `<button class="ghost wide" data-a="close">Done</button>`;
 }
 /* moves, shapes, mentors */
 const durS = m => (m >= 24 ? Math.round(m / 1.2) / 10 + " years" : fmtDur(m));
@@ -6686,6 +6680,7 @@ if (typeof document !== "undefined") {
     /* ux.js: a fast second tap on a screen that just moved on is dropped (it would answer the next question) */
     if (typeof uxTapDrop === "function" && uxTapDrop()) return;
     const tp = typeof uxTapStart === "function" ? uxTapStart(t.dataset.a) : null;
+    if (typeof rcpTapStart === "function") rcpTapStart(); /* receipt.js: the numbers before a move, for its receipt */
     /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
     soonTap(t.dataset.a, t);
     if (tp) uxTapEnd(tp); /* ux.js: Undo after a change of the money */

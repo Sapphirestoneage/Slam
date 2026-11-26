@@ -35,7 +35,7 @@ function employerBlock(ctx, ben) {
   return h('div.stack', { style: { gap: '8px' } },
     S.labelled('Your employer', S.select(list, ben.employer ?? null, pickIt, { label: 'Your employer', hint: 'Pick yours, if listed', width: 240 }), { tip: `${list.length} large employers, each from its own benefits page or SEC filing. Not listed: answer the rows above yourself.` }),
     e ? h('div.stack.small', { style: { gap: '4px' } },
-      h('span', {}, h('strong', {}, 'Match: '), e.match, e.fullAt > 0 && e.fullAt < 1 ? ` Put in ${pct(e.fullAt)} of pay to get all of it (${pct(e.fullPct)} of pay from ${e.name}).` : null),
+      h('span', {}, h('strong', {}, 'Match: '), `${e.match}.`, e.fullAt > 0 && e.fullAt < 1 ? ` Put in ${pct(e.fullAt)} of pay to get all of it (${pct(e.fullPct)} of pay from ${e.name}).` : null),
       e.empty.length ? h('span.muted', {}, `Not found in a dated source, so left for you: ${e.empty.map(k => ({ tiers: 'the match', vest: 'the vesting', esppDiscount: 'an ESPP', hsaEmployer: 'an HSA contribution' })[k]).join(', ')}.`) : null,
       S.moreBlock('profile:employer:sources', () => h('div.stack.small', { style: { gap: '4px' } }, e.sources.map(s => h('span', {}, `${s.what}: ${s.source}${s.read ? ` (read ${s.read})` : ''}`))), { label: 'Where this is from' })) : null);
 }
@@ -55,15 +55,15 @@ function worthBody(ctx, { rates, transit }) {
     O.ready ? h('div.row-line', { style: { gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' } }, tile('All together', yr(O.yearly), `${O.of} of 4 worked out`)) : null,
     row('HSA as a retirement account', H, [
       S.labelled('Your cover', S.toggle(HSA_COVER, plan.hsaCover ?? null, v => setPlan({ hsaCover: v }), { label: 'HSA cover', clearable: true })),
-      S.labelled('You put in a year', S.moneyInput(plan.hsaYou ?? null, v => setPlan({ hsaYou: v }), { hint: H?.ready ? '' : `Up to ${money(ctx.ref.benefits.hsa[plan.hsaCover === 'family' ? 'family' : 'self'])}` })),
+      S.labelled('You put in a year', S.moneyInput(plan.hsaYou ?? null, v => setPlan({ hsaYou: v }), { hint: 'Add amount', width: 150 }), { note: `Up to ${money(ctx.ref.benefits.hsa[plan.hsaCover === 'family' ? 'family' : 'self'])}` }),
       S.labelled('Left invested for', S.toggle(HSA_YEARS.map(y => [y, `${y} years`]), plan.hsaYears ?? null, v => setPlan({ hsaYears: v }), { label: 'Years invested', clearable: true })),
-      S.labelled('Care you pay yourself a year, receipts kept', S.moneyInput(plan.hsaReceipts ?? null, v => setPlan({ hsaReceipts: v }), { hint: 'Optional' }))],
+      S.labelled('Care you pay yourself a year, receipts kept', S.moneyInput(plan.hsaReceipts ?? null, v => setPlan({ hsaReceipts: v }), { hint: 'Optional', width: 150 }))],
       x => `${money(x.taxSaved)} less tax and ${money(x.employer)} from your employer.${x.grows != null ? ` Invested, ${money(x.each)} a year grows to about ${money(x.grows)} in ${x.years} years, in today's money.` : ''}${x.receiptsBank ? ` Receipts you keep let you take ${money(x.receiptsBank)} out tax free later.` : ''}${x.over > 0 ? ` Your limit leaves room for ${money(x.room)}: ${money(x.over)} over it does not count.` : ''}`),
     O.kids ? row('Dependent care FSA', D, [
-      ben.dependentFsa?.have === 'Yes' ? h('span.muted.small', {}, 'Child care from your answer above.') : S.labelled('Child care a year', S.moneyInput(plan.careYear ?? null, v => setPlan({ careYear: v }), { hint: 'Add amount' }))],
+      ben.dependentFsa?.have === 'Yes' ? h('span.muted.small', {}, 'Child care from your answer above.') : S.labelled('Child care a year', S.moneyInput(plan.careYear ?? null, v => setPlan({ careYear: v }), { hint: 'Add amount', width: 150 }))],
       x => `${money(x.put)} of care paid before tax saves ${money(x.yearly)} a year, for ${x.years} more years of care before your youngest turns ${x.ageUnder}: about ${money(x.total)} in all. The child care credit on your return is not counted here, and the same dollar cannot count for both.`) : null,
     row('ESPP', E, [
-      ben.espp?.have === 'Yes' ? h('span.muted.small', {}, 'What you put in and the discount come from your ESPP answer above.') : S.labelled('You would put in a year', S.moneyInput(plan.esppPut ?? null, v => setPlan({ esppPut: v }), { hint: 'Add amount' })),
+      ben.espp?.have === 'Yes' ? h('span.muted.small', {}, 'What you put in and the discount come from your ESPP answer above.') : S.labelled('You would put in a year', S.moneyInput(plan.esppPut ?? null, v => setPlan({ esppPut: v }), { hint: 'Add amount', width: 150 })),
       ben.espp?.have === 'Yes' ? null : S.labelled('Discount', S.toggle([[0.05, '5%'], [0.1, '10%'], [0.15, '15%']], plan.esppDiscount ?? null, v => setPlan({ esppDiscount: v }), { label: 'ESPP discount', clearable: true }))],
       x => `Sold when you buy, ${money(x.put)} buys stock worth ${money(x.stock)}: ${money(x.gain)} more, ${money(x.yearly)} after tax.${x.over > 0 ? ` The law caps the stock at ${money(x.cap)} a year, so ${money(x.maxPut)} of pay counts.` : ''} Holding the stock instead is a bet on one company.`),
     row('Commuter', M, [h('span.muted.small', {}, transit > 0 ? `Transit from your Budget: ${money(transit)} a month.` : 'Add transit or parking lines on your Budget.')],
@@ -76,9 +76,8 @@ function worthBody(ctx, { rates, transit }) {
       h('span', {}, `${ctx.ref.benefits.hsa.source} ${ctx.ref.benefits.dcfsa.source} ${ctx.ref.benefits.espp.source} ${ctx.ref.benefits.commuterSource}`)), { label: 'Show the math' }));
 }
 export function benefitsWorthBlock(ctx, opts) {
-  const ben = ctx.store.doc.profile?.benefits || {};
   return h('div.stack', { style: { gap: '12px', marginTop: '12px' } },
-    employerBlock(ctx, ben),
+    S.live(ctx, () => employerBlock(ctx, ctx.store.doc.profile?.benefits || {})),
     S.moreBlock('profile:benefits:worth', () => S.live(ctx, () => worthBody(ctx, opts)), { label: 'What your benefits are worth' }));
 }
 
@@ -96,9 +95,9 @@ function healthBody(ctx) {
     : h('p.muted', { style: { margin: 0 } }, needWords(E.needs));
   const planCol = (p, i) => h('div.card.stack', { style: { gap: '8px', minWidth: '220px', flex: '1 1 220px' }, 'data-plan': i },
     S.labelled('Name', S.textInput(p.name ?? null, v => edit(i, { name: v }), { hint: `Plan ${i + 1}`, width: 180 })),
-    S.labelled('Premium a month, before any credit', S.moneyInput(p.premium ?? null, v => edit(i, { premium: v }), { hint: 'Add premium' })),
-    S.labelled('Deductible', S.moneyInput(p.deductible ?? null, v => edit(i, { deductible: v }), { hint: 'Add deductible' })),
-    S.labelled('Out-of-pocket max', S.moneyInput(p.oop ?? null, v => edit(i, { oop: v }), { hint: 'Add max' })),
+    S.labelled('Premium a month, before any credit', S.moneyInput(p.premium ?? null, v => edit(i, { premium: v }), { hint: 'Add amount', width: 150 })),
+    S.labelled('Deductible', S.moneyInput(p.deductible ?? null, v => edit(i, { deductible: v }), { hint: 'Add amount', width: 150 })),
+    S.labelled('Out-of-pocket max', S.moneyInput(p.oop ?? null, v => edit(i, { oop: v }), { hint: 'Add amount', width: 150 })),
     S.labelled('Bought on the marketplace', S.toggle([[true, 'Yes'], [false, 'No, through work']], p.market ?? null, v => edit(i, { market: v }), { label: `Plan ${i + 1} marketplace` })),
     plans.length > 2 ? S.iconButton('trash', `Remove plan ${i + 1}`, () => setPlans(plans.filter((_, k) => k !== i)), { tiny: true }) : null);
   const R = P.rows, best = (k, i) => (P.cheapest[k] === i ? h('span.tag.plain', {}, 'Least') : null);

@@ -1087,7 +1087,9 @@ def quick_check(fn, x, o, ck, law):
         left = max(1, x['checksLeft'])
         ck('the year\'s tax', o['owe'], owe); ck('refund or owed', o['diff'], diff)
         ck('Step 4(c) a paycheck', o['extra'], -diff / left if diff < 0 else 0)
-        ck('Step 4(b) deductions', o['deductions'], diff * x['checksYear'] / (left * top) if diff > 0 and top > 0 else 0, 0.05)
+        cut = min(diff / left, x['perCheck']) if diff > 0 else 0  # a paycheck holds back at most what it withholds now
+        ck('Step 4(b) deductions', o['deductions'], cut * x['checksYear'] / top if cut > 0 and top > 0 else 0, 0.05)
+        ck('still a refund', o['stillRefund'], (diff - cut * left if cut > 0 and top > 0 else diff) if diff > 0 else 0, 0.05)
     elif fn == 'qcGlance':
         left = x['takeHome'] - x['spending'] - x['debtOutside']
         ck('left', o['left'], left); ck('kept', o['rate'], left / x['takeHome'], 1e-12)

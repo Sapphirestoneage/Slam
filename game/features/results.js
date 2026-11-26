@@ -287,7 +287,10 @@ function rsNextWin(c, d) {
   /* the money a month a move frees for the debts: what it saves plus what it adds, less what it costs from the
      paycheck. The match goes into a retirement account, not to cash, so it frees nothing for the debts. */
   const cashOf = x => (x.S.id === "match" ? 0 : Math.round(x.F.save + x.F.take - (x.F.cost || 0)));
-  let fits = stgRank(c).filter(x => x.V.v === "fits" && x.days > 0);
+  /* a move already on your steps is started: the next win is the next move (Krug self-test, item 5) */
+  let fits = stgRank(c).filter(
+    x => x.V.v === "fits" && x.days > 0 && !(typeof stgAdded === "function" && stgAdded(c, x.S))
+  );
   /* below zero the lead is the debt-free date: a move that frees cash for the debts comes first */
   if (lead === "debtfree" && fits.some(x => cashOf(x) > 0)) fits = fits.filter(x => cashOf(x) > 0);
   const r = fits.find(x => (x.S.effort || 3) <= 2) || fits[0];

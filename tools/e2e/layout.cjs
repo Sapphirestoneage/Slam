@@ -324,7 +324,9 @@ function scan(opt) {
             // controls in the same order. A table compares by column.
             const key = `${set.kind === 'table' ? ci : ctrlsIn(row.el).filter(lined).map(kindOf).join(',')}|${k}|${n[k]}`;
             if (!cols.has(key)) cols.set(key, []);
-            cols.get(key).push({ c, row, r: c.getBoundingClientRect() });
+            // On the solo pages the box a person sees is the .st-box around the input: its input starts later behind a "$"
+            // and earlier before a unit ("hours", "sq ft"), so the input's own edge would flag boxes that line up.
+            cols.get(key).push({ c, row, r: (c.closest('.st-box') || c).getBoundingClientRect() });
           }
         });
       }
@@ -786,13 +788,18 @@ async function runStart(browser) {
     // carried in the address (made-up numbers: two cards, a student loan), every fold open
     if (!ONLY || ONLY.some(o => 'solo calc'.includes(o))) try {
       const solo = await ctx.newPage(); solo.on('pageerror', e => errors.push(`Calc: ${String(e).slice(0, 200)}`));
+      solo.setDefaultTimeout(10000); // a miss shows in seconds, not after 30 s per control
+      console.log(`  Calc pages at ${width} ${theme} (${CALC_PAGES.length})...`);
       await solo.setViewportSize({ width, height: width < 600 ? 844 : 1000 }); await solo.emulateMedia({ colorScheme: theme });
       for (const t of CALC_PAGES) {
         await solo.goto(`${BASE}/${t}.html`, { waitUntil: 'load' }); await solo.waitForSelector('#answer, #steps'); await settle(solo, 250);
         await scanHere(solo, { route: `${t}.html`, width, theme, client: 'Start' }, STILL);
         await solo.goto(`${BASE}/${t}.html#/d/${CALC_PLAN}`, { waitUntil: 'load' }); await solo.reload({ waitUntil: 'load' }); await solo.waitForSelector('#answer, #steps'); await settle(solo, 250);
-        for (const c of await solo.locator('#main .st-field .st-chips').all()) { if (!(await c.locator('.st-chip[aria-pressed="true"]').count())) await c.locator('.st-chip').nth(1).click().catch(() => {}); await settle(solo, 40); }
-        const first = solo.locator('#main .st-box input').first(); if (await first.count() && !(await first.inputValue())) { await solo.locator('#main .st-box + .st-chips .st-chip').nth(2).click().catch(() => {}); await settle(solo, 80); }
+        // Only chips a person can see. A chip inside a closed fold cannot be clicked, and Playwright waited its full 30 s
+        // on each one (64 across the pages, about 32 minutes at each width and theme), so a whole run outlived the
+        // 30-minute limit of a background task and its browser was stopped mid-run, at "Start at 1280 light" (Nov 26).
+        for (const c of await solo.locator('#main .st-field .st-chips').all()) { const ch = c.locator('.st-chip').nth(1); if (!(await c.locator('.st-chip[aria-pressed="true"]').count()) && (await ch.isVisible())) { await ch.click({ timeout: 3000 }).catch(() => {}); await settle(solo, 40); } }
+        const first = solo.locator('#main .st-box input').first(); if (await first.count() && !(await first.inputValue())) { await solo.locator('#main .st-box + .st-chips .st-chip').nth(2).click({ timeout: 3000 }).catch(() => {}); await settle(solo, 80); }
         for (let i = 0; i < 6; i++) { const f = solo.locator('details.st-fold:not([open]) > summary').first(); if (!(await f.count())) break; await f.click(); await settle(solo, 40); }
         await settle(solo, 200); await scanHere(solo, { route: `${t}.html`, width, theme, client: 'Start', state: 'on a plan, folds open' }, [...STILL, 'covered', 'sticky']);
       }
