@@ -4,6 +4,8 @@
 // spec: { title, why, fields, run(values, ref), answer(result, values), more(api) }. The math is in js/solo.js, with tests.
 // A field with `unit` is a count, not money; one with `when` shows only for some answers. `picks` and `help` may be
 // functions of the answers and the reference data (tuition.html: the dated childcare row of the state tapped).
+// `options` may be a function too, and `run` gets the page's api as its third argument (cutinvest.html: the plan's own
+// return as a tap, and the plan's own FI date). An answer with `pair` shows two numbers side by side in place of one.
 // A field with `plan` reads and writes the plan's own answer (take-home, spending, invested), so nothing is typed twice.
 // A private spec (the hard moments, js/solo/hard.js) keeps nothing until the person turns on Keep this (boot's private
 // mode); its `keep(api)` card stands in for the link card, `first(api)` cards come before the boxes, and a spec with no
@@ -22,11 +24,11 @@ export function calcPage(id, spec) {
     const values = (over = {}) => ({ ...Object.fromEntries(spec.fields.map(f => [f.key, get(f)])), ...Object.fromEntries((spec.picks || []).map(p => [p.key, mem()[key(p.key)] ?? p.start])), ...over });
     const answerCard = (over = {}) => {
       if (!spec.run) return null;
-      const V = values(over), R = spec.run(V, api.ref);
+      const V = values(over), R = spec.run(V, api.ref, api);
       if (!R.ready) return h('div.st-card', { id: 'answer' }, h('h2', { style: { marginTop: 0 } }, 'Your answer shows here'), h('p.st-soft', { style: { marginBottom: 0 } }, spec.waiting ?? 'Fill in the boxes above and it appears. Rough numbers are fine.'));
       const A = spec.answer(R, V);
       if (!A) return null;
-      return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, A.lead), h('div.st-big', {}, A.big), h('p', { style: { fontWeight: 700 } }, A.line),
+      return h('div.st-card.hero', { id: 'answer', 'aria-live': 'polite' }, h('div.st-eyebrow', {}, 'Your answer'), h('div.st-soft', {}, A.lead), A.pair ? h('div.st-pair', {}, A.pair.map(([label, value]) => h('div', {}, h('div.st-small.st-soft', {}, label), h('div.st-big', {}, value)))) : h('div.st-big', {}, A.big), h('p', { style: { fontWeight: 700 } }, A.line),
         (spec.picks || []).map(p => h('div.st-field', {}, h('div.st-flabel', {}, p.label), h('div.st-chips', {}, p.options.map(([label, v]) => chip(label, V[p.key] === v, () => { api.remember({ [key(p.key)]: v }); api.render(); }))))),
         A.rows?.length ? h('ul.st-list', {}, A.rows.map(([label, small, value]) => h('li', {}, h('span.dot', {}, ''), h('span', {}, label, small ? h('small', {}, small) : null), h('span.when', {}, value)))) : null,
         A.small ? h('p.st-small.st-soft', {}, A.small) : null,
@@ -36,7 +38,7 @@ export function calcPage(id, spec) {
     let card = answerCard();
     const set = f => (v, typing) => { put(f, v); if (!typing) return api.render(); api.save(); const fresh = answerCard({ [f.key]: v }); if (card && fresh) { card.replaceWith(fresh); card = fresh; } spec.typed?.(api); };
     const field = f => (f.options
-      ? h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, f.options.map(([label, v]) => chip(label, get(f) === v, () => { put(f, v); api.render(); }))), f.help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, f.help) : null)
+      ? h('div.st-field', {}, h('div.st-flabel', {}, f.label), h('div.st-chips', {}, (typeof f.options === 'function' ? f.options(values(), api.ref, api) : f.options).map(([label, v]) => chip(label, get(f) === v, () => { put(f, v); api.render(); }))), f.help ? h('div.st-small.st-soft', { style: { marginTop: '4px' } }, f.help) : null)
       : numBox(f.label, get(f), typeof f.picks === 'function' ? f.picks(values(), api.ref) : f.picks, set(f), { id: `f_${f.key}`, help: typeof f.help === 'function' ? f.help(values(), api.ref) : f.help, unit: f.unit }));
     const inputs = !spec.fields.length ? null : h('div.st-card', { onFocusout: e => { const t = e.relatedTarget, main = $('main'); if (!t || t === main || !main.contains(t)) setTimeout(() => api.render(), 0); } },
       h('h2', { style: { marginTop: 0 } }, spec.boxes ?? (spec.fields.length === 1 ? 'One number' : 'A few numbers')), shown().map(field));

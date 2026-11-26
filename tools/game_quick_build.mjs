@@ -13,13 +13,15 @@ const from = new URL('../js/math/quick.js', import.meta.url), to = new URL('../g
 const HEAD = `/* ============================================================================
    SLAM the Game: core/quick.js
    PURPOSE     The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost
-               per use, Return on Hassle, worth it, personal inflation, starting earlier, kids, a pet, a
-               first apartment, New York unemployment and the runway with it. The sheet "Quick math"
+               per use, Return on Hassle, worth it, personal inflation, starting earlier, cut it or
+               invest it (the round $30k / $90k rule), kids, a pet, a first apartment, New York
+               unemployment and the runway with it. The sheet "Quick math"
                (features/quick.js) uses it.
    INPUT       Numbers only. No profile, no screen.
-   OUTPUT      Constants: QC_KID_STAGES. Functions: qcGrow, qcMonthlyOf, qcNominal, qcHysa, qcDca,
-               qcWarranty, qcPerUse, qcHassle, qcWorth, qcInflation, qcStart, qcKids, qcPet,
-               qcApartment, qcUiNy, qcBenefitRunway.
+   OUTPUT      Constants: QC_KID_STAGES, QC_CUT_RULE, QC_CUT_SOURCE. Functions: qcGrow, qcMonthlyOf,
+               qcNominal, qcInvested, qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcWorth,
+               qcInflation, qcStart, qcRound, qcCutInvest, qcKids, qcPet, qcApartment, qcUiNy,
+               qcBenefitRunway.
    DEPENDS ON  Nothing.
    RULES       GENERATED FILE. Do not edit it. The source is js/math/quick.js of the main SLAM app,
                so the small pages of the web app and the game have one copy of each rule. To change a

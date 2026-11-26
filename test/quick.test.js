@@ -57,6 +57,53 @@ test('starting earlier: the same monthly amount from two ages, the catch-up amou
   assert.equal(Q.qcStart({ monthly: 100, ageA: 30, ageB: 31, ret: 0 }).gap, 1200, 'no growth: just the year of payments');
 });
 
+test('cut it or invest it: the round $30k / $90k rule in the headline, the exact figures beside it, the ratio about a third', () => {
+  assert.deepEqual(Q.QC_CUT_RULE, { monthly: 100, kept: 30000, invested: 90000, years: 30, ret: 0.07 });
+  assert.equal(Q.qcCutInvest({}).ready, false); assert.equal(Q.qcCutInvest({ monthly: 0 }).ready, false);
+  const r = Q.qcCutInvest({ monthly: 100 }), g = 1.07 ** (1 / 12) - 1; // the defaults: 30 years at 7%
+  assert.equal(r.kept, 36000, 'exact: $100 x 12 x 30'); near(r.invested, 100 * (1.07 ** 30 - 1) / g, 1e-6, 'exact: a true 7% a year, added monthly');
+  assert.equal(Math.round(r.invested / 1000), 117, 'about $117,000');
+  assert.equal(r.atRule, true); assert.equal(r.roundKept, 30000); assert.equal(r.roundInvested, 90000);
+  near(r.ratio, r.invested / r.kept, 1e-12); assert.equal(r.times, 3); assert.equal(r.oneIn, 3, 'cutting is about 1/3 of investing');
+  near(r.growth, r.invested - 36000, 1e-9);
+  const big = Q.qcCutInvest({ monthly: 250 }); assert.equal(big.roundKept, 75000, 'the rule scales with the amount'); assert.equal(big.roundInvested, 230000, '$225,000 to two figures');
+  const short = Q.qcCutInvest({ monthly: 100, years: 10, ret: 0.07 });
+  assert.equal(short.atRule, false); assert.equal(short.kept, 12000); assert.equal(short.roundKept, 12000); assert.equal(short.roundInvested, Q.qcRound(short.invested), 'off the rule: the worked figure, rounded, never forced to the rule');
+  assert.equal(short.times, 1.4); assert.equal(short.oneIn, null, 'no "1/1" line');
+  const at8 = Q.qcCutInvest({ monthly: 100, years: 25, ret: 0.08 }); assert.equal(Math.round(at8.invested / 1000), 91); assert.equal(at8.atRule, false);
+  assert.equal(Q.qcCutInvest({ monthly: 100, years: 30, ret: 0 }).invested, 36000, 'no growth: the two are the same');
+  assert.equal(Q.qcRound(116945.26), 120000); assert.equal(Q.qcRound(36000), 36000); assert.equal(Q.qcRound(7500), 7500); assert.equal(Q.qcRound(0), 0);
+  // one growth function: starting earlier stands on the same line
+  near(Q.qcStart({ monthly: 100, ageA: 35, ageB: 36, to: 65, ret: 0.07 }).a, r.invested, 1e-6);
+});
+
+test('cut it or invest it: the page says the round rule, the ratio line, and the exact figures in Show the math', async () => {
+  globalThis.document ??= { documentElement: { dataset: {} } };
+  const { QUICK_SPECS } = await import('../js/solo/quick.js');
+  const S = QUICK_SPECS.cutinvest, api = { store: { doc: null }, ref };
+  assert.deepEqual(S.fields.map(f => [f.key, f.start ?? null]), [['monthly', 100], ['years', 30], ['ret', null]]);
+  assert.deepEqual(S.fields[0].picks, [25, 50, 100, 250]); assert.deepEqual(S.fields[1].options.map(o => o[1]), [10, 20, 30, 40]);
+  const chips = S.fields[2].options({}, ref, api); assert.ok(chips.some(([label, v]) => v === null && /^7%, the standard$/.test(label)), 'the standard 7% is the default tap');
+  const R = S.run({ monthly: 100, years: 30, ret: null }, ref, api), A = S.answer(R), E = Q.qcCutInvest({ monthly: 100, years: 30, ret: 0.07 });
+  assert.equal(R.fi, null, 'no plan behind the page: no FI line');
+  assert.deepEqual(A.pair, [['Cut it: kept', 'about $30k'], ['Invest it: grows to', 'about $90k']]); assert.match(A.lead, /^The round rule/);
+  assert.match(A.line, /^Cutting it is about 1\/3 of investing it\. Invested, the same \$100 is worth about 3 times as much\.$/);
+  assert.ok(A.rows.some(r => r[2] === 'The round rule')); assert.match(A.small, /\$30k \/ \$90k is the round rule/);
+  const fold = A.fold[0]; assert.equal(fold[0], 'Show the math: the exact figures');
+  const usd = v => `$${Math.round(v).toLocaleString('en-US')}`;
+  assert.ok(fold[1].includes(`= ${usd(E.kept)} kept`), fold[1]); assert.ok(fold[2].includes(`= ${usd(E.invested)}.`), fold[2]); assert.ok(fold[2].includes('$116,945'), 'about $117,000, as the engine has it');
+  assert.ok(fold[3].includes(`${E.ratio.toFixed(2)} times`));
+  const off = S.answer(S.run({ monthly: 100, years: 25, ret: 0.08 }, ref, api)); assert.match(off.lead, /^Rounded/); assert.deepEqual(off.pair.map(p => p[1]), ['about $30k', 'about $91k']);
+});
+
+test('cut it or invest it on the plan\'s own FI date: more goes in and the FI number falls (M53 through fiMoveOf)', async () => {
+  const { fiMoveOf } = await import('../js/math/fi.js');
+  const m = { inputs: { invested: 50000, realReturn: 0.07, withdrawalRate: 0.04 }, investing: { monthly: 800 }, fiNumber: { value: 900000 } }, from = new Date('2026-11-26T12:00:00Z');
+  const r = P.qcCutFi(m, 100, { from }), mv = fiMoveOf(m, { changes: [{ at: 0, monthly: 100 }], fi: -(100 * 12) / 0.04 }, { from });
+  assert.ok(r.days > 0, 'sooner'); assert.equal(r.days, -mv.fineDays);
+  assert.equal(P.qcCutFi(null, 100), null); assert.equal(P.qcCutFi(m, 0), null); assert.equal(P.qcCutFi({ inputs: {} }, 100), null);
+});
+
 test('kids, a pet and a first apartment add the person\'s own amounts', () => {
   const k = Q.qcKids({ age: 3, little: 15000, school: 12000, teen: 14000 });
   assert.equal(k.years.length, 15); assert.equal(k.left, 2 * 15000 + 8 * 12000 + 5 * 14000); assert.equal(k.now, 15000); assert.equal(k.peak.cost, 15000);

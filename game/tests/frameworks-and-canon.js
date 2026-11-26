@@ -142,7 +142,7 @@
   /* ---------- Home and the spreadsheet ---------- */
   go("home");
   chk(
-    "Home has one line of the next dollar, under Why this one of Your next win (results.js)",
+    "Home has one line of the next dollar, under Your goal now of Your next win (results.js)",
     (app().match(/Your next dollar:/g) || []).length === 1 &&
       app().indexOf("rs:win") < app().indexOf("Your next dollar:") &&
       app().indexOf("Your next dollar:") < app().indexOf("rs:month")

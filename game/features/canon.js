@@ -70,8 +70,8 @@ function fwStepOf(c) {
   }
 }
 /* ---------- the one line of the next dollar ---------- */
-/* The line "Your next dollar: ..." for this profile, or null. results.js shows it under "Why this one" of Your next
-   win on Home. */
+/* The line "Your next dollar: ..." for this profile, or null. results.js shows it on Home, under "Your goal now"
+   of Your next win. */
 function fwNextDollarLine(c) {
   const S = fwStepOf(c);
   if (!S.row) return null;

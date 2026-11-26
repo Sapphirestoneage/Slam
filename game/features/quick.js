@@ -2,13 +2,14 @@
    SLAM the Game: features/quick.js
    PURPOSE     Quick math. Small what-if questions: does this car fit, how much home fits, what one
                dollar becomes, and (run Not built, Part 2) a HYSA switch, all at once or a little each
-               month, cost per use, worth the hassle, what waiting costs, and a warranty.
+               month, cost per use, worth the hassle, what waiting costs, and a warranty; and (Nov 26
+               2026) cut it or invest it, Eli's round $30k / $90k rule.
    INPUT       The open sheet (W.kind): quick. The taps of the player (the actions in OUTPUT).
-   OUTPUT      12 functions. Actions (ACT): quick, qmopen, qmset. Menu: "Quick math".
-   DEPENDS ON  core/quick.js (qcHysa, qcDca, qcPerUse, qcHassle, qcStart, qcWarranty, qcNominal: the same
+   OUTPUT      13 functions. Actions (ACT): quick, qmopen, qmset. Menu: "Quick math".
+   DEPENDS ON  core/quick.js (qcHysa, qcDca, qcPerUse, qcHassle, qcStart, qcCutInvest, QC_CUT_RULE, qcWarranty, qcNominal: the same
                code as the web app's small pages), screens/dash.js (dkCard, dkStatRow, dkTile), core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/compare.js.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
-               page loads: features/gig.js, features/sim.js.
+               page loads: features/gig.js, features/sim.js, features/strat.js (stgImpact), features/kit.js (kitDays), features/look.js (lkK, the short money "$30k").
    RULES       Taps only. A rule of thumb shows next to the number of the player. No verdict. The real
                hourly wage and Safe to spend have their own screens, thus this sheet opens those
                screens. The same rules on the numbers of today are in Key numbers, and this sheet links
@@ -45,6 +46,11 @@ const QM = {
     n: "What does waiting to start cost?",
     d: "A year or a few, by the time you stop working",
     o: { amt: 250, wait: 1 },
+  },
+  cut: {
+    n: "Cut it, or invest it?",
+    d: "The $30k / $90k rule on a cost you cut",
+    o: { amt: 100, yrs: 30, ret: 7 },
   },
   warranty: {
     n: "Is this warranty worth it?",
@@ -113,7 +119,7 @@ function qmTwo(a, b) {
   return `<div class="cpgrid" style="grid-template-columns:1fr 1fr">${a}${b}</div>`;
 }
 /* The cards of run Not built, Part 2: each number from core/quick.js, shown in the dashboard kit. */
-const QC_GAME = ["hysa", "dca", "peruse", "hassle", "wait", "warranty"],
+const QC_GAME = ["hysa", "dca", "peruse", "hassle", "wait", "cut", "warranty"],
   QC_INFL = 0.02; /* the web app's inflation preset (data/reference-2026.json, presets.inflation.default) */
 function qcGameBody(c, id, o) {
   if (id === "hysa") {
@@ -252,6 +258,57 @@ function qcGameBody(c, id, o) {
       ])
     );
   }
+  if (id === "cut") {
+    /* Eli's round rule (QUESTIONS 608 a): the headline is round, the exact figures are in Show the math */
+    const r = qcCutInvest({ monthly: o.amt, years: o.yrs, ret: o.ret / 100 }),
+      fi = qcCutDays(c, o.amt),
+      rule = lkK(QC_CUT_RULE.kept) + " / " + lkK(QC_CUT_RULE.invested),
+      how = r.atRule ? "the round rule" : "rounded";
+    return (
+      q(
+        "What you cut a month",
+        qmChips("amt", [25, 50, 100, 250, 500], o.amt, v => money(v))
+      ) +
+      q(
+        "For how long",
+        qmChips("yrs", [10, 20, 30, 40], o.yrs, v => v + " years")
+      ) +
+      q(
+        "Growth a year, after inflation",
+        qmChips("ret", [6, 7, 8, 12], o.ret, v => v + "%"),
+        Math.round(R * 100) + "% is what the game uses everywhere."
+      ) +
+      dkStatRow(
+        [
+          dkTile("Cut it: kept", "about " + lkK(r.roundKept), { sub: how }),
+          dkTile("Invest it: grows to", "about " + lkK(r.roundInvested), { sub: how }),
+        ].concat(fi != null ? [dkTile("Days closer to FI", fi.toLocaleString(), { sub: "cut and invested" })] : [])
+      ) +
+      dkCard(
+        r.oneIn
+          ? "Cutting it is about 1/" + r.oneIn + " of investing it"
+          : "Over a stretch this short, the two stay close",
+        `<div class="small">Invested, the same ${money(o.amt)} a month is worth about ${r.times} times as much. ${rule} is the round rule for ${money(QC_CUT_RULE.monthly)} a month, rounded on purpose.</div>`
+      ) +
+      mathBox([
+        "The exact figures:",
+        "Cut it: " + money(o.amt) + " x 12 x " + o.yrs + " years = " + money(Math.round(r.kept)) + " kept.",
+        "Invest it: " +
+          money(o.amt) +
+          " a month for " +
+          r.months +
+          " months at " +
+          o.ret +
+          "% a year after inflation, added monthly = " +
+          money(Math.round(r.invested)) +
+          ".",
+        "Exact ratio: " + r.ratio.toFixed(2) + " times.",
+        fi != null
+          ? "Days closer to FI: your plan run month by month with the cost cut, next to the plan without it."
+          : "",
+      ])
+    );
+  }
   const r = qcWarranty({ price: o.price, repair: o.repair, chance: o.odds / 100 });
   return (
     q(
@@ -273,6 +330,13 @@ function qcGameBody(c, id, o) {
     `<div class="small">${r.pays ? "Your guess is above the line where the two meet." : "Put the price in savings instead and it stays yours if nothing breaks."}</div>` +
     mathBox([o.odds + "% of " + money(o.repair) + " next to a price of " + money(o.price) + "."])
   );
+}
+/* The days a cost cut each month brings FI closer: the Strategy Engine's own run (stgImpact, on goalSim). null with
+   no FI date. No formula here. */
+function qcCutDays(c, amt) {
+  if (typeof stgImpact !== "function") return null;
+  const imp = stgImpact(c, { save: amt, take: 0, equity: 0, once: 0, value: 0 }, "full");
+  return imp.fi != null && imp.fi > 0 ? kitDays(imp.fi) : null;
 }
 function qmBody(c, id, o) {
   if (QC_GAME.includes(id)) return qcGameBody(c, id, o);

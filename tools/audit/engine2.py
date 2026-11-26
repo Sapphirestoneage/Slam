@@ -1277,6 +1277,31 @@ def quick_check(fn, x, o, ck, law):
         a, b = grow(lo), grow(hi)
         ck('from the early age', o['a'], a, max(1.0, a * 1e-9)); ck('from the late age', o['b'], b, max(1.0, b * 1e-9))
         ck('catch-up a month', o['catchUp'], x['monthly'] * a / b if b > 0 else None, 0.01)
+    elif fn == 'qcCutInvest':
+        # Cut it or invest it: the kept money is a plain sum; the invested money is stepped month by month at the
+        # monthly rate that compounds to the yearly return. The round headline: the rule scaled at its own years and
+        # return, else the worked figure; both to two figures, by the decimal string (not by a logarithm).
+        n = x['years'] * 12; g = (1 + x['ret']) ** (1 / 12) - 1; b = 0.0
+        for _ in range(n):
+            b = b * (1 + g) + x['monthly']
+        kept = x['monthly'] * n; rule = x['rule']
+        def two(v):
+            if v <= 0:
+                return 0
+            whole = len(str(int(v)))
+            if whole <= 2:
+                return float(int(v + 0.5))
+            unit = 10 ** (whole - 2)
+            return float(int(v / unit + 0.5) * unit)
+        at = x['years'] == rule['years'] and abs(x['ret'] - rule['ret']) < 1e-9
+        ck('kept', o['kept'], kept, 1e-6); ck('invested', o['invested'], b, max(0.01, b * 1e-9)); ck('times as much', o['ratio'], b / kept, 1e-9)
+        if o['atRule'] != at:
+            ck('at the rule (1 yes, 0 no)', 1.0 if o['atRule'] else 0.0, 1.0 if at else 0.0)
+        per = x['monthly'] / rule['monthly']
+        ck('round, kept', o['roundKept'], two(rule['kept'] * per if at else kept), 1e-6)
+        ck('round, invested', o['roundInvested'], two(rule['invested'] * per if at else b), 1e-6)
+        ratio = b / kept
+        ck('about so many times', o['times'], float(int(ratio + 0.5)) if ratio >= 2 else int(ratio * 10 + 0.5) / 10, 1e-9)
     elif fn == 'qcAdd':
         stage = lambda a: x['little'] if a <= 4 else x['school'] if a <= 12 else x['teen']
         ck('kids to 18', o['kids'], sum(stage(a) for a in range(x['age'], 18)))
@@ -1894,7 +1919,7 @@ def run(cases, ref, il=None):
             peers_check(fn, x, o, ck)
         elif fn in ('ivMix', 'ivFees', 'ivHeatCell', 'ivRoth'):
             invest_check(fn, x, o, ck)
-        elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
+        elif fn in ('qcHysa', 'qcDca', 'qcSmall', 'qcInflation', 'qcStart', 'qcCutInvest', 'qcAdd', 'qcJobless', 'qcConsolidate', 'qcLeave', 'qcRoommates', 'qcW4', 'qcGlance'):
             quick_check(fn, x, o, ck, law)
         elif fn == 'careerRoi':
             # Career and education: the price, the raise, the payback and the lifetime value from the definitions; the

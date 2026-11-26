@@ -107,13 +107,14 @@
   chk("core/quick.js is the same code as js/math/quick.js of the main app", qcp.status === 0, qcp.stdout);
   X("quick");
   chk(
-    "the list has the six new cards",
+    "the list has the six new cards, and cut it or invest it",
     [
       "A high-yield savings account?",
       "All at once, or a little each month?",
       "What does each use cost?",
       "Is it worth the hassle?",
       "What does waiting to start cost?",
+      "Cut it, or invest it?",
       "Is this warranty worth it?",
     ].every(t => ov().includes(t))
   );
@@ -154,6 +155,53 @@
     ov().includes(money(Math.round(wt.gap))) && ov().includes("to 60") && clean(ov()),
     junk(ov())
   );
+  /* Eli's round rule (Nov 26 2026): the headline is round, the exact figures are in Show the math */
+  const ct = qcCutInvest({ monthly: 100, years: 30, ret: 0.07 });
+  X("qmopen", "cut");
+  chk(
+    "cut or invest: the headline is the round rule, about $30k and about $90k for $100 a month",
+    ov().includes("about $30k") && ov().includes("about $90k") && ov().includes("the round rule") && clean(ov()),
+    junk(ov())
+  );
+  chk(
+    "cut or invest: the ratio line, about 1/3 and about 3 times",
+    ct.oneIn === 3 &&
+      ct.times === 3 &&
+      ov().includes("Cutting it is about 1/3 of investing it") &&
+      ov().includes("about 3 times as much")
+  );
+  chk(
+    "cut or invest: the exact figures in Show the math are the engine's ($36,000 and about $117,000)",
+    Math.round(ct.kept) === 36000 &&
+      Math.abs(ct.invested - (100 * (Math.pow(1.07, 30) - 1)) / RM) < 1e-6 &&
+      /Show the math[\s\S]*The exact figures/.test(ov()) &&
+      ov().includes(money(36000) + " kept") &&
+      ov().includes(money(Math.round(ct.invested))) &&
+      ov().includes("Exact ratio: " + ct.ratio.toFixed(2) + " times")
+  );
+  X("qmset", "250", "amt");
+  chk("cut or invest: the rule scales with the amount", ov().includes("about $75k") && ov().includes("about $230k"));
+  X("qmset", "10", "yrs");
+  const ct2 = qcCutInvest({ monthly: 250, years: 10, ret: 0.07 });
+  chk(
+    "cut or invest: at other years the headline is the worked figure, rounded, and says so",
+    !ct2.atRule &&
+      ov().includes("about " + lkK(ct2.roundKept)) &&
+      ov().includes("about " + lkK(ct2.roundInvested)) &&
+      ov().includes("rounded") &&
+      !ov().includes("about $75k")
+  );
+  {
+    const c = C(),
+      imp = stgImpact(c, { save: 250, take: 0, equity: 0, once: 0, value: 0 }, "full");
+    chk(
+      "cut or invest: the days closer to FI are the Strategy Engine's own",
+      imp.fi != null && imp.fi > 0
+        ? ov().includes("Days closer to FI") && ov().includes(kitDays(imp.fi).toLocaleString())
+        : !ov().includes("Days closer to FI"),
+      imp.fi
+    );
+  }
   X("qmopen", "warranty");
   chk(
     "warranty: 20% of $600 is $120, they meet at 25%",

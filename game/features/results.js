@@ -7,12 +7,13 @@
                (Debt-to-income, Months of cushion, Savings rate, Net worth, FI progress), each with its value,
                its target, the time to the target at today's pace and what reaching it unlocks, then one
                button, "Start my first win". (2) Home as four cards in a priority grid: Your next win (the
-               biggest, with one pulsing button), By the end of this month (net worth to the last day of the
+               biggest: "Your goal now", the step the player is on, then "Get there faster", the one move
+               with one pulsing button; Eli, Nov 26 2026), By the end of this month (net worth to the last day of the
                month, solid if the planned moves happen, dotted if not), You are here (the route strip of the
                eras), and four metric tiles with See all metrics.
    INPUT       The profile c and the derived numbers d. The open sheet (W.kind firstplan, from spiral.js).
    OUTPUT      Math (compositions of the engines, no formula of their own): rsFire, rsLead, rsCards, rsCard,
-               rsNextWin, rsMonthEnd, rsRoute, rsTiles, rsBook. Views: rsRevealBody (the reveal inside
+               rsNextWin, rsGoal, rsMonthEnd, rsRoute, rsTiles, rsBook. Views: rsRevealBody (the reveal inside
                spPlanSheet of spiral.js), homeResults (the four cards, called by homeQuadTop in ux.js),
                rsWinCard, rsMonthCard, rsRouteCard, rsTilesCard (worker 2 of the run can call each one).
                Parts of functions in other files: topbarHome (topbarHTML in planner.js), nvRowHome (nvRowBase
@@ -22,7 +23,7 @@
                features/debts.js (dbPlan, dbLive, dbPay, dbStatus), features/strat.js (stgRank),
                features/spiral.js (spRoute, spDest, spWhen), features/look.js (lkNwText, lkK),
                features/games2.js (cashCal, calOf), features/kit.js (kitPill, kitDays, whereFromText),
-               features/canon.js (fwNextDollarLine), screens/dash.js (dkTile, dkArea, dkMonth, goalFwd).
+               features/canon.js (fwNextDollarLine, fwStepOf), core/frameworks.js (FW_STEP_HEAD), screens/dash.js (dkTile, dkArea, dkMonth, goalFwd).
    RULES       Every number comes from an existing engine. A number from typical amounts is a Guess: it is
                greyed, labeled "typical", and has Put in yours. Net worth is a range while any piece is a
                Guess. No red, no verdict words, about 15 words of text a card, the details collapsed.
@@ -331,6 +332,39 @@ function rsNextWin(c, d) {
   };
 }
 
+/* ---------- YOUR GOAL NOW ---------- */
+/* The goal that Your next win works toward: the step the player is on. Below zero it is the debt-free step, with
+   its date at today's payments (rsLead). Else it is the FOO step of the next dollar (fwStepOf, on nxaCalc), with
+   the next-dollar line and its amount to go. A FIRE type (Lean, Coast and so on) is a status on that timeline, thus
+   it is never the goal here. No formula of its own. */
+function rsGoal(c, d) {
+  d = d || derive(c);
+  if (fwLead({ worth: d.nw, fire: rsFire(c) }) === "debtfree") {
+    const L = rsLead(c, d);
+    return {
+      kind: "debtfree",
+      t: "Be debt-free",
+      s: L.months == null ? L.sub : L.months <= 0 ? L.sub : L.big + ", " + L.sub,
+      a: L.act,
+      v: L.v,
+      go: "See the plan",
+    };
+  }
+  const S = typeof fwStepOf === "function" ? fwStepOf(c) : { step: null },
+    line = S.step && typeof fwNextDollarLine === "function" ? fwNextDollarLine(c) : null;
+  if (S.step && FW_STEP_HEAD[S.step])
+    return { kind: "foo", step: S.step, t: FW_STEP_HEAD[S.step], s: line || "", a: "nxa", v: "", go: "See the order" };
+  const dest = spDest(spRoute(c, d));
+  return {
+    kind: "stop",
+    t: dest ? dest.n : "Past every stop",
+    s: dest ? spWhen(dest.m) : "",
+    a: "tab",
+    v: "map",
+    go: "See the map",
+  };
+}
+
 /* ---------- BY THE END OF THIS MONTH ---------- */
 /* Net worth to the last day of the month from the cash calendar (cashCal): each day's money in less money out, with
    the debt payments put back (they move money from cash to a debt, so net worth stays). Planned: with the next win's
@@ -457,8 +491,10 @@ function rsRevealBody(c, route) {
 /* Home, the four cards. Worker 2 of the run can call each card by name. */
 function rsWinCard(c, d) {
   const w = rsNextWin(c, d),
-    dl = w.dollar || (typeof fwNextDollarLine === "function" ? fwNextDollarLine(c) : null);
-  return `<div class="card dkcard rsq rswin" data-fid="rs:win"><div class="row between dkhead"><span class="dklabel">Your next win</span>${w.pending ? `<span class="pill">Check the fit</span>` : ""}</div><b class="rswint">${esc(w.t)}</b><div class="rsnums">${w.amt > 0 ? `<span><b>${money(w.amt)}</b><i class="tiny muted">a month</i></span>` : ""}${w.days ? `<span><b>${w.days.toLocaleString()} days</b><i class="tiny muted">closer to ${esc(w.daysOf)}</i></span>` : ""}</div>${w.unlock ? `<div class="tiny"><span class="muted">Unlocks</span> ${esc(w.unlock)}</div>` : ""}<button class="primary go wide" data-a="${esc(w.a)}" data-v="${esc(w.v)}">${esc(w.l)}</button><details class="math"><summary>Why this one</summary><div class="inner tiny stack" style="gap:4px">${w.s ? `<div>${esc(w.s)}</div>` : ""}${dl ? `<div>${esc(dl)}</div>` : ""}${w.math.map(l => `<div>${esc(l)}</div>`).join("")}<button class="ghost slim" data-a="stratlib">See all moves</button></div></details></div>`;
+    g = rsGoal(c, d);
+  /* the goal is a row to tap (a caret and its own words), not a second primary button */
+  const goal = `<button class="rowbtn rsgoal" data-a="${esc(g.a)}" data-v="${esc(g.v)}" data-fid="rs:goal"><span class="rsgoalt"><span class="dklabel">Your goal now</span><b>${esc(g.t)}</b>${g.s ? `<span class="tiny">${esc(g.s)}</span>` : ""}</span><span class="fkgo">${esc(g.go)} ›</span></button>`;
+  return `<div class="card dkcard rsq rswin" data-fid="rs:win"><div class="row between dkhead"><span class="dklabel">Your next win</span>${w.pending ? `<span class="pill">Check the fit</span>` : ""}</div>${goal}<div class="dklabel rsfast">Get there faster</div><b class="rswint">${esc(w.t)}</b><div class="rsnums">${w.amt > 0 ? `<span><b>${money(w.amt)}</b><i class="tiny muted">a month</i></span>` : ""}${w.days ? `<span><b>${w.days.toLocaleString()} days</b><i class="tiny muted">closer to ${esc(w.daysOf)}</i></span>` : ""}</div>${w.unlock ? `<div class="tiny"><span class="muted">Unlocks</span> ${esc(w.unlock)}</div>` : ""}<button class="primary go wide" data-a="${esc(w.a)}" data-v="${esc(w.v)}">${esc(w.l)}</button><details class="math"><summary>Why this one</summary><div class="inner tiny stack" style="gap:4px">${w.s ? `<div>${esc(w.s)}</div>` : ""}${w.math.map(l => `<div>${esc(l)}</div>`).join("")}<div>The goal is the step you are on. The move is the fastest easy way toward it.</div><button class="ghost slim" data-a="stratlib">See all moves</button></div></details></div>`;
 }
 function rsMonthCard(c, d) {
   const E = rsMonthEnd(c, d);

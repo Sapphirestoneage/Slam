@@ -117,6 +117,12 @@ New York's weekly rate from the handbook's rule and the runway with it; consolid
 and the loan as a sum of discounted payments; leaving a job on the second engine's own tax; roommates by share of the
 space or of the pay; the W-4 check with the child tax credit typed in again; and the month at a glance.
 
+Since Nov 26 2026 (follow-ups from Eli's answers) it also covers cut it or invest it (`qcCutInvest`, M8Q; Eli's round
+$30k / $90k rule): the kept money as a plain sum, the invested money stepped month by month at the monthly rate that
+compounds to the yearly return (SLAM uses the closed form), the ratio, and the round headline (the rule scaled by the
+amount at 30 years and 7%, else the worked figure, both to two figures by the decimal string where SLAM uses a
+logarithm).
+
 Since Nov 25 2026 (run JOE-1) it also covers the Job of Existing (`js/math/jobs.js`): which of the six unpaid jobs
 a person holds, worked out a second time from each answer that counts, and the order; the hours a month of running
 the money (each job at its tap or its default, the total, Guess / Close / Exact); each task's minutes a month; and

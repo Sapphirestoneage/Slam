@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-26. Files: 204. Lines: 119,597. Top-level functions: 2893. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-26. Files: 204. Lines: 119,732. Top-level functions: 2896. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -36,7 +36,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 22 | `core/giving.js` | 168 | 10 | 1 | 0 | Giving (run Finish everything partly built, Part 16): the giving rate on the base the player picks, the target a share comes to (maaser is commonly 10... |
 | 23 | `core/quest.js` | 363 | 20 | 1 | 0 | The math of the quest screens (run Not built, groups 1 to 5, Part 10a): the quest mode character sheet, capacity, how this plan fails, hidden costs, w... |
 | 24 | `core/trip.js` | 322 | 17 | 2 | 0 | Travel: a trip line by line (flights, lodging, food a day, the card's fee on other currencies, visa fees, travel insurance), points (cash or redeem), ... |
-| 25 | `core/quick.js` | 163 | 14 | 0 | 0 | The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost per use, Return on Hassle, worth it, personal inflation, start... |
+| 25 | `core/quick.js` | 187 | 15 | 1 | 0 | The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost per use, Return on Hassle, worth it, personal inflation, start... |
 | 26 | `core/play.js` | 235 | 6 | 0 | 0 | The math of the play parts (run Not built, groups 1 to 5, Part 10b): the daily life-sim challenge, the credit score game (myFICO's five factor shares)... |
 | 27 | `core/gigcore.js` | 279 | 15 | 1 | 0 | Gig and self-employed math with no tax engine: the price floor from a profit before tax and the billable hours, the set-aside so far, retirement room ... |
 | 28 | `core/hardcore.js` | 134 | 6 | 1 | 0 | The math and the words of Hard moments (run Not built, groups 1 to 5, Part 7): the split of the rent, a roommate leaving, untangling after a breakup, ... |
@@ -75,7 +75,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 61 | `features/debts.js` | 449 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
 | 62 | `features/import.js` | 357 | 9 | 9 | 0 | Fill in the spending from a bank or card statement file |
 | 63 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
-| 64 | `features/quick.js` | 467 | 13 | 1 | 0 | Quick math. Small what-if questions: does this car fit, how much home fits, what one dollar becomes, and (run Not built, Part 2) a HYSA switch, all at... |
+| 64 | `features/quick.js` | 531 | 14 | 1 | 0 | Quick math. Small what-if questions: does this car fit, how much home fits, what one dollar becomes, and (run Not built, Part 2) a HYSA switch, all at... |
 | 65 | `features/reveal.js` | 269 | 8 | 1 | 0 | Meet your character. Six cards, one tap each, change the numbers into a person: chapter, era, who the player is with money, the strongest number, and ... |
 | 66 | `features/moneylog.js` | 255 | 11 | 4 | 0 | Two tools. (1) The money log: all logged entries by month, read-only, with a copy as plain text |
 | 67 | `features/drills.js` | 525 | 15 | 9 | 0 | Four tools for hard days. (1) Money fire drills: a money fear, calculated on the numbers of the player, then one small action |
@@ -181,7 +181,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 167 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 168 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 169 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 170 | `data/patchnotes.js` | 585 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 170 | `data/patchnotes.js` | 595 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 171 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 172 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 173 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
@@ -208,14 +208,14 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 194 | `features/guild.js` | 264 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
 | 195 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 196 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
-| 197 | `features/results.js` | 533 | 21 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
+| 197 | `features/results.js` | 569 | 22 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
 | 198 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
 | 199 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
 | 200 | `features/lifemap.js` | 250 | 9 | 5 | 0 | The life tech tree (run Results-first Home, item 4) |
 | 201 | `features/book.js` | 629 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 202 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 203 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 204 | `features/built.js` | 1,857 | 4 | 25 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 204 | `features/built.js` | 1,858 | 4 | 26 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

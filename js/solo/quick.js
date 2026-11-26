@@ -4,8 +4,9 @@
 // with tests; these specs only say what to ask and how to say the answer. Amounts the app cannot source (what a child,
 // a pet or an apartment costs where you live, how fast your own prices moved) are the person's own taps.
 import { money } from './shell.js';
-import { qcHysa, qcDca, qcNominal, qcWarranty, qcPerUse, qcHassle, qcWorth, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../math/quick.js';
-import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance, QC_SPLIT } from '../math/quickplan.js';
+import { qcHysa, qcDca, qcNominal, qcWarranty, qcPerUse, qcHassle, qcWorth, qcInflation, qcStart, qcCutInvest, QC_CUT_RULE, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../math/quick.js';
+import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance, qcCutFi, QC_SPLIT } from '../math/quickplan.js';
+import { metrics } from '../math/metrics.js';
 
 const pct = (v, d = 0) => `${+(v * 100).toFixed(d)}%`, big = v => money(Math.round(v)), cents = v => `$${v.toFixed(2)}`;
 const opt = (list, f = String) => list.map(v => [f(v), v]);
@@ -16,6 +17,11 @@ const AGES = [22, 25, 30, 35, 40, 45, 50, 55];
 const PAY = [3000, 4000, 5000, 6500, 8000, 10000], SPEND = [2000, 3000, 4000, 5000, 6500];
 const planReal = ref => ref.presets.realReturn.default, planInfl = ref => ref.presets.inflation.default;
 const realWords = r => `Growth at the plan's ${pct(r, 1)} a year after inflation, so every amount is in today's dollars.`;
+const kWord = v => (v >= 1000 ? `$${+(v / 1000).toFixed(1)}k` : money(v)), days = v => `${Math.round(v).toLocaleString('en-US')} ${Math.round(v) === 1 ? 'day' : 'days'}`;
+// The whole plan behind the page, when the link carries one: its own return and its own FI date (cutinvest.html).
+const planOf = api => { try { return metrics(api.store.doc, api.ref, { now: new Date() }); } catch { return null; } };
+const ownReturn = (api, ref) => { const r = planOf(api)?.inputs?.realReturn; return r != null && r !== planReal(ref) ? r : null; };
+const CUT_ROUND = `${kWord(QC_CUT_RULE.kept)} / ${kWord(QC_CUT_RULE.invested)} is the round rule for ${money(QC_CUT_RULE.monthly)} a month: ${QC_CUT_RULE.years} years at ${pct(QC_CUT_RULE.ret)} a year after inflation, rounded on purpose.`;
 const W4_SMALL = 'Federal income tax only, with the standard deduction. State tax, other income and other credits are not in it; the IRS Tax Withholding Estimator covers those.';
 const W4_FOLD = [['How the W-4 line is worked out', 'Short: the gap divided by the paychecks left goes on Step 4(c), as extra withholding each paycheck.', 'Over: payroll spreads a Step 4(b) deduction across the whole year, so the amount there is the refund times paychecks a year, over paychecks left times your top rate. A paycheck cannot hold back less than nothing, so when the refund is more than the paychecks left withhold, the rest still comes at tax time. Change it back in January, or keep it if next year looks the same.', 'Hand the new W-4 to payroll; it takes effect on the next paycheck or two.']];
 const hourly = { key: 'wage', label: 'What an hour of your work pays you', picks: [15, 20, 30, 45, 60, 90], help: 'Take-home over the hours the job really takes. "What do I really make an hour?" works it out.' };
@@ -105,6 +111,23 @@ export const QUICK_SPECS = {
     answer: R => ({ lead: `Started at ${R.early}, ${money(R.monthly)} a month is worth this much more at ${R.to}`, big: big(R.gap), line: `${big(R.a)} from ${R.early}, ${big(R.b)} from ${R.late}. The ${R.waitYears} early years put in only ${big(R.putA - R.putB)} more. To end at the same place from ${R.late}, it takes about ${big(R.catchUp)} a month.`,
       rows: [[`From ${R.early}`, `${big(R.putA)} put in`, big(R.a)], [`From ${R.late}`, `${big(R.putB)} put in`, big(R.b)]], small: realWords(R.ret),
       fold: [['Whose idea this is', 'Every personal finance book has a version of this chart; the best-known compares two savers who start ten years apart. It is not here to make anyone feel late: the best day to start is the one in front of you.']] }),
+  },
+  cutinvest: {
+    title: 'Cut it, or invest it?', why: 'A cost you cut is money kept. The same money invested every month becomes about three times as much. Two round numbers show it.',
+    fields: [{ key: 'monthly', label: 'What you cut a month', picks: [25, 50, 100, 250], start: QC_CUT_RULE.monthly, help: 'A subscription, a habit, a bill you got lowered. Tap one or type your own.' },
+      { key: 'years', label: 'For how long', options: opt([10, 20, 30, 40], v => `${v} years`), start: QC_CUT_RULE.years },
+      { key: 'ret', label: 'Growth a year, after inflation', options: (v, ref, api) => [...ref.presets.realReturn.values.map(r => [r === planReal(ref) ? `${pct(r, 1)}, the standard` : pct(r, 1), r === planReal(ref) ? null : r]), ...(ownReturn(api, ref) == null ? [] : [[`Your plan's ${pct(ownReturn(api, ref), 1)}`, 'plan']])],
+        help: 'After inflation, so every amount is in today\'s dollars. The standard is what stocks have returned over long stretches; no year is promised.' }],
+    run: (v, ref, api) => { const R = qcCutInvest({ monthly: v.monthly, years: v.years, ret: v.ret === 'plan' ? ownReturn(api, ref) ?? planReal(ref) : v.ret ?? planReal(ref) }); return R.ready ? { ...R, fi: qcCutFi(planOf(api), v.monthly) } : R; },
+    answer: R => ({ lead: R.atRule ? `The round rule, for ${money(R.monthly)} a month over ${R.years} years` : `Rounded, for ${money(R.monthly)} a month over ${R.years} years at ${pct(R.ret, 1)}`,
+      pair: [['Cut it: kept', `about ${kWord(R.roundKept)}`], ['Invest it: grows to', `about ${kWord(R.roundInvested)}`]],
+      line: `${R.oneIn ? `Cutting it is about 1/${R.oneIn} of investing it.` : 'Over a stretch this short, cutting it keeps most of what investing it becomes.'} Invested, the same ${money(R.monthly)} is worth about ${R.times} times as much.`,
+      rows: [['How exact this is', R.atRule ? 'round on purpose, easy to remember' : 'worked from your taps, two figures kept', R.atRule ? 'The round rule' : 'Rounded'], ...(R.fi ? [['Your FI date, if you cut it and invest it', 'the whole plan\'s own date, at its own return', `${days(Math.abs(R.fi.days))} ${R.fi.days >= 0 ? 'sooner' : 'later'}`]] : [])],
+      small: `${CUT_ROUND} The exact figures for your taps are in Show the math.`,
+      fold: [['Show the math: the exact figures', `Cut it, exact: ${money(R.monthly)} x 12 x ${R.years} years = ${big(R.kept)} kept. Nothing grows; it is only not spent.`,
+        `Invest it, exact: ${money(R.monthly)} a month for ${R.months} months, growing ${pct(R.ret, 1)} a year after inflation, added monthly = ${big(R.invested)}. Of that, ${big(R.growth)} is growth.`,
+        `Exact ratio: ${big(R.invested)} over ${big(R.kept)} is ${R.ratio.toFixed(2)} times.`, CUT_ROUND, 'Today\'s dollars, before any tax on the growth. A lower or higher return moves the second number a lot; tap one to see.'],
+        ['Whose rule this is', 'Eli\'s, from coaching: "30k is cutting 100; 90k is if you invested that 100." It is kept round so it is easy to carry in your head. The point is the third: what you cut is worth about three times as much once it is invested.']] }),
   },
   waiting: {
     title: 'What does waiting to start cost?', why: 'Putting off investing for a year or a few feels free. One number shows what the wait costs by the time you stop working.',
@@ -236,4 +259,4 @@ export const QUICK_SPECS = {
   },
 };
 // The quick shelf, in the order the hub shows it.
-export const QUICK_SHELF = ['glance', 'hysa', 'dca', 'timemachine', 'waiting', 'consolidate', 'w4', 'jobless', 'leave', 'apartment', 'roommates', 'kids', 'pet', 'inflation', 'peruse', 'worthit', 'hassle', 'warranty'];
+export const QUICK_SHELF = ['glance', 'hysa', 'dca', 'timemachine', 'waiting', 'cutinvest', 'consolidate', 'w4', 'jobless', 'leave', 'apartment', 'roommates', 'kids', 'pet', 'inflation', 'peruse', 'worthit', 'hassle', 'warranty'];

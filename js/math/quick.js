@@ -16,6 +16,11 @@ export const qcMonthlyOf = rate => (1 + (rate ?? 0)) ** (1 / 12) - 1;
 // The plan's return after inflation, with inflation put back (for a comparison with a savings rate, which is not after inflation).
 export const qcNominal = (real, inflation) => (1 + (real ?? 0)) * (1 + (inflation ?? 0)) - 1;
 
+// A monthly amount invested at a return quoted as a year's growth (7% is 7% over the year, compounded monthly), for
+// `months`: qcGrow at the monthly rate that compounds to it. Starting earlier, the cost of waiting and the cut-or-invest
+// rule all stand on this one line.
+export const qcInvested = (monthly, ret, months) => qcGrow(0, monthly, 12 * qcMonthlyOf(ret), months);
+
 // HYSA switch: the same balance where it is, and in an account paying the other rate.
 export function qcHysa({ balance = null, fromRate = null, toRate = null, monthly = 0, years = 5 } = {}) {
   if (!(balance >= 0) || fromRate == null || toRate == null || !(balance > 0 || monthly > 0)) return { ready: false };
@@ -86,11 +91,28 @@ export function qcInflation({ parts = [], planRate = null } = {}) {
 // end at the same place.
 export function qcStart({ monthly = null, ageA = null, ageB = null, to = 65, ret = null } = {}) {
   if (!(monthly > 0) || !(ageA > 0) || !(ageB > 0) || ret == null || ageA >= to) return { ready: false };
-  const g = qcMonthlyOf(ret), fv = age => { const n = Math.max(0, (to - age) * 12); return g === 0 ? monthly * n : monthly * ((1 + g) ** n - 1) / g; };
+  const fv = age => qcInvested(monthly, ret, (to - age) * 12);
   const early = Math.min(ageA, ageB), late = Math.max(ageA, ageB), a = fv(early), b = fv(late);
   const factor = b > 0 ? a / b : null;
   return { ready: true, monthly, early, late, to, ret, a, b, gap: a - b, putA: monthly * Math.max(0, to - early) * 12, putB: monthly * Math.max(0, to - late) * 12,
     catchUp: factor == null ? null : monthly * factor, waitYears: late - early, perYearWaited: late > early ? (a - b) / (late - early) : 0 };
+}
+
+// Cut it or invest it (the "$30k / $90k" rule of thumb, Eli: "30k is cutting 100; 90k is if you invested that 100";
+// "keep it as round but basically it's 1/3"): a monthly cost cut and kept, with no growth, next to the same amount
+// invested every month. The headline is round: at the rule's own years and return it is the round rule, scaled by the
+// amount; at any other tap it is the worked figure, rounded to two figures. kept and invested are the exact figures
+// (Show the math). times: what investing it is worth next to cutting it; oneIn: the same as "1 / 3", when it is 2 or more.
+export const QC_CUT_RULE = { monthly: 100, kept: 30000, invested: 90000, years: 30, ret: 0.07 };
+export const QC_CUT_SOURCE = 'Eli\'s rule of thumb (SLAM; QUESTIONS 608 (a), answered Nov 26 2026): cutting $100 a month is about $30,000, investing that $100 is about $90,000, so cutting is about a third of investing; round on purpose. The exact figures next to it are the amount x 12 x the years, and the same amount invested monthly at 7% a year after inflation for 30 years';
+export const qcRound = v => { if (!(v > 0)) return 0; const p = 10 ** Math.max(0, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; };
+export function qcCutInvest({ monthly = null, years = QC_CUT_RULE.years, ret = QC_CUT_RULE.ret, rule = QC_CUT_RULE } = {}) {
+  if (!(monthly > 0) || !(years > 0) || ret == null) return { ready: false };
+  const months = years * 12, kept = qcInvested(monthly, 0, months), invested = qcInvested(monthly, ret, months);
+  const atRule = years === rule.years && Math.abs(ret - rule.ret) < 1e-9, per = monthly / rule.monthly, ratio = invested / kept;
+  return { ready: true, monthly, years, ret, months, kept, invested, growth: invested - kept, ratio, atRule,
+    roundKept: qcRound(atRule ? rule.kept * per : kept), roundInvested: qcRound(atRule ? rule.invested * per : invested),
+    times: ratio >= 2 ? Math.round(ratio) : Math.round(ratio * 10) / 10, oneIn: ratio >= 1.5 ? Math.round(ratio) : null };
 }
 
 // Kids: a year of a child's costs by age, from the person's own amounts for each stage, until 18.

@@ -13,7 +13,7 @@ import { runwayOf, backwardsOf, tripCostOf, habitCostOf, loanCostOf, stoppedPayO
 import { ilIncomeTaxOf, ilNationalInsuranceOf, olimPointsOf, aliyahOf } from '../../js/math/aliyah.js';
 import { RULES } from '../../js/registry/assumptions.js';
 import { hbRun, hbBreakeven, hbPriceToRent, hbFivePercent } from '../../js/math/homebuy.js';
-import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
+import { qcHysa, qcDca, qcWarranty, qcPerUse, qcHassle, qcInflation, qcStart, qcCutInvest, QC_CUT_RULE, qcKids, qcPet, qcApartment, qcUiNy, qcBenefitRunway } from '../../js/math/quick.js';
 import { qcConsolidate, qcLeave, qcRoommates, qcW4, qcGlance } from '../../js/math/quickplan.js';
 import { gigInvoicesOf, gigAppsOf, gigProfitFirstOf, gigRetireOf, gigLimitsOf, gigSafeHarborOf, gigPayoutsOf, gigVsFloorOf } from '../../js/math/gig.js';
 import { gigRate, gigSetAside, gigRetire } from '../../js/math/gigplan.js';
@@ -184,6 +184,7 @@ for (let i = 0; i < N; i++) {
   { const parts = ['housing', 'food', 'transport', 'health', 'other'].map(key => ({ key, amount: rnd() < 0.2 ? null : money(50, 4000), change: pick([-0.02, 0, 0.02, 0.03, 0.05, 0.08, 0.12]) })); if (parts.every(q => q.amount == null)) parts[0].amount = 1000;
     const r = qcInflation({ parts, planRate: 0.02 }); add('qcInflation', { parts }, { rate: r.rate, yearMore: r.yearMore }); }
   { const x = { monthly: money(25, 3000), ageA: whole(18, 50), ageB: whole(18, 60), to: 65, ret: pick([0, 0.03, 0.05, 0.07]) }, r = qcStart(x); add('qcStart', x, { a: r.a, b: r.b, catchUp: r.catchUp }); }
+  { const x = { monthly: pick([25, 50, 100, 250, money(5, 2000)]), years: pick([10, 20, 30, 30, 40]), ret: pick([0, 0.06, 0.07, 0.07, 0.08, 0.12]) }, r = qcCutInvest(x); add('qcCutInvest', { ...x, rule: QC_CUT_RULE }, { kept: r.kept, invested: r.invested, ratio: r.ratio, roundKept: r.roundKept, roundInvested: r.roundInvested, atRule: r.atRule, times: r.times }); }
   { const x = { age: whole(0, 17), little: money(1000, 40000), school: money(1000, 30000), teen: money(1000, 30000), upfront: pick([0, 150, 2000]), monthly: money(10, 400), vet: pick([0, 300, 1500]), years: pick([5, 10, 15]), rent: money(500, 6000), depositMonths: pick([0, 1, 2]), lastMonth: pick([0, 1]), brokerMonths: pick([0, 1, 1.8]), moving: pick([0, 600]), setup: pick([0, 1500]), monthlyOther: pick([0, 150]) };
     const k = qcKids(x), p = qcPet(x), a = qcApartment(x); add('qcAdd', x, { kids: k.left, pet: p.lifetime, petFirst: p.firstYear, keys: a.keys, month: a.month }); }
   { const N = ref.limits.unemployment.NY, x = { highQuarter: money(500, 60000), cash: money(1, 60000), spending: money(800, 12000), keep: pick([1, 0.9]) }, U = qcUiNy({ highQuarter: x.highQuarter, rules: N }), R = qcBenefitRunway({ cash: x.cash, spending: x.spending, weekly: U.weekly, weeks: U.weeks, keep: x.keep });

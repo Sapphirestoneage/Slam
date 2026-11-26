@@ -303,3 +303,11 @@ players: speedrun / below zero / FIRE; the same at both widths; no console error
 | Do your next win: start it (on your steps) | not reachable from Home | 6 / 6 / 4 (fit check, open Verdict, Add to my steps) | 2 / 2 / 2 (Start this win, Add to my steps), then the next action in view |
 | Get back Home (from a sheet) | 2 / 2 / 2 | 1 / 1 / 1 | 1 / 1 / 1 (also 1 from the big picture, with the top bar Home) |
 
+## Follow-ups from Eli's answers (Nov 26 2026)
+
+Done and on main. Home's Your next win shows the goal (the FOO step, or the debt-free step below zero) and then how to
+get there faster (the one move, one pulsing button); tap counts as before (1 to open the next win, 2 to put it on your
+steps; FI still in the first screen at 390). A 19th quick calculator, Cut it, or invest it? (`cutinvest.html`, and Menu >
+Quick math in the game): Eli's round $30k / $90k rule in the headline, the exact figures in Show the math. Eli's answers
+are logged in QUESTIONS (580 follow-up, 608 a, 624 d, 626, 639); what was chosen without an answer is QUESTIONS 643.
+Waits for Eli's go, not built: the FOO orders by destination reworked so the FIRE types are statuses on the one timeline.

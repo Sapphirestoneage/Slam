@@ -198,9 +198,10 @@ const WB = [
       WB_FN("rsMonthEnd") &&
       WB_FN("rsRoute") &&
       WB_FN("rsTiles") &&
+      WB_FN("rsGoal") &&
       WB_HAS("gohome") &&
       WB_FN("fwMonthEnd"),
-    "Your next win (one move, its money a month, the days closer to FI or debt-free, what it unlocks, one pulsing button), By the end of this month (solid if the planned moves happen, dotted if not), You are here (the route strip), four metric tiles with See all metrics, and Home on every screen.",
+    "Your next win (your goal now, the step you are on, then how to get there faster: one move, its money a month, the days closer to FI or debt-free, what it unlocks, one pulsing button), By the end of this month (solid if the planned moves happen, dotted if not), You are here (the route strip), four metric tiles with See all metrics, and Home on every screen.",
     null,
   ],
   [
@@ -255,9 +256,9 @@ const WB = [
   ["plan", "Quick math: a car, a home, a dollar later", "b", () => WB_HAS("quick") && WB_FN("qmCar"), "", "quick"],
   [
     "plan",
-    "Quick math: a HYSA switch, all at once or a little each month, cost per use, worth the hassle, what waiting costs, a warranty",
+    "Quick math: a HYSA switch, all at once or a little each month, cost per use, worth the hassle, what waiting costs, cut it or invest it (the round $30k / $90k rule), a warranty",
     "b",
-    () => WB_HAS("quick") && WB_FN("qcHysa") && WB_FN("qcDca") && WB_FN("qcGameBody"),
+    () => WB_HAS("quick") && WB_FN("qcHysa") && WB_FN("qcDca") && WB_FN("qcCutInvest") && WB_FN("qcGameBody"),
     "One engine with the web app's quick calculators (js/math/quick.js). The rest of that shelf (debt consolidation, the W-4 check, unemployment, leaving a job, a first apartment, roommates, kids, a pet, personal inflation, worth it, the month at a glance) is on the web app's small pages.",
     "quick",
   ],

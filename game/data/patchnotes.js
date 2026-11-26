@@ -578,6 +578,16 @@ const PATCH_NOTES = [
       "Your Money or Your Life: step 1b shows your balance sheet, and step 3 shows each month you log in hours of your life.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Your goal, and how to get there faster",
+    l: [
+      "Your next win on Home now shows two things: your goal now, the step you are on, and under it the one move that gets you there faster.",
+      "Tap the goal to see the whole order. The one button still starts the move.",
+      "A new quick calculator, Cut it, or invest it: what a cost you cut keeps, next to what the same money grows to when you invest it. Cutting is about a third of investing.",
+      "It is on the web app's shelf of quick calculators and in the game under Menu, Quick math. The exact figures are under Show the math.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

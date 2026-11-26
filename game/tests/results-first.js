@@ -227,6 +227,49 @@
       w.kind === "step" ||
         (top.includes(esc(w.t)) && top.includes("a month") && (w.days == null || top.includes("days</b>")))
     );
+    /* Eli, Nov 26 2026: both the goal and how to get there faster, in this order */
+    const g = rsGoal(c, d),
+      win = top.slice(top.indexOf("rs:win"), top.indexOf("rs:month")),
+      iGoal = win.indexOf("Your goal now"),
+      iFast = win.indexOf("Get there faster"),
+      iBtn = win.indexOf('class="primary go wide"'),
+      iWhy = win.indexOf("Why this one");
+    chk(
+      k + ": the card shows the goal, then how to get there faster, then the one button, then Why this one",
+      iGoal > 0 && iGoal < iFast && iFast < win.indexOf(esc(w.t), iFast) && iFast < iBtn && iBtn < iWhy,
+      [iGoal, iFast, iBtn, iWhy]
+    );
+    chk(
+      k + ": the goal is a row to tap with its own words, not a second primary button",
+      new RegExp('<button class="rowbtn rsgoal" data-a="' + g.a + '"[^>]*data-fid="rs:goal">').test(win) &&
+        win.includes("<b>" + esc(g.t) + "</b>") &&
+        win.includes(esc(g.go)) &&
+        typeof ACT[g.a] === "function"
+    );
+    chk(
+      k + ": the goal is a step of the one order, never a FIRE type",
+      ["debtfree", "foo", "stop"].includes(g.kind) && !/Lean|Coast|Barista|Chubby|Fat/.test(g.t + " " + g.s),
+      g
+    );
+    if (k === "neg")
+      chk(
+        "neg: below zero the goal is the debt-free step, with the date of the payoff run",
+        g.kind === "debtfree" &&
+          g.a === "debtplan" &&
+          (rsLead(c, d).months > 0 ? g.s.includes(rsLead(c, d).big) : true),
+        g
+      );
+    if (k === "fire")
+      chk(
+        "fire: the goal is the FOO step of the next dollar",
+        g.kind === "foo" && g.t === FW_STEP_HEAD[fwStepOf(c).step] && g.s === (fwNextDollarLine(c) || ""),
+        g
+      );
+    chk(
+      k + ": no line of the goal or the move is long (about 15 words)",
+      [g.t, w.t].every(x => x.split(/\s+/).length <= 15) && g.s.split(/\. /).every(x => x.split(/\s+/).length <= 16),
+      g.s
+    );
     chk(
       k + ": the chart is solid and dotted",
       /rs:month[\s\S]*stroke-dasharray:0.5 5[\s\S]*stroke:var\(--sap\);stroke-width:2.5/.test(top) &&

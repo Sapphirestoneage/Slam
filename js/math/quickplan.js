@@ -10,6 +10,7 @@ import { federalTax, takeHomeFromGross, grossFromTakeHome, childTaxCredit } from
 import { rowShare } from './household.js';
 import { monthlySurplus, savingsRate } from './spending.js';
 import { HM_SPLIT, splitSharesOf } from './hard.js';
+import { fiMoveOf } from './fi.js';
 
 // Debt consolidation: the debts as they are (one balance at its average rate and what is paid now) next to one loan
 // that pays them off. feePct: the origination fee, taken out of what the loan pays out, so the loan is larger.
@@ -75,4 +76,14 @@ export function qcGlance({ takeHome = null, spending = null, debtOutside = 0 } =
   const S = monthlySurplus({ takeHome, spending, debtPaymentsOutsideSpending: debtOutside ?? 0 });
   const rate = savingsRate({ takeHome, surplus: S.value });
   return { ready: true, takeHome, spending, debtOutside: debtOutside ?? 0, out: spending + (debtOutside ?? 0), left: S.value, rate: rate.value, perDay: (spending + (debtOutside ?? 0)) * 12 / 365, keptYear: S.value * 12, text: S.text };
+}
+
+// Cut it and invest it, on the plan's own FI date (M53 through fiMoveOf, M9Z): the amount goes in every month from
+// now, and the cost is gone for good, so the FI number falls by a year of it over the withdrawal rate (the same move
+// as the subscriptions card of Enough). m is metrics(). days: how many days sooner; null without an FI date.
+export function qcCutFi(m, monthly, { from = new Date() } = {}) {
+  const wr = m?.inputs?.withdrawalRate;
+  if (!(monthly > 0) || !(wr > 0)) return null;
+  const r = fiMoveOf(m, { changes: [{ at: 0, monthly }], fi: -(monthly * 12) / wr }, { from });
+  return r == null || r.never || r.fineDays == null ? null : { days: -r.fineDays, before: r.before, after: r.after };
 }
