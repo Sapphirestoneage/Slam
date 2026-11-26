@@ -5,6 +5,7 @@ import { boot, h, btn, chip, money, numBox, stepLine, carryCard, foot, gameWords
 import { answer, onFile } from '../journey.js';
 import { runwayOf, CUTS, STILL_IN } from '../solo.js';
 import { HAPPENS } from '../extras.js';
+import { cmFyou } from '../math/canonmath.js';
 
 const $ = id => document.getElementById(id);
 function draw(api) {
@@ -36,6 +37,27 @@ function draw(api) {
       h('p', { style: { fontWeight: 700 } }, R.covered ? 'What still comes in covers what goes out. The zombies get bored and leave.' : `If the zombies shut every office in town tomorrow, your cash holds the fort for ${R.days.toLocaleString('en-US')} days. Each ${money(1000)} more adds about ${Math.round(R.perThousand)}.`),
       seg);
   };
+  // Part 21: F-You money (JL Collins), the months you could walk away from a job: the cash above, plus what you could
+  // sell without a penalty, at what life costs with the job gone (js/math/canonmath.js, one function with the game).
+  const fyou = () => {
+    const inv = m.soloFyInv ?? null, work = m.soloFyWork ?? null, health = m.soloFyHealth ?? null;
+    const F = cmFyou({ reach: cash == null ? null : cash + (inv ?? 0), spending, workCosts: work, health });
+    const pick = patch => { api.remember(patch); api.render(); };
+    const row = (label, key, opts, cur, show) => h('div.st-field', {}, h('div.st-flabel', {}, label), h('div.st-chips', {}, opts.map(v => chip(show(v), cur === v, () => pick({ [key]: cur === v ? null : v })))));
+    const mo = v => (v == null ? 'No end' : `${v < 10 ? v.toFixed(1) : Math.round(v)} months`);
+    return h('div.st-card', { id: 'fyou' }, h('div.st-eyebrow', {}, 'F-You money'), h('h2', { style: { margin: '0 0 6px' } }, 'Months you could walk away from a job'),
+      F.ready ? [h('div.st-big', {}, mo(F.months)), h('p', { style: { fontWeight: 700 } }, `${money(Math.round(F.reach))} you could reach, at ${money(Math.round(F.walk))} a month with the job gone.${F.next != null ? ` ${money(Math.round(Math.max(0, F.toNext)))} more reaches ${F.next} months.` : ''}`)]
+        : h('p.st-soft', { style: { margin: '0 0 8px' } }, 'Two numbers above and the meter fills in.'),
+      row('Investments you could sell without a penalty (a taxable account, Roth contributions)', 'soloFyInv', [0, 5000, 25000, 100000], inv, v => (v ? money(v) : 'None')),
+      row('Work costs that stop with the job, a month (commute, lunches, clothes)', 'soloFyWork', [0, 100, 250, 500, 1000], work, v => (v ? money(v) : 'None')),
+      row('Health cover on your own, a month', 'soloFyHealth', [0, 300, 600, 900, 1500], health, v => (v ? money(v) : 'Covered another way')),
+      F.ready ? h('details.st-fold', {}, h('summary', {}, 'Show the math'), h('ol.st-steps', {},
+        h('li', {}, `Cash ${money(Math.round(cash))}${inv ? ` + investments ${money(inv)}` : ''} = ${money(Math.round(F.reach))}`),
+        h('li', {}, `A month: ${money(Math.round(spending))}${F.counted.workCosts ? ` - work costs ${money(work)}` : ''}${F.counted.health ? ` + health cover ${money(health)}` : ''} = ${money(Math.round(F.walk))}`),
+        h('li', {}, F.months == null ? 'Nothing goes out, so it has no end.' : `${money(Math.round(F.reach))} / ${money(Math.round(F.walk))} = ${mo(F.months)}`),
+        !F.counted.workCosts || !F.counted.health ? h('li', {}, 'A tap not given counts as nothing for now.') : null)) : null,
+      h('p.st-small.st-soft', { style: { marginBottom: 0 } }, 'JL Collins, The Simple Path to Wealth, calls it F-You money: enough set aside that a job cannot hold you.'));
+  };
   let card = result(), carry = null;
   const setNum = (key, v, typing) => { if (key === 'cash') { const t = cash || 0, c = cashNow.checking ?? 0; answer(api.store, 'cash', v == null ? { checking: 0, savings: 0 } : t > 0 ? { checking: Math.round(v * c / t), savings: v - Math.round(v * c / t) } : { checking: 0, savings: v }); } else answer(api.store, 'spending', { gut: v ?? 0 });
     if (typing) { const fresh = (() => { const c2 = onFile(api.store.doc, 'cash'), s2 = onFile(api.store.doc, 'spending'); return runwayOf({ cash: (c2.checking ?? 0) + (c2.savings ?? 0), spending: s2.gut ?? null, stillIn, cut }); })(); api.save(); soft(fresh); } else api.render(); };
@@ -57,7 +79,7 @@ function draw(api) {
   const keep = document.activeElement?.id;
   $('main').replaceChildren(...[
     h('div.st-card.hero', {}, h('div.st-eyebrow', {}, 'One thing, done right'), h('h1', {}, api.me.title), h('p', { style: { marginBottom: 0 } }, 'If the pay stopped tomorrow, how many months are covered? Looking at it once, calmly, is the whole exercise.')),
-    inputs, card, zombie(), carry].filter(Boolean));
+    inputs, card, zombie(), fyou(), carry].filter(Boolean));
   if (cash == null) inputs.querySelector('.st-box .in')?.classList.add('st-pulse'); else if (!(spending > 0)) inputs.querySelectorAll('.st-box .in')[1]?.classList.add('st-pulse');
   if (keep && document.activeElement?.id !== keep) { /* focus left with the redraw: that is fine, the box was left */ }
 }

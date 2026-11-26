@@ -126,6 +126,14 @@ bonus kept (the deposit's interest at each rate grown month by month, the gap af
 $1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
 month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
 
+Since Nov 26 2026 (run Finish everything partly built, Part 21) it also covers the canon rows (`js/math/canonmath.js`,
+M8X, the one engine of the web app and the game): F-You money with the work costs and the health cover each left out at
+times (the months, the noodle months, the next mark and what reaches it); the hand-off check (your hour, the help's hour);
+the noodle budget, with the person's own keeps and the usual keeps read again from the same list of words; pay yourself
+first with parts that leave before the pay lands; the Shockingly Simple Math loop (M72) against its closed form, the
+first whole month where the sum of a growing series reaches the target; the balance sheet by group with blank lines; and
+the money log month by month, each category in hours of life.
+
 Since Nov 26 2026 (run Finish everything partly built, Part 16) it also covers Giving (`js/math/giving.js`, the one
 engine of the web app and the game): the giving rate and the target on each base (gross, take-home, after work costs)
 with some inputs blank; one gift once or every month (hours at the wage, each month's gift grown to the FI date one

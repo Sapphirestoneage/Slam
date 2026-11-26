@@ -115,6 +115,7 @@ export const FORMATS = [
   { version: 72, shape: '9332b38b' }, // Nov 26 2026 (run Finish everything partly built, Part 15): M8U safety nets (life changes on the ladder, the levels, rule ends)
   { version: 73, shape: 'efadf1ac' }, // Nov 26 2026 (run Finish everything partly built, Part 16): M8V giving, app-only, four charitable rules of 2026 on the assumptions list
   { version: 74, shape: 'ceca2a79' }, // Nov 26 2026 (run Finish everything partly built, Part 18): M8R the auto session summary, Plan › FIRE and the Plan report on the tabs
+  { version: 75, shape: 'df273c06' }, // Nov 26 2026 (run Finish everything partly built, Part 21): M8X the canon rows finished (F-You money, the nine, the hand-off check, the noodle budget, pay yourself first, the M72 loop, YMOYL 1b and 3)
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

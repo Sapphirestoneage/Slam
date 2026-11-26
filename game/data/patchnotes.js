@@ -536,6 +536,18 @@ const PATCH_NOTES = [
       "Plan, FIRE: every way to financial independence (Lean, Coast, Barista, FIRE, Chubby and Fat) with its number and date, a tap for a faster pace, and each type in plain words.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Eight famous money ideas, finished",
+    l: [
+      "Famous money ideas has F-You money: the months you could walk away from a job, with what stops with the job and what health cover would cost. The web app's How long would my money last has it too.",
+      "The noodle budget: keep or set aside each line for the bare-bones month, and see how long your cash lasts on it.",
+      "Pay yourself first: what leaves your pay before any spending, a paycheck at a time, and what is left to live on.",
+      "Shockingly Simple Math: your savings rate, from $0, as years until work is optional, and the next 5% step.",
+      "What an hour of your time is worth, next to what the help costs an hour, to decide what to hand off. And which of the Money Guy's nine steps you are on.",
+      "Your Money or Your Life: step 1b shows your balance sheet, and step 3 shows each month you log in hours of your life.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

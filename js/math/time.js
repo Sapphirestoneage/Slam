@@ -4,6 +4,7 @@ import { realHourlyWage } from './income.js';
 import { money, hours, fiDays, EMPTY } from '../format.js';
 import { isBlank, ok, fmt } from './result.js';
 import { RULES } from '../registry/assumptions.js';
+import { cmHandOff } from './canonmath.js';
 
 // The hourly rate behind the toggle. Real hours when entered; otherwise take-home / 173 as a Guess (R153).
 export function hourlyRate({ takeHome, workCosts, paidHours, commuteHours, prepHours }, ref) {
@@ -49,6 +50,7 @@ export function materialityOf(rate, a = {}) {
 // Batch 15, item 12: is a paid service worth it? Its cost a month against the hours it saves at the real hourly wage.
 export function outsourceCheck({ cost, hoursSaved }, rate) {
   if (isBlank(cost) || isBlank(hoursSaved) || !rate?.value) return { value: null, needs: [isBlank(cost) ? 'what it costs' : isBlank(hoursSaved) ? 'hours it saves' : 'take-home pay'] };
-  const worth = hoursSaved * rate.value, v = worth - cost;
-  return { ...ok('M17', v, `${hours(hoursSaved)} saved a month at ${money(rate.value, { cents: true })} an hour is worth ${money(worth)}; it costs ${money(cost)}, so ${v >= 0 ? `it frees ${money(v)} of your time` : `it costs ${money(-v)} more than your time is worth`} a month.`), worth, perHour: cost / hoursSaved };
+  const H = cmHandOff({ cost, hoursSaved, wage: rate.value }), v = H.ready ? H.gap : null; // Part 21: one function with the game's hand-off check
+  if (!H.ready) return { value: null, needs: [H.needs] };
+  return { ...ok('M17', v, `${hours(hoursSaved)} saved a month at ${money(rate.value, { cents: true })} an hour is worth ${money(H.worth)}; it costs ${money(cost)}, so ${v >= 0 ? `it frees ${money(v)} of your time` : `it costs ${money(-v)} more than your time is worth`} a month.`), worth: H.worth, perHour: H.perHour };
 }

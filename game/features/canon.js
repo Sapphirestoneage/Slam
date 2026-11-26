@@ -11,7 +11,7 @@
                (W.kind): ymoyl, ymstep, fwwins.
    OUTPUT      Math readers: fwNow, fwBabyOf, fwStepOf, fwNextDollarLine, fwPathOf, fwWinsOf, fwBook. Parts of functions in
                other files: homeNextDollar (home in ui.js). Sheets: fwPathSheet, fwStepSheet, fwWinsSheet.
-               Actions (ACT): ymoyl, ymstep, ym1a, ym1b, ym4, ym5, ym6, ym7, ym9, fwset, fwdone, fwwins,
+               Actions (ACT): ymoyl, ymstep, ym1a, ym4, ym5, ym6, ym7, ym9, fwset, fwdone, fwwins,
                fwwin, fwsave, fwbk. Menu: "Your Money or Your Life", "Quick wins".
    DEPENDS ON  core/frameworks.js (the math, one file with the web app), core/withdraw.js, core/trip.js,
                core/engine.js (derive, timeLedger, hoursOf, SWR, R), screens/ui.js, screens/dash.js (the
@@ -843,8 +843,9 @@ Object.assign(ACT, {
     const id = t.dataset.v,
       s = FW_YMOYL.find(q => q.id === id);
     if (!s) return;
+    if (["1b", "2", "3", "8"].includes(id) && typeof ACT[s.act] === "function")
+      return ACT[s.act](t); /* meters.js: 1b and 3 */
     if (s.act === "ym1b") return go("money");
-    if (["2", "8"].includes(id)) return ACT[s.act](t);
     W = { kind: "ymstep", id };
     sheet(fwStepSheet);
   },

@@ -6,6 +6,7 @@ import * as S from './staples.js';
 import { STEP_CARDS, stepSub, stepGet } from '../registry/foo.js';
 import { addMonths, ymOf } from '../month.js';
 import { foo, ORIGINAL } from '../math/foo.js';
+import { cmFooNine } from '../math/canonmath.js';
 import { monthName } from '../month.js';
 import { money } from '../format.js';
 import { gapCard } from './gap-ui.js';
@@ -81,9 +82,15 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
     S.sec('foo:steps', { title: 'Every step', open: true, summary: `${f.steps.filter(s => s.status === 'Done').length} of ${f.steps.length} done` }, h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
       FUI.original === 'baby' ? babyStepsCard(ctx, f) // run Not built, groups 1 to 5, Part 4: the Baby Steps next to the SLAM FOO
-        : FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), h('ol', {}, ORIGINAL.map(o => h('li', {}, o))),
+        : FUI.original ? h('div.card.foo-original', {}, h('h2', {}, "The Money Guy's original"), nineLine(f), h('ol', {}, ORIGINAL.map((o, i) => h('li', {}, cmFooNine(f.here).n === i + 1 ? h('strong', {}, `${o} (you are here)`) : o))),
         h('p.muted.small', {}, 'For comparison. SLAM adds joy up front, giving at the tax-free step, income gaps, the three big e layers, Quiet Quitting FI and a launch window.')) : null)),
     translatorSection(app, ctx, f)]; // the Advice translator: the unlearn list read at your step
+}
+
+// Part 21: which of the Money Guy's nine steps the SLAM step sits on (js/math/canonmath.js, one mapping with the game).
+function nineLine(f) {
+  const N = cmFooNine(f.here);
+  return N.ready ? h('p', {}, h('strong', {}, `You are on step ${N.n} of their nine: ${N.name}.`), N.extra ? ' Your step is one SLAM adds.' : '') : null;
 }
 
 // Item 32: the done steps as one slim line, opened on request.

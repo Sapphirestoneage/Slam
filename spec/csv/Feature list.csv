@@ -54,10 +54,10 @@ Only SLAM,Advice translator,"What applies to you now, before, and what to unlear
 Only SLAM,Wrapped,Spotify-style year in review,Eli,SLAM,Hours saved this year,7,Backlog,
 YOUR MONEY OR YOUR LIFE: all nine steps,,,,,,,,
 YMOYL,Step 1a: Lifetime earnings,Add up every dollar earned since your first job,"Vicki Robin, Joe Dominguez","Your Money or Your Life, step 1",Total hours of life traded,4,No,
-YMOYL,Step 1b: What do I have to show for it,Personal balance sheet of everything you own,"Vicki Robin, Joe Dominguez",YMOYL step 1,,3,Partly (net worth),
+YMOYL,Step 1b: What do I have to show for it,Personal balance sheet of everything you own,"Vicki Robin, Joe Dominguez",YMOYL step 1,,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's Your Money or Your Life step 1b, the balance sheet by group, with your home and car apart)"
 YMOYL,Step 2a: Real hourly wage (life energy),"Take-home minus work costs, divided by all job hours including commute and recovery","Vicki Robin, Joe Dominguez",YMOYL step 2,The base of every time view,3,Yes,
 YMOYL,Step 2b: Track every cent,Log every dollar in and out,"Vicki Robin, Joe Dominguez",YMOYL step 2,,3,Yes (calendar),
-YMOYL,Step 3: Monthly tabulation in life energy,Monthly categories converted into hours of life,"Vicki Robin, Joe Dominguez",YMOYL step 3,Every category in hours,3,Partly,
+YMOYL,Step 3: Monthly tabulation in life energy,Monthly categories converted into hours of life,"Vicki Robin, Joe Dominguez",YMOYL step 3,Every category in hours,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's step 3 (each month of the money log, every category in hours of life); web: Report › Statements in Hours)"
 YMOYL,Step 4: The three questions,"Per category: fulfillment? aligned with values? would it change without a job? Mark +, -, 0","Vicki Robin, Joe Dominguez",YMOYL step 4,,4,No,
 YMOYL,Step 5: Wall chart,Monthly income and spending lines over years,"Vicki Robin, Joe Dominguez",YMOYL step 5,,4,No,
 YMOYL,Step 6: Lower spending,"Ideas for each minus category, tied to the three questions","Vicki Robin, Joe Dominguez",YMOYL step 6,Hours freed,4,No,
@@ -66,9 +66,9 @@ YMOYL,Step 8: Crossover point,Monthly investment income line meets monthly spend
 YMOYL,Step 9: Managing your finances,Steady safe income from capital,"Vicki Robin, Joe Dominguez",YMOYL step 9,,5,No,
 YMOYL,Fulfillment curve and 'enough',"Where each category sits on the curve: survival, comforts, luxuries, enough","Vicki Robin, Joe Dominguez",YMOYL,,4,No,
 "FROM THE BOOKS, BLOGS AND PODCASTS",,,,,,,,
-Canon,Shockingly Simple Math,"Savings rate to years to FI, on your own numbers",Mr. Money Mustache,MMM blog,Years to FI,3,Partly (built before),
+Canon,Shockingly Simple Math,"Savings rate to years to FI, on your own numbers",Mr. Money Mustache,MMM blog,Years to FI,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's Famous money ideas › Shockingly Simple Math (the curve from $0, your rate, the next 5%); web: years.html and Report › Overview, one loop)"
 Canon,Car and commute cost check,True cost of a car and a long commute,Mr. Money Mustache,MMM blog,Hours per year driving and paying,4,No,
-Canon,F-You money meter,Months you could walk away from a job,JL Collins,The Simple Path to Wealth,Months of freedom,3,Partly (runway),
+Canon,F-You money meter,Months you could walk away from a job,JL Collins,The Simple Path to Wealth,Months of freedom,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: web: runway.html, F-You money; the game's Famous money ideas › F-You money, with the noodle month)"
 Canon,Accumulate vs preserve stage,Which stage you're in and the matching mix,JL Collins,The Simple Path to Wealth,,5,No,
 Canon,Three-fund portfolio check,Allocation vs a simple three-fund mix,Taylor Larimore,The Bogleheads' Guide to the Three-Fund Portfolio,,5,No,
 Canon,Time buckets,Plan experiences by life stage,Bill Perkins,Die With Zero,,5,No,
@@ -83,7 +83,7 @@ Canon,Expected net worth (PAW/UAW),Age x pretax income / 10 vs actual net worth,
 Canon,Assets vs liabilities by cash flow,Does it put money in or take it out each month,Robert Kiyosaki,Rich Dad Poor Dad,,4,No,
 Canon,Cashflow quadrant,"Income by employee, self-employed, business, investor",Robert Kiyosaki,Cashflow Quadrant,,4,No,
 Canon,Baby Steps tracker,Which of the 7 steps you're on,Dave Ramsey,The Total Money Makeover,,4,No,
-Canon,Financial Order of Operations,Which of the 9 steps you're on and the next dollar,"Brian Preston, Bo Hanson",The Money Guy Show,,3,Partly (built before),
+Canon,Financial Order of Operations,Which of the 9 steps you're on and the next dollar,"Brian Preston, Bo Hanson",The Money Guy Show,,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: which of the Money Guy's nine you are on: web Plan › FOO with the original; the game's Famous money ideas › The Financial Order of Operations, with the next dollar)"
 Canon,Wealth multiplier,"What $1 saved today becomes at retirement, by age","Brian Preston, Bo Hanson",The Money Guy Show,Hours today vs dollars later,4,No,
 Canon,20/3/8 car rule,"Car purchase check: 20% down, 3 years, under 8% of income","Brian Preston, Bo Hanson",The Money Guy Show,,4,No,
 Canon,Dreamlining,Dreams with costs and a target monthly income,Tim Ferriss,The 4-Hour Workweek,Months of work per dream,5,No,
@@ -98,14 +98,14 @@ Canon,HSA as a retirement account,Invest the HSA and save receipts,Brandon (Mad 
 Canon,0% tax early retirement,Income shaped to pay little or no tax,Jeremy Jacobson,Go Curry Cracker,,5,Backlog (True FI),
 Canon,Travel rewards value,"Points earned from normal spending, valued in trips",Brad Barrett,ChooseFI,,5,Backlog (card library),
 Canon,"Afford anything, not everything",Every choice shows what it costs elsewhere,Paula Pant,Afford Anything,Hours of other goals given up,4,No,
-Canon,Hourly value of your time,"What an hour of your time is worth, used to decide what to outsource",Grant Sabatier,Financial Freedom,Built on the time view,3,Partly,
+Canon,Hourly value of your time,"What an hour of your time is worth, used to decide what to outsource",Grant Sabatier,Financial Freedom,Built on the time view,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's Famous money ideas › What an hour of your time is worth (your hour next to the help's hour); web: the outsource check on Plan, one function)"
 Canon,Savings rate ladder,How each 5% of savings rate cuts years of work,Jacob Lund Fisker,Early Retirement Extreme,Years per 5%,4,No,
-Canon,Noodle budget,Bare-bones survival budget,Tiffany Aliche,Get Good with Money,,3,Partly (fixed floor),
+Canon,Noodle budget,Bare-bones survival budget,Tiffany Aliche,Get Good with Money,,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's Famous money ideas › The noodle budget (keep or set aside each line, the months the cash lasts). Web: the fixed floor and the DRAFTT level only)"
 Canon,Profit First for side income,Split business income into set percentages,Mike Michalowicz,Profit First,,5,No,
 Canon,Value Equation for income,"Price an offer by outcome, likelihood, time and effort",Alex Hormozi,$100M Offers,,5,No,
 Canon,Pop-up side hustle test,"Test a business idea cheaply, track its hourly return",Alan Donegan,PopUp Business,Return per hour,5,No,
 Canon,Algebra of wealth,"Focus, stoicism, time and diversification as a scorecard",Scott Galloway,The Algebra of Wealth,,6,No,
-Canon,Pay yourself first,Savings come out before spending,George S. Clason,The Richest Man in Babylon,,3,Partly,
+Canon,Pay yourself first,Savings come out before spending,George S. Clason,The Richest Man in Babylon,,3,Yes,"Built (Nov 26 2026, run Finish everything partly built, Part 21: the game's Famous money ideas › Pay yourself first (wired goals first, a paycheck, what is left); web: Report › Statements, one function)"
 Canon,Uber Frugal month,A one-month challenge with daily tracking,Mrs. Frugalwoods,Frugalwoods,,6,No,
 Canon,Pricing your power,Price-floor math for independent work,MelRose Michaels; Alexandra Snow,Sex Work CEO; Wicked Alliance,Hourly floor,5,Backlog (domme series),
 Canon,Quarterly tax set-aside,Estimated tax savings for cash and gig income,Daisy Does Taxes,Domme-world tax education,,3,Yes (set-aside),

@@ -588,6 +588,18 @@ const WB = [
   ],
   [
     "plan",
+    "The canon rows finished: F-You money, the noodle budget, pay yourself first, Shockingly Simple Math, your hour, the Money Guy's nine, Your Money or Your Life steps 1b and 3",
+    "b",
+    () =>
+      ["fyou", "noodle", "mtpay", "simplemath", "mthand", "foonine", "ym1b", "ym3"].every(WB_HAS) &&
+      WB_FN("cmFyou") &&
+      WB_FN("cmTabulate") &&
+      WB_FN("mtBook"),
+    "Famous money ideas: F-You money (the months you could walk away, with the noodle month), the noodle budget (keep or set aside each line), pay yourself first (wired goals first, a paycheck, what is left), Shockingly Simple Math (from $0, the next 5%), what an hour of your time is worth next to the help's hour, and which of the Money Guy's nine you are on. Your Money or Your Life: step 1b, the balance sheet, and step 3, each month of the money log in hours of life. One math file with the web app (js/math/canonmath.js).",
+    "fyou",
+  ],
+  [
+    "plan",
     "Retirement engine by Zack (MIT license), through one adapter",
     "b",
     () => typeof RetireEngine === "object" && WB_FN("retireScenario") && WB_FN("retireSummary"),

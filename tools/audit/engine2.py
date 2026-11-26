@@ -694,6 +694,72 @@ def il_points(il, resident, year):
     return resident + sum(per[(year - 1) * 12:year * 12]) / 12
 
 
+def canon_check(fn, x, o, ck):
+    """The canon rows (M8X), worked out again from the definitions in the source books' words."""
+    import re
+    if fn == 'cmFyou':
+        r, sp = x['reach'], x['spending']
+        if r is None or sp is None or sp <= 0: ck('not ready', o['ready'], False); return
+        walk = max(0.0, sp - (x['workCosts'] or 0) + (x['health'] or 0))
+        months = max(0.0, r) / walk if walk > 0 else None
+        ck('a month without the job', o['walk'], walk); ck('months', o['months'], months, 1e-6)
+        ck('on the floor', o['onFloor'], max(0.0, r) / x['floor'] if x['floor'] else None, 1e-6)
+        nxt = None if months is None else next((m for m in (3, 6, 12, 24) if m > months + 1e-9), None)
+        ck('next mark', o['next'], nxt, 0); ck('to the next mark', o['toNext'], None if nxt is None else nxt * walk - r)
+    elif fn == 'cmHandOff':
+        c, h, w = x['cost'], x['hoursSaved'], x['wage']
+        if c is None or h is None or h <= 0 or w is None or w <= 0: ck('not ready', o['ready'], False); return
+        ck('worth', o['worth'], h * w); ck('gap', o['gap'], h * w - c); ck('the help an hour', o['perHour'], c / h, 1e-6); ck('under', o['under'], c / h < w)
+    elif fn == 'cmNoodle':
+        words = re.compile(r"rent|mortgage|housing|home insurance|property tax|utilit|electric|power|heat|water|gas bill|internet|phone|grocer|food at home|^food$|transport|transit|bus|train|car payment|car insurance|gas$|fuel|insurance|health|medic|prescri|child ?care|daycare|minimum|loan|debt|card payment", re.I)
+        rows = [l for l in x['lines'] if l['amt'] is not None and l['amt'] > 0]
+        if not rows: ck('not ready', o['ready'], False); return
+        keep = [l['keep'] if isinstance(l['keep'], bool) else bool(words.search(l['k'].strip())) for l in rows]
+        full = sum(l['amt'] for l in rows); nd = sum(l['amt'] for l, k in zip(rows, keep) if k)
+        ck('full', o['full'], full); ck('noodle', o['noodle'], nd); ck('the keeps', o['keep'] == keep, True)
+        cash = None if x['cash'] is None else max(0.0, x['cash'])
+        ck('months', o['months'], None if cash is None or nd <= 0 else cash / nd, 1e-6); ck('months at full', o['monthsFull'], None if cash is None else cash / full, 1e-6)
+    elif fn == 'cmPayFirst':
+        ps = [p for p in x['parts'] if p['monthly'] is not None and p['monthly'] > 0.5]
+        mo = sum(p['monthly'] for p in ps); ft = sum(p['monthly'] for p in ps if not p['pre'])
+        th, sp = x['takeHome'], x['spending']
+        ck('a month', o['monthly'], mo); ck('a paycheck', o['perPaycheck'], mo / x['paysPerMonth'])
+        ck('left', o['left'], None if th is None else th - ft); ck('room', o['room'], None if th is None or sp is None else th - ft - sp)
+        ck('share', o['share'], ft / th if th else None, 1e-9)
+    elif fn == 'cmYearsAtRate':
+        # the closed form: months n is the first whole month where s x ((g^n - 1) / (g - 1)) reaches (1 - s) x 12 / wr
+        s_, r, wr = x['s'], x['realReturn'], x['withdrawalRate']
+        g, target = (1 + r) ** (1 / 12), (1 - s_) * 12 / wr
+        if r == 0: n = math.ceil(target / s_ - 1e-9)
+        else: n = math.ceil(math.log(target * (g - 1) / s_ + 1) / math.log(g) - 1e-9)
+        ck('years', o['years'], n / 12 if n <= 840 else None, 1e-9)
+    elif fn == 'cmBalanceSheet':
+        A = [a for a in x['owns'] if a['v'] is not None]; L = [d for d in x['owes'] if d['v'] is not None]
+        if not A and not L: ck('not ready', o['ready'], False); return
+        own, owe = sum(a['v'] for a in A), sum(d['v'] for d in L)
+        ck('own', o['own'], own); ck('owe', o['owe'], owe); ck('net', o['net'], own - owe)
+        order, by = [], {}
+        for a in A:
+            if a['g'] not in by: order.append(a['g']); by[a['g']] = 0.0
+            by[a['g']] += a['v']
+        ck('groups', len(o['groups']) == len(order) and all(g == q[0] and abs(by[g] - q[1]) < 1e-6 for g, q in zip(order, o['groups'])), True)
+    elif fn == 'cmTabulate':
+        w = x['wage'] if x['wage'] and x['wage'] > 0 else None
+        by = {}
+        for r in x['rows']:
+            M = by.setdefault(r['d'][:7], {'in': 0.0, 'out': 0.0, 'cats': {}})
+            if r['kind'] == 'in': M['in'] += r['amt']
+            else:
+                M['out'] += r['amt']; k = r['cat'] or 'Not sorted'; M['cats'][k] = M['cats'].get(k, 0.0) + r['amt']
+        ms = sorted(by)
+        ck('the months', [m['m'] for m in o['months']] == ms, True)
+        for m, got in zip(ms, o['months']):
+            M = by[m]
+            ck('in', got['in'], M['in']); ck('out', got['out'], M['out']); ck('hours out', got['hoursOut'], None if w is None else M['out'] / w, 1e-6)
+            mine = {k: v for k, v in M['cats'].items()}
+            ck('each category', len(got['cats']) == len(mine) and all(abs(mine[c[0]] - c[1]) < 1e-6 and ((c[2] is None) == (w is None)) and (w is None or abs(c[2] - mine[c[0]] / w) < 1e-6) for c in got['cats']), True)
+
+
 def own_check(fn, x, o, ck, ref):
     """Your own path (M8P), worked out again from the definitions: the deductible, coinsurance and out-of-pocket max
     one dollar at a time, the fees step by step, the two sides and the two jobs added up, the Rule of 5 plus the added
@@ -1801,6 +1867,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('cmFyou', 'cmHandOff', 'cmNoodle', 'cmPayFirst', 'cmYearsAtRate', 'cmBalanceSheet', 'cmTabulate'):
+            canon_check(fn, x, o, ck)
         elif fn.startswith('op') and fn in ('opTransition', 'opPapers', 'opTwoSides', 'opPackage', 'opSearchFund', 'opFamily', 'opAgeCare'):
             own_check(fn, x, o, ck, law.ref)
         elif fn in ('plBonus', 'plHunt', 'plChallenge', 'plFicoRound', 'plNextMonthly'):

@@ -33,6 +33,7 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
+import { cmFyou, cmHandOff, cmNoodle, cmPayFirst, cmYearsAtRate, cmBalanceSheet, cmTabulate } from '../../js/math/canonmath.js';
 import { gvRate, gvTarget, gvGift, gvBunch, gvEnvelopes, gvCredit } from '../../js/math/giving.js';
 import { HH_QUESTIONS, hhCompare, hhFiTogether, hhEquity, hhMarryGap } from '../../js/math/hhold.js';
 import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
@@ -394,6 +395,26 @@ for (let i = 0; i < N; i++) {
   const Ee = gvEnvelopes(env); add('gvEnvelopes', env, { held: Ee.held, free: Ee.free, rows: Ee.rows.map(r => ({ left: r.left, full: r.full, past: r.past })) });
   const owedEach = money(10, 3000), cr = { months: Array.from({ length: whole(0, 14) }, (_, j) => ({ m: `2026-${String((j % 12) + 1).padStart(2, '0')}`, owed: rnd() < 0.1 ? null : owedEach, given: rnd() < 0.25 ? null : rnd() < 0.15 ? 0 : money(1, owedEach * 3) })), ahead: rnd() < 0.6 };
   const Cc = gvCredit(cr); add('gvCredit', cr, { balance: Cc.balance, after: Cc.rows.map(r => r.after), fromCredit: Cc.rows.map(r => r.fromCredit) });
+}
+// The canon rows (run Finish everything partly built, Part 21, M8X): F-You money with taps left out, the hand-off check,
+// the noodle budget with own taps and the usual keeps, pay yourself first with parts before the pay lands, the M72 loop
+// at other rates, the balance sheet with blank lines, and the money log month by month in hours.
+for (let i = 0; i < N; i++) {
+  const f = { reach: rnd() < 0.1 ? null : money(1, 300000), spending: rnd() < 0.1 ? null : money(300, 15000), workCosts: rnd() < 0.3 ? null : rnd() < 0.2 ? 0 : money(10, 1500), health: rnd() < 0.3 ? null : rnd() < 0.2 ? 0 : money(50, 2000), floor: rnd() < 0.4 ? null : money(200, 8000) };
+  const F = cmFyou(f); add('cmFyou', f, F.ready ? { ready: true, walk: F.walk, months: F.months, onFloor: F.onFloor, next: F.next, toNext: F.toNext } : { ready: false });
+  const hv = { cost: rnd() < 0.1 ? null : money(5, 800), hoursSaved: rnd() < 0.1 ? null : whole(1, 30), wage: rnd() < 0.15 ? null : between(8, 150) };
+  const H = cmHandOff(hv); add('cmHandOff', hv, H.ready ? { ready: true, worth: H.worth, gap: H.gap, perHour: H.perHour, under: H.under } : { ready: false });
+  const names = ['Rent', 'Groceries', 'Dining out', 'Electric', 'Gym', 'Car insurance', 'Streaming', 'Card minimum', 'Fun', 'Phone'];
+  const nl = { lines: Array.from({ length: whole(0, 8) }, () => ({ k: pick(names), amt: rnd() < 0.1 ? null : money(5, 3000), keep: rnd() < 0.3 ? rnd() < 0.5 : null })), cash: rnd() < 0.2 ? null : money(1, 60000) };
+  const Nd = cmNoodle(nl); add('cmNoodle', nl, Nd.ready ? { ready: true, full: Nd.full, noodle: Nd.noodle, months: Nd.months, monthsFull: Nd.monthsFull, keep: Nd.rows.map(r => r.keep) } : { ready: false });
+  const pf = { parts: Array.from({ length: whole(0, 4) }, (_, j) => ({ name: `P${j}`, monthly: rnd() < 0.1 ? null : rnd() < 0.1 ? 0 : money(10, 3000), pre: rnd() < 0.3 })), paysPerMonth: pick([52, 26, 24, 12]) / 12, takeHome: rnd() < 0.15 ? null : money(800, 20000), spending: rnd() < 0.2 ? null : money(500, 15000) };
+  const P = cmPayFirst(pf); add('cmPayFirst', pf, { monthly: P.monthly, perPaycheck: P.perPaycheck, left: P.left, room: P.room, share: P.share });
+  const yr = { s: whole(1, 99) / 100, realReturn: pick([0, 0.02, 0.04, 0.06, 0.08]), withdrawalRate: pick([0.03, 0.035, 0.04, 0.05]) };
+  add('cmYearsAtRate', yr, { years: cmYearsAtRate(yr.s, yr) });
+  const bs = { owns: Array.from({ length: whole(0, 6) }, (_, j) => ({ k: `A${j}`, v: rnd() < 0.15 ? null : money(1, 500000), g: pick(['cash', 'invest', 'home', 'car']) })), owes: Array.from({ length: whole(0, 4) }, (_, j) => ({ k: `D${j}`, v: rnd() < 0.15 ? null : money(1, 300000) })) };
+  const B = cmBalanceSheet(bs); add('cmBalanceSheet', bs, B.ready ? { ready: true, own: B.own, owe: B.owe, net: B.net, groups: B.groups.map(q => [q.g, q.v]) } : { ready: false });
+  const tw = rnd() < 0.2 ? null : between(8, 120), tr = Array.from({ length: whole(0, 25) }, () => ({ d: `2026-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 28)).padStart(2, '0')}`, amt: money(1, 5000), cat: pick(['Home', 'Food', 'Fun', null]), kind: pick(['in', 'out', 'out', 'out']) }));
+  const T = cmTabulate(tr, tw); add('cmTabulate', { rows: tr, wage: tw }, { months: T.months.map(m => ({ m: m.m, in: m.in, out: m.out, hoursOut: m.hoursOut, cats: m.cats.map(c => [c.cat, c.amt, c.hours]) })) });
 }
 // Households together (run Finish everything partly built, Part 12): two to six people by name, some answers blank;
 // FI numbers and dates, some blank; a shared home with or without a loan typed; pay for the tax gap when two marry, on
