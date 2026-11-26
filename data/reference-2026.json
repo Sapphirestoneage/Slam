@@ -3140,6 +3140,14 @@
       "nyEarnedMultiple": 1.5,
       "nyCareMultiple": 2.0,
       "baseMultiple": 1.3,
+      "states": {
+        "NJ": {
+          "multiple": 1.85,
+          "netTest": false,
+          "period": "2026-10-01 to 2027-09-30",
+          "source": "NJ Department of Human Services, Who is Eligible for SNAP? (nj.gov/humanservices/njsnap/apply/eligibility): gross monthly income up to 185% of the poverty level for October 2026 to September 2027 ($2,461 for one, $5,088 for four, $876 for each more), with broad-based categorical eligibility and no net income test. Read through a web search on Nov 26 2026; the dollars are 185% of the 2026 HHS guideline a month"
+        }
+      },
       "nySua": {
         "nyc": 1062,
         "rest": 877
@@ -3547,5 +3555,32 @@
   },
   "idChangeNY": { "courtNyc": 65, "courtNyState": 210, "dmvLicense": 12.5, "dmvId": 5, "birthNys": 0, "birthNysCopy": 30, "ssaCard": 0, "passportCorrection": 0, "passportBook": 130, "passportExecution": 35 },
   "adoptionCredit": { "max": 17670, "refundable": 5120, "phaseStart": 265080, "phaseEnd": 305080 },
-  "estate": { "federalExclusion": 15000000, "giftAnnual": 19000, "nyExclusion": 7350000, "nyCliffShare": 1.05, "tenYears": 10, "minorAge": 21, "nycPartnerFee": 35 }
+  "estate": { "federalExclusion": 15000000, "giftAnnual": 19000, "nyExclusion": 7350000, "nyCliffShare": 1.05, "tenYears": 10, "minorAge": 21, "nycPartnerFee": 35 },
+  "benefits": {
+    "about": "Run Finish everything partly built, Part 10 (Benefits and health): the limits of the benefits optimizer for plan year 2027, the one being chosen at open enrollment now. 2026 limits stay in limits.",
+    "planYear": 2027,
+    "hsa": {
+      "self": 4500,
+      "family": 9000,
+      "catchUp55": 1000,
+      "source": "IRS Rev. Proc. 2026-24 (released May 29 2026): 2027 HSA limits $4,500 self-only and $9,000 family; the $1,000 catch-up at 55 is set by law and not indexed. Quoted by KPMG TaxNewsFlash, EY Tax News (Jun 1 2026) and Journal of Accountancy (Jun 2026). Read through a web search on Nov 26 2026 (irs.gov, sec.gov and the employer sites do not open from the build machine)",
+      "date": "2026-05-29"
+    },
+    "dcfsa": {
+      "limit": 7500,
+      "separate": 3750,
+      "ageUnder": 13,
+      "source": "IRC 129(a)(2)(A) as amended by Public Law 119-21 (One Big Beautiful Bill Act, Jul 4 2025): $7,500 a year ($3,750 married filing separately) for tax years from 2026, not indexed; an employer plan must adopt the higher limit. Care counts for a child under 13 (IRC 21(b)(1)(A)). Quoted by SHRM, the National Law Review and Mercer. Read through a web search on Nov 26 2026 (irs.gov, sec.gov and the employer sites do not open from the build machine)",
+      "date": "2025-07-04"
+    },
+    "commuterMonthly": 350,
+    "commuterSource": "IRS Rev. Proc. 2026-35 (Nov 5 2026): the qualified transportation fringe for 2027 is $350 a month for transit and vanpool together and $350 for parking. Quoted by the American Payroll Association (Nov 6 2026) and the US DOT transit benefit bulletin TSB 2027-02. Read through a web search on Nov 26 2026 (irs.gov, sec.gov and the employer sites do not open from the build machine)",
+    "commuterDate": "2026-11-05",
+    "espp": {
+      "cap": 25000,
+      "maxDiscount": 0.15,
+      "source": "26 U.S.C. 423(b)(8): no more than $25,000 of stock (its value when the option is granted) a calendar year; 423(b)(6): the price is at least 85% of the value (a discount of 15% at most). Text of the code at uscode.house.gov and govinfo.gov, quoted in search results. Read through a web search on Nov 26 2026 (irs.gov, sec.gov and the employer sites do not open from the build machine)",
+      "date": "2026-11-26"
+    }
+  }
 }

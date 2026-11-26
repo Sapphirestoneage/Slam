@@ -128,6 +128,14 @@ spending on each step, the Enough meter and the share of today's life the curve 
 per $100 of a price, the memory years and dividends of an experience, the same 10 years later, the days on the FI date,
 the totals and the order of the regret view); and every subscription as days (the total shared out by each one's month,
 and the hours of work a year).
+Since Nov 26 2026 (run Finish everything partly built, Part 10) it also covers Benefits and health
+(`js/math/benefitsplan.js`, the one engine of the web app and the game), each worked out a second time from the 2027
+limits in the reference file: the HSA (what counts under the limit less the employer's part, the dollars a year, the
+future value of the yearly money as a sum of each year's growth, the receipts kept), the dependent care FSA (the care
+that counts, the years until the youngest turns 13, the total), the ESPP (the cap on stock, the gain, after tax),
+commuter, the health chain at any income, state and size (Medicaid, the Essential Plan, the marketplace credit from the
+IRS table, the gap, full price), and plans side by side (premiums after the credit, the typical and heavy year, the
+least of each).
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
 (`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
 plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own

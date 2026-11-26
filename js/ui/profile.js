@@ -13,6 +13,7 @@ import { gatesOf, syncCount, WORK, HOUSING, COVERAGE, AREAS, REAL_TYPES, recordF
 import { ageOf } from '../math/metrics.js';
 import { profileCompletion } from '../profile-completion.js';
 import { BENEFITS, HAVE, TRANSIT, commuterSavings } from '../benefits.js';
+import { benefitsWorthBlock, healthSection } from './benefits-ui.js';
 import { taxRates, monthlyFrom, defaultFilingStatus } from '../math/income.js';
 import { HOLIDAY_SETS, nextHoliday, SHABBAT_SPEND_DAY } from '../math/holidays.js';
 import { COMMUNITIES, setCommunityOn } from '../community.js';
@@ -287,7 +288,8 @@ export function profileScreen(app, ctx) {
       cal.jewish ? checkbox('Shabbat every week: a Budget line spent Thursday, used Friday night and Saturday', !!cal.shabbat, v => setCal('shabbat', v), { key: 'p:cal-shabbat' }) : null));
 
   const benefits = g.employer ? section('Benefits at work', 'income', h('p.muted', {}, 'Answer what your job offers. A yes opens just what we need for it.'),
-    h('div.benefit-list', {}, BENEFITS.map(benefitRow))) : null;
+    h('div.benefit-list', {}, BENEFITS.map(benefitRow)), benefitsWorthBlock(ctx, { rates, transit })) : null; // run of Nov 26 2026, Part 10
+  const health = healthSection(ctx, section); // run of Nov 26 2026, Part 10: coverage you may qualify for, plans side by side
 
   // Next (Brandon B1.1): once every core answer is in, or parked for later.
   const c = profileCompletion(store.doc);
@@ -306,13 +308,13 @@ export function profileScreen(app, ctx) {
     work: said(g.work, g.housing, p.incomeStability),
     home: `${roommates} ${roommates === 1 ? 'roommate' : 'roommates'}, split ${ways} ${ways === 1 ? 'way' : 'ways'}`,
     calendar: said(HOLIDAY_SETS.filter(x => cal[x.id]).map(x => x.label).join(', ') || 'No holidays ticked'),
-    benefits: null, accounts: p.noneOfThese ? 'None of these' : said(AREAS.filter(([k]) => (areas[k] ?? rowsIn(k) > 0) === true).map(([, l]) => l).join(', ')),
+    benefits: null, health: null, accounts: p.noneOfThese ? 'None of these' : said(AREAS.filter(([k]) => (areas[k] ?? rowsIn(k) > 0) === true).map(([, l]) => l).join(', ')),
     couple: said(modeOf(p), p.moneyStyle),
     people: peopleSummary(store.doc), // batch 49
   };
-  const ids = ['why-now', 'applies', 'about', 'people', 'work', 'home', 'calendar', 'benefits', 'accounts', 'couple'];
+  const ids = ['why-now', 'applies', 'about', 'people', 'work', 'home', 'calendar', 'benefits', 'health', 'accounts', 'couple'];
   const people = peopleSection(ctx, { section, app }); // batch 49: households of any size
-  return [whyNow, hub, about, people, work, home, calendar, benefits, accounts, couple].map(willGetAll)
+  return [whyNow, hub, about, people, work, home, calendar, benefits, health, accounts, couple].map(willGetAll)
     .map((sec, i) => (sec ? secWrap(sec, `profile:${ids[i]}`, { open: i < 2, summary: sums[ids[i]] }) : sec)).concat([next]);
 }
 
