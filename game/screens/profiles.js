@@ -51,6 +51,7 @@ function profSheet() {
   if (typeof profSheetKids === "function") h = profSheetKids(h); /* kids.js: the row "Kids mode" */
   if (typeof profSheetAddon === "function") h = profSheetAddon(h); /* addon.js: the card for the add-ons */
   if (typeof profSheetFounding === "function") h = profSheetFounding(h); /* founding.js: the mark "Founding Tester" */
+  if (typeof profSheetGuild === "function") h = profSheetGuild(h); /* guild.js: the row "Your guild" */
   return h;
 }
 function profSheetBase() {

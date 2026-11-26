@@ -1052,6 +1052,78 @@ def ratio_check(x, o, ck):
         ck('confidence, the read', o['confidence'][1] == read, True)
 
 
+def play_bonus(b):
+    # a bank bonus kept, worked month by month: the deposit's interest at each rate, the gap, its tax, the fees
+    bonus, m = b.get('bonus'), b.get('months')
+    dep = b.get('deposit') or 0
+    if not (bonus and bonus > 0) or not (m and m > 0) or (dep > 0 and b.get('hysaRate') is None):
+        return None
+    def grow(rate):
+        v = dep
+        for _ in range(m):
+            v += v * (rate or 0) / 12
+        return v - dep
+    lost = max(0.0, grow(b.get('hysaRate')) - grow(b.get('bankRate')))
+    t = b.get('taxRate')
+    tax = 0 if t is None else bonus * t
+    kept_lost = lost if t is None else lost * (1 - t)
+    return {'lost': lost, 'net': bonus - tax - kept_lost - (b.get('fees') or 0), 'tax': None if t is None else tax}
+
+
+def play_check(fn, x, o, ck):
+    if fn == 'plBonus':
+        w = play_bonus(x)
+        ck('ready', o['ready'], w is not None)
+        if w is not None:
+            ck('interest given up', o['lost'], w['lost'], 0.01); ck('kept', o['net'], w['net'], 0.02)
+            if w['tax'] is not None: ck('tax', o['tax'], w['tax'], 0.01)
+    elif fn == 'plHunt':
+        banked = lined = 0.0; opn = need = 0
+        for b in x['list']:
+            st = b.get('state') if b.get('state') in ('planned', 'open', 'paid') else 'planned'
+            w = play_bonus(b)
+            if w is None: need += 1
+            v = round(w['net'] * 100) / 100 if w else 0
+            if st == 'paid': banked += v
+            else: lined += v
+            if st == 'open': opn += 1
+        ck('kept', o['banked'], banked, 0.02); ck('lined up', o['lined'], lined, 0.02); ck('left', o['left'], max(0, 1000 - banked), 0.02)
+        ck('open at once', o['open'], opn, 0); ck('missing a term', o['needs'], need, 0); ck('there', o['there'], banked >= 1000)
+    elif fn == 'plChallenge':
+        c, cash, sp, apr = x['cost'], x['cash'], x['spendMonth'], x['cardApr']
+        ok = c is not None and c > 0 and cash is not None and cash >= 0 and sp is not None and sp > 0
+        ck('ready', o['ready'], ok)
+        if not ok: return
+        def card(amt):
+            if apr is None: return None
+            bal, paid, r = amt, 0.0, apr / 12
+            pmt = amt / 3 if r == 0 else amt * r / (1 - (1 + r) ** -3)
+            for _ in range(3):
+                bal = bal * (1 + r) - pmt; paid += pmt
+            return paid - amt
+        for k, fc, fk in (('cushion', c, 0), ('card', 0, c), ('half', c / 2, c / 2)):
+            short = max(0, fc - cash); oncard = fk + short
+            ck(k + ': cash left', o['ways'][k]['cashLeft'], max(0, cash - fc), 0.01)
+            ck(k + ': on the card', o['ways'][k]['fromCard'], oncard, 0.01)
+            ck(k + ': months after', o['ways'][k]['monthsAfter'], max(0, cash - fc) / sp, 0.006)
+            want = card(oncard) if oncard > 0 else None
+            got = o['ways'][k]['card']
+            ck(k + ': interest', None if got is None else got['interest'], want, 0.02)
+    elif fn == 'plFicoRound':
+        share = {'pay': 0.35, 'owed': 0.30, 'length': 0.15, 'new': 0.10, 'mix': 0.10}
+        want = sorted(share.values(), reverse=True)
+        right = [share[k] == want[i] for i, k in enumerate(x['order'])]
+        ck('places', o['places'], sum(right), 0); ck('weight placed right', o['points'], sum(share[k] for i, k in enumerate(x['order']) if right[i]), 0.001)
+    elif fn == 'plNextMonthly':
+        import datetime
+        y, m, d = map(int, x['t'].split('-'))
+        cur = datetime.date(y, m, d)
+        while True:
+            if cur.day == x['day'] and not (x['after'] and cur == datetime.date(y, m, d)): break
+            cur += datetime.timedelta(days=1)
+        ck('the date', o['d'] == cur.isoformat(), True)
+
+
 def run(cases, ref, il=None):
     law, R = Law(ref), Report()
     extra = {'interest_gap': [], 'pace': [], 'life': {'runs': 0, 'years': 0, 'unsettled_years': 0, 'tax_gap_years': 0, 'worst_tax_gap': 0.0, 'worst_tax_case': None, 'credit_gap_years': 0, 'worst_credit_gap': 0.0, 'runs_touched': 0}}
@@ -1401,6 +1473,8 @@ def run(cases, ref, il=None):
             if not edge:
                 ck('breakeven year', o['year'], first_year, 0); ck('renting cheaper the whole time', o['never'], first_year is None)
             ck('price-to-rent ratio', o['ratio'], price / (x['rent'] * 12), 1e-6); ck('the 5% rule, a month', o['five'], price * 0.05 / 12); ck('rent under the 5% line', o['rentLess'], x['rent'] < price * 0.05 / 12)
+        elif fn in ('plBonus', 'plHunt', 'plChallenge', 'plFicoRound', 'plNextMonthly'):
+            play_check(fn, x, o, ck)
         elif fn == 'ratios':
             ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):

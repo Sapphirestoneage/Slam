@@ -363,7 +363,20 @@ const PATCH_NOTES = [
       "Financial confidence: rate how sure you feel with one tap, and see it next to what your numbers say.",
       "In the web app the same ratios are on Report, Overview, under Ratios.",
     ],
-  },];
+  },
+  {
+    d: "2026-11-26",
+    t: "Daily challenges, the bonus hunt, guilds and App lock",
+    l: [
+      "After the daily question: a daily challenge. One surprise cost at your level, sized in days of your own spending, and three ways to meet it. Practice only.",
+      "The first $1,000 bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest the deposit gives up, and the fees), and your bonuses one at a time.",
+      "The credit score game: tap what weighs most in a FICO Score, and what everyday moves touch. No real score is fetched.",
+      "Roots and branches, proof you can keep on a done step, a book for each step from the library, and a second voice to blend into your theme.",
+      "Your guild: a private group of the people in your game, with mentors who finished a track and a monthly money date. Nothing shows until each person turns it on.",
+      "App lock: a PIN or your device's own lock each time the game opens. On this device only.",
+    ],
+  },
+];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
 if (typeof globalThis !== "undefined") globalThis.PATCH_NOTES = PATCH_NOTES;

@@ -1005,6 +1005,7 @@ function dqSheet() {
     (st && st.ok && typeof qzDailyPart === "function"
       ? qzDailyPart(c)
       : "") /* quizzes.js: the route by the quiz result */ +
+    (st && st.ok && typeof lsDailyPart === "function" ? lsDailyPart(c) : "") /* life.js: the daily challenge */ +
     G2B("dailyok", st && st.ok ? "Done for today" : "Skip for today")
   );
 }
