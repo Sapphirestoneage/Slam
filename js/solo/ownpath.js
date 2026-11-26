@@ -21,7 +21,7 @@ const AGES = [22, 25, 30, 35, 40, 45, 50, 55, 60];
 export function sourcesCard(title, list, id = null) {
   return h('div.st-card', id ? { id } : {}, h('details.st-fold', {}, h('summary', {}, title),
     h('p.st-small.st-soft', {}, `Checked on ${OP_CHECKED_WORDS}, by search on each one's own site. Rules and fees change: check the page on the day you use it.`),
-    h('ul.st-list', {}, list.map(r => h('li', {}, h('span.dot', {}, ''), h('span', {}, r.who ?? r.name, h('small', {}, r.said || r.what), r.phone ? h('small', { style: { fontWeight: 700 } }, r.phone) : null, h('small', {}, r.where)))))));
+    h('ul.st-list', {}, list.map(r => h('li', {}, h('span.dot', {}, ''), h('span', { style: { minWidth: 0, overflowWrap: 'anywhere' } }, r.who ?? r.name, h('small', {}, r.said || r.what), r.phone ? h('small', { style: { fontWeight: 700 } }, r.phone) : null, h('small', {}, r.where)))))));
 }
 const saveRow = S => (S?.ready && S.left > 0 ? [['Still to find', S.saved ? `after the ${money(S.saved)} saved` : null, big(S.left)], ...(S.months != null ? [['At your monthly amount', `${money(S.monthly)} a month`, months(S.months)]] : [])] : S?.there ? [['Saved already covers it', null, 'already there']] : []);
 const PRIVATE_FOLD = ['What this page keeps', 'Nothing, unless you tap Keep at the bottom. The answers stay in this open page only: not in the address, not on the device, not with a coach or a shared plan. Leave page, at the top, opens a weather page in this tab.'];
@@ -70,7 +70,7 @@ export const OWN_SPECS = {
     title: 'What does changing my name and marker cost?', why: 'Each step, who sets it, and its fee. New York first: the court, the birth certificate, Social Security, the DMV and the passport.',
     fields: [{ key: 'court', label: 'Where you file', options: [['New York City', 'nyc'], ['New York, outside the city', 'ny'], ['Another state', 'other']] },
       { key: 'courtFee', label: 'Your state\'s court fee', picks: [], when: v => v.court === 'other', help: 'From your court\'s own page. The other states\' fees are not in here yet.' },
-      { key: 'born', label: 'Where you were born', options: [['New York, outside the city', 'nys'], ['New York City', 'nyc'], ['Somewhere else', 'other']] },
+      { key: 'born', label: 'Where you were born', options: [['New York City', 'nyc'], ['New York, outside the city', 'nys'], ['Somewhere else', 'other']] },
       { key: 'birthFee', label: 'The birth certificate fee you were told', picks: [], when: v => v.born && v.born !== 'nys', optional: true, help: 'New York City\'s own pages differ ($0 or $40). Another state: its own office.' },
       { key: 'copies', label: 'Extra copies of the new birth certificate', unit: 'copies', options: [0, 1, 2, 3].map(n => [String(n), n]), start: 0, when: v => v.born === 'nys', help: 'One copy comes free.' },
       { key: 'idDoc', label: 'At the DMV', options: [['A driver license', 'license'], ['A non-driver ID', 'id'], ['Not now', 'none']], start: 'none' },
