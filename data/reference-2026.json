@@ -127,6 +127,14 @@
     }
   },
   "tax": {
+    "charity": {
+      "nonItemizer": {
+        "single": 1000,
+        "joint": 2000,
+        "head": 1000
+      },
+      "floor": 0.005
+    },
     "mortgageDebtLimit": 750000,
     "saltCap": 40400,
     "standardDeduction": {
