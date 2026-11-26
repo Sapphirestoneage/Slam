@@ -166,6 +166,29 @@ const WB = [
   ["see", "The next few months", "b", () => WB_HAS("months") && WB_FN("monthsAhead"), "", "months"],
   [
     "see",
+    "Here's where you stand: the payoff reveal at the end of setup",
+    "b",
+    () => WB_FN("rsRevealBody") && WB_FN("rsCards") && WB_FN("rsLead") && WB_HAS("rsfirst") && WB_FN("fwLead"),
+    "The lead number (the debt-free date below zero, the FI date for a FIRE player, else the next stop), five result cards with a target, the time at today's pace and what each unlocks, typical numbers greyed with Put in yours, then Start my first win.",
+    null,
+  ],
+  [
+    "see",
+    "Home, results first: four cards",
+    "b",
+    () =>
+      WB_FN("homeResults") &&
+      WB_FN("rsNextWin") &&
+      WB_FN("rsMonthEnd") &&
+      WB_FN("rsRoute") &&
+      WB_FN("rsTiles") &&
+      WB_HAS("gohome") &&
+      WB_FN("fwMonthEnd"),
+    "Your next win (one move, its money a month, the days closer to FI or debt-free, what it unlocks, one pulsing button), By the end of this month (solid if the planned moves happen, dotted if not), You are here (the route strip), four metric tiles with See all metrics, and Home on every screen.",
+    null,
+  ],
+  [
+    "see",
     "Copy your numbers out, and the plan as a spreadsheet that comes back in",
     "b",
     () =>

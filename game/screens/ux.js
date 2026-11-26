@@ -125,18 +125,29 @@ function homeWelcome() {
 /* Part of home() in ui.js. Adds the tab title and the four tiles at the top, and the button "Show more" at the bottom. */
 function homeQuadTop(h) {
   if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
+  /* results.js: the four cards of results first (Your next win, By the end of this month, You are here, the tiles) */
+  const rs = typeof homeResults === "function" ? homeResults(C(), D) : null;
   const top =
     tabHead() +
-    /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
-    '<div class="hqtop">' +
-    (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +
-    homeQuad(C(), D) +
-    "</div>";
+    (rs !== null
+      ? '<div class="rstop">' + rs + "</div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
+      : /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
+        '<div class="hqtop">' +
+        (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +
+        homeQuad(C(), D) +
+        "</div>");
   return h
-    .replace('<div class="stack">', () => '<div class="stack hq' + (HOME_MORE ? "" : " less2") + '">' + top)
+    .replace(
+      '<div class="stack">',
+      () => '<div class="stack hq' + (rs !== null ? " rs" : "") + (HOME_MORE ? "" : " less2") + '">' + top
+    )
     .replace(
       /<\/div>\s*$/,
-      () => (HOME_MORE ? "" : '<button class="ghost wide morebtn" data-a="homemore">Show more</button>') + "</div>"
+      () =>
+        (HOME_MORE
+          ? ""
+          : `<button class="ghost wide morebtn" data-a="homemore">${rs !== null ? "See all of Home" : "Show more"}</button>`) +
+        "</div>"
     );
 }
 /* Part of safeSheet() in ui.js. Adds the tile "Free to spend" below the title. */

@@ -35,11 +35,11 @@
   save();
   go("home");
   chk(
-    "Home offers it once, plainly, under the main tiles",
+    "Home offers it once, plainly, under the four cards (results.js)",
     app().includes("Meet your character") &&
       app().includes('class="rowbtn homerow" data-a="reveal"') &&
-      app().indexOf('class="quad"') > 0 &&
-      app().indexOf('class="quad"') < app().indexOf('data-a="reveal"'),
+      app().indexOf("<!--homerows-->") > 0 &&
+      app().indexOf("<!--homerows-->") < app().indexOf('data-a="reveal"'),
     ""
   );
   go("me");

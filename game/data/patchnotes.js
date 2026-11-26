@@ -332,6 +332,17 @@ const PATCH_NOTES = [
       "On the web: three small pages on the same math, on the shelf Family money.",
     ],
   },
+  {
+    d: "2026-11-26",
+    t: "Results first: see where you stand",
+    l: [
+      "Setup now ends on Here's where you stand: your lead number and five result cards, each with its target and the time to get there.",
+      "The five: debt-to-income, months of cushion, savings rate, net worth and FI progress.",
+      "Below zero, the lead number is your debt-free date. Building toward FI, it is your FI date.",
+      "Home is four cards: your next win, net worth by the end of this month, where you are on the route, and your numbers.",
+      "A Home button sits at the top of every screen, next to Back. The money calendar is in the Menu.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

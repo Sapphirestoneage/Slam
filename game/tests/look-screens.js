@@ -61,12 +61,10 @@
   go("home");
   let o = app();
   chk(
-    "Home: the stat row with its four numbers, above the four boxes",
-    o.includes("Free to spend") &&
+    "Home: results first, the four cards with the metric tiles (results.js); the stat row stays for the fallback",
+    o.includes("rs:tiles") &&
       o.includes("Net worth") &&
-      o.includes("Next goal") &&
-      o.includes("Free of costly debt") &&
-      o.indexOf("dkstats") < o.indexOf('class="quad"') &&
+      ["Free to spend", "Net worth", "Next goal", "Free of costly debt"].every(t => homeStatRow(c, D).includes(t)) &&
       clean(o),
     junk(o)
   );

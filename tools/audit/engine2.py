@@ -1454,6 +1454,21 @@ def run(cases, ref, il=None):
             cu = x['monthly'] * 6; ck('income', o['income'], x['invested'] * x['rate'] / 12); ck('cushion left', o['cushionLeft'], max(0, cu - x['cash'])); ck('cache', o['cache'], max(0, x['cash'] - cu))
         elif fn == 'fwWins':
             m = sum(w['save'] for w in x['wins'].values() if w['save'] is not None); ck('month', o['month'], m); ck('fi days', o['fiDays'], m * 12 / (x['yearSpend'] / 365), 1e-6)
+        elif fn == 'fwLead':
+            w = x['worth']; ck('lead', o['lead'] == ('debtfree' if (w is not None and w < 0) else ('fi' if x['fire'] else 'next')), True)
+        elif fn == 'fwDtiMonths':
+            g = x['gross']
+            if g is None: ck('no pay, no months', o['months'] is None, True)
+            else:
+                # month by month from 0: the first month where home plus the payments of the debts still open fit the target
+                want = None
+                for m in range(0, 121):
+                    if (x['home'] + sum(d['pay'] for d in x['debts'] if d['off'] is None or d['off'] > m)) / g <= x['target']: want = m; break
+                ck('months', o['months'] is None if want is None else o['months'], True if want is None else want, 0)
+        elif fn == 'fwMonthEnd':
+            ds = x['days']; t = x['today']; L = x['last']
+            asis = x['worth'] + sum(d['net'] for d in ds if t < d['day'] <= L)
+            ck('end as is', o['endAsIs'], asis, 1e-6); ck('end planned', o['endPlanned'], asis + (x['extra'] if L > t else 0), 1e-6); ck('days', o['n'], L - t + 1, 0)
         elif fn == 'careerStack':
             L = x['list']; months = lambda s: int(s[:4]) * 12 + int(s[5:7])
             sets = [set(range(months(c['from']), months(c['to']) + 1)) for c in L]

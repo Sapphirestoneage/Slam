@@ -76,22 +76,24 @@ function dkBars(groups, names) {
     .join("");
   return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(names.join(" and "))} by month">${bars}</svg><div class="dklegend">${names.map((n, j) => `<span><i style="background:${DK_COLORS[j]}"></i>${esc(n)}</span>`).join("")}</div>`;
 }
-/* An area chart of one series (a balance over time). o: { labels: [first, last], faint: second series } */
+/* An area chart of one series (a balance over time). o: { labels: [first, last], faint: second series, dots: draw the
+   second series dotted, fit: the axis fits the values, with no zero line (a short span, like one month) } */
 function dkArea(vals, o) {
   o = o || {};
   if (!vals || vals.length < 2) return "";
   const W = 320,
     H = 110,
     all = vals.concat(o.faint || []),
-    hi = Math.max(...all),
-    lo = Math.min(0, ...all),
+    pad = o.fit ? Math.max(1, (Math.max(...all) - Math.min(...all)) * 0.15) : 0,
+    hi = Math.max(...all) + pad,
+    lo = o.fit ? Math.min(...all) - pad : Math.min(0, ...all),
     span = hi - lo || 1,
     n = Math.max(vals.length, (o.faint || []).length) - 1 || 1,
     y = v => (H - 4 - ((v - lo) / span) * (H - 10)).toFixed(1),
     path = s => s.map((v, i) => (i ? "L" : "M") + ((i / n) * W).toFixed(1) + "," + y(v)).join(" ");
   const base = y(Math.max(lo, Math.min(hi, 0))),
     fill = path(vals) + ` L${(((vals.length - 1) / n) * W).toFixed(1)},${base} L0,${base} Z`;
-  return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Over time")}">${lo < 0 ? `<line x1="0" x2="${W}" y1="${base}" y2="${base}" style="stroke:var(--line);stroke-width:1"/>` : ""}${o.faint && o.faint.length > 1 ? `<path d="${path(o.faint)}" style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4"/>` : ""}<path d="${fill}" style="fill:var(--sap);opacity:.22"/><path d="${path(vals)}" style="fill:none;stroke:var(--sap);stroke-width:2.5"/></svg>${o.labels ? `<div class="row between tiny muted"><span>${esc(o.labels[0])}</span><span>${esc(o.labels[1])}</span></div>` : ""}`;
+  return `<svg class="dkchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Over time")}">${lo < 0 && (!o.fit || hi > 0) ? `<line x1="0" x2="${W}" y1="${base}" y2="${base}" style="stroke:var(--line);stroke-width:1"/>` : ""}${o.faint && o.faint.length > 1 ? `<path d="${path(o.faint)}" style="fill:none;stroke:var(--muted);stroke-width:${o.dots ? "2.5;stroke-linecap:round;stroke-dasharray:0.5 5" : "1.5;stroke-dasharray:4 4"}"/>` : ""}<path d="${fill}" style="fill:var(--sap);opacity:.22"/><path d="${path(vals)}" style="fill:none;stroke:var(--sap);stroke-width:2.5"/></svg>${o.labels ? `<div class="row between tiny muted"><span>${esc(o.labels[0])}</span><span>${esc(o.labels[1])}</span></div>` : ""}`;
 }
 /* A donut with a legend list. parts: [{ l, v }]. o: { center, sub } */
 function dkDonut(parts, o) {
