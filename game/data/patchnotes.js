@@ -354,7 +354,7 @@ const PATCH_NOTES = [
     ],
   },
   {
-    d: "2026-11-25",
+    d: "2026-11-26",
     t: "LGBTQ+ money tools, private by default",
     l: [
       "What care would cost you after your plan pays, and a check of what a health plan covers.",
