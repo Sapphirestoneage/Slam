@@ -310,7 +310,8 @@ function enoughSheet() {
     enCreepCard(R) +
     enYearsCard(R) +
     enParetoCard(R) +
-    enEnoughCard(c, R)
+    enEnoughCard(c, R) +
+    `<button class="ghost wide slim" data-a="joy">Joy and enough: joy per dollar, the fulfillment curve, the rich-life list</button>`
   );
 }
 /* Part of the settings in ui.js (the card above Game words): the one Rough numbers switch. */

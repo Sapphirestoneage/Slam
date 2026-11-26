@@ -581,6 +581,10 @@ details.mng>summary{min-height:48px;padding:8px 12px}
 details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{content:"Close"}
 .mngh{display:flex;align-items:center;gap:10px;min-width:0}.mnico{font-size:20px;width:26px;text-align:center;flex:none}
 .mnrows{padding:0 10px 10px;gap:8px}
+.lkcover{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}.lkcover[hidden]{display:none}
+.lkin{max-width:360px;width:100%;display:flex;flex-direction:column;gap:12px;text-align:center}
+.lkdots{font-size:22px;letter-spacing:8px;text-align:center}.lkpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lkkey{min-height:52px;min-width:44px;font-size:20px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.25)}.lkkey:disabled{opacity:.5}
 </style>
 </head>
 <body>
@@ -594,6 +598,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
 <script src="account/door.js?v=29500834"></script>
+<script src="account/lock.js?v=1a52a1d9"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
@@ -602,7 +607,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
 <script src="vendor/retire-engine.js?v=bcb147a3"></script>
-<script src="core/engine.js?v=d96b692c"></script>
+<script src="core/engine.js?v=fe0b462c"></script>
 <script src="core/engine2.js?v=0f916c85"></script>
 <script src="core/homebuy.js?v=9fefc7d2"></script>
 <script src="core/career.js?v=2164a1a6"></script>
@@ -610,11 +615,13 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/quest.js?v=405ce1b4"></script>
 <script src="core/trip.js?v=0152603f"></script>
 <script src="core/quick.js?v=914d9a44"></script>
+<script src="core/play.js?v=708ae829"></script>
 <script src="core/gigcore.js?v=baa39c64"></script>
 <script src="core/hardcore.js?v=ae053a47"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
-<script src="core/enough.js?v=869b33d0"></script>
+<script src="core/enough.js?v=cad03dc6"></script>
+<script src="core/exercises.js?v=3256be10"></script>
 <script src="core/ratios.js?v=939803ee"></script>
 <script src="data/roles.js?v=d90d4899"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
@@ -623,16 +630,16 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/frameworks.js?v=29cc8402"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=929e920c"></script>
+<script src="screens/ui.js?v=adb500c2"></script>
 <script src="screens/dash.js?v=fe4d3586"></script>
 <script src="features/games.js?v=2c23c7f4"></script>
-<script src="features/games2.js?v=c0aef9c8"></script>
+<script src="features/games2.js?v=462fb773"></script>
 <script src="features/goalrank.js?v=c7526049"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
-<script src="screens/profiles.js?v=442b6691"></script>
+<script src="screens/profiles.js?v=d0f900aa"></script>
 <script src="screens/smart.js?v=96e07bbd"></script>
-<script src="screens/planner.js?v=9fe6aa7b"></script>
+<script src="screens/planner.js?v=faa57f9c"></script>
 <script src="account/cloud.js?v=dcb3a34e"></script>
 <script src="screens/ux.js?v=cfcddd02"></script>
 <script src="core/metrics.js?v=6a4cfb0a"></script>
@@ -648,7 +655,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/fair.js?v=43e98594"></script>
 <script src="features/values.js?v=78adcf5c"></script>
 <script src="features/missions.js?v=b8439083"></script>
-<script src="features/connect.js?v=dbbdbbe3"></script>
+<script src="features/connect.js?v=afa77b4f"></script>
 <script src="features/house.js?v=214d1ccc"></script>
 <script src="features/back.js?v=608af286"></script>
 <script src="features/lever.js?v=0ba6aaa7"></script>
@@ -672,7 +679,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/csp.js?v=13fbfc02"></script>
 <script src="features/ideas.js?v=49f621ff"></script>
 <script src="features/ideas2.js?v=1e1741e1"></script>
-<script src="features/ideas3.js?v=77b67629"></script>
+<script src="features/ideas3.js?v=6eb8137b"></script>
 <script src="features/ideas4.js?v=0c283d9d"></script>
 <script src="features/ideas5.js?v=fb4dcf72"></script>
 <script src="features/roof.js?v=249bfa93"></script>
@@ -741,7 +748,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/sins.js?v=b2462a2d"></script>
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=4d933cb6"></script>
-<script src="data/patchnotes.js?v=0e3e3bdc"></script>
+<script src="data/patchnotes.js?v=cdc0cb3b"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -753,15 +760,21 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/careq.js?v=d4b04ebb"></script>
 <script src="features/rolemap.js?v=5e50a14d"></script>
 <script src="features/canon.js?v=f2a5a93c"></script>
-<script src="features/enough.js?v=67d96e2d"></script>
+<script src="features/enough.js?v=8c38fb32"></script>
+<script src="features/exercises.js?v=6f57d65f"></script>
+<script src="features/joy.js?v=1ee7adf7"></script>
 <script src="features/ratios.js?v=d7a1b45b"></script>
 <script src="features/hard.js?v=9bf92c41"></script>
+<script src="features/life.js?v=a2f569dc"></script>
+<script src="features/hunt.js?v=8116f378"></script>
+<script src="features/guild.js?v=8029feae"></script>
+<script src="features/lockset.js?v=ded305f7"></script>
 <script src="features/results.js?v=6c9c7632"></script>
 <script src="features/receipt.js?v=3a74ca0e"></script>
 <script src="features/lifemap.js?v=ab031863"></script>
-<script src="features/book.js?v=a0a297bd"></script>
+<script src="features/book.js?v=76bd04e8"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=4c56b719"></script>
+<script src="features/built.js?v=15a7c27e"></script>
 </body>
 </html>

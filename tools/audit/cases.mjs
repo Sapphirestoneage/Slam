@@ -30,10 +30,11 @@ import { JOB_IDS, jobRoles, jobAdmin, jobLiving, jobTaskMonthly, jobWireTimes, j
 import { refiOf, stepladderOf, ladderRate } from '../../js/math/studentloan.js';
 import { fwSwan, fwPeak, fwZeroTax, fwBabySteps, fwWealthStage, fwLifetime, fwStep9, fwWins, FW_WINS, fwLead, fwDtiMonths, fwMonthEnd } from '../../js/math/frameworks.js';
 import { WAYS, wayCustom, waySpend, wayReturn, wayPay, wayHistory, wayTolerance, vpwShare, spendDownPayment } from '../../js/math/withdraw.js';
-import { enCreep, enPareto, enEnough, enRough, enStepCreep } from '../../js/math/enough.js';
+import { enCreep, enPareto, enEnough, enRough, enStepCreep, enJoy, enCurve, enRich, enSubs } from '../../js/math/enough.js';
 import { fmSandwich, fmBoomerang, fmTuition, fm529 } from '../../js/math/family.js';
 import { qsStats, qsCapacity, qsFails, qsHidden, qsRank, qsDuel, QS_OPPONENTS } from '../../js/math/quest.js';
 import * as RA from '../../js/math/ratios.js';
+import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
 
 const [out = '/tmp/slam-audit-cases.json', nArg = '500', seedArg = '20261114'] = process.argv.slice(2);
 const N = Number(nArg), ref = JSON.parse(readFileSync(new URL('../../data/reference-2026.json', import.meta.url)));
@@ -303,6 +304,25 @@ for (let i = 0; i < N; i++) {
   const a = { spend: money(500, 9000), take: rnd() < 0.1 ? 0 : money(500, 12000) }, b = { spend: a.spend * between(0.9, 1.3), take: a.take * between(0.9, 1.3) };
   add('enStepCreep', { a, b }, { up: enStepCreep(a, b) });
 }
+// Joy and enough (run Finish everything partly built, Part 8): lines with and without a joy tap, a wage or none; the
+// curve with some categories placed; a rich-life list with prices, joys, kinds and regrets; subscriptions and a total
+// of days. The days function of the rich list is a made-up straight line here (the real one is each app's FI date).
+for (let i = 0; i < N; i++) {
+  const lines = Array.from({ length: whole(0, 10) }, (_, k) => ({ name: `L${k}`, amt: rnd() < 0.1 ? 0 : money(5, 3000), joy: rnd() < 0.3 ? null : whole(1, 5) }));
+  const wage = pick([null, 0, 18.5, 32, 75]), J = enJoy(lines, { wage });
+  add('enJoy', { lines, wage }, J.ready ? { ready: true, total: J.total, ratedTotal: J.ratedTotal, dollarJoy: J.dollarJoy, lovedShare: J.lovedShare,
+    rows: J.rows.map(r => ({ name: r.name, joyShare: r.joyShare, per100: r.per100, hours: r.hours, perHour: r.perHour })) } : { ready: false });
+  const steps = ['survival', 'comforts', 'luxuries', 'past', null], cats = Array.from({ length: whole(0, 8) }, (_, k) => ({ cat: `C${k}`, amt: rnd() < 0.1 ? 0 : money(10, 2500) }));
+  const place = Object.fromEntries(cats.map(c => [c.cat, pick(steps)]).filter(([, v]) => v)), K = enCurve(cats, place);
+  add('enCurve', { cats, place }, K.ready ? { ready: true, total: K.total, placedTotal: K.placedTotal, past: K.past, meter: K.meter, share: K.share, levels: K.levels.map(l => l.amt) } : { ready: false });
+  const items = Array.from({ length: whole(0, 6) }, (_, k) => ({ id: `i${k}`, name: `I${k}`, price: rnd() < 0.15 ? null : money(20, 20000), joy: rnd() < 0.15 ? null : whole(1, 5),
+    kind: pick(['experience', 'thing', null]), done: rnd() < 0.3, regret: pick(['alot', 'little', 'no', null]) }));
+  const age = rnd() < 0.15 ? null : whole(18, 85), lifeTo = pick([null, 85, 90, 95]), perDay = money(20, 400), Rr = enRich(items, { age, lifeTo, days: p => Math.round(p / perDay) });
+  add('enRich', { items, age, lifeTo, perDay }, { plannedTotal: Rr.plannedTotal, doneTotal: Rr.doneTotal, alotTotal: Rr.alotTotal, alotDays: Rr.alotDays,
+    items: Rr.items.map(x => ({ id: x.id, per100: x.per100, memYears: x.memYears, dividend: x.dividend, laterYears: x.laterYears, days: x.days })), regret: Rr.regret.map(x => x.id) });
+  const subs = Array.from({ length: whole(0, 6) }, (_, k) => ({ name: `S${k}`, amt: rnd() < 0.1 ? 0 : money(1, 90) })), totalDays = rnd() < 0.15 ? null : money(1, 400);
+  const P = enSubs(subs, totalDays, { wage }); add('enSubs', { subs, totalDays, wage }, P.ready ? { ready: true, total: P.total, days: P.days, rows: P.rows.map(r => ({ name: r.name, days: r.days, hoursYear: r.hoursYear })) } : { ready: false });
+}
 // Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): random households, some inputs missing (null), some
 // zero; each ratio from js/math/ratios.js, worked out again from its definition in the second engine.
 for (let i = 0; i < N; i++) {
@@ -337,6 +357,23 @@ for (let i = 0; i < N; i++) {
     windfall: v(RA.raWindfall({ amount: x.wind, toTax: x.toTax, toFun: x.toFun, toCash: x.toCash, toDebt: x.toDebt, invested: x.toInv })),
     confidence: (() => { const r = RA.raConfidence({ rating: x.rating, good: x.good, of: x.of }); return r.value == null ? null : [r.value, r.read]; })(),
   });
+}
+// The game's play math (run Not built, groups 1 to 5, Part 10b): a bank bonus with its deposit, months, rates, fees and
+// tax (some missing); a hunt of a few bonuses; a daily challenge on random cash, spending and card rates; a round of
+// the credit score game; the next monthly date. The second engine works each out again from its definition.
+for (let i = 0; i < N; i++) {
+  const maybe = (v, p = 0.1) => (rnd() < p ? null : v);
+  const bon = () => ({ bonus: maybe(pick([100, 200, 300, 400, 500, 900])), deposit: rnd() < 0.2 ? 0 : money(100, 30000), months: maybe(pick([2, 3, 4, 6, 12])), hysaRate: maybe(pick([0, 0.01, 0.035, 0.045]), 0.15), bankRate: pick([0, 0, 0.001, 0.01]), fees: pick([0, 0, 5, 25, 60]), taxRate: maybe(pick([0.1, 0.12, 0.22, 0.32]), 0.3), state: pick(['planned', 'open', 'paid', 'odd']) });
+  const b = bon();
+  add('plBonus', b, plBonus(b));
+  const list = Array.from({ length: whole(0, 5) }, bon);
+  add('plHunt', { list }, plHunt(list));
+  const ch = { cost: maybe(money(10, 20000)), cash: maybe(rnd() < 0.1 ? 0 : money(10, 60000)), spendMonth: maybe(money(800, 12000)), cardApr: maybe(pick([0, 0.18, 0.24, 0.29]), 0.3) };
+  add('plChallenge', ch, plChallenge(ch));
+  const ids = ['pay', 'owed', 'length', 'new', 'mix'], order = ids.slice().sort(() => rnd() - 0.5);
+  add('plFicoRound', { order }, plFicoRound(order));
+  const t = `${whole(2025, 2028)}-${String(whole(1, 12)).padStart(2, '0')}-${String(whole(1, 28)).padStart(2, '0')}`, day = whole(1, 28), after = rnd() < 0.5;
+  add('plNextMonthly', { t, day, after }, { d: plNextMonthly(t, day, after) });
 }
 // If the pay stopped: the Life Transitions ladder on the plan's own answers (fewer cases: each builds a household).
 for (let i = 0; i < Math.max(10, Math.round(N / 5)); i++) {

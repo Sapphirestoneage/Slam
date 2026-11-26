@@ -94,6 +94,11 @@ after the last one, with the end of a month moved to its last day); and a date t
 days to go, and whether its reminder shows). Feature 6 adds who carries what (`jobCarry`), worked out a second time person by person: each person's part of
 each job they hold and of each task handed to them, the household total, and the value at the value of an hour.
 
+Since Nov 26 2026 (run Not built, groups 1 to 5, Part 10b) it also covers the game's play math (`js/math/play.js`): a bank
+bonus kept (the deposit's interest at each rate grown month by month, the gap after its tax, the fees), the hunt toward
+$1,000 (only the paid bonuses count as kept), the three ways of a daily challenge (the card's 3 payments stepped month by
+month), a round of the credit score game from myFICO's shares, and the next monthly money date by walking the calendar.
+
 Since Nov 26 2026 (run Not built, groups 1 to 5, Part 9) it also covers Ratios on Key numbers (`js/math/ratios.js`, the
 one engine of the web app and the game): random households with some inputs missing and some at zero, every ratio worked
 out again from its definition (the short-term and revolving debts sorted by type a second way, the interest month by
@@ -107,6 +112,13 @@ spending growth, the income growth from the ledger or the tapped guess, the aler
 year and this year, what it grew past inflation and whether it counts as faster than prices); the Pareto (the fewest
 biggest lines that reach 80%, by a running total); the enough number and the room for error; the Rough numbers range of
 any amount, built as text a second way from the digits; and the game's creep check between two looks.
+Since Nov 26 2026 (run Finish everything partly built, Part 8) it also covers Joy and enough, on the same engine:
+joy per dollar (each line's share of the joy, joy per $100, the hours of work at a wage and the joy per hour, the joy of
+an average dollar and the share on what is loved, with lines that have no tap left out); the fulfillment curve (the
+spending on each step, the Enough meter and the share of today's life the curve calls enough); the rich-life list (joy
+per $100 of a price, the memory years and dividends of an experience, the same 10 years later, the days on the FI date,
+the totals and the order of the regret view); and every subscription as days (the total shared out by each one's month,
+and the hours of work a year).
 Since Nov 25 2026 (run Not built, groups 1 to 5, Part 4) it also covers Eli's frameworks and the canon
 (`js/math/frameworks.js`, M8W), each worked out a second time from its definition: the SWAN number (months of spending
 plus the worry, the gap, the months of cash), the net worth peak (a year-by-year loop with the second engine's own

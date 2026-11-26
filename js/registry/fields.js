@@ -194,7 +194,7 @@ export const AREAS = [
       pick('settings.dollars', "Plan shows today's or future dollars", ['real', 'nominal'], { part: 'settings', key: 'dollars' }),
       f('settings.debtExtra', 'Extra to debt a month (Make it the plan on Home)', 'money', { part: 'settings', key: 'debtExtra' }), // batch 11 (item 3)
       f('settings.phase4', 'Phase 4 previews on (Life Transitions on Plan)', 'yesno', { part: 'settings', key: 'phase4' }), // batch 21: Coach tools › Session; on for new households in this build
-      f('settings.enough', 'Lifestyle creep and enough: the choices tapped', 'text', { part: 'settings', key: 'enough', sheet: { skip: 'screen choices on Budget and Goals (the rate prices grew, an income guess, the life called enough, the room for error), not money inputs of the plan' } }), // run Not built, groups 1 to 5, Part 3
+      f('settings.enough', 'Lifestyle creep and enough: the choices tapped', 'text', { part: 'settings', key: 'enough', sheet: { skip: 'screen choices on Budget and Goals (the rate prices grew, an income guess, the life called enough, the room for error, where each category sits on the fulfillment curve), not money inputs of the plan' } }), // run Not built, groups 1 to 5, Part 3; the curve: run Finish everything partly built, Part 8
       f('client.couple', 'Couple (from Solo or couple)', 'yesno', { part: 'client', key: 'couple', sheet: { skip: 'set by Solo or couple' } }),
     ],
   },
@@ -429,6 +429,7 @@ export const AREAS = [
       f('sinkingFund', 'Sinking fund account', 'text', { kinds: ['bill'], sheet: { skip: 'points at an account row by its id; set it in SLAM' } }),
       f('fundTag', 'Purpose tag', 'text', { kinds: ['bill'] }),
       f('joy', 'Bedazzle (a joy line)', 'yesno', { kinds: ['bill'] }),
+      f('joyRate', 'Joy (1 to 5), tapped on Budget › Joy per dollar', 'number', { kinds: ['bill'] }), // run Finish everything partly built, Part 8: the happiness rating per line (spec F099)
       pick('decision', 'Looking for savings', ['Keep', 'Cut', 'Lower', 'Look into it'], { kinds: ['bill'] }),
       f('target', 'Target or cap a month', 'money', { kinds: ['bill'] }),
       f('tags', 'Tags', 'list', { kinds: ['bill'] }),
@@ -523,7 +524,7 @@ export const NOT_IN_SHEET = {
   'assumptions.lifeRetireAge': 'a Lifetime plan choice on the self-serve journey (the age work stops, when picked); the lifetime engine (M9U) is app-only, so the sheet has no use for it yet',
   'settings.start': 'the self-serve journey\'s own choices (what brought you here, what matters most, a home priced, drills ticked, the last statement read): screen choices, not money inputs',
   'settings.fastTrack': 'the last Fast Track run, kept to compare',
-  'settings.exercises': 'the answers of the money exercises, by exercise id (the letter from your calm self): the person\'s own words, private by default, not money inputs',
+  'settings.exercises': 'the answers of the money exercises, by exercise id (the letter from your calm self and Home › Exercises, js/exercises/catalog.js): the person\'s own words and who sees them, Me only by default, not money inputs',
   'settings.hard': 'the hard-moment tools (run Not built, groups 1 to 5, Part 7, js/hard.js): each tool\'s own taps and ticks, only when the person turned on Keep this; private (a coach sees one only when let in, never a partner or anything shared), not money inputs of the plan',
   'settings.recalc': 'Recalculating\'s own notes (the safe-to-fail line and the opt-in audit\'s tagged events): words and tags about the past, not money inputs of the plan',
   'settings.intake': 'when the pre-session intake was imported, and how many answers (Import intake on Coach tools > Data)',
@@ -535,6 +536,7 @@ export const NOT_IN_SHEET = {
   'settings.typicalInClient': 'batch 31: Coach tools > Session > Typical at your age, whether client view shows the typical-at-your-age notes (the coach always sees them); a display switch, default off',
   'settings.typicalOff': 'batch 31: the money boxes whose typical-at-your-age note was hidden (box key to true), so each stays hidden for this client',
   'settings.debtCustomOrder': 'the custom payoff order, debt ids dragged into place on Plan › Debt payoff (F3)',
+  'settings.richLife': 'the rich-life list on Goals (run Finish everything partly built, Part 8): each thing\'s name, price, joy, kind, done and regret, the person\'s own taps for a what-if, not money inputs of the plan',
   'spending.categoryJoy': 'dated joy ratings (1 to 5) per spending category, rated on the Budget (F6); the Captured tab lists them',
   'spending.transactions': 'transactions imported from bank CSVs (J): date, description, amount, bank, the Budget line, Actual level',
   'spending.months.actualFrom': 'where a month actual came from (csv); set by the statement import (J)',

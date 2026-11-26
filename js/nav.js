@@ -8,7 +8,7 @@ export const TABS = [
   // Home is one screen (Phase 3): the program, the picture, the next small things. Start session switches it to the
   // session mode; About you stays a page of its own under it.
   { id: 'home', name: 'Home', job: 'This session: the program, the picture, the next small things', subs: [
-    { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }, { id: 'review', name: 'Review', hidden: true }] }, // Review: the gate before a session ends (no sub-tab of its own)
+    { id: 'session', name: 'Home' }, { id: 'profile', name: 'About you', area: 'needs' }, { id: 'review', name: 'Review', hidden: true }, { id: 'exercises', name: 'Exercises', hidden: true }] }, // Review: the gate before a session ends (no sub-tab of its own); Exercises: the money exercises, opened from About you, the letter and Find
   { id: 'net-worth', name: 'Net worth', job: 'What you own and owe', subs: [
     { id: 'assets', name: 'Assets', area: 'assets' }, { id: 'debt', name: 'Debt', area: 'debt' }, { id: 'credit-cards', name: 'Credit cards', area: 'debt' }, { id: 'protection', name: 'Protection', area: 'goals' }, { id: 'fire-drill', name: 'Fire drill', area: 'assets', phase4: true }, { id: 'money-control', name: 'Money control', area: 'assets', phase4: true, control: true }] }, // batch 44: the bank fire drill, a Phase 4 preview; batch 55: the money-control map (control: never where js/privacy.js controlSeen says no)
   { id: 'cash-flow', name: 'Cash flow', job: 'Money in and out: income, taxes, budget, calendar, close', subs: [
@@ -67,7 +67,8 @@ export function routeForPlace(place) {
   return routeOf(tab.id, sub.id);
 }
 
-export const VIEWS = [{ label: 'Bills list', where: 'Cash flow › Calendar › Bills list', route: '#/cash-flow/calendar?view=bills', words: ['bills', 'subscriptions', 'recurring', 'repeating charges'] }];
+export const VIEWS = [{ label: 'Bills list', where: 'Cash flow › Calendar › Bills list', route: '#/cash-flow/calendar?view=bills', words: ['bills', 'subscriptions', 'recurring', 'repeating charges'] },
+  { label: 'Money exercises', where: 'Home › About you › Money exercises', route: '#/home/exercises', words: ['exercises', 'money psychology', 'journal', 'letter to money', 'money memory', 'money story', 'autobiography', 'alter ego', 'forgiveness', 'scarcity', 'purpose', 'why journal', 'after work', 'retirement identity'] }]; // Part 7 of the run Finish everything partly built
 // Find (R168 '/'): the everyday words first (batch 14: js/find.js, the table in data/reference-2026.json), then
 // fields, screens and the client's own records. Punctuation and spacing do not count ("401k" finds "401(k)").
 // Identical results show once; two fields with the same name say which group each is in.

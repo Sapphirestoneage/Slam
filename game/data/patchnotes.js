@@ -399,6 +399,39 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    t: "Daily challenges, the bonus hunt, guilds and App lock",
+    l: [
+      "After the daily question: a daily challenge. One surprise cost at your level, sized in days of your own spending, and three ways to meet it. Practice only.",
+      "The first thousand-dollar bonus hunt: a bank bonus calculator (the bonus less its tax, the savings interest given up, the fees). And the credit score game, with no real score fetched.",
+      "Roots and branches, proof you can keep on a done step, a book for each step from the library, and a second voice to blend into your theme.",
+      "Your guild: a private group of the people in your game, with mentors who finished a track and a monthly money date. Nothing shows until each person turns it on.",
+      "App lock: a PIN or your device's own lock each time the game opens. On this device only.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Money exercises",
+    l: [
+      "Ten short pieces of writing about you and money, in one place: a letter to money, your earliest money memory, your money autobiography and more.",
+      "Each one opens with a short prompt and a few lines to tap, so you never start from an empty page. Type, or speak where your browser can turn speech into words.",
+      "Three prompts for life after work: a Why journal, Little p purpose and who you are after work. Ready for retirement, apart from the money opens them.",
+      "Your words are yours: Me only, unless you share one with your coach. The letter from your calm self is the first card.",
+      "In the Menu, under Money exercises. In the web app: About you, then Open the exercises.",
+    ],
+  },
+  {
+    d: "2026-11-26",
+    t: "Joy and enough",
+    l: [
+      "Menu has Joy and enough: tap how much joy each spending line brings you, and see joy per dollar and joy per hour of work.",
+      "Place each line on the fulfillment curve (survival, comforts, luxuries, past enough) and read your Enough meter.",
+      "A rich-life list: the things you want, with a price and a joy, the memory dividends of an experience, and a regret view.",
+      "Every subscription shows the days it adds to the day work becomes optional.",
+      "In the web app the same tools are on the Budget (Joy per dollar, Subscriptions in days) and on Goals.",
+    ],
+  },
+  {
+    d: "2026-11-26",
     t: "Receipts and your life map",
     l: [
       "Each move you finish and each amount you log now shows what moved: net worth, the days closer to FI or debt-free, any number that changed.",
