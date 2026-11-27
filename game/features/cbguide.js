@@ -189,7 +189,7 @@ const CB_GUIDE = {
   ],
   keep: [
     "Keep it, share it, or tell Eli",
-    "Three buttons: keep your plan with a free account, share a card, or tell Eli about a problem.",
+    "Keep your plan with a free account, share your results card or get it as an image, or tell Eli about a problem.",
     "Your plan stays on this device as you go. Nothing is sent until you tap.",
   ],
   pairs: [

@@ -17,7 +17,7 @@
                couldbe.js), cbHomeFirst, cbRevealBookRows (part of cbBook in couldbe.js). Views:
                cbRevealView. Parts of functions in
                other files: homeCbTile and homeFirstCard (homeQuadTop in ux.js), cbTopRows (planTabCb in couldbe.js), cbTopIds
-               (planTabStrat in strat.js). Actions (ACT): cbsave, cbshare, cbaddstep, cbfirstgo. A step of the flow, added
+               (planTabStrat in strat.js). Actions (ACT): cbsave, cbshare, cbcardimg, cbaddstep, cbfirstgo. A step of the flow, added
                with cbStepAdd("reveal", ...).
    DEPENDS ON  core/report.js, core/paylayers.js (lyReceipt, LY_SPENDING, LY_END), core/engine.js (derive,
                todayISO, daysBetween), features/couldbe.js (cbHas, cbStore, cbNumbers, cbChart, cbChartHtml,
@@ -31,8 +31,8 @@
    RULES       A view shows what the math functions return. The difference between the two numbers is what
                the flow's one engine gives (lyReceipt). The moves before FI and the Yes, but card come from
                the month-by-month run of the plan: their months are on their own line, never added to the
-               difference, and an "i" says so. The card to share has ages, names and time. It has no dollar
-               amount. The tile of Home shows only to a player who has been in the flow (c.x.cb).
+               difference, and an "i" says so. The card to share (run CC-1, item 12) has the era, the FI number with
+               its age and the names of the top moves. It has no other figure. The tile of Home shows only to a player who has been in the flow (c.x.cb).
    COMPAT      New optional keys in c.x.cb: at (the screen of the flow the player left off on), rev (the day
                the reveal was first seen), seen and was ({ day, n }: the numbers the last time the player was
                here, and the time before that). An old saved game has none, and nothing here shows for it.
@@ -162,27 +162,43 @@ function cbReveal(c) {
     yb: Y && Y.n ? Y : null,
   };
 }
-/* The words of the card to share. The same parts as the Yes, but card, so that the one painter draws it
-   (cbYbPaint in cbyesbut.js). Ages, names and time: no dollar amount. V: cbReveal(). */
-function cbPlanCard(V) {
-  const age = x => (x.age == null ? "No date yet at today's pace" : x.years === 0 ? "There now" : "FI at age " + x.age),
-    names = V.items.filter(x => x.kind !== "card").map(x => x.name);
+/* THE RESULTS CARD (run CC-1, item 12): the words of the one card to share. The same parts as the Yes, but card,
+   so that the one painter draws it (cbYbPaint in cbyesbut.js). On it: the era, the headline number (the FI number,
+   with the age), and the top 3 moves by name. No other figure. V: cbReveal(). c: the profile. */
+function cbPlanCard(V, c) {
+  c = c || C();
+  const d = derive(c),
+    N = V.N,
+    use = N.could.shown != null ? N.could : N.is,
+    age = use.age == null ? "No date yet at today's pace" : use.years === 0 ? "There now" : "FI at age " + use.age,
+    top = cbTopMoves(c).map(r => r.name),
+    counted = V.items.filter(x => x.kind !== "card").map(x => x.name),
+    moves = (top.length ? top : counted).slice(0, CBR_TOP),
+    why = String(eraOne(d) || "");
   return {
     brand: "SLAM the Game",
-    title: "My two numbers",
-    yes: { label: "What it is", lines: ["The standard way:", "25 times a year of spending"], words: age(V.N.is) },
-    mid: "The difference",
-    net: V.diff.card,
-    but: {
-      label: "What it could be",
-      lines: names.length
-        ? names.slice(0, 3).concat(names.length > 3 ? ["and " + (names.length - 3) + " more"] : [])
-        : ["Nothing counted yet"],
-      words: age(V.N.could),
+    title: "My results",
+    yes: {
+      label: "My era",
+      lines: [/[$\d]/.test(why) || !why ? "Where I am on the way to FI" : why],
+      words: eraName(d),
     },
+    mid: "My FI number",
+    net: use.shown == null ? "Not worked out yet" : cbM(use.shown),
+    but: {
+      label: moves.length === 1 ? "My top move" : "My top " + (moves.length || CBR_TOP) + " moves",
+      lines: moves.length ? moves : ["No move picked yet"],
+      words: age,
+    },
+    wrap: 2,
     foot: "A what-if on my own numbers. " + (typeof TRUST_LINE === "string" ? TRUST_LINE : ""),
-    file: "slam-my-two-numbers.png",
+    file: "slam-my-results.png",
   };
+}
+/* The same card on the screen, small, so that the player sees what is on it before a tap (and a screenshot works
+   too). Part of cbRevealView(). K: cbPlanCard(). */
+function cbCardPeek(K) {
+  return `<div class="tile small cbpeek"><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.06em">${esc(K.yes.label)}</div><b>${esc(K.yes.words)}</b><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.06em;margin-top:8px">${esc(K.mid)}</div><b style="font-size:22px">${esc(K.net)}</b><div class="tiny muted">${esc(K.but.words)}</div><div class="tiny muted" style="text-transform:uppercase;letter-spacing:.06em;margin-top:8px">${esc(K.but.label)}</div>${K.but.lines.map(l => `<div class="small">${esc(l)}</div>`).join("")}</div>`;
 }
 /* THE TOP MOVES for Next Steps: the moves the player counted first, then the most days sooner. A move that is
    already theirs, or left out, is not a next step. [{ id, src, key, name, words, counted, added, canAdd, open }]. */
@@ -417,6 +433,7 @@ function cbRevealView() {
     N = V.N,
     S = V.S,
     U = cbTypUsed(c) /* couldbe.js: the answers that are a typical value */,
+    PK = cbPlanCard(V, c) /* the results card, shown small before the two buttons */,
     row = x =>
       x.deep
         ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Opens: ${esc(x.deep.l)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
@@ -498,7 +515,7 @@ function cbRevealView() {
         )
       : "",
     /* run 16, A1: the three buttons of the old last screen live here, quiet and closed */
-    b4 = `<details class="math cbkeep" data-fid="cb:end3"${W && W.msg ? " open" : ""}><summary>Keep it, share it, or tell Eli</summary><div class="inner stack cbend3" style="gap:8px"><div class="row between" style="gap:8px"><span class="tiny muted">${esc(cbSaveState().words)}</span>${cbI("keep")}</div><button class="ghost wide" data-a="cbsave">${cbSaveState().signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button>${W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : ""}<div class="tiny muted">The card is a picture. It shows your two ages, what you counted, and the time between. It shows no dollar amount. Nothing leaves this device until you send it.</div></div></details>`,
+    b4 = `<details class="math cbkeep" data-fid="cb:end3"${W && W.msg ? " open" : ""}><summary>Keep it, share it, or tell Eli</summary><div class="inner stack cbend3" style="gap:8px"><div class="row between" style="gap:8px"><span class="tiny muted">${esc(cbSaveState().words)}</span>${cbI("keep")}</div><button class="ghost wide" data-a="cbsave">${cbSaveState().signed ? "Keep my plan" : "Keep my plan: make a free account"}</button>${cbCardPeek(PK)}<button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="cbcardimg">Get this card as an image</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button>${W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : ""}<div class="tiny muted">The card is a picture of the box above: your era, your FI number with its age, and the names of your top moves. No other figure is on it. Nothing leaves this device until you send it.</div></div></details>`,
     block = (n, h) => (h ? `<div class="cbrevb cbrev${n}" data-fid="cb:rev${n}">${h}</div>` : "");
   return (
     head("The reveal", "Your number, and what it could be") +
@@ -618,7 +635,11 @@ Object.assign(ACT, {
   /* Share my card: the image of the two numbers, by the share sheet of the device, else as a file */
   cbshare: () => {
     cbSeenKeep();
-    cbYbImage("send", cbPlanCard(cbReveal(C())));
+    cbYbImage("send", cbPlanCard(cbReveal(C()), C()));
+  },
+  /* the same card as a file on this device */
+  cbcardimg: () => {
+    cbYbImage("save", cbPlanCard(cbReveal(C()), C()));
   },
   /* Home, the first move: its steps go on Next Steps (a move of the Strategy Engine), the card gives way to Your next
      win, and the move opens */
