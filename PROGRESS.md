@@ -343,3 +343,4 @@ for each part.
 - **Task 6.** `cbTop` draws one slim strip when `cbSlim(W.step)`; `drawSheetCb` is unchanged and counts the number in the strip.
 - **Task 7.** `cbFirstMove(c)` is the first of `cbTopMoves(c)`, which now carries the one-liner, the lever, the steps and their minutes.
 - Tests: `game/tests/what-you-want.js` (70 checks). The walks `door_walk`, `launch_walk`, `firstweek_walk` and `game_clicks` tap the new screen.
+- Finished by a second session the same day (the first one was cut off): both suites and the five walks ran again (`door_walk` 44 checks, `launch_walk` 148, `firstweek_walk` 102, `ux_pass_walk` 120, all ok); `tools/game_clicks.cjs` allows 6 taps to the first number (Start, What you want, four chips). Walked in Chromium at 390, 1280 and 1440 with a renter and a costly-debt player. Not checked: that https://play.stresslessaboutmoney.com/game/ answers (the session's network refuses the address).

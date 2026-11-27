@@ -170,7 +170,8 @@ async function walk(browser, base, want) {
   let bad = 0;
   for (const name of Object.keys(PERSONAS)) {
     const r = await walk(browser, base, PERSONAS[name]);
-    if (!r.reveal || r.first == null || r.first > 5) bad++;
+    // Run SLAM-ONBOARD-1: 6 taps to the first number (Start, What you want, the four range chips); 5 before it.
+    if (!r.reveal || r.first == null || r.first > 6) bad++;
     console.log(
       name +
         ": " +
