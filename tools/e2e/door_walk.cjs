@@ -4,7 +4,8 @@
 // The Supabase script comes from a CDN that the build machine cannot reach, and a walk must not touch the real
 // database, so a stand-in answers in its place: nobody signed in (a new visitor), or one signed-in person.
 // The walk: (1) a new visitor from the link with ?ref= at 390 x 640: the landing, all of it on the first screen,
-// one primary button; (2) Start, the taps of a person, to the payoff reveal ("Here's where you stand"), with the count of taps and
+// one primary button; (2) Start, the one opening (What it is / What it could be: four taps to the first number, the
+// chart, the last screen), then the rest of setup with the taps of a person, to the payoff reveal ("Here's where you stand"), with the count of taps and
 // the time; (3) the address still has ?ref=; (4) the offer to save opens "Create your account", and Back returns to
 // the game; (5) the same visitor again: straight to the game; (6) a signed-in person: no landing; (7) 1280 wide.
 // Exit code 1 when a check fails.
@@ -79,9 +80,29 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   };
   await tap('#door [data-door=start]');
   chk('Start: no sign-in screen, no landing', !(await page.locator('#su-gate').count()) && !(await page.locator('#door').count()));
-  chk('the first question is "Am I okay?"', /Am I okay\?/.test(await page.locator('#ov h2').first().innerText()));
-  chk('page 1 asks for no typing (the name box is closed)', !(await page.locator('#ov input:visible').count()));
+  // Run A (Nov 27 2026): the one opening of a new player is What it is / What it could be (game/features/couldbe.js):
+  // four answers by range chips, then the first number. The setup rounds come after it, from its last screen.
+  chk('the first screen is the first of four questions, not the setup rounds', /Question 1 of 4/.test(await page.locator('#ov').innerText()) && /How old are you\?/.test(await page.locator('#ov').innerText()) && !/Am I okay\?|Question 1 of 5|Here's where you stand/.test(await page.locator('#ov').innerText()));
+  chk('the first question asks for no typing', !(await page.locator('#ov input:visible').count()));
   await shot(page, '3-first-question-390');
+  for (const [q, i] of [['age', 2], ['spend', 2], ['inv', 2], ['save', 3]]) { await tap(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`); await page.waitForTimeout(550); }
+  const top = await page.locator('#ov .cbtop').innerText();
+  chk('the first number shows after 5 taps or fewer from the landing', taps <= 5 && /What it is/i.test(top) && /\$[\d,]+/.test(top), [taps, top]);
+  console.log(`     taps from the landing to the first number: ${taps}`);
+  chk('the two numbers start equal', (await page.locator('#ov [data-cbn=is]').innerText()) === (await page.locator('#ov [data-cbn=could]').innerText()) && /equal until you count something/.test(await page.locator('#ov').innerText()));
+  chk('What it is: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
+  await shot(page, '3a-what-it-is-390');
+  await tap('#ov [data-a=cbgo][data-v=next]'); await page.waitForTimeout(550);
+  chk('the chart shows, stacked, with the two numbers still on top', (await page.locator('#ov svg.dkstack').isVisible()) && (await page.locator('#ov .cbtop').isVisible()));
+  const cw = await page.locator('#ov svg.dkstack').boundingBox();
+  chk('the chart fits 390 wide', cw && cw.x >= 0 && cw.x + cw.width <= 390 && !(await sideways(page)) && !(await junk(page)), cw);
+  await shot(page, '3c-chart-390');
+  // to the last screen of the flow (a later step may sit between), then the rest of setup
+  for (let i = 0; i < 8 && !(await page.locator('#ov [data-a=cbrest]').count()); i++) { await tap('#ov [data-a=cbgo][data-v=next]'); await page.waitForTimeout(550); }
+  chk('the last screen of the flow has no dead end: the rest of setup, Next Steps, Home', (await page.locator('#ov [data-a=cbrest]').isVisible()) && (await page.locator('#ov [data-a=cbsteps]').isVisible()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
+  await shot(page, '3d-last-screen-390');
+  await tap('#ov [data-a=cbrest]'); await page.waitForTimeout(550);
+  chk('the rest of setup opens under "Am I okay?"', /Am I okay\?/.test(await page.locator('#ov').innerText()) && (await page.evaluate(() => W && W.kind === 'setup' && W.cbRest === true)));
   // The setup asks one question at a time and fills in what the earlier taps already say. So the robot looks at the
   // screen as a person does: it taps its answer to the open question, or "That's all", or Next.
   const WANT = { ageDec: '30s', age: '34', work: 'Established', incKinds: 'A main job', payFreq: 'Every 2 weeks', steady: 'Steady', homeQ: '', live: 'On my own', rel: 'Single by choice', deps: 'None', share: 'No one', debtKinds: 'Credit card balance', accts: 'Checking', can1k: 'No', cover: 'Less than a month', invest: 'No' };
@@ -123,7 +144,7 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   chk('the reveal marks typical numbers as a Guess', /Guess/.test(txt) && /typical/.test(txt));
   chk('the reveal offers to save by making an account', await page.locator('#ov [data-a=doorsave]').isVisible());
   chk('the answer: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
-  console.log(`     taps from Start to the answer: ${taps} (the robot waits 0.65 s after each tap: ${secs} s in all)`);
+  console.log(`     taps from the landing through the flow and the rest of setup to the answer: ${taps} (the robot waits 0.65 s after each tap: ${secs} s in all)`);
   await shot(page, '4-answer-390');
   // 3. the mark in the link is still there
   chk('the address still has ?ref=abc123', /\?ref=abc123/.test(page.url()), page.url());

@@ -1412,6 +1412,7 @@ function drawSheetOnce() {
   if (typeof drawSheetNav === "function") drawSheetNav(); /* nav.js: the trail, and the row Back / Forward / Close */
   if (typeof drawSheetStars === "function") drawSheetStars(); /* stars.js: paint the canvas of the galaxy */
   if (typeof drawSheetQuest === "function") drawSheetQuest(); /* questlog.js: the exact spot of a round */
+  if (typeof drawSheetCb === "function") drawSheetCb(); /* couldbe.js: the short animation of the two top numbers */
 }
 /* CLOSE THE SHEET.
    closeSheet() is the full function. It calls each part by name.
@@ -1692,6 +1693,8 @@ function openSetup(mode) {
       cover: null,
       invest: null,
     });
+  if (typeof openSetupCb === "function")
+    openSetupCb(base, mode); /* couldbe.js: the rest of setup keeps the four answers */
   W = { kind: "setup", mode, add: mode === "add", step: 0, o: base };
   sheet(setupSheet);
 }
@@ -1796,6 +1799,8 @@ function finishSetupBase() {
   save();
   tab = "home";
   render();
+  /* couldbe.js: a profile made by What it is / What it could be goes on in that flow */
+  if (!edit && typeof finishSetupCb === "function" && finishSetupCb(w, o)) return;
   /* element.js: a new profile gets the character reveal in place of the card "Your character is ready". */
   if (!edit && typeof finishSetupReveal === "function" && finishSetupReveal(o)) return;
   celebrate(
@@ -2817,7 +2822,11 @@ const ACT = {
     else if (MSUM.length) moveSummary();
   },
   info: t => infoSheet(t.dataset.k),
-  start: () => openSetup(G.demo ? "new" : "edit"),
+  /* couldbe.js: a new player starts with What it is / What it could be; the setup rounds come after it */
+  start: () => {
+    if (G.demo && typeof cbStart === "function" && cbStart()) return;
+    openSetup(G.demo ? "new" : "edit");
+  },
   edit: () => openSetup("edit"),
   addperson: () => openSetup("add"),
   nextsample: () => {

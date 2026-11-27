@@ -13,8 +13,9 @@ needs). Put the picture on the slide as it is. Do not crop the white edge and do
 | A person who is signed in | Their game. The landing screen does not show. |
 | A person who tapped Start before and has a game on this phone, with no account yet | Their game, with one row on Home: "Keep this game: make a free account". |
 
-Start needs no account and no typing. It opens the setup by taps under the question "Am I okay?" (7 short pages,
-about 20 taps). The last tap opens the answer: what the taps say about the cushion, a surprise bill, the money left
+Start needs no account and no typing. Since Nov 27 2026 it opens What it is / What it could be: four taps, then the
+FI number and the layer chart (`docs/WHAT-IT-COULD-BE.md`). Its last screen opens the setup by taps under the question
+"Am I okay?" (five short rounds). The last tap opens the answer: what the taps say about the cushion, a surprise bill, the money left
 from each paycheck, debt and investing, and the one next step. The answer is a Guess and says so. Then it offers to
 save the game by making a free account. Until then the game is on that phone only.
 

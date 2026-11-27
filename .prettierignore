@@ -33,3 +33,4 @@ game/core/askrank.js
 game/core/feel.js
 game/core/canonmath.js
 game/core/statuses.js
+game/core/paylayers.js

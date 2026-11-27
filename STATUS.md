@@ -322,3 +322,18 @@ timeline with the important milestones.
 |-----:|------|-------|-------|
 | 1 | FIRE statuses | Done. One FOO order for everyone (the orders by Lean / Barista / Fat are removed; Baby Steps and Money Guy comparisons stay). Coast, Lean, Barista, FI, Chubby and Fat are statuses with a number, a date, Guess / Close / Exact and Show the math; markers between the steps; a one-time card with "Options this opens"; the quiet Recalculating line under a status. The option words are a draft for Eli (QUESTIONS 644). Missing: Barista, Chubby and Fat have no number in the game | Web: Plan > FOO (the row "Statuses on the way" and the section "FIRE statuses on your path"), Home (the card), Plan > Goals "FIRE statuses: the numbers", Plan > FIRE, `trip.html` (Your FIRE journey). Game: Home (the card, and a line on You are here), the big picture (Your life map: markers and "FIRE statuses on the way"), Menu > Trips and the journey > Journey. Code: `js/math/statuses.js`, `statusesOf` in `js/math/destinations.js`, `stGame` in `game/features/coast.js`, `data/library/status-options.json` |
 | 2 | Life simulator timeline | Not started (the next worker) | |
+
+## RUN A: What it is / What it could be (Nov 27 2026)
+
+From Eli's prompt (Nov 27 2026): a new player's first experience is one number and one chart. They see their FI number
+the standard way ("What it is"), then switch things on and watch "What it could be" drop. The record of the screens
+before and after, and how it is built: `docs/WHAT-IT-COULD-BE.md`.
+
+| Step | What | State | Where |
+|-----:|------|-------|-------|
+| 0 | Front door (replace, do not add) | Done. The flow is the one opening after the landing and Start. The spiral rounds and the payoff reveal are the rest of setup, opened from the flow's last screen and from Next Steps. A returning player lands on Home. Before: 25 screens and 35 taps to the reveal | Game: the landing > Start. Code: `cbStart` in `game/features/couldbe.js`, called from `doorBegin`, `ACT.start`, `clFirstGame` |
+| 1 | Entry (5 taps or fewer to the first number) | Done. Age, spending a month, invested, saved a month, by range chips; "I know it" for an exact amount; 5 taps from the landing. A profile that has the answers skips it | The first four screens of the flow |
+| 2 | "What it is" | Done. Spending x 25 and the age at today's pace from the engine; two numbers pinned for the whole flow, equal at the start | The fifth screen; Menu > What it is / What it could be |
+| 3 | The layer chart | Done. 5-year bars to 95, single years with Back, four layers and Split by account, the two costs as their own parts, the hatched gap with its dollars, toggle chips, the needs line, a sheet for each layer. Counting a cost or an income moves the second number | The sixth screen. Math: `js/math/paylayers.js` (M91), `game/core/paylayers.js` |
+| 4 | Two strategy steps (spending shape, Social Security) | Not started (the next worker). The pattern is ready: `cbStepAdd`, `cbCount`, the receipt | |
+| | Tests, Krug, finish | Partly. The tests of steps 0 to 3 are in both suites and the walks are updated. The Krug self-check with the three personas, the full last screen and the promote are the next worker's | `game/tests/what-it-could-be.js`, `test/paylayers.test.js` |

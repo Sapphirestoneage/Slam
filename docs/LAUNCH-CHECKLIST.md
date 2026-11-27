@@ -63,7 +63,7 @@ How to know it worked: each of the five lines is true. If one is not, stop and t
 
 ## 5. A real phone (about five minutes)
 
-1. Type the link into a phone (private window) and tap **Start**. Answer the taps to the screen "Am I okay?". Time
+1. Type the link into a phone (private window) and tap **Start**. Answer the four taps to your first number, then go on to "Finish setup" and answer the taps to the reveal. Time
    it: the promise on the first screen is 2 minutes.
 2. Open `docs/qr-slam.png` on a laptop screen and point the phone camera at it. It opens the same first screen.
 3. On that phone tap **Report**, **Confusing**, write three words, **Send report**. After step 2 of this list it

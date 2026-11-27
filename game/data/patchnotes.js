@@ -598,6 +598,16 @@ const PATCH_NOTES = [
       "If your balance dips back under a status, one quiet Recalculating line shows the new date.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "Your FI number in four taps",
+    l: [
+      "A new game now starts with four taps: your age, what you spend, what you have invested and what you save.",
+      "Then one number: what it takes for work to be optional, and the age you get there at today's pace.",
+      "A chart shows what pays for each year of your life: work, investments, Social Security. Switch a layer off and see what is not covered yet.",
+      "The rest of setup is one tap away when you want your real picture. Menu: What it is / What it could be.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

@@ -1176,6 +1176,154 @@ def peers_check(fn, x, o, ck):
         ck('the gap', o['gap'], x['rate'] - c, 1e-12)
 
 
+def layers_check(fn, x, o, ck):
+    """What it is / What it could be (js/math/paylayers.js): the year-by-year run of the layer chart and the two numbers,
+    worked out again. The year is settled by cutting the range of the tax in half until it fits, not by going round."""
+    keys = ['tax', 'pre', 'roth', 'hsa']
+    steps = x.get('taxSteps')
+    def tax_of(v):
+        if not steps or v <= 0:
+            return 0.0
+        t = 0.0
+        for k, (lo, rate) in enumerate(steps):
+            hi = steps[k + 1][0] if k + 1 < len(steps) else float('inf')
+            t += max(0.0, min(v, hi) - lo) * rate
+        return t
+    def shape_at(bands, age):
+        f = 1.0
+        for b in sorted(bands or [], key=lambda b: b['from']):
+            if age >= b['from']:
+                f = b['f']
+        return f
+    def steady_at(q, age, off):
+        ss = q['ss']['year'] if q.get('ss') and not off.get('ss') and age >= q['ss']['age'] else 0.0
+        oth = 0.0
+        if not off.get('other'):
+            for it in q.get('other') or []:
+                if age >= (it.get('from') or 0) and (it.get('to') is None or age < it['to']):
+                    oth += it['year']
+        return ss, oth
+    def health_at(q, age, stop):
+        h = q.get('health')
+        if not h or not h['year'] > 0:
+            return 0.0
+        return h['year'] if (stop is None or age >= stop) and age < h.get('until', 65) else 0.0
+    if fn == 'lyYears':
+        off, stop = x.get('off') or {}, x.get('stop')
+        bal = {k: max(0.0, x['bal'].get(k) or 0) for k in keys}
+        rows, met_from, line_sum, gap_sum = [], None, 0.0, 0.0
+        for age in range(x['age'], 96):
+            plan_work = stop is None or age < stop
+            working = plan_work and not off.get('work')
+            f = shape_at(x.get('shape'), age)
+            needs, wants = x['spend'] * x['needsShare'] * f, x['spend'] * (1 - x['needsShare']) * f
+            health = health_at(x, age, stop)
+            ss_all, oth_all = steady_at(x, age, off)
+            r = x['grow'] if plan_work else x['draw']
+            cap = {k: 0.0 if off.get(k) else bal[k] * (1 + r) for k in keys}
+            def pay(wtax):
+                left = needs + wants + health + wtax
+                ss = min(ss_all, left); left -= ss
+                oth = min(oth_all, left); left -= oth
+                work = min(x['workPay'] if working else 0.0, left); left -= work
+                out = dict.fromkeys(keys, 0.0)
+                out['hsa'] = min(left, health, cap['hsa']); left -= out['hsa']
+                for k in keys:
+                    v = min(left, cap[k] - out[k]); out[k] += v; left -= v
+                return ss, oth, work, out, left
+            # the tax that fits: the smallest t with tax_of(pre drawn at t) <= t (the draw of pre rises with t)
+            lo_t, hi_t = 0.0, 0.0
+            if steps:
+                if tax_of(pay(0.0)[3]['pre']) > 0.005:
+                    hi_t = tax_of(cap['pre']) + 1.0
+                    for _ in range(80):
+                        mid = (lo_t + hi_t) / 2
+                        if tax_of(pay(mid)[3]['pre']) > mid:
+                            lo_t = mid
+                        else:
+                            hi_t = mid
+            wtax = hi_t
+            ss, oth, work, out, gap = pay(wtax)
+            for k in keys:
+                add = x['save'] * (x['saveTo'].get(k) or 0) if working else 0.0
+                bal[k] = bal[k] * (1 + r) + add if off.get(k) else max(0.0, bal[k] * (1 + r) - out[k]) + add
+            line = needs + wants + health + wtax
+            rows.append([age, line, work, out['tax'], out['pre'], out['roth'], out['hsa'], ss, oth, gap, wtax, health, sum(bal.values())])
+            steady = ss_all + oth_all
+            met = steady > 0 and steady >= needs + health - 0.005
+            met_from = (met_from if met_from is not None else age) if met else None
+            line_sum += line; gap_sum += gap if gap >= 0.005 else 0.0
+        names = ['age', 'line', 'work', 'taxable', 'traditional', 'Roth', 'HSA', 'Social Security', 'other', 'gap', 'tax on withdrawals', 'health', 'left']
+        ok = len(rows) == len(o['rows'])
+        ck('the number of years', len(o['rows']), len(rows), 0)
+        if ok:
+            for mine, theirs in zip(rows, o['rows']):
+                for j in range(1, 13):
+                    if not ck(f'{names[j]} at {mine[0]}', theirs[j], mine[j], 1.0):
+                        ok = False
+                if not ok:
+                    break
+        ck('the first age steady income meets the needs', o['needsAge'], met_from, 0) if (o['needsAge'] is not None and met_from is not None) else ck('needs met: none or some', o['needsAge'] is None, met_from is None)
+        ck('the share covered', o['share'], (line_sum - gap_sum) / line_sum if line_sum > 0 else 1.0, 1e-6)
+        if ok:
+            for b in o['bars']:
+                g = [r for r in rows if b[0] <= r[0] <= b[1]]
+                ck(f'the bar from {b[0]}: the line', b[2], sum(r[1] for r in g) / len(g), 1.0)
+                ck(f'the bar from {b[0]}: the gap', b[3], sum(r[9] for r in g) / len(g), 1.0)
+                ck(f'the bar from {b[0]}: investments', b[4], sum(r[3] + r[4] + r[5] + r[6] for r in g) / len(g), 1.0)
+    elif fn == 'lyNumbers':
+        c, off, r = x.get('counted') or {}, x.get('off') or {}, x['draw']
+        inv = sum(max(0.0, x['bal'].get(k) or 0) for k in keys)
+        def pile(n):
+            v = inv
+            for _ in range(n):
+                v = v * (1 + x['grow']) + x['save']
+            return v
+        is_t = x['spend'] / r
+        def first(target):
+            for n in range(81):
+                if pile(n) >= target(x['age'] + n):
+                    return n
+            return None
+        n_is = first(lambda a: is_t)
+        ck('What it is', o['is'][0], is_t)
+        ck('its age', o['is'][1] is None, n_is is None) if n_is is None or o['is'][1] is None else ck('its age', o['is'][1], x['age'] + n_is, 0)
+        q = {'ss': ({'year': x['ss']['year'] * c['ss'].get('share', 1), 'age': x['ss']['age']} if c.get('ss') is not None and x.get('ss') and not off.get('ss') else None),
+             'other': x.get('other') if c.get('other') is not None and not off.get('other') else [], 'health': x.get('health') if c.get('health') is not None else None}
+        bands = (c.get('shape') or {}).get('bands') if c.get('shape') is not None else None
+        use_tax = c.get('wtax') is not None and steps and x.get('preShare', 0) > 0
+        any_c = bool(q['ss'] or (c.get('other') is not None and x.get('other') and not off.get('other')) or c.get('shape') is not None or (c.get('health') is not None and x.get('health')) or (c.get('wtax') is not None and steps))
+        ck('anything counted', o['counted'], any_c)
+        if not any_c:
+            ck('nothing counted: the same number', o['could'][0], is_t)
+            return
+        def net(age, stop):
+            ss, oth = steady_at(q, age, {})
+            b = max(0.0, x['spend'] * shape_at(bands, age) + health_at(q, age, stop) - ss - oth)
+            if not use_tax or b <= 0:
+                return b
+            # the tax t with t = tax_of((b + t) * share): cut the range in half
+            lo_t, hi_t = 0.0, b * 2 + 1
+            for _ in range(80):
+                mid = (lo_t + hi_t) / 2
+                if tax_of((b + mid) * x['preShare']) > mid:
+                    lo_t = mid
+                else:
+                    hi_t = mid
+            return b + hi_t
+        def target(at):
+            pv, v = 0.0, 1.0
+            for age in range(at, 96):
+                v /= 1 + r
+                pv += net(age, at) * v
+            return pv + net(95, at) / r * v
+        n_c = first(target)
+        at = x['age'] + n_c if n_c is not None else (x['age'] + n_is if n_is is not None else x['age'])
+        ck('What it could be', o['could'][0], target(at), 2.0)
+        ck('its age', o['could'][1] is None, n_c is None) if n_c is None or o['could'][1] is None else ck('its age', o['could'][1], x['age'] + n_c, 0)
+        ck('the costs that are counted', o['raisedBy'] == [k for k in ('health', 'wtax') if (c.get('health') is not None and x.get('health') if k == 'health' else c.get('wtax') is not None and steps)], True)
+
+
 def family_check(fn, x, o, ck):
     """Family money (M8F), worked out month by month instead of by stretches and formulas."""
     if fn == 'fmSandwich':
@@ -1961,6 +2109,8 @@ def run(cases, ref, il=None):
             family_check(fn, x, o, ck)
         elif fn in ('qsStats', 'qsCapacity', 'qsFails', 'qsHidden', 'qsRank', 'qsDuel'):
             quest_check(fn, x, o, ck)
+        elif fn in ('lyYears', 'lyNumbers'):
+            layers_check(fn, x, o, ck)
         elif fn in ('peNetWorth', 'peIncome', 'peSaving'):
             peers_check(fn, x, o, ck)
         elif fn in ('ivMix', 'ivFees', 'ivHeatCell', 'ivRoth'):

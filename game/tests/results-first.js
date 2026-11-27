@@ -1,7 +1,7 @@
 /* ============================================================================
    SLAM the Game, test: tests/results-first.js
    PURPOSE     Examine results first (run Results-first Home, items 1 and 2): the payoff reveal at the end of
-               setup (the lead number picked by the answers, five result cards with a value, a target, the time
+               the rest of setup (setup comes after What it is / What it could be since run A) (the lead number picked by the answers, five result cards with a value, a target, the time
                at today's pace and what it unlocks, typical values greyed with Put in yours, one button "Start
                my first win") and Home as four cards (Your next win with one pulsing button, By the end of this
                month with a solid and a dotted line, You are here, the metric tiles), the Home button on every
@@ -74,6 +74,43 @@
       share: "A partner",
     },
   };
+  /* Run A (Nov 27 2026): a player with only the four answers of What it is / What it could be (couldbe.js).
+     Home is still results first, and the values that stand on a tapped range are greyed and labeled. */
+  {
+    G = clone(G0);
+    G.demo = true;
+    W = null;
+    X("start");
+    [
+      ["age", 1],
+      ["spend", 2],
+      ["inv", 3],
+      ["save", 3],
+    ].forEach(([q, i]) => X("cbset", "", "", { q, i }));
+    chk(
+      "four answers: the flow goes on at What it is, not at the reveal",
+      W && W.kind === "cb" && W.step === "is",
+      W && W.kind
+    );
+    closeSheet();
+    const hm = app();
+    chk(
+      "four answers: Home is results first",
+      /class="rstop"/.test(hm) && /Your next win/i.test(text(hm)),
+      text(hm).slice(0, 200)
+    );
+    chk(
+      "four answers: the values are a Guess, greyed and labeled typical",
+      /typical/.test(text(hm)) && /Guess/.test(hm) && /class="dknum guess"/.test(hm)
+    );
+    chk("four answers: Home shows no undefined and no NaN", clean(hm), junk(hm));
+    X("tab", "plan");
+    chk(
+      "four answers: Next Steps opens the rest of setup and the two numbers",
+      /data-a="cbrest"/.test(app()) && /data-a="cb"/.test(app())
+    );
+    X("tab", "home");
+  }
   const play = o => {
     G = clone(G0);
     G.demo = true;

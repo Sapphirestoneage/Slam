@@ -465,6 +465,7 @@ function planTab() {
   if (h === null) h = typeof planTabFold === "function" ? planTabFold(planTabMain) : planTabMain();
   if (typeof planTabIdeas === "function") h = planTabIdeas(h); /* ideasz.js: the block for the famous money ideas */
   if (typeof planTabPath === "function") h = planTabPath(h); /* paths.js: the path that the player picked */
+  if (typeof planTabCb === "function") h = planTabCb(h); /* couldbe.js: the two numbers, and the rest of setup */
   /* strat.js: the section "Moves to try". With no strat.js, the place mark is taken out. */
   h = typeof planTabStrat === "function" ? planTabStrat(h) : h.replace("<!--moveshere-->", "");
   if (typeof planTabPeriod === "function") h = planTabPeriod(h); /* look.js: the pay period */

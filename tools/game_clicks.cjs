@@ -1,7 +1,8 @@
 /* ============================================================================
    tools/game_clicks.cjs
-   PURPOSE     Count the taps from the first screen of the game to the payoff reveal ("Here's where you
-               stand"), for two invented personas: a speedrun persona (the simplest answers) and the most
+   PURPOSE     Count the taps from the first screen of the game to the first number (What it is, the one
+               opening since run A) and on through the rest of setup to the payoff reveal ("Here's where
+               you stand"), for two invented personas: a speedrun persona (the simplest answers) and the most
                complex persona (many income kinds, a household, many debts and accounts).
    USAGE       node tools/game_clicks.cjs [--trace]
    INPUT       The folder game/. No saved game.
@@ -57,7 +58,29 @@ async function walk(browser, base, want) {
     await start.first().click();
     taps++;
     trace.push("1. Start");
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(700);
+  }
+  // Run A (Nov 27 2026): the one opening of a new player, What it is / What it could be: four range chips, then the
+  // first number; then its screens to the last one, and from there the rest of setup.
+  let first = null;
+  if (await page.locator("#ov [data-a=cbset]").count()) {
+    for (const [q, i] of want.cb || [["age", 2], ["spend", 2], ["inv", 2], ["save", 3]]) {
+      await page.locator(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`).click();
+      taps++;
+      trace.push(taps + ". " + q + " chip " + i);
+      await page.waitForTimeout(650);
+    }
+    if (await page.locator("#ov [data-cbn=is]").count()) first = taps;
+    for (let i = 0; i < 8 && !(await page.locator("#ov [data-a=cbrest]").count()); i++) {
+      await page.locator("#ov [data-a=cbgo][data-v=next]").first().click();
+      taps++;
+      trace.push(taps + ". Next (the flow)");
+      await page.waitForTimeout(650);
+    }
+    await page.locator("#ov [data-a=cbrest]").click();
+    taps++;
+    trace.push(taps + ". Finish setup: five short rounds");
+    await page.waitForTimeout(650);
   }
   for (let i = 0; i < 120; i++) {
     const pick = await page.evaluate(want => {
@@ -123,7 +146,7 @@ async function walk(browser, base, want) {
     Array.isArray(v) ? v.filter(x => !used[k + "=" + x]).map(x => k + " " + x) : used[k] ? [] : [k + " " + v]
   );
   await ctx.close();
-  return { taps, reveal, trace, missed, errs };
+  return { taps, first, reveal, trace, missed, errs };
 }
 (async () => {
   const srv = await serve(path.resolve(__dirname, "../game")),
@@ -132,11 +155,12 @@ async function walk(browser, base, want) {
   let bad = 0;
   for (const name of Object.keys(PERSONAS)) {
     const r = await walk(browser, base, PERSONAS[name]);
-    if (!r.reveal) bad++;
+    if (!r.reveal || r.first == null || r.first > 5) bad++;
     console.log(
       name +
         ": " +
-        (r.reveal ? r.taps + " taps from Start to \"Here's where you stand\"" : "did not reach the reveal after " + r.taps + " taps") +
+        (r.first != null ? r.first + " taps from Start to the first number (What it is). " : "The first number did not show. ") +
+        (r.reveal ? r.taps + " taps from Start, through the flow and the rest of setup, to \"Here's where you stand\"" : "did not reach the reveal after " + r.taps + " taps") +
         (r.missed.length ? ". Not asked (filled in from earlier taps, or not on the setup): " + r.missed.join(", ") : "") +
         (r.errs.length ? ". Page errors: " + r.errs.slice(0, 2).join(" | ") : "")
     );

@@ -233,6 +233,14 @@ the line when the balance is back under a status. The numbers and months themsel
 (M9G, M53, M54, rcCoast), which have their own cases above. The order of the late steps by FIRE type is removed, so
 it has no case.
 
+Added Nov 27 2026 (What it is / What it could be, js/math/paylayers.js): for 500 made-up players, the year-by-year
+run of the layer chart from today to 95 (for each year: the line, what work, each of the four accounts, Social
+Security and other income pay, the gap, the tax on traditional withdrawals, health insurance before 65 and what is
+left invested), its 5-year bars, the first age steady income meets the needs and the share covered, with some layers
+switched off; and the two numbers (What it is and its age, What it could be and its age with some things counted,
+and which costs raise it). The second engine settles each year's tax by cutting the range in half, where SLAM goes
+round until it settles. The tax is a made-up table of steps here; in the game it is the tax engine (retireTax).
+
 Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (the balance at year end, the
 withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:
 the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a

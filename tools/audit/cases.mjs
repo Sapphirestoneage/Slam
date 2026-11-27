@@ -25,6 +25,7 @@ import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { ST_KEYS, stList, stMarkers, stWeave, stCard, stBelow } from '../../js/math/statuses.js';
+import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -644,6 +645,30 @@ for (let i = 0; i < N; i++) {
   const must = Array.from({ length: whole(0, 2) }, (_, k) => ({ id: 100 + k, value: Infinity })), list = [...must, ...R];
   const S = arStop(list, AR_RULES.stopShare);
   add('arStop', { values: list.map(q => (q.value === Infinity ? 'must' : q.value)), share: AR_RULES.stopShare }, { ask: S.ask.length, rest: S.rest.length, total: S.total, asked: S.asked, restValue: S.restValue, stop: S.stop });
+}
+// What it is / What it could be (js/math/paylayers.js, run A, Nov 27 2026): the two numbers with some things counted, and
+// the year-by-year run of the layer chart (each layer of each year, the gap, the line), its 5-year bars, the first age
+// steady income meets the needs, and the share covered, with some layers switched off. The tax is a made-up table of
+// steps ([from, rate]) so both engines can work it out.
+for (let i = 0; i < N; i++) {
+  const age = whole(20, 68), spend = money(12000, 160000), steps = [[0, 0], [whole(8000, 30000), pick([0.1, 0.12])], [whole(40000, 110000), pick([0.22, 0.24])]];
+  const taxOf = x => steps.reduce((t, st, k) => t + Math.max(0, Math.min(x, k + 1 < steps.length ? steps[k + 1][0] : Infinity) - st[0]) * st[1], 0);
+  const bal = { tax: rnd() < 0.5 ? 0 : money(100, 600000), pre: rnd() < 0.2 ? 0 : money(100, 1500000), roth: rnd() < 0.5 ? 0 : money(100, 500000), hsa: rnd() < 0.7 ? 0 : money(100, 80000) };
+  const tot = bal.tax + bal.pre + bal.roth + bal.hsa, sh = k => (tot > 0 ? bal[k] / tot : k === 'pre' ? 1 : 0);
+  const off = {}; for (const k of ['work', 'tax', 'pre', 'roth', 'hsa', 'ss', 'other']) if (rnd() < 0.12) off[k] = true;
+  const x = { age, spend, needsShare: between(0.4, 0.95), workPay: Math.round(spend * between(0.7, 2)), save: rnd() < 0.15 ? 0 : money(500, 90000), bal,
+    saveTo: { tax: sh('tax'), pre: sh('pre'), roth: sh('roth'), hsa: sh('hsa') }, preShare: sh('pre'), grow: pick([0.05, 0.07]), draw: pick([0.035, 0.04]),
+    ss: rnd() < 0.15 ? null : { year: money(6000, 60000), age: pick([62, 67, 70]) },
+    other: rnd() < 0.35 ? [{ year: money(1200, 40000), from: whole(age, 75), to: rnd() < 0.3 ? whole(76, 90) : null }] : [],
+    health: rnd() < 0.2 ? null : { year: money(2400, 30000), until: 65 }, shape: rnd() < 0.3 ? [{ from: 75, f: 0.85 }, { from: 85, f: 0.7 }] : null,
+    stop: rnd() < 0.1 ? null : whole(age, 75), off, taxSteps: rnd() < 0.2 ? null : steps };
+  const p = { ...x, tax: x.taxSteps ? taxOf : null };
+  const rows = lyYears(p), cov = lyCoverage(rows);
+  add('lyYears', x, { rows: rows.map(r => [r.age, r.line, r.work, r.tax, r.pre, r.roth, r.hsa, r.ss, r.other, r.gap, r.wtax, r.health, r.left]), needsAge: lyNeedsAge(rows), share: cov.share, bars: lyBars(rows, 5).map(b => [b.from, b.to, b.line, b.gap, b.inv]) });
+  const counted = {}; if (rnd() < 0.6) counted.ss = { share: pick([1, 0.75, 0.5]) }; if (rnd() < 0.4) counted.other = {}; if (rnd() < 0.3) counted.health = {}; if (rnd() < 0.3) counted.wtax = {};
+  if (rnd() < 0.3) counted.shape = { bands: [{ from: 75, f: 0.8 }, { from: 85, f: 0.7 }] };
+  const Nn = lyNumbers(p, counted);
+  add('lyNumbers', { ...x, counted }, { is: [Nn.is.target, Nn.is.age], could: [Nn.could.target, Nn.could.age], counted: Nn.counted, raisedBy: Nn.raisedBy });
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

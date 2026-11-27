@@ -764,6 +764,23 @@ const WB = [
     null,
   ],
   [
+    "see",
+    "What it is / What it could be: your FI number and the layer chart",
+    "p",
+    () =>
+      WB_FN("lyYears") &&
+      WB_FN("lyNumbers") &&
+      WB_FN("cbNumbers") &&
+      WB_FN("cbChart") &&
+      WB_FN("cbStart") &&
+      WB_FN("cbStepAdd") &&
+      WB_HAS("cb") &&
+      WB_HAS("cbcount") &&
+      WB_HAS("cbrest"),
+    "The first thing a new player sees: four taps (age, spending, invested, saved a month), then the FI number the standard way and its age. Two numbers stay on top: What it is and What it could be. The chart shows which layer pays for each year to 95 (work, investments, Social Security, other), what is not covered yet, and the two costs the 25 times rule leaves out. Menu: What it is / What it could be. Missing: the two strategy steps and the full last screen.",
+    "cb",
+  ],
+  [
     "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",

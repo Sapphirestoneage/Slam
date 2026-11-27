@@ -56,8 +56,90 @@ function dkSpark(vals) {
     );
   return `<svg class="dkspark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts.join(" ")}" style="fill:none;stroke:var(--good);stroke-width:2"/></svg>`;
 }
-/* Grouped bars. groups: [{ l: label, v: [a, b] }], names: [name of a, name of b]. */
-function dkBars(groups, names) {
+/* Grouped bars. groups: [{ l: label, v: [a, b] }], names: [name of a, name of b]. o.stack: stacked bars (below). */
+function dkBars(groups, names, o) {
+  if (o && o.stack) {
+    /* STACKED BARS (o.stack): one bar for each group, its values one on the other in the colors o.colors, with one
+       axis. A group: { l (the label), v (the values), gap (not covered: hatched, on top), gapL (its words), line (a
+       mark across the bar: the total to reach), mark (a second, dashed mark), side (a thin bar of the parts of the
+       line, colors o.sideColors), act and av (the action of a tap on the bar), acts (the action value of each value:
+       a tap on one part, with o.partAct) }. o: { h, top (the words of the highest value), label }. */
+    const W = 320,
+      H = o.h || 170,
+      top = 28,
+      foot = 16,
+      max = Math.max(1, ...groups.map(g => Math.max(g.line || 0, g.v.reduce((a, b) => a + b, 0) + (g.gap || 0)))),
+      gw = W / Math.max(1, groups.length),
+      sw = groups.some(g => g.side) ? Math.max(4, Math.min(12, gw * 0.2)) : 0,
+      bw = Math.max(6, Math.min(46, gw - 4 - sw)),
+      y = v => H - foot - (v / max) * (H - foot - top),
+      rect = (x, w, a, b, extra) =>
+        b - a <= 0
+          ? ""
+          : `<rect x="${x.toFixed(1)}" y="${y(b).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0.5, y(a) - y(b)).toFixed(1)}" ${extra}/>`;
+    const bars = groups
+      .map((g, i) => {
+        const x0 = i * gw + (gw - bw - sw) / 2 + sw;
+        let at = 0,
+          sat = 0;
+        const segs = g.v
+          .map((v, j) => {
+            const a = at;
+            at += v;
+            return rect(
+              x0,
+              bw,
+              a,
+              at,
+              `rx="1.5" style="fill:${o.colors[j]}"` +
+                (o.partAct && g.acts && g.acts[j]
+                  ? ` data-a="${o.partAct}" data-v="${esc(g.acts[j])}" tabindex="0" role="button" aria-label="${esc(names[j] || "")}"`
+                  : "")
+            );
+          })
+          .join("");
+        const gap =
+          g.gap > 0
+            ? rect(
+                x0,
+                bw,
+                at,
+                at + g.gap,
+                `class="dkgap" style="fill:url(#dkhatch);stroke:var(--warn);stroke-width:1"`
+              ) +
+              (g.gapL
+                ? `<text class="dkgapl" x="${(x0 + bw / 2).toFixed(1)}" y="${(y(at + g.gap) - 3).toFixed(1)}" text-anchor="middle">${esc(g.gapL)}</text>`
+                : "")
+            : "";
+        const side = g.side
+          ? g.side
+              .map((v, j) => {
+                const a = sat;
+                sat += v;
+                return rect(x0 - sw - 1, sw, a, sat, `style="fill:${o.sideColors[j]}"`);
+              })
+              .join("")
+          : "";
+        const line =
+          (g.mark > 0
+            ? `<line x1="${(i * gw + 1).toFixed(1)}" x2="${((i + 1) * gw - 1).toFixed(1)}" y1="${y(g.mark).toFixed(1)}" y2="${y(g.mark).toFixed(1)}" class="dkmark"/>`
+            : "") +
+          (g.line > 0
+            ? `<line x1="${(i * gw).toFixed(1)}" x2="${((i + 1) * gw).toFixed(1)}" y1="${y(g.line).toFixed(1)}" y2="${y(g.line).toFixed(1)}" class="dkline"/>`
+            : "");
+        const inner =
+          side +
+          segs +
+          gap +
+          line +
+          `<text x="${(i * gw + gw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle">${esc(g.l)}</text>`;
+        return g.act
+          ? `<g data-a="${g.act}" data-v="${esc(g.av == null ? "" : g.av)}" tabindex="0" role="button" aria-label="${esc(g.al || g.l)}" class="dktap"><rect x="${(i * gw).toFixed(1)}" y="0" width="${gw.toFixed(1)}" height="${H}" style="fill:transparent"/>${inner}</g>`
+          : inner;
+      })
+      .join("");
+    return `<svg class="dkchart dkstack" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || names.join(", "))}"><defs><pattern id="dkhatch" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" style="stroke:var(--warn);stroke-width:2"/></pattern></defs>${o.top ? `<text x="0" y="10">${esc(o.top)}</text>` : ""}<line x1="0" x2="${W}" y1="${H - foot}" y2="${H - foot}" style="stroke:var(--line);stroke-width:1"/>${bars}</svg>`;
+  }
   const W = 320,
     H = 120,
     max = Math.max(1, ...groups.flatMap(g => g.v)),

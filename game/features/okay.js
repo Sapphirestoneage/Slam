@@ -154,7 +154,7 @@ function homeDoorRow(h) {
 }
 /* Part of welcome() in ux.js. The welcome screen for a visitor with no account who closed the first question. */
 function welcomeDoor() {
-  return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px"><div class="small">Your first question: am I okay? About 2 minutes of taps.</div><button class="primary go wide" data-a="doorgo">Start</button><button class="ghost wide" data-a="doorin">I have an account. Sign in</button><div class="tiny muted">No numbers, no typing. Free. Education and tools, not financial advice.</div></div></div>`;
+  return `<div class="stack welcomebox"><h1>SLAM the Game</h1><div class="small muted">Your money, one small step at a time.</div><div class="card stack" style="gap:10px"><div class="small">Four taps, then your first number.</div><button class="primary go wide" data-a="doorgo">Start</button><button class="ghost wide" data-a="doorin">I have an account. Sign in</button><div class="tiny muted">No numbers, no typing. Free. Education and tools, not financial advice.</div></div></div>`;
 }
 /* Part of suAcctSheet() in supa.js. "My account" for a visitor with no account. */
 function doorAcctSheet() {

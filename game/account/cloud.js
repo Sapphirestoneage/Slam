@@ -555,6 +555,8 @@ function clFirstGame() {
     clPaint();
     setTimeout(() => {
       try {
+        /* couldbe.js: the one opening of a new player; the setup rounds come after it */
+        if (G.demo && !SH && typeof cbStart === "function" && cbStart()) return;
         if (G.demo && !SH && typeof openSetup === "function") openSetup("new");
       } catch (e) {
         report(e, "cloud.js: clFirstGame (1)");

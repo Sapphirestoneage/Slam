@@ -73,7 +73,7 @@
   chk("a new visitor: the landing screen is on the page", kids.length === 1 && kids[0].id === "door" && DOOR.shown);
   const L = kids[0].innerHTML;
   chk("the one line", L.includes("Find out if you're okay with money in 2 minutes, no typing, free."));
-  chk("the first question is named", L.includes("Am I okay?"));
+  chk("the first step is named: four taps, then the number", L.includes("First: four taps, then your freedom number."));
   chk("one Start button", (L.match(/data-door="start"/g) || []).length === 1 && />Start<\/button>/.test(L));
   chk(
     "Sign in is there, and it is not the primary button",
@@ -144,10 +144,37 @@
     ready,
   ]);
   chk("Start: the visitor plays with no account", doorGuest() && store.slam_guest === "1");
-  chk("Start opens the setup by taps", W && W.kind === "setup" && W.door === true);
+  /* the one opening of a new player: What it is / What it could be (features/couldbe.js) */
+  chk("Start opens the one opening: four questions by taps", W && W.kind === "cb" && W.step === "entry", W && W.kind);
   let h = ov();
-  chk("the first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of \d+/.test(h));
-  chk("page 1 has no typing that is required", /How old are you\?/.test(h));
+  chk("the old opening is not shown first", !/Am I okay\? · page|Question 1 of 5|Here's where you stand/.test(h));
+  chk(
+    "the first question asks the age, with range chips and no box to type in",
+    /How old are you\?/.test(h) && !/<input/.test(h)
+  );
+  X("cbset", "", "", { q: "age", i: 2 });
+  X("cbset", "", "", { q: "spend", i: 2 });
+  X("cbset", "", "", { q: "inv", i: 2 });
+  chk("no number before the fourth answer", W.step === "entry" && G.demo);
+  X("cbset", "", "", { q: "save", i: 3 });
+  h = ov();
+  chk(
+    "the first number comes at the fifth tap, with the tap on Start",
+    cbTaps() === 5 && W.kind === "cb" && W.step === "is" && /What it is/.test(h) && /data-cbn="is"/.test(h),
+    cbTaps()
+  );
+  chk(
+    "the game is the visitor's own after the four answers",
+    !G.demo && G.chars.length === 1 && store.slam_guest === "2"
+  );
+  /* the rest of setup, from the last screen of the flow */
+  X("cbgo", "end");
+  chk("the last screen opens the rest of setup", /data-a="cbrest"/.test(ov()) && /data-a="cbsteps"/.test(ov()));
+  X("cbrest");
+  chk("the rest of setup is the setup by taps", W && W.kind === "setup" && W.door === true && W.cbRest === true);
+  h = ov();
+  chk("its first question is Am I okay?", /<h2>Am I okay\?<\/h2>/.test(h) && /Am I okay\? · page 1 of \d+/.test(h));
+  chk("it keeps the age of the four answers", W.o.age === 32 && W.o.ageDec === "30s", [W.o.age, W.o.ageDec]);
   /* the taps of a person, through the five rounds (spiral.js) to the answer */
   let taps = 0;
   const T = (a, v, k) => {
@@ -164,8 +191,6 @@
       if (W && W.sp && W.sp.at === "reveal") T("spnext");
       if (W && W.sp && W.sp.at === "level") T("spgo");
     };
-  T("agedec", "30s", "ageDec");
-  T("setn", "34", "age");
   P(0);
   P(9); /* amounts.js: the cards, Next leaves them a guess */
   chk("page 5 from the door has no fast finish", W.step === 4 && !/speedfin/.test(ov()), W.step);
@@ -329,7 +354,7 @@
   doorGate(done);
   doorStart();
   chk("the copy of the account is put away", store[KEY + ".was"] === "the game of user-1" && !("su_uid" in store));
-  chk("and the visitor starts the first question on a new game", G.demo && W && W.kind === "setup" && W.door);
+  chk("and the visitor starts the first question on a new game", G.demo && W && W.kind === "cb" && W.step === "entry");
   closeSheet();
   UX_NOSAMPLE = true; /* the harness turns the welcome screen off; this check needs it */
   render();

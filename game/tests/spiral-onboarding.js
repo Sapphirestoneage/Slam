@@ -1,6 +1,6 @@
 /* ============================================================================
    SLAM the Game, test: tests/spiral-onboarding.js
-   PURPOSE     Examine setup as a spiral: the five rounds in the order D, A, I, T, E, one number for each
+   PURPOSE     Examine the rest of setup (it comes after What it is / What it could be) as a spiral: the five rounds in the order D, A, I, T, E, one number for each
                round with its Guess tag, the chain and the route strip, the level change with "Next" and
                "Stop here", the checklist of the round, the 50/30/20 summary, and "Your first plan" (now the
                payoff reveal of results.js, with the route and the inputs it depends on most inside it).
@@ -16,6 +16,15 @@
     if (W && W.sm) W.sm.adv = 0;
     X("wnext");
   };
+  /* Run A (Nov 27 2026): the spiral rounds are the rest of setup now. A new player's Start opens What it is /
+     What it could be (features/couldbe.js); its last screen and Next Steps open these rounds. */
+  X("start");
+  chk(
+    "Start of a new player opens the one opening, not the rounds",
+    W && W.kind === "cb" && W.step === "entry" && !/Question 1 of 5/.test(ov()),
+    W && W.kind
+  );
+  closeSheet();
   openSetup("new");
   let h = ov();
   chk(

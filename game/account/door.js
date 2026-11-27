@@ -2,9 +2,10 @@
    SLAM the Game: account/door.js
    PURPOSE     The front door. A person who arrives from the QR code or a link, with no account on this
                device, sees one landing screen: one line, one big Start button, "What is this?" (closed
-               by default) and Sign in. Start needs no account and no typing: it opens the setup by taps
-               with the question "Am I okay?" (features/okay.js). The game of such a visitor stays on
-               this device until the visitor makes an account.
+               by default) and Sign in. Start needs no account and no typing: it opens the one opening
+               of a new player, What it is / What it could be (features/couldbe.js). The setup by taps
+               with the question "Am I okay?" (features/okay.js) comes after it. The game of such a
+               visitor stays on this device until the visitor makes an account.
    INPUT       The browser storage: slam_guest ("1" = tapped Start, "2" = has a game on this device),
                su_uid (the account that the copy on this device belongs to), the sign-in token of
                Supabase. The address of the page (a sign-in link that comes back from an email).
@@ -16,7 +17,7 @@
                file.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/supa.js (suGate), screens/ui.js (ACT, G, KEY, W, fresh, openSetup,
-               drawSheet, render).
+               drawSheet, render), features/couldbe.js (cbStart: the one opening of a new player).
    RULES       The button Report is the button of features/fbreport.js (the same class and the same
                action "flag"); fbScreen() there names this screen "front door". One primary button (Start). The landing never shows to a person who is signed in, and
                never to a visitor who already has a game on this device. The address of the page is not
@@ -79,7 +80,7 @@ function doorHtml(wait) {
   return `<style>${css}</style><div class="door-in">
  <p class="door-eye">SLAM the Game</p>
  <h1>Find out if you're okay with money in 2 minutes, no typing, free.</h1>
- <p class="door-q">The first question is yours: "Am I okay?"</p>
+ <p class="door-q">First: four taps, then your freedom number.</p>
  <button type="button" class="door-go" data-door="start">Start</button>
  <button type="button" class="door-in2" data-door="in">I have an account. Sign in</button>
  <div class="door-msg" role="status">${wait ? "One moment. The sign-in screen is on its way." : ""}</div>
@@ -148,9 +149,12 @@ function doorBegin() {
     if (owner) doorPut("su_uid", null);
     if (G.demo) {
       render();
-      openSetup("new");
-      W.door = true;
-      drawSheet();
+      /* couldbe.js: a new player starts with What it is / What it could be. The setup rounds come after it. */
+      if (!(typeof cbStart === "function" && cbStart())) {
+        openSetup("new");
+        W.door = true;
+        drawSheet();
+      }
     } else render();
   } catch (e) {
     report(e, "door.js: doorBegin");
