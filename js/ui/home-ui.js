@@ -3,7 +3,7 @@
 // on, End session saves the snapshot), the path of twelve nodes with the current one open to its checklist, the
 // Picture % with its pace, the three next small things, and money in one line with the FI date locked or unlocked.
 // A card with nothing to say stays off the screen.
-import { coastCard } from './destinations-ui.js';
+import { statusCard } from './destinations-ui.js';
 import { h, clear, icon } from './dom.js';
 import { paydayOf } from '../payday.js';
 import { recalcParts } from './recalc-ui.js';
@@ -65,7 +65,7 @@ export function homeScreen(app, ctx) {
   return [nextDollarLine(app, ctx), // run Not built, groups 1 to 5, Part 4: the one line of the next dollar, the match included
     sessionStrip(app, ctx, P),
     recalcParts(app, ctx, 'home', { inSession: P.inSession }), // Nov 25 2026: Recalculating (the old date, the new date, the next turn), the triage, the refill, the letter, Done for this month
-    coastCard(ctx, P.m, fiGate(ctx)), // run of Nov 25 2026: the day the Coast number is reached, one calm card, one time
+    statusCard(ctx, P.m, fiGate(ctx)), // run of Nov 27 2026: a FIRE status just reached (Coast is one case), one calm card, one time; or the quiet Recalculating line
     gapOf(doc, P.m) ? gapCard(app, ctx, P.m) : debtHero(app, ctx, P.m), // batch 12 (item 5): a short month owns Home; else (batch 11) the debt-free date leads
     askNextCard(app, ctx), // batch 43 (M9Q): the one question that narrows the plan most, one tap to its box
     P.inSession ? joyAsk(ctx, P) : null, // F4: asked at the start of each session

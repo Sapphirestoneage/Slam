@@ -24,6 +24,7 @@ import { esHeirs, esTenYear, esCompare, ES_KINDS, ES_HEIRS } from '../../js/math
 import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
+import { ST_KEYS, stList, stMarkers, stWeave, stCard, stBelow } from '../../js/math/statuses.js';
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -112,6 +113,16 @@ for (let i = 0; i < N; i++) {
   { const x = { target: money(500, 60000), balance: money(1, 70000), monthly: rnd() < 0.1 ? null : money(10, 3000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05` }, r = rcRefill(x); add('rcRefill', x, { gap: r.gap, months: r.months, ym: r.full ? null : r.ym, full: r.full }); }
   { const x = { invested: money(500, 2000000), realReturn: pick([0.03, 0.05, 0.07]), monthly: rnd() < 0.1 ? pick([0, null]) : money(20, 9000), nowAt: `2026-${String(whole(1, 12)).padStart(2, '0')}-05`, maxMonths: pick([120, 360, 840]) }; x.coast = Math.round(x.invested * between(0.8, 1.6));
     const r = rcCoast(x); add('rcCoast', x, { below: r.below, by: r.by, months: r.months, ym: r.below ? r.ym : null }); }
+  // The FIRE statuses (js/math/statuses.js, run of Nov 27 2026): what is reached, the gap, the month of each date, the
+  // markers in date order, where each marker sits between the steps of a timeline, which card shows and the line
+  // when the balance is back under a status. The numbers and months come from the app's engines; this checks the list.
+  { const x = { invested: rnd() < 0.1 ? 0 : money(500, 3000000), known: rnd() < 0.85, level: pick(['Guess', 'Close', 'Exact']), nowYm: `2026-${String(whole(1, 12)).padStart(2, '0')}`,
+      items: ST_KEYS.map(key => ({ key, value: rnd() < 0.15 ? null : money(20000, 4000000), months: rnd() < 0.15 ? null : whole(1, 600) })),
+      seen: Object.fromEntries(ST_KEYS.filter(() => rnd() < 0.3).map(k => [k, '2026-01-05'])), hidden: Object.fromEntries(ST_KEYS.filter(() => rnd() < 0.2).map(k => [k, '2026-06'])), month: pick(['2026-06', '2026-07']),
+      steps: Array.from({ length: whole(3, 10) }, () => (rnd() < 0.3 ? 'done' : rnd() < 0.2 ? null : whole(0, 600))) };
+    const L = stList(x), M = stMarkers(L), W = stWeave(x.steps.map((t, i) => ({ i, t })), M, s => s.t), c = stCard(L), b = stBelow(L, { hidden: x.hidden, month: x.month });
+    add('fireStatuses', x, { rows: L.map(s => ({ key: s.key, reached: s.reached, months: s.months, ym: s.ym, gap: s.gap })), markers: M.map(m => m.key),
+      weave: W.map(r => (r.step ? r.step.i : r.status.key)), card: c ? c.key : null, below: b ? { key: b.key, by: b.by, ym: b.ym } : null }); }
   // The money sins read (js/math/sins.js): the weights, the fading (half-life SN_RULES.halfLife) and the quiz as a
   // starting guess that shares out as other evidence comes in; and the month of a defense (before and during).
   { const T = ['lust', 'greed', 'sloth', 'denial', 'fear'], SRC = ['quiz', 'ledger', 'checkin', 'app', 'you', 'fix'], now = '2026-11-25';

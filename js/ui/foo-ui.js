@@ -12,7 +12,8 @@ import { money } from '../format.js';
 import { gapCard } from './gap-ui.js';
 import { libraryFor, learnBlock } from './library-ui.js';
 import { fooRangeLine } from './range-ui.js';
-import { fooDestinationSection } from './destinations-ui.js';
+import { fooStatuses, fooStatusSection, fooMarkRow } from './destinations-ui.js';
+import { fiGate } from './report-ui.js';
 import { babyStepsCard, translatorSection } from './canon-ui.js';
 
 export const FUI = { original: false };
@@ -24,6 +25,7 @@ import { overrideStep, clearOverride } from '../program.js';
 export function fooScreen(app, ctx, { flags = [] } = {}) {
   const doc = ctx.store.doc, p = doc.profile, set = doc.settings;
   const f = foo(doc, ctx.ref, { now: ctx.now(), flags });
+  const gate = fiGate(ctx), S9 = fooStatuses(ctx, f, gate); // run of Nov 27 2026: the FIRE statuses, markers between the steps (no step moves)
   const L = libraryFor(app, ctx, { f }); // batch 26 (M9K): three to learn and one to unlearn at each step
   const setP = patch => ctx.store.setDoc('profile', patch);
   const when = s => (s.status === 'Done' ? 'Done' : s.date ? monthName(s.date, 'short') : s.status === 'Optional' ? (s.id === '0b' ? 'Pick joy lines' : 'Nothing to fund yet') : s.status === 'Off' ? 'Off' : s.status === 'Locked' ? '' : s.left == null && s.id === '5b' ? 'Set an amount' : s.status === 'Later' ? '' : f.gap ? 'After the gap' : 'Needs a surplus');
@@ -39,6 +41,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
       h('div.foo-fill', { 'aria-hidden': 'true', style: { width: `${Math.round((s.progress ?? 0) * 100)}%` } }),
       h('button.foo-tile', { type: 'button', 'aria-label': `Step ${s.id}, ${s.name} (${stepSub(s.id)}): ${s.status}. Open the detail`, onclick: () => openStep(s) }, h('span.foo-n', {}, s.id), h('span.foo-name', {}, s.name)),
       f.here === s.id ? h('span.foo-here', {}, 'You are here') : null, card(s)))),
+    fooMarkRow(S9), // the FIRE statuses on the way, each with the step it comes before
     S.moreBlock('foo:path', () => h('ul.foo-dates', {}, f.path.map(d => h('li', {}, h('strong', {}, monthName(d.ym, 'short')), ` ${d.name}`))), { label: `Every date on the way (${f.path.length})` }));
   // A locked step: the lock and its plain reason; Unlock anyway needs a note (kept on the session record) and shows the cost in FI days.
   const unlock = (anchor, s) => { const n = h('input', { placeholder: 'Why (required)', 'aria-label': 'Why unlock it' }); S.popover(anchor, h('div.stack', { style: { gap: '8px' } }, h('strong', {}, `Unlock ${s.name} anyway`), h('span.muted.small', {}, s.prereq?.text), h('label.field', { style: { width: '300px' } }, n),
@@ -78,7 +81,7 @@ export function fooScreen(app, ctx, { flags = [] } = {}) {
   return [head('FOO', 'Your order of operations: what to fund next, and when',
       S.toggle([[false, 'SLAM path'], [true, "With the Money Guy's original"], ['baby', 'With the Baby Steps']], FUI.original, v => { FUI.original = v; app.render(); }, { label: 'Show another order next to it' })),
     f.gap ? gapCard(app, ctx, undefined, { where: 'foo' }) : null, // batch 12 (item 5): the gap on top
-    S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), fooDestinationSection(ctx, f), settings, // batch 13: the path and the steps are the core (open)
+    S.sec('foo:path-sec', { title: 'Your path', open: true, summary: f.here ? `You are at step ${f.here}` : null }, path), fooStatusSection(ctx, f, gate, S9), settings, // batch 13: the path and the steps are the core (open)
     S.sec('foo:steps', { title: 'Every step', open: true, summary: `${f.steps.filter(s => s.status === 'Done').length} of ${f.steps.length} done` }, h(`div.foo-cols${FUI.original ? '.two' : ''}`, {},
       h('div.foo-steps', {}, doneLine(f), f.steps.filter(s => s.status !== 'Done' || FUI.showDone).map(stepRow)), // item 32: done steps fold into one slim line
       FUI.original === 'baby' ? babyStepsCard(ctx, f) // run Not built, groups 1 to 5, Part 4: the Baby Steps next to the SLAM FOO

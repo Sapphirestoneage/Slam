@@ -1,16 +1,20 @@
-// The FI destinations (run of Nov 25 2026): Lean, Barista, Regular, Chubby and Fat as views, the stress table, the
-// pod's FI number, the Coast card and the FOO by destination. Made-up households only; the arithmetic is in each comment.
+// The FI variants (run of Nov 25 2026): Lean, Barista, Regular, Chubby and Fat as views, the stress table, the
+// pod's FI number, the Coast card; and the FIRE statuses (Nov 27 2026): one FOO order, markers, the reached card. Made-up households only; the arithmetic is in each comment.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fatFiNumber, chubbyFiNumber, baristaGap, baristaFiNumber, fiStress, fiDate } from '../js/math/fi.js';
 import { rcCoast, rcCoastWords } from '../js/math/recalc.js';
-import { destinationsOf, baristaSooner, stressOf, podFiOf, coastReachedOf, fooFor, apartOf } from '../js/math/destinations.js';
+import { destinationsOf, baristaSooner, stressOf, podFiOf, coastReachedOf, apartOf, statusesOf, statusSeenPatch, statusBelowPatch, fooWithStatuses } from '../js/math/destinations.js';
+import { ST_KEYS, ST_LEVELS, stList, stMarkers, stWeave, stCard, stBelow, stLine } from '../js/math/statuses.js';
 import { fiTargets, setDestinations, baristaHealthOf, FAT_FACTOR } from '../js/plan.js';
 import { metrics } from '../js/math/metrics.js';
 import { foo } from '../js/math/foo.js';
+import { journeyInputs, journeyStatusRows } from '../js/math/ladder.js';
+import { tpJourney } from '../js/math/trip.js';
 import { Store } from '../js/records.js';
-import { FOO_BY_DESTINATION, FOO_MASK, FOO_EXTRA, DESTINATIONS, FAT_TEMPLATE, FAT_NOTES } from '../js/registry/destinations.js';
+import { DESTINATIONS, FAT_TEMPLATE, FAT_NOTES } from '../js/registry/destinations.js';
 import { ORDER } from '../js/registry/foo.js';
 import { buildPersona, loadDefs, NOW } from '../tools/personas/build.mjs';
 
@@ -135,38 +139,157 @@ test('the Coast card: shows the day invested reaches the Coast number, and one t
   assert.equal(seen.reached, true); assert.equal(seen.show, false, 'closed once, it stays closed');
 });
 
-test('the FOO by destination: the oxygen mask steps never move, only the late steps (Eli, QUESTIONS 580)', () => {
+// ---------- the FIRE statuses (run of Nov 27 2026): one FOO order, statuses as markers, the reached card ----------
+const options = JSON.parse(readFileSync(new URL('../data/library/status-options.json', import.meta.url)));
+const investedAcct = (doc, m) => doc.records.find(r => r.kind === 'account' && (r.values?.balance ?? 0) > 0 && metrics({ ...doc, records: doc.records.map(x => (x === r ? { ...x, values: { ...x.values, balance: x.values.balance + 1e6 } } : x)) }, ref, { now }).inputs.invested > m.inputs.invested);
+
+test('one FOO order for everyone: no FIRE type moves or adds a step (Eli, Nov 27 2026)', () => {
+  const doc = persona('three-adults');
+  const base = foo(doc, ref, { now }).steps.map(s => s.id);
+  assert.deepEqual(base, ORDER, 'the one order');
+  // a stored choice of an order by FIRE type (program.destinations.foo, Nov 25 2026) is ignored
+  for (const k of DESTINATIONS) {
+    const s = new Store(persona('three-adults')); setDestinations(s, { foo: k, pick: k });
+    const F = foo(s.doc, ref, { now });
+    assert.deepEqual(F.steps.map(x => x.id), ORDER, `${k}: the same order`);
+    assert.equal(F.here, foo(doc, ref, { now }).here, `${k}: the same step`);
+  }
+  // the code of the three orders is gone
+  for (const f of ['js/math/destinations.js', 'js/registry/destinations.js', 'js/ui/destinations-ui.js', 'js/ui/foo-ui.js'])
+    assert.doesNotMatch(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8'), /fooFor|FOO_BY_DESTINATION|FOO_EXTRA|FOO_MASK|fooDestinationSection/, f);
+});
+
+test('stList: the six statuses, each with its number, reached or its date, the level and its math', () => {
+  // $100,000 invested. Coast $80,000 (reached), Lean $150,000 in 14 months, FI $400,000 in 90, Fat no date, Barista no number
+  const L = stList({ invested: 100000, known: true, level: 'Close', nowYm: '2026-11', options: options.statuses, items: [
+    { key: 'Coast', value: 80000, months: 0, math: ['Coast math.'] }, { key: 'Lean', value: 150000, months: 14 }, { key: 'FI', value: 400000, months: 90 },
+    { key: 'Chubby', value: 500000, months: 120 }, { key: 'Fat', value: 600000, months: null, never: true }, { key: 'Barista', value: null, needs: ['part-time income'] }] });
+  assert.deepEqual(L.map(s => s.key), ST_KEYS);
+  const by = Object.fromEntries(L.map(s => [s.key, s]));
+  assert.equal(by.Coast.reached, true); assert.equal(by.Coast.when, 'Reached'); assert.equal(by.Coast.months, 0);
+  assert.equal(by.Lean.reached, false); assert.equal(by.Lean.ym, '2028-01'); assert.equal(by.Lean.when, 'Jan 2028'); assert.equal(by.Lean.gap, 50000);
+  assert.equal(by.FI.ym, '2034-05');
+  assert.equal(by.Fat.never, true); assert.equal(by.Fat.when, 'Not on this path yet');
+  assert.equal(by.Barista.value, null); assert.deepEqual(by.Barista.needs, ['part-time income']); assert.equal(by.Barista.when, null);
+  for (const s of L) { assert.equal(s.level, 'Close'); assert.ok(ST_LEVELS.includes(s.level)); if (s.value != null) assert.ok(s.math.length >= 1, `${s.key}: Show the math`); }
+  assert.match(by.Lean.math.join(' '), /\$150,000 less \$100,000 invested = \$50,000 to go/);
+  assert.match(by.Coast.math.join(' '), /Coast math\..*at or over \$80,000: reached/);
+  // the markers: date order, reached first; a status with no number or no date is not a marker
+  const M = stMarkers(L);
+  assert.deepEqual(M.map(k => k.key), ['Coast', 'Lean', 'FI', 'Chubby']);
+  assert.deepEqual(stMarkers(L, { skip: ['Coast', 'FI'] }).map(k => k.key), ['Lean', 'Chubby']);
+  assert.match(stLine(L), /^Reached: Coast\. Next status: Lean, \$150,000, Jan 2028\.$/);
+  // empty is not zero: nothing invested known, nothing reached
+  assert.equal(stList({ invested: null, items: [{ key: 'Lean', value: 150000, months: 3 }] })[1].reached, false);
+});
+
+test('stWeave: markers sit between the steps in date order, and no step changes', () => {
+  const steps = [{ id: 'a', t: 'done' }, { id: 'b', t: 'done' }, { id: 'c', t: 0 }, { id: 'd', t: 12 }, { id: 'e', t: null }, { id: 'f', t: 60 }];
+  const frozen = JSON.stringify(steps);
+  const marks = [{ key: 'Coast', reached: true, months: 0 }, { key: 'Lean', reached: false, months: 30 }, { key: 'Fat', reached: false, months: 400 }];
+  const W = stWeave(steps, marks, s => s.t);
+  assert.deepEqual(W.map(r => (r.step ? r.step.id : `*${r.status.key}`)), ['a', 'b', '*Coast', 'c', 'd', 'e', '*Lean', 'f', '*Fat']);
+  assert.deepEqual(W.filter(r => r.step).map(r => r.step), steps, 'the steps, the same objects in the same order');
+  assert.equal(JSON.stringify(steps), frozen);
+  assert.deepEqual(stWeave(steps, [], s => s.t).map(r => r.step.id), ['a', 'b', 'c', 'd', 'e', 'f']);
+});
+
+test('statusesOf: the plan\'s own numbers and dates, and the markers on the FOO timeline', () => {
   const doc = persona('three-adults'), m = metrics(doc, ref, { now });
   doc.assumptions.partTimeIncome = 1500;
-  const F = foo(doc, ref, { now }), V = destinationsOf(m, doc, { now });
-  const of = k => fooFor(F, V.find(v => v.key === k));
-  const ids = k => of(k).steps.map(s => s.id);
-  assert.deepEqual(ids('Regular FI'), ORDER); assert.equal(of('Regular FI').changed, false);
-  assert.deepEqual(ids('Chubby FI'), ORDER);
-  // the three orders, step by step
-  assert.deepEqual(ids('Lean FI'), ['0b', '1', '2', '3', '4', '5', '5b', 'bridge', '6', '7', '9', '8']);
-  assert.deepEqual(ids('Barista FI'), ['0b', '1', '2', '3', '4', 'hsa', 'cover', '5', '5b', '6', '9', '7', '8']);
-  assert.deepEqual(ids('Fat FI'), ['0b', '1', '2', '3', '4', '5', 'taxadv', '5b', '6', '8', '9', '7']);
-  assert.deepEqual(FOO_MASK, ORDER.slice(0, 5), 'the oxygen mask is the first five steps of the standard order');
-  for (const k of DESTINATIONS) {
-    const o = FOO_BY_DESTINATION[k].order, own = o.filter(id => !FOO_EXTRA[id]);
-    assert.deepEqual(o.slice(0, FOO_MASK.length), FOO_MASK, `${k}: the oxygen mask steps are first and in their order`);
-    assert.deepEqual([...own].sort(), [...ORDER].sort(), `${k}: every standard step, once`);
-    for (const id of Object.keys(FOO_BY_DESTINATION[k].why)) assert.ok(!FOO_MASK.includes(id) && o.includes(id), `${k}: a reason only on a late step`);
-    for (const id of o.filter(x => FOO_EXTRA[x])) assert.ok(FOO_BY_DESTINATION[k].why[id], `${k}: the added step ${id} says why`);
-    // nothing in the mask is marked moved
-    for (const s of of(k).steps.filter(x => FOO_MASK.includes(x.id))) assert.equal(s.moved, false);
+  const S9 = statusesOf(m, doc, { now, level: 'Close', options });
+  const V = destinationsOf(m, doc, { now }), by = Object.fromEntries(S9.list.map(s => [s.key, s]));
+  // each number and date is the one Plan › Goals shows (M9G on M53); Coast is M54
+  for (const [k, key] of [['Lean FI', 'Lean'], ['Barista FI', 'Barista'], ['Regular FI', 'FI'], ['Chubby FI', 'Chubby'], ['Fat FI', 'Fat']]) {
+    const v = V.find(x => x.key === k);
+    assert.equal(by[key].value, v.value, k); assert.equal(by[key].reached, v.reached, k); assert.equal(by[key].ym, v.ym, `${k}: the same date`);
   }
-  // Lean moves the taxable bridge up, Barista the HSA and the health-cover bridge, Fat every tax-advantaged account
-  assert.match(FOO_EXTRA.bridge.sub, /before 59 and a half/); assert.match(FOO_EXTRA.hsa.name, /HSA/); assert.match(FOO_EXTRA.cover.name, /health-cover bridge/); assert.match(FOO_EXTRA.taxadv.name, /every tax-advantaged account/);
-  // an added step is a place in the order: no date, no number, never where you are
-  const bridge = of('Lean FI').steps.find(s => s.id === 'bridge');
-  assert.equal(bridge.extra, true); assert.equal(bridge.date, null); assert.equal(bridge.target, null); assert.ok(bridge.why);
-  // the finish line is the destination's own number and date; where you are does not change
-  const lean = of('Lean FI'), nine = lean.steps.find(s => s.id === '9'), v = V.find(x => x.key === 'Lean FI');
-  assert.equal(nine.target, v.value); assert.equal(nine.date, v.ym); assert.match(nine.name, /Lean number/);
-  for (const k of DESTINATIONS) assert.equal(of(k).here, F.here, `${k}: where you are is the same step`);
-  assert.ok(lean.steps.find(s => s.id === '8').why);
+  assert.equal(by.Coast.value, m.coastFi.value);
+  const k = rcCoast({ invested: m.inputs.invested, coast: m.coastFi.value, realReturn: m.inputs.realReturn, nowAt: now, monthly: m.investing.monthly, maxMonths: 840 });
+  if (!m.investing.before && !(m.investing.changes || []).length && k.months != null) assert.equal(by.Coast.months, k.months);
+  // markers in date order
+  const months = S9.markers.map(x => x.months);
+  assert.deepEqual(months, [...months].sort((a, b) => a - b));
+  assert.ok(S9.markers.length >= 3, 'markers present');
+  // on the FOO timeline: every step once, in the one order, and every marker once
+  const F = foo(doc, ref, { now }), rows = fooWithStatuses(F, S9.markers, { now });
+  assert.deepEqual(rows.filter(r => r.step).map(r => r.step.id), ORDER);
+  assert.deepEqual(rows.filter(r => r.status).map(r => r.status.key).sort(), S9.markers.map(x => x.key).sort());
+  assert.deepEqual(rows.filter(r => r.step).map(r => r.step), F.steps, 'no step is changed');
+  // every status with a number has options to open, 2 to 4, each with a link in both apps
+  for (const key of ST_KEYS) {
+    const o = options.statuses[key].options;
+    assert.ok(o.length >= 2 && o.length <= 4, `${key}: 2 to 4 options`);
+    for (const x of o) { assert.ok(x.t && x.why && x.web && x.game, `${key} ${x.id}`); if (!x.web.startsWith('#')) assert.ok(existsSync(new URL(`../${x.web}`, import.meta.url)), `${x.web} exists`); }
+    assert.deepEqual(by[key].options, o);
+  }
+  assert.equal(options.draft, true, 'the words are a draft until Eli edits them');
+});
+
+test('reaching a status: one calm card, one time; the next step stays the same', () => {
+  const doc = persona('three-adults'), m = metrics(doc, ref, { now });
+  const before = statusesOf(m, doc, { now, level: 'Close', options });
+  assert.equal(before.card, null, 'nothing reached, no card');
+  const F0 = foo(doc, ref, { now });
+  investedAcct(doc, m).values.balance += Math.ceil(m.coastFi.value);
+  const m2 = metrics(doc, ref, { now }), S9 = statusesOf(m2, doc, { now, level: 'Close', options });
+  assert.equal(S9.card.key, 'Coast'); assert.equal(S9.card.title, 'You can stop sprinting');
+  assert.equal(S9.card.heading, 'Options this opens'); assert.equal(S9.card.stay, 'Your next step stays the same. These are options.');
+  assert.ok(S9.card.options.length >= 2 && S9.card.options.length <= 4); assert.ok(S9.card.math.length);
+  assert.equal(statusesOf(m2, doc, { now, level: 'Guess', options }).card, null, 'never on a guess');
+  // the next step and the next dollar do not change by themselves: the FOO reads no status
+  const s = new Store(doc);
+  const F1 = foo(s.doc, ref, { now });
+  setDestinations(s, statusSeenPatch(s.doc, 'Coast', '2026-11-27'));
+  const F2 = foo(s.doc, ref, { now });
+  assert.equal(F2.here, F1.here); assert.deepEqual(F2.steps.map(x => [x.id, x.status, x.date]), F1.steps.map(x => [x.id, x.status, x.date]));
+  assert.deepEqual(F1.steps.map(x => x.id), F0.steps.map(x => x.id));
+  // closed once, it stays closed; the next reached status gets its own card
+  const after = statusesOf(metrics(s.doc, ref, { now }), s.doc, { now, level: 'Close', options });
+  assert.equal(s.doc.program.destinations.coastSeen, '2026-11-27', 'Coast keeps its own key');
+  assert.notEqual(after.card?.key, 'Coast');
+  if (after.card) { setDestinations(s, statusSeenPatch(s.doc, after.card.key, '2026-11-27')); assert.equal(s.doc.program.destinations.statusSeen[after.card.key], '2026-11-27'); }
+});
+
+test('back under a status: the quiet Recalculating line, never a warning', () => {
+  const doc = persona('three-adults'), m0 = metrics(doc, ref, { now });
+  const acct = investedAcct(doc, m0), start = acct.values.balance;
+  acct.values.balance = start + Math.ceil(m0.coastFi.value);
+  const s = new Store(doc); setDestinations(s, statusSeenPatch(s.doc, 'Coast', '2026-11-01'));
+  assert.equal(statusesOf(metrics(s.doc, ref, { now }), s.doc, { now, level: 'Close', options }).below?.key === 'Coast', false, 'at or over Coast: no line');
+  s.doc.records.find(r => r.id === acct.id).values.balance = start;
+  const m2 = metrics(s.doc, ref, { now }), S9 = statusesOf(m2, s.doc, { now, level: 'Close', options });
+  assert.equal(S9.below.key, 'Coast'); assert.equal(S9.below.title, 'Recalculating');
+  assert.equal(S9.below.by, m2.coastFi.value - m2.inputs.invested);
+  assert.match(S9.below.line, /^Below Coast by \$[\d,]+\. New Coast date: /);
+  assert.doesNotMatch(`${S9.below.line} ${S9.below.next}`, /warning|behind|off track|fail|mistake/i);
+  assert.equal(S9.card, null, 'the reached card does not come back');
+  // the same date as the old Coast line (rcCoast on the plan's path)
+  assert.equal(S9.below.ym, coastReachedOf(m2, s.doc, { now }).below.ym);
+  // closed for this month
+  setDestinations(s, statusBelowPatch(s.doc, 'Coast', S9.below.month));
+  assert.equal(statusesOf(m2, s.doc, { now, level: 'Close', options }).below, null);
+  // any status: Lean seen, then under it
+  const L = stList({ invested: 90000, known: true, level: 'Exact', nowYm: '2026-11', seen: { Lean: '2026-10-01' }, items: [{ key: 'Lean', value: 100000, months: 7 }] });
+  assert.equal(stBelow(L, { month: '2026-11' }).line, 'Below Lean by $10,000. New Lean date: Jun 2027.');
+  assert.equal(stBelow(L, { month: '2026-11', hidden: { Lean: '2026-11' } }), null);
+  assert.equal(stCard(L), null);
+});
+
+test('the journey map: the statuses between its stages, and no stage moves', () => {
+  const doc = persona('three-adults');
+  const J = tpJourney(journeyInputs(doc, ref, { now, debtKnown: true }));
+  const rows = journeyStatusRows(J, doc, ref, { now });
+  assert.deepEqual(rows.filter(r => r.step).map(r => r.step), J.stages, 'the stages, the same objects in the same order');
+  const marks = rows.filter(r => r.status).map(r => r.status.key);
+  assert.ok(marks.length >= 1, 'markers present'); assert.ok(!marks.includes('Coast') && !marks.includes('FI'), 'Coast and FI are stages of the journey already');
+});
+
+test('the game\'s copy of the statuses is made from js/math/statuses.js and the options file, and is current', () => {
+  const src = readFileSync(new URL('../js/math/statuses.js', import.meta.url), 'utf8'), data = readFileSync(new URL('../data/library/status-options.json', import.meta.url), 'utf8');
+  const hash = createHash('sha256').update(src).update(JSON.stringify(JSON.parse(data))).digest('hex').slice(0, 16);
+  assert.match(readFileSync(new URL('../game/core/statuses.js', import.meta.url), 'utf8'), new RegExp(`SOURCE-HASH  ${hash}`), 'run node tools/game_statuses_build.mjs, then the game steps (stamp, code map)');
+  assert.match(readFileSync(new URL('../game/index.html', import.meta.url), 'utf8'), /<script src="core\/statuses\.js\?v=[0-9a-f]+"><\/script>/);
 });
 
 test('the Barista number adds health insurance, unless a tap says the part-time job covers it', () => {

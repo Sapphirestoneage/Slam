@@ -28,9 +28,9 @@ export function baristaHealthOf(doc) {
   if (doc.program?.destinations?.jobHealth === true) return 0;
   return doc.assumptions?.lifeHealth ?? null;
 }
-// The taps of the destination views, saved on the plan (one undo step each): the view that is open, the Fat list,
-// the destination the FOO is ordered for, the day the Coast card was closed.
-export function setDestinations(store, patch) { store.setIn('program', ['destinations'], { ...(store.doc.program?.destinations || {}), ...patch }, 'FI destinations'); }
+// The taps of the FI variant views and the status cards, saved on the plan (one undo step each): the view that is
+// open, the Fat list, the day each status card was closed (js/math/destinations.js, statusSeenPatch).
+export function setDestinations(store, patch) { store.setIn('program', ['destinations'], { ...(store.doc.program?.destinations || {}), ...patch }, 'FIRE statuses'); }
 // Every FI number the plan talks about.
 export function fiTargets(m, doc) {
   const x = m.inputs;

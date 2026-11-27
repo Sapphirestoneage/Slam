@@ -8,12 +8,16 @@
                normal and the rest are fogged. A tap on an era opens what it is, why it matters, its money and
                time, its steps and one Go do it button.
    INPUT       The profile c and the derived numbers d. The open sheet (W.kind ltnode, W.i).
+               The FIRE statuses (Eli, 2026-11-27) are markers between the eras, in date order. The eras
+               Coast and Freedom are the Coast and FI statuses, so those two get no second marker. A row
+               under the map shows all six statuses. No era moves or changes.
    OUTPUT      Math (compositions of the engines, no formula of their own): ltMap, ltBonus, ltHeadStart,
                ltEra, ltBook. Views: ltMapHtml, ltSheet. Parts of functions in other files: mapTabTree
                (mapTab in ui.js). Actions (ACT): ltnode.
    DEPENDS ON  core/engine.js (ERAS, eraSteps, goalSim, grow, R, derive), screens/ui.js (freeAt, eraN, money,
                mathBox, head), features/kit.js (kitState, kitSharp, kitPill), features/results.js (rsNextWin),
-               core/metrics.js (knN1), screens/dash.js (dkMonth, dkProgress, dkCaption).
+               core/metrics.js (knN1), screens/dash.js (dkMonth, dkProgress, dkCaption), features/coast.js (stGame,
+               the action ltstatus), core/statuses.js (stMarkers, stWeave).
    RULES       The eras, the gates and the steps are the game's own (ERAS, eraSteps); this file keeps no copy.
                The ages come from goalSim, the FI age from freeAt, the head start from grow(). No red, no
                verdict words. The map scrolls sideways inside its own box; the page never does.
@@ -95,7 +99,21 @@ function ltMap(c, d) {
         bonus: i >= 1 && i <= d.era ? ltBonus(c, d, i) : null,
       };
     });
+  /* The FIRE statuses between the eras, in date order. No date shows on a Guess: then only reached ones. */
+  let sts = { list: [], markers: [], st: "Guess" };
+  try {
+    sts = stGame(c, d);
+  } catch (e) {
+    report(e, "lifemap.js: ltMap statuses");
+  }
+  const marks = stMarkers(sts.list, { skip: ["Coast", "FI"] }).filter(m => m.reached || sts.st !== "Guess"),
+    rows = stWeave(eras, marks, e =>
+      e.st === "done" || e.st === "here" ? "done" : e.months != null ? e.months : e.i === nx ? 0 : null
+    );
   return {
+    rows,
+    statuses: sts.list,
+    stLevel: sts.st,
     start: LT_START,
     age,
     fiAge,
@@ -190,6 +208,15 @@ function ltColHtml(e) {
     e.st === "done" || e.st === "here" ? "✓" : e.st === "current" ? "Now" : e.st === "next" ? "Next" : "Later";
   return `<button class="ltcol ${e.st}" data-a="ltnode" data-v="${e.i}" data-fid="lt:${e.i}"><span class="row between tiny"><span class="muted">Era ${e.i}</span><span class="pill">${pill}</span></span><b class="small">${esc(e.n)}</b><span class="tiny muted">${esc(lab)}</span>${e.steps.length ? `<span class="ltdots" aria-label="${e.done} of ${e.steps.length} steps">${e.steps.map(s => `<i class="${s.done ? "on" : ""}"></i>`).join("")}</span>` : ""}${e.bonus ? `<span class="tiny ltbon">${esc(e.bonus.v)}</span>` : ""}<span class="tiny ltview">View ›</span></button>`;
 }
+/* One status marker between two eras. */
+function ltMarkHtml(m) {
+  return `<button class="ltmark${m.reached ? " reached" : ""}" data-a="ltstatus" data-v="${esc(m.key)}" data-fid="lt:st:${esc(m.key)}"><span class="tiny muted">Status</span><b class="small">${esc(m.name)}</b><span class="tiny">${money(Math.round(m.value))}</span><span class="tiny muted">${esc(m.when)}</span><span class="tiny ltview">View ›</span></button>`;
+}
+/* The row of all six statuses under the map. */
+function ltStatusRow(M) {
+  if (!M.statuses.length) return "";
+  return `<div class="dklabel">FIRE statuses on the way</div><div class="tiny muted">Markers, not steps. Reaching one opens options. Your next step stays the same.</div><div class="ltsts">${M.statuses.map(s => `<button class="ghost slim${s.reached ? " reached" : ""}${s.value == null ? " off" : ""}" data-a="ltstatus" data-v="${esc(s.key)}">${esc(s.name)}: ${s.value == null ? "no number yet" : s.reached ? "reached ✓" : M.stLevel === "Guess" ? money(Math.round(s.value)) : money(Math.round(s.value)) + ", " + esc(s.when)} ›</button>`).join("")}</div>`;
+}
 function ltMapHtml(c, d) {
   const M = ltMap(c, d),
     H = M.head,
@@ -198,7 +225,8 @@ function ltMapHtml(c, d) {
     `<div class="card dkcard ltcard" data-fid="lt:map"><div class="row between dkhead"><span class="dklabel">Your life map</span><span class="tiny muted">Age ${M.start} to ${M.fiAge != null ? "FI at " + M.fiAge : M.end}</span></div>` +
     `<div class="tiny muted">You launch in at age ${esc(M.age)}, in ${esc(M.eras[M.here].n)}${M.bonuses.length ? ", with " + M.bonuses.length + " starting bonus" + (M.bonuses.length === 1 ? "" : "es") + " checked from your answers" : ""}.${cur ? " Unlocking now: " + esc(cur.n) + "." : ""}</div>` +
     `<div class="ltruler" aria-hidden="true"><i style="width:${M.youPct.toFixed(1)}%"></i><b style="left:${M.youPct.toFixed(1)}%"></b></div><div class="row between tiny muted"><span>Age ${M.start}</span><span>You, ${esc(M.age)}</span><span>${M.fiAge != null ? "FI, " + M.fiAge : "Age " + M.end}</span></div>` +
-    `<div class="ltscroll" tabindex="0" aria-label="The eras, from the start to Legacy"><div class="ltrow">${M.eras.map(ltColHtml).join("")}</div></div>` +
+    `<div class="ltscroll" tabindex="0" aria-label="The eras, from the start to Legacy"><div class="ltrow">${M.rows.map(r => (r.status ? ltMarkHtml(r.status) : ltColHtml(r.step))).join("")}</div></div>` +
+    ltStatusRow(M) +
     (H
       ? `<div class="tile ltgrow" data-fid="lt:head"><div class="row between"><span class="dklabel">Head start</span>${kitPill(H.st)}</div><b class="${H.st === "Guess" ? "guess" : ""}">${money(H.inv)} becomes ${money(H.fv)} by age ${H.age}</b><div class="tiny muted">With nothing more added. Starting early does that.</div>${mathBox(H.math)}</div>`
       : "") +

@@ -1,0 +1,64 @@
+{
+  "id": "library.statusOptions",
+  "asOf": "2026-11-27",
+  "draft": true,
+  "note": "DRAFT for Eli to edit (run FIRE statuses and the life timeline, Nov 27 2026, Part 1). The words shown when a FIRE status is reached: what changed, and the options it opens. Both apps read this one file (the web app loads it; node tools/game_statuses_build.mjs copies it into game/core/statuses.js). Each option links to a tool that exists: web is a page or a route of the web app, game is an action of the game's menu. An option is something to look at. It never changes the next step by itself.",
+  "heading": "Options this opens",
+  "stay": "Your next step stays the same. These are options.",
+  "statuses": {
+    "Coast": {
+      "title": "You can stop sprinting",
+      "changed": "What you have invested can grow to your FI number by the age you set, with nothing more added. From here, saving is a choice about how soon, not a race.",
+      "options": [
+        { "id": "coast-lower", "t": "Lower what you put toward retirement", "why": "Growth alone carries you to your number. What you add now only moves the date sooner.", "web": "coast.html", "game": "paths" },
+        { "id": "coast-work", "t": "Look at lower-paid work you like more", "why": "Your pay only has to cover today's bills, not tomorrow's.", "web": "#/plan/transitions", "game": "offers" },
+        { "id": "coast-goals", "t": "Put more toward nearer goals", "why": "Money that went to retirement can go to a home, a trip or a break.", "web": "#/plan/goals", "game": "cdn" }
+      ]
+    },
+    "Lean": {
+      "title": "You reached Lean FI",
+      "changed": "Your investments can pay for your needs for good: food, housing and transportation. Work now pays for everything else.",
+      "options": [
+        { "id": "lean-bridge", "t": "Build the taxable bridge", "why": "A regular investment account is money you can reach before 59 and a half.", "web": "zerotax.html", "game": "ages" },
+        { "id": "lean-optional", "t": "Work is optional on a lean budget", "why": "See how long your money lasts if the paycheck stopped and you lived on needs only.", "web": "runway.html", "game": "transit" },
+        { "id": "lean-break", "t": "Try a break from work on paper", "why": "A few months off, a sabbatical or a slower job, priced before you choose.", "web": "#/plan/transitions", "game": "blocks" }
+      ]
+    },
+    "Barista": {
+      "title": "You reached Barista FI",
+      "changed": "Part-time work you like, plus your investments, can pay for the life you live today. Full-time work is a choice.",
+      "options": [
+        { "id": "barista-health", "t": "Fill the HSA and build the health-cover bridge", "why": "Health insurance is the cost part-time pay has to carry. It is added to your number unless you tap that the part-time job covers it.", "web": "#/plan/goals", "game": "care" },
+        { "id": "barista-work", "t": "Look at part-time work that covers your costs", "why": "Compare the pay, the hours and the health cover of two jobs side by side.", "web": "career.html", "game": "offers" },
+        { "id": "barista-move", "t": "Try the move to part-time on paper", "why": "The month the pay changes, the tripwires and a plan B.", "web": "#/plan/transitions", "game": "blocks" }
+      ]
+    },
+    "FI": {
+      "title": "You reached FI",
+      "changed": "Your investments can pay for the life you live today, for good. Work is optional.",
+      "options": [
+        { "id": "fi-takeout", "t": "See how you would take money out", "why": "Which account first, and how much comes out with no federal tax.", "web": "zerotax.html", "game": "takeout" },
+        { "id": "fi-stress", "t": "Stress test the number", "why": "Your date and your number if markets are slow or you take out more.", "web": "#/plan/goals", "game": "stress" },
+        { "id": "fi-peak", "t": "Choose when your net worth should peak", "why": "Money is for living. See when to start spending it down.", "web": "peak.html", "game": "odds" }
+      ]
+    },
+    "Chubby": {
+      "title": "You reached Chubby FI",
+      "changed": "Your investments can pay for today's life with some room: half of your Fat list.",
+      "options": [
+        { "id": "chubby-room", "t": "Use the room to spare", "why": "Pick which extras on your Fat list start now.", "web": "#/plan/goals", "game": "enough" },
+        { "id": "chubby-help", "t": "Pay for help at home", "why": "Cleaning or childcare buys back hours. See which tasks to hand off.", "web": "hassle.html", "game": "jobs" },
+        { "id": "chubby-giving", "t": "Give more", "why": "Set a giving rate, or plan one larger gift.", "web": "giving.html", "game": "giving" }
+      ]
+    },
+    "Fat": {
+      "title": "You reached Fat FI",
+      "changed": "Your investments can pay for today's life plus every extra on your Fat list.",
+      "options": [
+        { "id": "fat-room", "t": "Use the room to spare", "why": "Every extra on your Fat list is paid for. Check that the list is still the life you want.", "web": "#/plan/goals", "game": "enough" },
+        { "id": "fat-help", "t": "Pay for help at home", "why": "Cleaning or childcare buys back hours. See which tasks to hand off.", "web": "hassle.html", "game": "jobs" },
+        { "id": "fat-giving", "t": "Give while you can see it", "why": "Set a giving rate, bunch gifts, or plan what goes to your people.", "web": "giving.html", "game": "giving" }
+      ]
+    }
+  }
+}

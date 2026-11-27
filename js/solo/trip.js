@@ -9,7 +9,7 @@
 import { boot, h, btn, chip, money, numBox, copyLink, foot } from './shell.js';
 import { answer, onFile } from '../journey.js';
 import { tripCostOf, TRIP_COSTS, TRIP_AGE_PICKS } from '../solo.js';
-import { journeyInputs } from '../math/ladder.js';
+import { journeyInputs, journeyStatusRows } from '../math/ladder.js';
 import { pack } from '../start/link.js';
 import { fwWealthStage, FW_WEALTH, FW_K25_SOURCE } from '../math/frameworks.js'; // run Not built, groups 1 to 5, Part 4: the wealth stages, on the journey's own net worth
 import { TP_LINES, TP_FX_CAN, TP_FX_START, TP_OPTS, TP_TAPS_NOTE, TP_CURRENCIES, TP_SOURCES, tpMoney, tpCost, tpCostWords, tpCostMath, tpLevel, tpPoints, tpPointsWords, tpPointsMath,
@@ -152,9 +152,11 @@ function draw(api) {
     return h(`li${s.done ? '.done' : here ? '.here' : ''}`, {}, h('span.dot', {}, s.done ? '' : String(i + 1)), h('span', {}, s.name, h('small', {}, small), here && s.pct != null ? bar(s.pct, `${s.name}: ${pctTxt(s.pct)}`) : null,
       here && a && a.pct != null && a.pct < s.pct ? h('small', {}, `After the trip: ${pctTxt(a.pct)}`) : null), h('span.when', {}, when));
   };
+  // A FIRE status on the way (Nov 27 2026): a marker between the stages, not a stage. Coast and FI are stages already.
+  const statusRow = k => h(`li.tp-status${k.reached ? '.done' : ''}`, { 'data-status': k.key }, h('span.dot', {}, '◆'), h('span', {}, `${k.full} status`, h('small', {}, `A marker on the way, not a step: ${big(k.value)} invested. Reaching it opens options; your next step stays the same.`)), h('span.when', {}, k.reached ? 'Reached' : k.when));
   const journey = h('div.st-card', { id: 'tp-journey' }, h('h2', { style: { marginTop: 0 } }, 'Your FIRE journey'),
-    h('p.st-soft', {}, 'The usual stages, where you are on them, and how this trip moves you.'),
-    J.here != null || J.unknown.length < J.stages.length ? h('ul.st-list', {}, J.stages.map(stageRow)) : null,
+    h('p.st-soft', {}, 'The usual stages, where you are on them, the FIRE statuses on the way, and how this trip moves you.'),
+    J.here != null || J.unknown.length < J.stages.length ? h('ul.st-list', {}, (usd ? journeyStatusRows(J, api.store.doc, api.ref, { now }) : J.stages.map(step => ({ step }))).map(r => (r.status ? statusRow(r.status) : stageRow(r.step, J.stages.indexOf(r.step))))) : null,
     h('p', { style: { fontWeight: 700 } }, tpJourneyWords(J, cur) || 'Tap your numbers below to see where you are.'),
     J.fiDays != null ? rows([['The day work becomes optional', 'your plan, run again with the trip in', tpDayWords(J.fiDays)]]) : null,
     math('tp-m-journey', tpJourneyMath(J, cur)), wealthFold(fwWealthStage({ worth: J.worth, monthly: J.monthly })));

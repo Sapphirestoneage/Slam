@@ -588,6 +588,16 @@ const PATCH_NOTES = [
       "It is on the web app's shelf of quick calculators and in the game under Menu, Quick math. The exact figures are under Show the math.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "FIRE statuses on your path",
+    l: [
+      "Coast, Lean, Barista, FI, Chubby and Fat are now statuses you pass on the way, not goals. Everyone has one order of steps.",
+      "Each status shows as a marker with its number and its date: on the FOO page of the web app, on your life map and on the journey map.",
+      "When you reach one, a calm card on Home says what changed and lists a few options it opens. Your next step stays the same.",
+      "If your balance dips back under a status, one quiet Recalculating line shows the new date.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

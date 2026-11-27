@@ -110,6 +110,7 @@ a { color: var(--primary); text-underline-offset: 2px; }
 .st-list li:first-child { border-top: 0; }
 .st-list .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--primary); display: grid; place-items: center; font-size: .875rem; font-weight: 800; color: var(--primary); }
 .st-list li.done .dot { background: var(--good); border-color: var(--good); color: #fff; }
+.st-list li.tp-status .dot { border-style: dashed; border-radius: 6px; font-size: .75rem; }
 .st-list li.here .dot { background: var(--primary); color: var(--on-primary); }
 .st-list li.here { font-weight: 800; }
 .st-list .when { font-weight: 700; white-space: nowrap; }

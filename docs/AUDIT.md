@@ -226,6 +226,13 @@ Added Nov 25 2026 (the FI destinations): Fat FI with and without a list of extra
 part-time pay closes and whether it covers health insurance, and every box of the FI date stress test (the second
 engine uses the closed formula for each box, SLAM steps month by month).
 
+Added Nov 27 2026 (the FIRE statuses, js/math/statuses.js): for 500 made-up lists, which statuses are reached (the
+invested money at or over the number), the gap, the month of each date, the markers in date order, where each marker
+sits between the steps of a timeline (the steps keep their order), which one-time card shows (never on a guess) and
+the line when the balance is back under a status. The numbers and months themselves come from the app's engines
+(M9G, M53, M54, rcCoast), which have their own cases above. The order of the late steps by FIRE type is removed, so
+it has no case.
+
 Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (the balance at year end, the
 withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:
 the same amount each year, a share of the balance, a floor and a ceiling, guardrails. The second engine steps a

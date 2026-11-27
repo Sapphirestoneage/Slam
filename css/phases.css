@@ -758,8 +758,8 @@ tr.row-note .part-line { margin-right: 12px; }
   .audit .audit-row { grid-template-columns: 1fr auto; }
   .audit .audit-row .seg, .audit .audit-later { grid-column: 1 / -1; }
 }
-/* The FI destinations (run of Nov 25 2026): the views on Plan › Goals, the stress table, the pod, the FOO by
-   destination, and the Coast card on Home. */
+/* The FI variants (run of Nov 25 2026): the views on Plan › Goals, the stress table, the pod. The FIRE statuses
+   (run of Nov 27 2026): the markers on the FOO timeline and the status card on Home. */
 .dest-card { display: flex; flex-direction: column; gap: var(--s3); }
 .dest-what { margin: 0; }
 .dest-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
@@ -782,13 +782,25 @@ table.rows.mini.dest-stress td.dest-cur { font-weight: 700; outline: 2px solid v
 .dest-foo li.here { border-color: var(--goals); border-width: 2px; }
 .dest-foo-names { display: flex; flex-direction: column; min-width: 0; }
 .dest-foo-when { text-align: right; }
+.dest-foo li.dest-status { border-style: dashed; background: color-mix(in srgb, var(--goals) 6%, transparent); }
+.dest-foo li.dest-status.reached { border-color: var(--good); }
+.dest-status-num { white-space: nowrap; }
+.foo-marks { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: var(--s3); }
+.foo-marks .foo-mark { padding: 4px 10px; border: 1px dashed var(--goals); border-radius: 999px; font-size: .8125rem; }
+.foo-marks .foo-mark.reached { border-color: var(--good); }
+.foo-mark-name { font-weight: 700; }
+.status-opts-h { margin: var(--s3) 0 4px; font-size: 1rem; }
+.status-opts { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.status-opts li { display: flex; flex-direction: column; padding: 8px 10px; border: 1px solid var(--border-row); border-radius: 8px; }
+.status-opts li a { min-height: 28px; font-weight: 600; }
+.status-stay { font-weight: 600; margin: 0 0 var(--s3); }
 .coast-card { border: 2px solid var(--good); margin-bottom: var(--s3); }
 .coast-card h2 { margin: 0; }
 @media (max-width: 760px) {
   .dest-facts { grid-template-columns: 1fr; }
   .dest-fat-row { grid-template-columns: 1fr; gap: 4px; }
   .dest-foo li { grid-template-columns: 30px 1fr; }
-  .dest-foo li .tag, .dest-foo-when { grid-column: 2; text-align: left; justify-self: start; }
+  .dest-foo li .tag, .dest-foo-when, .dest-status-num { grid-column: 2; text-align: left; justify-self: start; }
   /* the two small tables keep their headers on a phone and fit the screen: the FI number column gives way */
   table.rows.mini.dest-stress thead, table.rows.mini.dest-pod thead { display: table-header-group; }
   table.rows.mini.dest-stress, table.rows.mini.dest-pod { display: table; width: 100%; font-size: .8125rem; }

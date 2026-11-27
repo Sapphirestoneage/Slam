@@ -698,6 +698,10 @@ export const REFERENCE_FILES = [
   { id: 'library.unlearn', file: 'data/library/unlearn.json', label: 'The unlearn list: popular advice that fits one FOO step and not another, with the step it belongs to',
     source: 'SLAM\'s own (Eli Saperstein), written for SLAM\'s FOO steps in Batch 26; from names where each piece of advice is usually heard',
     date: '2026-11-06', readBy: 'Plan › FOO (the one thing to unlearn at each step), through js/math/library.js (M9K)' },
+  // Run FIRE statuses and the life timeline (Nov 27 2026), Part 1: the words of each FIRE status card. A draft for Eli.
+  { id: 'library.statusOptions', file: 'data/library/status-options.json', label: 'The FIRE statuses: what changed when one is reached, and the options it opens (a draft for Eli to edit)',
+    source: 'SLAM\'s own: drafted Nov 27 2026 from Eli\'s words (the FIRE types are statuses on the FOO timeline; reaching one opens options, and the next step stays), from the steps the order by FIRE type added on Nov 25 2026, and Eli\'s Barista health rule (QUESTIONS 580)',
+    date: '2026-11-27', readBy: 'Home (the card of a status that was just reached) through js/ui/destinations-ui.js, and the game through game/core/statuses.js (tools/game_statuses_build.mjs); words only, no math reads a number from them' },
   // Batch 36 (QUESTIONS 313): where a skill's words disagree with a SLAM rule, SLAM's rule in one line (the skill's words stay).
   { id: 'library.slamRules', file: 'data/library/slam-rules.json', label: 'SLAM\'s rule beside a skill: one line per skill whose words disagree with a SLAM rule (the Rule of 5, heavy debt at 8%, the cash layers, the FOO order)',
     source: 'SLAM\'s own (Eli Saperstein), from a scan of all 665 skills against RULES and the FOO in Batch 36; the skill files are not changed',

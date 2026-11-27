@@ -559,6 +559,10 @@ button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.
 /* the life map (features/lifemap.js): the ten eras from age 15, done bright, the one being unlocked pulsing, later fogged */
 .ltcard{display:flex;flex-direction:column;gap:8px;min-width:0}.ltruler{position:relative;height:8px;border-radius:99px;background:var(--line);margin-top:4px}.ltruler i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--good)}.ltruler b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--sap);border:2px solid var(--text)}
 .ltscroll{overflow-x:auto;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch;padding:4px 2px 8px;scroll-snap-type:x proximity}.ltrow{display:flex;gap:8px;width:max-content}
+/* the FIRE statuses (features/coast.js, core/statuses.js): markers between the eras, the row of statuses, the options of a card */
+button.ltmark{display:flex;flex-direction:column;justify-content:center;gap:4px;width:112px;min-height:150px;text-align:left;font-weight:400;border-style:dashed;border-color:var(--sap);background:transparent;scroll-snap-align:start}button.ltmark.reached{border-color:var(--good)}
+.ltsts{display:flex;flex-wrap:wrap;gap:8px}.ltsts button{min-height:44px;font-weight:400;border-style:dashed}.ltsts button.reached{border-color:var(--good)}.ltsts button.off{opacity:.7}
+button.stopt{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;width:100%}.rsst{display:block}
 button.ltcol{display:flex;flex-direction:column;gap:4px;width:150px;min-height:150px;text-align:left;font-weight:400;scroll-snap-align:start;box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .ltcol.done,.ltcol.here{border-color:var(--good)}.ltcol.here{box-shadow:0 0 0 2px var(--good)}.ltcol.current{border-color:var(--sap)}.ltcol.later{opacity:.45;border-style:dashed}
 .ltdots{display:flex;flex-wrap:wrap;gap:3px}.ltdots i{width:10px;height:10px;border-radius:50%;border:1px solid var(--muted)}.ltdots i.on{background:var(--good);border-color:var(--good)}
@@ -629,6 +633,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/estate.js?v=d7f9b533"></script>
 <script src="core/feel.js?v=5ffd145b"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
+<script src="core/statuses.js?v=8ac638be"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
 <script src="core/hhold.js?v=58b95f8b"></script>
 <script src="core/enough.js?v=cad03dc6"></script>
@@ -709,7 +714,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/cover.js?v=63f66f9b"></script>
 <script src="features/mix.js?v=eb0c8a71"></script>
 <script src="features/slept.js?v=14da2d57"></script>
-<script src="features/coast.js?v=f0092f60"></script>
+<script src="features/coast.js?v=bb75dc2d"></script>
 <script src="features/sim.js?v=59617d65"></script>
 <script src="features/sims/rentbuy.js?v=54ad93a0"></script>
 <script src="features/sims/mortgage.js?v=19fb0257"></script>
@@ -739,7 +744,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/countdown.js?v=7b159a1f"></script>
 <script src="features/offers.js?v=7dfb9a2c"></script>
 <script src="features/career.js?v=e016b343"></script>
-<script src="features/trip.js?v=50f6617e"></script>
+<script src="features/trip.js?v=95106e87"></script>
 <script src="features/family.js?v=4898d525"></script>
 <script src="features/nextacct.js?v=34d838ed"></script>
 <script src="features/ledger.js?v=e80edc0b"></script>
@@ -766,7 +771,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/rings.js?v=7012818f"></script>
 <script src="features/quest.js?v=051c6c4e"></script>
 <script src="features/peers.js?v=2c804668"></script>
-<script src="data/patchnotes.js?v=54db1fcd"></script>
+<script src="data/patchnotes.js?v=59086b6f"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -793,13 +798,13 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/guild.js?v=388d9385"></script>
 <script src="features/hhold.js?v=3fb0b8a0"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
-<script src="features/results.js?v=5db7f0e9"></script>
+<script src="features/results.js?v=213dedc7"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
-<script src="features/lifemap.js?v=d8ad5d8f"></script>
+<script src="features/lifemap.js?v=762a5948"></script>
 <script src="features/book.js?v=30b34aaa"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=738caba4"></script>
+<script src="features/built.js?v=cbd741a2"></script>
 </body>
 </html>

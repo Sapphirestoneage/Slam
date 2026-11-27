@@ -310,4 +310,15 @@ get there faster (the one move, one pulsing button); tap counts as before (1 to 
 steps; FI still in the first screen at 390). A 19th quick calculator, Cut it, or invest it? (`cutinvest.html`, and Menu >
 Quick math in the game): Eli's round $30k / $90k rule in the headline, the exact figures in Show the math. Eli's answers
 are logged in QUESTIONS (580 follow-up, 608 a, 624 d, 626, 639); what was chosen without an answer is QUESTIONS 643.
-Waits for Eli's go, not built: the FOO orders by destination reworked so the FIRE types are statuses on the one timeline.
+The FOO orders by destination were reworked on Nov 27 2026: see the next section.
+
+## RUN: FIRE statuses and the life timeline (Nov 27 2026)
+
+From Eli's words (Nov 26-27 2026): the FIRE types are not goals. They are statuses on the FOO timeline: reaching one
+gives more options to look around, and where the next dollar goes does not change by itself. And a life simulator
+timeline with the important milestones.
+
+| Part | What | State | Where |
+|-----:|------|-------|-------|
+| 1 | FIRE statuses | Done. One FOO order for everyone (the orders by Lean / Barista / Fat are removed; Baby Steps and Money Guy comparisons stay). Coast, Lean, Barista, FI, Chubby and Fat are statuses with a number, a date, Guess / Close / Exact and Show the math; markers between the steps; a one-time card with "Options this opens"; the quiet Recalculating line under a status. The option words are a draft for Eli (QUESTIONS 644). Missing: Barista, Chubby and Fat have no number in the game | Web: Plan > FOO (the row "Statuses on the way" and the section "FIRE statuses on your path"), Home (the card), Plan > Goals "FIRE statuses: the numbers", Plan > FIRE, `trip.html` (Your FIRE journey). Game: Home (the card, and a line on You are here), the big picture (Your life map: markers and "FIRE statuses on the way"), Menu > Trips and the journey > Journey. Code: `js/math/statuses.js`, `statusesOf` in `js/math/destinations.js`, `stGame` in `game/features/coast.js`, `data/library/status-options.json` |
+| 2 | Life simulator timeline | Not started (the next worker) | |

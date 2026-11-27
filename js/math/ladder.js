@@ -14,6 +14,8 @@ import { STEPS, MARKERS, LADDER } from '../registry/ladder.js';
 import { LISTS, RULES } from '../registry/assumptions.js';
 import { gatesOf } from '../gates.js';
 import { ownPlanPerson } from '../registry/couples.js';
+import { statusesOf } from './destinations.js';
+import { stMarkers, stWeave } from './statuses.js';
 
 const sum = (list, f) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
 const CONSUMER = new Set(LISTS.consumerDebt);
@@ -104,4 +106,17 @@ export function journeyInputs(doc, ref, { now = new Date(), debtKnown = false, t
     when: { debt: mk('consumerFree')?.months ?? null, coast: mk('coast')?.months ?? null, fi: mk('fi')?.months ?? null },
     whenAfter: F?.after != null ? { fi: F.after } : {}, fiDays: F?.days ?? null,
   };
+}
+
+// The stages of the journey map with the FIRE statuses between them, in date order (run FIRE statuses and the life
+// timeline, Nov 27 2026). Coast and FI are stages of the journey already, so they get no second marker; Lean,
+// Barista, Chubby and Fat do. No stage moves or changes. J is tpJourney's result. A date shows only on a balance the
+// person knows (level Close); on a guess only a reached status shows.
+export function journeyStatusRows(J, doc, ref, { now = new Date() } = {}) {
+  let marks = [];
+  try {
+    const m = metrics(doc, ref, { now, person: ownPlanPerson(doc) }), known = !!m.inputs.investedKnown;
+    marks = stMarkers(statusesOf(m, doc, { now, level: known ? 'Close' : 'Guess' }).list, { skip: ['Coast', 'FI'] }).filter(k => k.reached || known);
+  } catch { marks = []; }
+  return stWeave(J.stages, marks, s => (s.done ? 'done' : s.months != null ? s.months : J.stages.indexOf(s) === J.here ? 0 : null));
 }

@@ -1824,6 +1824,52 @@ def run(cases, ref, il=None):
                 ck('month it is whole', int(o['ym'][:4]) * 100 + int(o['ym'][5:7]), y * 100 + m, 0)
             elif gap > 0:
                 ck('no months without money going back', o['months'], None)
+        elif fn == 'fireStatuses':
+            # The FIRE statuses, worked out again: a status is reached when the invested money is at or over its
+            # number; its month is today's month plus its months; the markers are the dated ones, reached first then
+            # by months; each marker sits before the first later step that follows the last step at or before it.
+            inv, order = x['invested'], ['Coast', 'Lean', 'Barista', 'FI', 'Chubby', 'Fat']
+            items = {i['key']: i for i in x['items']}
+            sure = bool(x['known']) and x['level'] != 'Guess'
+            def ym_plus(ym, n):
+                t = int(ym[:4]) * 12 + int(ym[5:7]) - 1 + n
+                return '%04d-%02d' % (t // 12, t % 12 + 1)
+            rows, marks = {}, []
+            for pos, key in enumerate(order):
+                it = items[key]; val = it.get('value')
+                val = val if val is not None and val > 0 else None
+                reached = val is not None and inv >= val
+                months = None if val is None else 0 if reached else it.get('months')
+                ym = None if months is None else ym_plus(x['nowYm'], months)
+                gap = None if val is None or reached else val - inv
+                rows[key] = dict(reached=reached, months=months, ym=ym, gap=gap, val=val)
+                if val is not None and months is not None: marks.append((months, pos, key, reached))
+            for r in o['rows']:
+                e = rows[r['key']]
+                ck(r['key'] + ' reached', r['reached'], e['reached']); ck(r['key'] + ' months', r['months'], e['months'], 0)
+                ck(r['key'] + ' month', r['ym'] == e['ym'], True); ck(r['key'] + ' gap', r['gap'], e['gap'])
+            marks.sort()
+            ck('markers in date order', o['markers'] == [k for _, _, k, _ in marks], True)
+            T = [(-1 if t == 'done' else t) for t in x['steps']]
+            slots = {}
+            for months, pos, key, reached in marks:
+                k = -0.5 if reached else months
+                last = max([i for i, t in enumerate(T) if t is not None and t <= k], default=-1)
+                nxt = next((i for i, t in enumerate(T) if i > last and t is not None and t > k), len(T))
+                slots.setdefault(nxt, []).append(key)
+            weave = []
+            for i in range(len(T) + 1):
+                weave += slots.get(i, [])
+                if i < len(T): weave.append(i)
+            ck('markers between the steps', o['weave'] == weave, True)
+            ck('the steps keep their order', [w for w in o['weave'] if isinstance(w, int)] == list(range(len(T))), True)
+            seen = x['seen']
+            card = next((k for k in order if rows[k]['reached'] and k not in seen and sure), None)
+            ck('the card of a status just reached', o['card'] == card, True)
+            below = next((k for k in order if k in seen and not rows[k]['reached'] and rows[k]['val'] is not None and sure and x['hidden'].get(k) != x['month']), None)
+            ck('back under a status', (o['below']['key'] if o['below'] else None) == below, True)
+            if below:
+                ck('how far under', o['below']['by'], rows[below]['val'] - inv); ck('the new month', o['below']['ym'] == rows[below]['ym'], True)
         elif fn == 'rcCoast':
             # Back under Coast, in closed form. The Coast number and the money grow at the same return, so the gap
             # closes when the saving alone, counted back to today, covers it: P * (1 - g^-n) / (g - 1) >= gap.

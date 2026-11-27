@@ -764,6 +764,22 @@ const WB = [
     null,
   ],
   [
+    "feel",
+    "FIRE statuses: markers on your path, and the options each one opens",
+    "b",
+    () =>
+      WB_FN("stList") &&
+      WB_FN("stGame") &&
+      WB_FN("stWeave") &&
+      WB_FN("rsRouteStatus") &&
+      WB_HAS("ltstatus") &&
+      WB_HAS("stok") &&
+      WB_HAS("stbelowok") &&
+      stGame(C()).list.length === 6,
+    "Coast, Lean and FI are statuses, not goals: markers with a number and a date on the life map, the journey and the card You are here. Reaching one shows a card with a few options to look at. Your next step stays the same. Barista, Chubby and Fat have no number in the game yet.",
+    null,
+  ],
+  [
     "see",
     "While you slept: what your money earned",
     "b",

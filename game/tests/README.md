@@ -69,6 +69,7 @@ Each file has the name of its feature.
 | `taking-money-out.js` | Taking money out: the order, guardrails, the years before 59 and a half, health cover | `features/takeout.js`, `data/takeout2026.js` |
 | `two-ages.js` | Two ages: work optional and money reachable, for each person | `features/ages.js` |
 | `while-you-slept.js` | While you slept | `features/slept.js` |
+| `fire-statuses.js` | The FIRE statuses (run FIRE statuses and the life timeline, Part 1): the copy of `core/statuses.js` is current with the options file; the six statuses with their numbers, dates, level and math; the Lean marker between the eras of the life map and the stages of the journey (no era or stage moves); the status row and sheet; the one-time card with Options this opens (each option opens a tool that exists) and the line that the next step stays; the next win is the same after a card; the quiet line under a status; no card on a Guess; the spreadsheet row | `core/statuses.js`, `features/coast.js`, `features/lifemap.js`, `features/results.js`, `features/trip.js` |
 | `fi-ratio-and-coast-card.js` | The FI ratio on Key numbers with its "i", the card "You can stop sprinting", and the quiet Recalculating card under Coast | `features/coast.js` |
 | `before-you-sign.js` | Before you sign | `features/sign.js` |
 | `famous-money-ideas.js` | Famous money ideas | `features/ideas.js` to `ideas5.js`, `ideasz.js`, `roof.js` |

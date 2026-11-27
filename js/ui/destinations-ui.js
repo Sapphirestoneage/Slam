@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// The FI destinations on Plan › Goals (run of Nov 25 2026): Lean, Barista, Regular, Chubby and Fat as views, the
-// stress table, the pod's FI number; the FOO by destination on Plan › FOO; the Coast card on Home. Formatting only:
-// js/math/destinations.js and js/math/fi.js work every number out.
+// The FI variants on Plan › Goals (run of Nov 25 2026): Lean, Barista, Regular, Chubby and Fat as views, the
+// stress table, the pod's FI number. The FIRE statuses (run of Nov 27 2026): the markers on the FOO timeline of
+// Plan › FOO, and on Home the one-time card of a status that was just reached ("You can stop sprinting" is the Coast
+// case) and the quiet Recalculating line when the balance falls back under one. Formatting only:
+// js/math/destinations.js, js/math/statuses.js and js/math/fi.js work every number out.
 import { h } from './dom.js';
 import * as S from './staples.js';
 import { money, pct } from '../format.js';
 import { monthName, addMonths, ymOf } from '../month.js';
-import { destinationsOf, baristaSooner, stressOf, podFiOf, coastReachedOf, fooFor } from '../math/destinations.js';
+import { destinationsOf, baristaSooner, stressOf, podFiOf, statusesOf, statusSeenPatch, statusBelowPatch, fooWithStatuses } from '../math/destinations.js';
 import { setDestinations } from '../plan.js';
 import { DESTINATIONS, DESTINATION_WORDS, FAT_TEMPLATE, FAT_NOTES, FAT_AMOUNTS, BARISTA_PAY, BARISTA_HEALTH } from '../registry/destinations.js';
-import { stepSub } from '../registry/foo.js';
 
 const short = v => (v >= 1000 ? `$${v / 1000}k` : `$${v}`);
 const span = n => (n == null ? null : n === 0 ? 'now' : n < 24 ? `${n} ${n === 1 ? 'month' : 'months'}` : `${(n / 12).toFixed(1)} years`);
@@ -17,6 +18,16 @@ const span = n => (n == null ? null : n === 0 ? 'now' : n < 24 ? `${n} ${n === 1
 const LEVEL = { Low: ['Guess', 'Some numbers behind this are still guesses. It will move as they firm up.'], Medium: ['Close', 'Most numbers behind this are estimates or better.'], High: ['Exact', 'The numbers behind this are ones you know.'] };
 export const levelTag = gate => { const L = LEVEL[gate?.confidence?.word] ?? LEVEL.Low; return h('span.tag.plain.dest-level', { title: L[1] }, L[0]); };
 const pick = ctx => ctx.store.doc.program?.destinations || {};
+// The level word of a gate, for the statuses: a locked gate is a Guess.
+export const levelOf = gate => (gate?.unlocked ? (LEVEL[gate?.confidence?.word] ?? LEVEL.Low)[0] : 'Guess');
+// The draft words of the status cards (data/library/status-options.json), fetched once; the screen draws again when
+// they arrive. This file is the one place of the web app that fetches them.
+let OPTIONS = null, loading = null;
+export function setStatusOptions(json) { OPTIONS = json || null; }
+export function statusOptions() {
+  if (!OPTIONS && !loading && typeof fetch === 'function') loading = fetch('data/library/status-options.json').then(r => (r.ok ? r.json() : null)).then(j => { if (j) { OPTIONS = j; document.dispatchEvent(new CustomEvent('slam:rerender')); } else loading = null; }).catch(() => { loading = null; });
+  return OPTIONS;
+}
 
 function viewCard(ctx, v, V, gate) {
   const doc = ctx.store.doc, a = doc.assumptions || {};
@@ -91,8 +102,8 @@ export function destinationSections(ctx, m, gate) {
   const doc = ctx.store.doc, V = destinationsOf(m, doc, { now: ctx.now() });
   const open = DESTINATIONS.includes(pick(ctx).pick) ? pick(ctx).pick : 'Regular FI';
   const v = V.find(x => x.key === open);
-  const chips = S.tapPick(V.map(x => [x.key, x.short]), open, k => setDestinations(ctx.store, { pick: k }), { label: 'Destination', key: 'dest:pick', clearable: false });
-  const dest = S.sec('goals:destinations', { title: 'FI destinations', area: 'goals', summary: 'Lean, Barista, Regular, Chubby and Fat: each with its number and date' },
+  const chips = S.tapPick(V.map(x => [x.key, x.short]), open, k => setDestinations(ctx.store, { pick: k }), { label: 'FI variant', key: 'dest:pick', clearable: false });
+  const dest = S.sec('goals:destinations', { title: 'FIRE statuses: the numbers', area: 'goals', summary: 'Lean, Barista, Regular, Chubby and Fat: each status with its number and date' },
     () => h('div.stack', { style: { gap: '10px' } }, chips, viewCard(ctx, v, V, gate)));
   const stress = S.sec('goals:stress', { title: 'FI date stress test', area: 'goals', summary: 'Your date at four withdrawal rates and three returns' }, () => stressTable(ctx, m, gate));
   const many = podFiOf(doc, ctx.ref, { now: ctx.now() }).people.length >= 2;
@@ -100,37 +111,59 @@ export function destinationSections(ctx, m, gate) {
   return [dest, stress, pod];
 }
 
-// Home: the day the Coast date is reached, one calm card, shown until it is closed once.
-export function coastCard(ctx, m, gate) {
-  const c = coastReachedOf(m, ctx.store.doc, { now: ctx.now() });
+// Home: a status that was just reached, one calm card, shown until it is closed once. "You can stop sprinting" is the
+// Coast case. The next step does not change: the card says so, and its options are links to look around.
+export function statusCard(ctx, m, gate) {
   if (!gate?.unlocked) return null; // a date on guesses stays quiet until the numbers behind it are in
-  // Back under Coast after the card was closed: one quiet Recalculating card, never a warning (Eli, Nov 25 2026).
-  if (c.below?.show && c.below.words) return h('div.card.coast-card.coast-below', { role: 'status' },
-    h('div.row-line', {}, h('h2', {}, c.below.words.title), levelTag(gate)),
-    h('p', {}, c.below.words.line),
-    h('p.muted.small', {}, c.below.words.next, ' ', S.mathButton({ id: 'M54', value: c.below.by, needs: [], text: c.below.text }, 'Show the math')),
-    h('div.row-line', {}, S.button('Got it', { onClick: () => setDestinations(ctx.store, { coastBelowSeen: c.below.month }) }), h('a', { href: '#/plan/goals' }, 'See your destinations')));
-  if (!c.show) return null;
+  const doc = ctx.store.doc, O = statusOptions();
+  const S9 = statusesOf(m, doc, { now: ctx.now(), level: levelOf(gate), options: O });
+  // Back under a status after its card was closed: one quiet Recalculating card, never a warning (Eli, Nov 25 2026).
+  const b = S9.below;
+  if (b) return h('div.card.coast-card.coast-below', { role: 'status', 'data-status': b.key },
+    h('div.row-line', {}, h('h2', {}, b.title), levelTag(gate)),
+    h('p', {}, b.line),
+    h('p.muted.small', {}, b.next, ' ', S.mathButton({ id: b.key === 'Coast' ? 'M54' : 'M9G', value: b.by, needs: [], text: b.math.join(' ') }, 'Show the math')),
+    h('div.row-line', {}, S.button('Got it', { onClick: () => setDestinations(ctx.store, statusBelowPatch(doc, b.key, b.month)) }), h('a', { href: '#/plan/foo' }, 'See your statuses')));
+  const c = S9.card;
+  if (!c || !O) return null; // the card waits for its words
   const today = ctx.now().toISOString().slice(0, 10);
-  return h('div.card.coast-card', { role: 'status' },
-    h('div.row-line', {}, h('h2', {}, 'You can stop sprinting'), levelTag(gate)),
-    h('p', {}, `What you have invested can grow to your FI number by ${c.retireAge ?? 'the age you set'} with nothing more added. From here, saving is a choice about how soon, not a race.`),
-    h('p.muted.small', {}, S.mathButton({ id: 'M54', value: c.coast, needs: [], text: c.text }, 'Show the math'), ' This holds while the balance stays at or over your Coast number.'),
-    h('div.row-line', {}, S.button('Got it', { onClick: () => setDestinations(ctx.store, { coastSeen: today }) }), h('a', { href: '#/plan/goals' }, 'See your destinations')));
+  return h('div.card.coast-card.status-card', { role: 'status', 'data-status': c.key },
+    h('div.row-line', {}, h('h2', {}, c.title), levelTag(gate)),
+    h('p', {}, c.changed),
+    h('p.muted.small', {}, S.mathButton({ id: c.key === 'Coast' ? 'M54' : 'M9G', value: c.value, needs: [], text: c.math.join(' ') }, 'Show the math'), ` This holds while the balance stays at or over your ${c.name} number.`),
+    h('h3.status-opts-h', {}, c.heading),
+    h('ul.status-opts', {}, c.options.map(o => h('li', {}, h('a', { href: o.web }, o.t), h('span.muted.small', {}, o.why)))),
+    h('p.status-stay', {}, c.stay),
+    h('div.row-line', {}, S.button('Got it', { onClick: () => setDestinations(ctx.store, statusSeenPatch(doc, c.key, today)) }), h('a', { href: '#/plan/foo' }, 'See your statuses')));
 }
 
-// Plan › FOO: the same steps in the order for a destination.
-export function fooDestinationSection(ctx, f) {
-  const doc = ctx.store.doc, m = ctx.metrics();
-  const V = destinationsOf(m, doc, { now: ctx.now() });
-  const key = DESTINATIONS.includes(pick(ctx).foo) ? pick(ctx).foo : 'Regular FI';
-  const F = fooFor(f, V.find(x => x.key === key));
-  return S.sec('foo:destination', { title: 'Your order by destination', summary: key === 'Regular FI' ? 'Lean, Barista and Fat change the late steps' : `${DESTINATION_WORDS[key].short}: ${F.steps.filter(s => s.why).length} late steps move or are added` }, () => h('div.card', {},
+// Plan › FOO: the FIRE statuses as markers between the steps of the one order, in date order. No step moves.
+const markWhen = k => (k.reached ? 'Reached' : k.ym ? monthName(k.ym, 'short') : '');
+export function fooStatuses(ctx, f, gate) {
+  const m = ctx.metrics(), doc = ctx.store.doc;
+  const S9 = statusesOf(m, doc, { now: ctx.now(), level: levelOf(gate), options: statusOptions() });
+  return { ...S9, rows: fooWithStatuses(f, gate?.unlocked ? S9.markers : S9.markers.filter(k => k.reached), { now: ctx.now() }) };
+}
+// The markers under the path of tiles, in date order: each says the step it comes before. Read-only labels.
+export function fooMarkRow(S9) {
+  const marks = S9.rows.map((r, i) => (r.status ? { k: r.status, next: S9.rows.slice(i + 1).find(x => x.step)?.step ?? null } : null)).filter(Boolean);
+  if (!marks.length) return null;
+  return h('div.foo-marks', { 'aria-label': 'FIRE statuses on the way' }, h('span.label', {}, 'Statuses on the way'),
+    marks.map(({ k, next }) => h(`span.foo-mark${k.reached ? '.reached' : ''}`, { 'data-status': k.key }, h('span.foo-mark-name', {}, `◆ ${k.name}`), ` ${money(k.value)}, ${markWhen(k)}`, h('span.muted', {}, k.reached ? '' : next ? ` · before step ${next.id}` : ' · after the last step'))));
+}
+export function fooStatusSection(ctx, f, gate, S9) {
+  const by = new Map(S9.list.map(s => [s.key, s]));
+  const row = s => h(`li.dest-status${s.reached ? '.reached' : ''}`, { 'data-status': s.key },
+    h('span.foo-n.status-dot', { 'aria-label': 'Status' }, '◆'), h('div.dest-foo-names', {}, h('strong', {}, `${s.full} status`), h('span.muted.small', {}, s.what)),
+    h('span.dest-status-num', {}, s.value == null ? h('span.muted.small', {}, 'Needs ', S.needLinks(ctx, s.needs.length ? s.needs : ['spending'])) : S.mathButton({ id: s.key === 'Coast' ? 'M54' : 'M9G', value: s.value, needs: [], text: s.math.join(' ') }, money(s.value))),
+    h('span.small.dest-foo-when', {}, s.value == null ? '' : !gate?.unlocked && !s.reached ? h('span.muted', {}, 'Date after your numbers are in') : [s.when, ' ', levelTag(gate)]));
+  const undated = S9.list.filter(s => !S9.rows.some(r => r.status?.key === s.key));
+  return S.sec('foo:statuses', { title: 'FIRE statuses on your path', summary: S9.line ?? 'Coast, Lean, Barista, FI, Chubby and Fat: markers on the way, not steps' }, () => h('div.card', {},
     h('div.stack', { style: { gap: '10px' } },
-      S.labelled('Where are you going?', S.tapPick(DESTINATIONS.map(k => [k, DESTINATION_WORDS[k].short]), key, k => setDestinations(ctx.store, { foo: k }), { label: 'Destination for the order', key: 'dest:foo', clearable: false }), { note: DESTINATION_WORDS[key].what }),
-      h('ol.dest-foo', {}, F.steps.map(s => h(`li${F.here === s.id ? '.here' : ''}`, {},
-        h('span.foo-n', { 'aria-label': s.extra ? 'Added step' : `Step ${s.id}` }, s.extra ? '+' : s.id), h('div.dest-foo-names', {}, h('strong', {}, s.name), s.extra ? h('span.muted.small', {}, s.sub) : null, s.why ? h('span.small', {}, s.why) : h('span.muted.small', {}, stepSub(s.id))),
-        s.extra ? h('span.tag.plain', {}, 'Added') : s.why ? h('span.tag.plain', {}, 'Moved') : null,
-        h('span.muted.small.dest-foo-when', {}, s.extra ? 'In this order' : s.status === 'Done' ? 'Done' : F.here === s.id ? 'You are here' : s.target != null ? `${money(s.target)}${s.date ? `, ${monthName(s.date, 'short')}` : ''}` : s.date ? monthName(s.date, 'short') : '')))),
-      h('p.muted.small', { style: { margin: 0 } }, F.changed ? 'The first five steps never move: your own oxygen mask comes first. Only the late steps change places, and the finish line takes this destination\'s number. An added step is a place in the order; it has no number of its own yet.' : 'This destination keeps the standard order.'))));
+      h('p', { style: { margin: 0 } }, 'A status is a marker you pass on the way. Reaching one opens options to look at. It does not move a step, and your next step stays the same.'),
+      h('ol.dest-foo', {}, S9.rows.map(r => (r.status ? row(by.get(r.status.key)) : h(`li${f.here === r.step.id ? '.here' : ''}`, {},
+        h('span.foo-n', { 'aria-label': `Step ${r.step.id}` }, r.step.id), h('div.dest-foo-names', {}, h('strong', {}, r.step.name)), h('span', {}),
+        h('span.muted.small.dest-foo-when', {}, r.step.status === 'Done' ? 'Done' : f.here === r.step.id ? 'You are here' : r.step.date ? monthName(r.step.date, 'short') : ''))))),
+      undated.length ? h('ul.dest-foo.dest-undated', { 'aria-label': 'Statuses with no date yet' }, undated.map(row)) : null,
+      h('p.muted.small', { style: { margin: 0 } }, 'One order for everyone. The numbers, the Fat list and part-time pay are on ', h('a', { href: '#/plan/goals' }, 'Plan › Goals'), '; every status at another pace is on ', h('a', { href: '#/plan/fire' }, 'Plan › FIRE'), '.'))));
 }

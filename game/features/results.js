@@ -515,7 +515,7 @@ function rsMonthCard(c, d) {
 }
 function rsRouteCard(c, d) {
   const R = rsRoute(c, d);
-  return `<button class="card dkcard rsq rsroute" data-a="tab" data-v="map" data-fid="rs:route"><span class="row between dkhead"><span class="dklabel">You are here</span><span class="caret">›</span></span><span class="rsstrip" aria-hidden="true">${R.nodes.map(n => `<i class="${n.s}"></i>`).join("")}</span><b class="small">${esc(R.here)}</b><span class="tiny muted">${R.dest ? "Next: " + esc(R.dest.n) + ", " + esc(spWhen(R.dest.m)) : "Past every stop"}</span><span class="tiny rsgo">See the full map</span></button>`;
+  return `<button class="card dkcard rsq rsroute" data-a="tab" data-v="map" data-fid="rs:route"><span class="row between dkhead"><span class="dklabel">You are here</span><span class="caret">›</span></span><span class="rsstrip" aria-hidden="true">${R.nodes.map(n => `<i class="${n.s}"></i>`).join("")}</span><b class="small">${esc(R.here)}</b><span class="tiny muted">${R.dest ? "Next: " + esc(R.dest.n) + ", " + esc(spWhen(R.dest.m)) : "Past every stop"}</span>${typeof rsRouteStatus === "function" ? rsRouteStatus(c, d) /* coast.js: the FIRE statuses reached, and the next one */ : ""}<span class="tiny rsgo">See the full map</span></button>`;
 }
 function rsTilesCard(c, d) {
   const T = rsTiles(c, d);

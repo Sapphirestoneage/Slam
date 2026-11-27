@@ -123,6 +123,20 @@ function tpgJourney(c) {
   });
   return { L, J, st: L.cur === "USD" ? kitState([kitSharp(c, "take"), kitSharp(c, "spend")]) : "Guess" };
 }
+/* The stages of the journey with the FIRE statuses between them, in date order (Eli, 2026-11-27). Coast and FI
+   are stages of the journey already, so they get no second marker. No stage moves. */
+function tpgStatusRows(c, J) {
+  let marks = [];
+  try {
+    const K = stGame(c);
+    marks = stMarkers(K.list, { skip: ["Coast", "FI"] }).filter(m => m.reached || K.st !== "Guess");
+  } catch (e) {
+    report(e, "trip.js: tpgStatusRows");
+  }
+  return stWeave(J.stages, marks, s =>
+    s.done ? "done" : s.months != null ? s.months : J.stages.indexOf(s) === J.here ? 0 : null
+  );
+}
 function tripBook(c) {
   const L = tpgLines(c),
     T = L.T,
@@ -347,7 +361,17 @@ function tripSheet() {
       here = J.here;
     h += dkCard(
       "Your FIRE journey",
-      dkDayStrip(st.map((s, i) => ({ d: s.name, on: i === here, mark: s.done ? "Done" : i === here ? "Here" : "" }))) +
+      dkDayStrip(
+        tpgStatusRows(c, J).map(r =>
+          r.status
+            ? { d: "◆ " + r.status.name, on: false, mark: r.status.reached ? "Status ✓" : r.status.when }
+            : {
+                d: r.step.name,
+                on: st.indexOf(r.step) === here,
+                mark: r.step.done ? "Done" : st.indexOf(r.step) === here ? "Here" : "",
+              }
+        )
+      ) +
         st
           .map((s, i) => {
             if (i !== here || s.pct == null) return "";
@@ -365,7 +389,10 @@ function tripSheet() {
           ? ""
           : `<div class="tiny muted">The trip is in ${esc(TP_CURRENCIES.find(x => x[0] === cur)[1])}. Your plan is in US dollars, so the trip stays out of it: no exchange rate is guessed.</div>`) +
         mathBox(tpJourneyMath(J, cur)),
-      { cap: "Digging out, the first $1k, debt free, $100k, Coast, FI.", right: kitPill(Q.st) }
+      {
+        cap: "Digging out, the first $1k, debt free, $100k, Coast, FI. A ◆ is a FIRE status on the way.",
+        right: kitPill(Q.st),
+      }
     );
     h += dkCard(
       "Stage by stage",

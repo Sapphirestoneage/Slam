@@ -41,7 +41,7 @@ export function fireScreen(app, ctx) {
   const strip = S.summaryStrip(ctx, [
     { label: 'Invested toward FI', result: { id: 'M41', value: B.invested, needs: B.invested == null ? ['investments'] : [], unit: 'money', text: 'What is invested toward FI today (Invested toward FI on Net worth).' }, note: R?.share != null ? `${pct(Math.min(1, R.share))} of your FI number` : null, home: '#/net-worth/assets' },
     { label: 'FI number', result: R?.number ?? m.fiNumber, note: R?.spending != null ? `${money(R.spending)} a month for good` : null, home: '#/plan/goals' },
-    { label: 'Nearest finish line', result: nearest ? { id: 'M53', value: nearest.months, needs: [], unit: 'months', text: nearest.date?.text ?? `${nearest.short} FIRE on the plan's own path.` } : { id: 'M53', value: null, needs: R?.needs?.length ? R.needs : ['spending'], unit: 'months', text: '' },
+    { label: 'Next status', result: nearest ? { id: 'M53', value: nearest.months, needs: [], unit: 'months', text: nearest.date?.text ?? `${nearest.short} FIRE on the plan's own path.` } : { id: 'M53', value: null, needs: R?.needs?.length ? R.needs : ['spending'], unit: 'months', text: '' },
       render: () => when(nearest), note: nearest ? `${nearest.short === 'Regular' ? 'FIRE' : `${nearest.short} FIRE`}, in ${span(nearest.months)}` : null, lock: gate.unlocked ? null : { reason: gate.reason, route: gate.route } },
     { label: 'Coast number', result: m.coastFi, note: B.coast.reached ? 'Reached: growth alone gets you there' : B.coast.gap != null ? `${money(B.coast.gap)} more to coast` : null },
   ]);
@@ -61,7 +61,7 @@ export function fireScreen(app, ctx) {
       h('div.fire-cell', {}, h('span.label', {}, 'At this pace'), date, moved, v.value != null && gate.unlocked ? levelTag(gate) : null),
       h('div.fire-cell', {}, h('span.label', {}, 'So far'), v.share == null ? h('span.muted', {}, 'Needs invested') : h('span', {}, pct(Math.min(1, v.share))), v.share != null ? h('div.rung-bar', { title: pct(Math.min(1, v.share)) }, h('span', { style: { width: `${Math.min(100, v.share * 100)}%` } })) : null));
   };
-  const board = h('div.card.fire-board', {}, h('h2', {}, 'Every FIRE type at this pace'), h('div.fire-rows', {}, B.views.map(row)),
+  const board = h('div.card.fire-board', {}, h('h2', {}, 'Every FIRE status at this pace'), h('div.fire-rows', {}, B.views.map(row)),
     h('div.fire-row.fire-coast', { 'data-fire': 'Coast' },
       h('div.fire-name', {}, h('strong', {}, 'Coast FIRE'), mine === 'Coast' ? h('span.tag.plain', { title: 'From your FIRE Community Quiz' }, 'Your flavor') : null, h('span.muted.small', {}, 'Growth alone gets you to your FI number by the age you set.')),
       h('div.fire-cell', {}, h('span.label', {}, 'The number'), B.coast.value == null ? h('span.muted', {}, '–') : S.mathButton({ id: 'M54', value: B.coast.value, needs: [], text: B.coast.text ?? '' }, money(B.coast.value))),
@@ -70,7 +70,7 @@ export function fireScreen(app, ctx) {
     h('p.muted.small', { style: { marginBottom: 0 } }, 'Each date runs on the plan\'s own path: the debt-first months come first, then the pace you tapped. The numbers do not change with the pace; only the dates move.'));
   const explain = S.sec('fire:explain', { title: 'The FIRE types, in plain words', summary: 'Lean, Coast, Barista, FIRE, Chubby and Fat' },
     () => h('div.card.fire-explain', {}, FIRE_EXPLAIN.map(x => h('div.fire-ex', {}, h('strong', {}, x.name, mine === x.key ? ' (your flavor)' : ''), h('p', {}, x.what), h('p.muted.small', {}, `Fits when: ${x.fits} It asks: ${x.asks}`))),
-      h('p.muted.small', { style: { marginBottom: 0 } }, 'The names are the ones the FIRE community uses. Your numbers and dates are above; the Fat list and part-time pay are set on Plan › Goals, FI destinations.')));
+      h('p.muted.small', { style: { marginBottom: 0 } }, 'The names are the ones the FIRE community uses. Your numbers and dates are above; the Fat list and part-time pay are set on Plan › Goals, FIRE statuses: the numbers. A status is a marker on your path (Plan › FOO); reaching one opens options and moves no step.')));
   const quiz = h('p.muted.small.fire-quiz', {}, flavor ? `Your FIRE Community Quiz leans ${flavor.name}${flavor.tie ? ' (a close call)' : ''}. A game lens, not a forecast.` : 'Not sure which fits? The FIRE Community Quiz is on the quiz page, under More quizzes: fourteen taps.', ' ', h('a', { href: 'quiz.html' }, flavor ? 'Take it again' : 'Open the quiz page'));
-  return [head('FIRE', 'Every way to financial independence, at the pace you pick'), strip, paceRow, board, quiz, explain];
+  return [head('FIRE', 'Every FIRE status, with its number and its date at the pace you pick'), strip, paceRow, board, quiz, explain];
 }

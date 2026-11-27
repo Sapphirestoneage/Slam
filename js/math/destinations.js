@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// The FI destinations (run of Nov 25 2026). Pure: no DOM. Every number here comes from a function that already
+// The FI variants and the FIRE statuses (run of Nov 25 2026; statuses Nov 27 2026). Pure: no DOM. Every number here comes from a function that already
 // works it out: the FI numbers from fiTargets (js/plan.js), each date from monthsTo (the plan's own path), the stress
 // table from fiStress (M9X), the pod from metrics() in the Everyone view and each adult's view (the household
 // engine, M9N), and the Coast date from the Coast FI number (M54).
@@ -11,7 +11,8 @@ import { fiTargets, monthsTo, fatExtrasOf, baristaHealthOf, FAT_FACTOR } from '.
 import { addMonths, ymOf, monthName } from '../month.js';
 import { fmt } from './result.js';
 import { adultsOf, personLabels } from '../registry/couples.js';
-import { DESTINATIONS, DESTINATION_WORDS, FOO_BY_DESTINATION, FOO_EXTRA } from '../registry/destinations.js';
+import { DESTINATIONS, DESTINATION_WORDS } from '../registry/destinations.js';
+import { stList, stMarkers, stCard, stBelow, stLine, stWeave } from './statuses.js';
 
 const pctWords = v => `${+(v * 100).toFixed(2)}%`;
 
@@ -145,21 +146,44 @@ export function coastReachedOf(m, doc, { now = new Date() } = {}) {
     text: reached ? `${fmt.money(inv)} invested is at or over your Coast number, ${fmt.money(coast)}. ${m.coastFi.text}` : null };
 }
 
-// The FOO by destination: the same steps (js/math/foo.js), in the order for where you are going, and the finish line
-// at that destination's number and date. F is foo()'s result; view is the destination's view from destinationsOf.
-export function fooFor(F, view) {
-  const key = view?.key && FOO_BY_DESTINATION[view.key] ? view.key : 'Regular FI', D = FOO_BY_DESTINATION[key];
-  const byId = new Map(F.steps.map(s => [s.id, s]));
-  const standard = F.steps.map(s => s.id);
-  const order = D.order.filter(id => byId.has(id) || FOO_EXTRA[id]), own = order.filter(id => byId.has(id));
-  const steps = order.map(id => {
-    // A late step this destination adds: a place in the order and its reason. It has no number of its own.
-    if (FOO_EXTRA[id]) return { id, extra: true, name: FOO_EXTRA[id].name, sub: FOO_EXTRA[id].sub, status: null, date: null, target: null, moved: true, why: D.why[id] ?? null };
-    const s = byId.get(id);
-    const finish = id === '9' && key !== 'Regular FI' && view?.value != null;
-    return { id, name: finish ? `Reach your ${view.short} number` : s.name, status: finish ? (view.reached ? 'Done' : s.status === 'Done' ? 'Later' : s.status) : s.status,
-      date: finish ? view.ym : s.date ?? null, target: finish ? view.value : null, moved: standard.indexOf(id) !== own.indexOf(id), why: D.why[id] ?? null };
-  });
-  const here = steps.find(s => !s.extra && !['Done', 'Locked', 'Off', 'Optional'].includes(s.status))?.id ?? null;
-  return { key, short: view?.short ?? 'Regular', steps, here, changed: steps.some(s => s.why) };
+// The FIRE statuses of one person (run FIRE statuses and the life timeline, Nov 27 2026, Part 1; Eli: the FIRE types are
+// statuses on the FOO timeline, not goals). One list for every screen: Coast, Lean, Barista, FI, Chubby and Fat, each
+// with its number, whether it is reached, its date at today's pace, Guess / Close / Exact and its math. Nothing new is
+// worked out: the numbers and dates are destinationsOf (M9G on M53), the Coast number is M54 and its date is rcCoast
+// (the Coast number grows each month, so only what goes in closes the gap). stList (js/math/statuses.js, the one
+// function both apps call) decides what is reached and puts the list in order.
+// level: 'Guess', 'Close' or 'Exact' (the FI date's own confidence, from the screen's gate). options: the statuses of
+// data/library/status-options.json (the draft words of each card). The taps are kept on the plan
+// (program.destinations): coastSeen and statusSeen (the day a card was closed), coastBelowSeen and statusBelow (the
+// month a Recalculating line was closed for).
+const STATUS_OF = { 'Lean FI': 'Lean', 'Barista FI': 'Barista', 'Regular FI': 'FI', 'Chubby FI': 'Chubby', 'Fat FI': 'Fat' };
+export function statusesOf(m, doc, { now = new Date(), level = 'Guess', options = null } = {}) {
+  const x = m.inputs, D = doc.program?.destinations || {}, ym = ymOf(now);
+  const items = destinationsOf(m, doc, { now }).map(v => ({ key: STATUS_OF[v.key], value: v.value, months: v.months, never: v.never, needs: v.needs,
+    note: v.spending != null ? `${fmt.money(v.spending)} a month from investments` : null, math: [v.number?.text, v.date?.text].filter(Boolean) }));
+  const coast = m.coastFi?.value ?? null, going = m.investing?.monthly ?? null, bf = m.investing?.before ?? null;
+  const left = x.age != null && x.retireAge != null ? Math.max(0, Math.round((x.retireAge - x.age) * 12)) : 840;
+  const k = coast == null || x.invested == null ? null : rcCoast({ invested: x.invested, coast, realReturn: x.realReturn, nowAt: now, maxMonths: left, monthly: going == null ? null : n => (bf && n < bf.months ? bf.monthly : going + changeAt(m.investing?.changes, n)) });
+  items.unshift({ key: 'Coast', value: coast, months: k?.months ?? null, never: !!k && k.months == null, needs: m.coastFi?.needs || [],
+    math: [m.coastFi?.text, k?.below && k.months != null ? 'The Coast number grows each month at the same return as your money, so the date is the month what you put in closes the gap.' : null].filter(Boolean) });
+  const list = stList({ invested: x.invested, known: !!x.investedKnown, level, nowYm: ym, items, options: options?.statuses || null, money: fmt.money,
+    seen: { ...(D.statusSeen || {}), ...(D.coastSeen ? { Coast: D.coastSeen } : {}) } });
+  return { list, markers: stMarkers(list), card: stCard(list), line: stLine(list, { money: fmt.money }),
+    below: stBelow(list, { hidden: { ...(D.statusBelow || {}), ...(D.coastBelowSeen ? { Coast: D.coastBelowSeen } : {}) }, month: ym, money: fmt.money }) };
+}
+// What to save when a card is closed, as a patch for setDestinations (js/plan.js). Coast keeps its own keys (the
+// cards closed before this run stay closed).
+export function statusSeenPatch(doc, key, day) {
+  const D = doc.program?.destinations || {};
+  return key === 'Coast' ? { coastSeen: day } : { statusSeen: { ...(D.statusSeen || {}), [key]: day } };
+}
+export function statusBelowPatch(doc, key, month) {
+  const D = doc.program?.destinations || {};
+  return key === 'Coast' ? { coastBelowSeen: month } : { statusBelow: { ...(D.statusBelow || {}), [key]: month } };
+}
+// The FOO steps with the status markers between them, in date order. No step moves or changes (one FOO order for
+// everyone). F is foo()'s result; markers come from statusesOf.
+export function fooWithStatuses(F, markers, { now = new Date() } = {}) {
+  const base = ymOf(now), months = ym => { const [y, mo] = ym.split('-').map(Number), [by, bm] = base.split('-').map(Number); return (y - by) * 12 + (mo - bm); };
+  return stWeave(F.steps, markers, s => (s.status === 'Done' ? 'done' : s.date ? Math.max(0, months(s.date)) : F.here === s.id ? 0 : null));
 }
