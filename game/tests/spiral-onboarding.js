@@ -21,7 +21,7 @@
   X("start");
   chk(
     "Start of a new player opens the one opening, not the rounds",
-    W && W.kind === "cb" && W.step === "entry" && !/Question 1 of 5/.test(ov()),
+    W && W.kind === "cb" && W.step === "wants" && !/Question 1 of 5/.test(ov()),
     W && W.kind
   );
   closeSheet();

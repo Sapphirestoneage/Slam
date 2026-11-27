@@ -39,6 +39,7 @@
       newGame();
       box[ER_KEY] = erPack(A);
       X("start");
+      X("wnskip"); /* What you want (run SLAM-ONBOARD-1) comes first: Skip for now */
       return C();
     },
     FULL = { age: 2, spend: 2, inv: 3, save: 3, cush: "1 to 3 months", debts: ["Credit card balance"], tax: "some" };
@@ -151,6 +152,7 @@
   /* ---- 5. erIn(): the answers come into the game ---- */
   newGame();
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1) comes first: Skip for now */
   X("cbset", "", "", { q: "age", i: 2 });
   X("cbset", "", "", { q: "spend", i: 2 });
   X("cbset", "", "", { q: "inv", i: 3 });
@@ -174,6 +176,24 @@
   );
   chk("the entry is not asked again", !/Question 1 of/.test(ov()) && /What it is/.test(ov()));
   chk("the key is removed after one use", !(ER_KEY in box));
+  /* run SLAM-ONBOARD-1: a demo visitor sees What you want first, and the picks become goals */
+  newGame();
+  box[ER_KEY] = erPack({ age: 2, spend: 2, inv: 3, save: 3 });
+  X("start");
+  chk("a demo visitor sees What you want first, and the key waits", G.demo && W.step === "wants" && ER_KEY in box);
+  X("wnpick", "home");
+  X("wnnext");
+  chk(
+    "after it the four questions are passed over, and the pick is a goal",
+    !G.demo &&
+      W.kind === "cb" &&
+      W.step === "is" &&
+      C()
+        .goals.map(g => g.n)
+        .join() === "Buy a home" &&
+      !(ER_KEY in box),
+    W.kind + " " + W.step
+  );
   c = arrive(FULL);
   chk(
     "the setup answers of the demo are on the profile",
@@ -192,6 +212,7 @@
   newGame();
   box[ER_KEY] = erPack({ age: 4, spend: 1 });
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1) comes first: Skip for now */
   chk(
     "two answers: the entry opens at question 3, and the game is still new",
     G.demo && W.kind === "cb" && W.q === 2 && /Question 3 of/.test(ov()),
@@ -201,6 +222,7 @@
   /* nothing to carry: the entry starts at question 1 */
   newGame();
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1) comes first: Skip for now */
   chk("no key: the entry starts at question 1", W.kind === "cb" && W.step === "entry" && /Question 1 of/.test(ov()));
   /* a player with a game is left alone */
   c = arrive(FULL);

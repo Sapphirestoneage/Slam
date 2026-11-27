@@ -113,6 +113,12 @@ async function setup(page, P, who) {
     const st = await ev(() => ({ kind: W && W.kind, step: W && W.step, sp: W && W.sp && W.sp.at, txt: (document.querySelector('#ov') || document.body).innerText }));
     if (DBG) console.log('  ', n, st.kind, st.step, st.sp, JSON.stringify(st.txt.slice(0, 160)));
     if (st.kind === 'firstplan') return Object.assign(seen, { done: true });
+    /* run SLAM-ONBOARD-1: What you want is the first screen. This walk is about the rounds: Skip for now. */
+    if (st.kind === 'cb' && st.step === 'wants') {
+      await ev(() => ACT.wnskip());
+      await page.waitForTimeout(500);
+      continue;
+    }
     if (st.kind === 'cb' && st.step === 'is' && !seen.rest) {
       seen.rest = true;
       await ev(() => ACT.cbrest());

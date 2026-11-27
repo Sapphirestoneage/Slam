@@ -173,7 +173,8 @@
   chk(
     "a want is found by a lever, then by the next tag",
     wnMatch(c, ["interest", "fi"]).l === "Get out of debt" &&
-      wnMatch(c, ["housing"]).l === "Buy a home" &&
+      wnMatch(c, ["housing"]) === null &&
+      wnMatch(c, ["A"]).l === "Buy a home" &&
       wnMatch(c, ["taxes"]) === null
   );
   chk(

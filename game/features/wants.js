@@ -25,13 +25,14 @@
    ========================================================================= */
 /* The chips, in the order of the screen. k: the kind of goal (GOAL_K in engine.js). tags: what the want is about:
    a lever of the Strategy Engine (housing, income, interest, taxes, spending), a round of setup (D, A, I, T, E), or
-   "fi" (any move that brings the FI date closer). */
+   "fi" (any move that brings the FI date closer). Buy a home has no lever: the housing moves are for a home the
+   player already has. */
 const WN_LIST = [
   { id: "early", l: "Retire early", k: "Something else", tags: ["fi", "A"] },
   { id: "ontime", l: "Retire on time", k: "Something else", tags: ["fi", "A"] },
   { id: "debt", l: "Get out of debt", k: "Something else", tags: ["interest", "D"] },
   { id: "cushion", l: "Build a cushion", k: "Something else", tags: ["spending", "A"] },
-  { id: "home", l: "Buy a home", k: "Home", tags: ["housing", "A"] },
+  { id: "home", l: "Buy a home", k: "Home", tags: ["A"] },
   { id: "travel", l: "Travel more", k: "Trip", tags: ["spending", "E"] },
   { id: "kids", l: "Have or raise kids", k: "Something else", tags: ["E"] },
   { id: "career", l: "Change careers or quit my job", k: "Quit my job", tags: ["income", "I"] },
@@ -117,6 +118,9 @@ function wnLeave(keep) {
   W.wnOwn = false;
   CB.taps++;
   sheet(cbSheet);
+  /* erain.js: a visitor who comes from the demo Find your era already answered the four questions there. With all
+     four the player is made here, with the picks of this screen as goals, and the flow goes on at What it is. */
+  if (typeof erIn === "function") erIn();
 }
 Object.assign(ACT, {
   /* a chip: on or off. An own name (k own) is taken off the list. */

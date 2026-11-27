@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 217. Lines: 125,640. Top-level functions: 3091. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 218. Lines: 126,073. Top-level functions: 3105. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -17,7 +17,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 3 | `features/firelink.js` | 35 | 1 | 0 | 0 | The button "Start from a blank FIRE sheet": one small function for each place that shows it (the Export entry of the game, the Export entry of the web... |
 | 4 | `account/trust.js` | 375 | 15 | 2 | 0 | Trust. Three things: (1) the one line "Education and tools, not financial advice." and the link to the privacy page; (2) calm words for each answer of... |
 | 5 | `account/liveflag.js` | 113 | 10 | 0 | 0 | The ONE switch of Live Session Mode (a coaching call that fills the client's profile while the two talk) |
-| 6 | `account/door.js` | 232 | 19 | 0 | 0 | The front door. A person who arrives from the QR code or a link, with no account on this device, sees one landing screen: one line, one big Start butt... |
+| 6 | `account/door.js` | 234 | 19 | 0 | 0 | The front door. A person who arrives from the QR code or a link, with no account on this device, sees one landing screen: one promise (your FI number,... |
 | 7 | `account/lock.js` | 254 | 16 | 2 | 0 | App lock and passkeys (run Not built, groups 1 to 5, Part 10b) |
 | 8 | `account/supa.js` | 737 | 22 | 6 | 0 | Accounts on the website. Each player signs in with an email address and a password, and gets a private saved game in the Supabase database |
 | 9 | `data/skills.js` | 5,163 | 0 | 0 | 0 | Data only. The skills of the skill tree: name, group, effort, reward, and the text of each skill |
@@ -45,7 +45,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 31 | `core/feel.js` | 197 | 4 | 0 | 0 | Game feel (run Finish everything partly built, Part 20): start at the finish line (work back from what you need to what today has to look like), the r... |
 | 32 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
 | 33 | `core/statuses.js` | 134 | 7 | 1 | 0 | The FIRE statuses: Coast, Lean, Barista, FI, Chubby and Fat as markers on the one path |
-| 34 | `core/paylayers.js` | 320 | 20 | 3 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
+| 34 | `core/paylayers.js` | 323 | 20 | 4 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
 | 35 | `core/jobs.js` | 354 | 18 | 0 | 0 | The math of the Job of Existing (run JOE-1): which of the six unpaid jobs a player holds, from answers already given; the hours a month of running the... |
 | 36 | `core/hhold.js` | 320 | 8 | 0 | 0 | The math of Households (run Finish everything partly built, Part 12): the same question for everyone and its talk points, the answer code for two phon... |
 | 37 | `core/enough.js` | 554 | 11 | 0 | 0 | The math of Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): spending growth next to income growth per category, year over year, the... |
@@ -65,7 +65,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 51 | `screens/dash.js` | 508 | 29 | 5 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
 | 52 | `features/games.js` | 678 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
 | 53 | `features/games2.js` | 1,456 | 40 | 18 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
-| 54 | `features/goalrank.js` | 225 | 8 | 5 | 0 | Goals you keep, then rank (UX pass, item 29) |
+| 54 | `features/goalrank.js` | 232 | 9 | 5 | 0 | Goals you keep, then rank (UX pass, item 29) |
 | 55 | `features/year.js` | 783 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
 | 56 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
 | 57 | `screens/profiles.js` | 137 | 6 | 4 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
@@ -208,27 +208,28 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 194 | `features/life.js` | 549 | 25 | 5 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
 | 195 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
 | 196 | `features/feel.js` | 530 | 15 | 4 | 0 | Game feel (run Finish everything partly built, Part 20) |
-| 197 | `features/erain.js` | 253 | 14 | 0 | 0 | The 60-second demo "Find your era" (era/index.html, run CC-1, item 7, Nov 27 2026), and the way its answers come into the game |
+| 197 | `features/erain.js` | 259 | 14 | 0 | 0 | The 60-second demo "Find your era" (era/index.html, run CC-1, item 7, Nov 27 2026), and the way its answers come into the game |
 | 198 | `features/guild.js` | 264 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
 | 199 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 200 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 201 | `features/results.js` | 569 | 22 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 202 | `features/couldbe.js` | 1,702 | 64 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
-| 203 | `features/cbtax.js` | 456 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
-| 204 | `features/cbflex.js` | 321 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
-| 205 | `features/cblater.js` | 244 | 7 | 3 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
-| 206 | `features/cbmoves.js` | 240 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
-| 207 | `features/cbyesbut.js` | 548 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
-| 208 | `features/cbstack.js` | 189 | 4 | 6 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
-| 209 | `features/cbreveal.js` | 487 | 14 | 9 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
-| 210 | `features/firstweek.js` | 208 | 12 | 1 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
-| 211 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
-| 212 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
-| 213 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
-| 214 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 215 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 216 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 217 | `features/built.js` | 2,026 | 4 | 36 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 202 | `features/couldbe.js` | 1,897 | 68 | 13 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 203 | `features/wants.js` | 154 | 8 | 1 | 0 | What you want (run SLAM-ONBOARD-1, Nov 27 2026): the first screen of a new player, before the four questions of What it is / What it could be |
+| 204 | `features/cbtax.js` | 456 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
+| 205 | `features/cbflex.js` | 321 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
+| 206 | `features/cblater.js` | 244 | 7 | 3 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
+| 207 | `features/cbmoves.js` | 240 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
+| 208 | `features/cbyesbut.js` | 548 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
+| 209 | `features/cbstack.js` | 189 | 4 | 6 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
+| 210 | `features/cbreveal.js` | 536 | 15 | 10 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
+| 211 | `features/firstweek.js` | 208 | 12 | 1 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
+| 212 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
+| 213 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
+| 214 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
+| 215 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 216 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 217 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 218 | `features/built.js` | 2,043 | 4 | 37 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -246,7 +247,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1071 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1078 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

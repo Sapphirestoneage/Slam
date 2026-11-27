@@ -368,3 +368,19 @@ Item 7 ran early, in its own lane, for the event of Nov 30. The other items of C
 | Item | Status | What | Where |
 |---|---|---|---|
 | 7 | Done | A page outside the game asks six or seven questions by taps and shows an era, one next move and "Start my full game". The era comes from the game's own rule, and the game opens with the answers filled in. A printable US Letter page holds a QR code to `https://play.stresslessaboutmoney.com/game/era/`. Not verified from the build machine: that the new address answers (the network there blocks it). Open points: QUESTIONS 654 | `game/era/` (`index.html`, `print.html`, `README.md`), `game/features/erain.js`, `tools/game_era_build.mjs`, `tools/qr_era.py`, `game/tests/find-your-era-demo.js`, `test/era-demo.test.js` |
+
+## RUN 13: SLAM-ONBOARD-1, the front door and the new order (Nov 27 2026)
+
+Two workers, one after the other. Worker 1 did tasks 1, 2, 3, 5, 6 and 7. Tasks 4, 8 and 9, the page-order test and the promotion are worker 2's.
+
+| Task | Status | What | Where |
+|---|---|---|---|
+| 1 | Done | The landing has one promise ("See your FI number, then see how much smaller it could be."), the sub line, Start as the one primary button, and one trust line under the buttons. The landing, the four questions and the reveal say "your FI number". The two welcome texts under the landing say the same. | `game/account/door.js`, `game/screens/ux.js`, `game/screens/ui.js` |
+| 2 | Done | The launch link is https://play.stresslessaboutmoney.com/game/ in the game, the QR tool, the QR code, the share link of Founding Testers and the docs. Links inside the game are relative, so both addresses work. Not checked from here: the network of the session does not reach the new address. | `docs/LAUNCH-LINK.md`, `tools/qr_slam.py`, `game/data/qr.js`, `docs/qr-slam.png` |
+| 3 | Done | What you want: the first screen of a new player. Eleven chips and Something else (the field Add my own of the card draft). The picks are goals in `c.goals`, and tags at the top of the flow. | `game/features/wants.js`, `game/tests/what-you-want.js` |
+| 5 | Done | The chip "No idea, use typical" on spend, invested and saved: a published value for the age, a Guess. The reveal names each one with "Make it mine". | `game/features/couldbe.js` (`cbTypical`), `data/reference-2026.json` (`typicalInvested`), `tools/game_paylayers_build.mjs` (`LY_TYP_REF`) |
+| 6 | Done | From the first way screen on, the two numbers are one slim strip that stays at the top; the number counts to its new value. | `cbTop`, `cbSlim` in `game/features/couldbe.js` |
+| 7 | Done | The last screen shows the first move (the #1 move of Next Steps): what, why, about how long, Add to my steps. The first button is "Keep my plan: make a free account". | `cbEndView`, `cbFirstMove` in `game/features/cbreveal.js` |
+| 4, 8, 9 | Not started | Worker 2. | |
+
+Taps from the landing to the last screen, fastest path: 9 before, 10 now (the new screen costs one tap: Skip for now).

@@ -220,7 +220,9 @@ function erDrop() {
     report(e, "erain.js: erDrop");
   }
 }
-/* Part of cbStart() in couldbe.js. A new player who comes from the demo: the four answers of the entry are filled
+/* Part of cbStart() in couldbe.js and of wnLeave() in wants.js. Since run SLAM-ONBOARD-1 the first screen of a new
+   player is What you want: cbStart() opens it, this function does nothing there (the step is not the entry), and
+   wnLeave() calls it again when the player leaves that screen. A new player who comes from the demo: the four answers of the entry are filled
    in. With all four, the profile is made the way cbMake() makes it, with the setup answers of the demo added, and
    the flow goes on at "What it is". With fewer, the entry opens at the first open question. Returns true when it
    made the profile. */
@@ -232,7 +234,8 @@ function erIn() {
     erDrop();
     const a = erCb(A);
     if (!Object.keys(a).length) return false;
-    const base = erBase(A);
+    const base = erBase(A),
+      wants = W.o && W.o.wants; /* wants.js: the picks of What you want, the screen before the entry */
     if (!base) {
       W.o.a = Object.assign(W.o.a || {}, a);
       W.q = Math.max(
@@ -242,6 +245,9 @@ function erIn() {
       drawSheet();
       return false;
     }
+    /* the picks become goals, as cbMake() in couldbe.js makes them */
+    if (wants && wants.length && typeof wnGoals === "function")
+      base.goals = wnGoals(Object.assign({}, base, { spend: Math.max(1, Math.round(a.spend.v)) }), wants);
     W = { kind: "setup", mode: "new", step: 0, o: base, cbMade: true };
     finishSetup();
     return true;

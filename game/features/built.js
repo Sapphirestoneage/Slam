@@ -867,6 +867,23 @@ const WB = [
   ],
   [
     "see",
+    "What you want first, No idea, use typical, the slim strip and your first move",
+    "b",
+    () =>
+      WB_FN("wnView") &&
+      WB_FN("wnGoals") &&
+      WB_FN("wnMatch") &&
+      WB_FN("cbTypical") &&
+      WB_FN("cbSlim") &&
+      WB_FN("cbFirstMove") &&
+      WB_HAS("wnnext") &&
+      WB_HAS("cbtyp") &&
+      WB_HAS("cbmine"),
+    "Run SLAM-ONBOARD-1. A new player first taps what they want; the picks become goals and show as tags at the top of the flow. Each of the three money questions has a chip No idea, use typical: a published value for your age, as a Guess, and the reveal offers Make it mine. From the first way on the two numbers are one slim strip. The last screen shows your first move with why, about how long, and Add to my steps.",
+    "cb",
+  ],
+  [
+    "see",
     "What it could be: the reveal, the card to share, Home and the day after",
     "b",
     () =>
@@ -881,7 +898,7 @@ const WB = [
       WB_HAS("cbshare") &&
       WB_HAS("cbaddstep") &&
       WB_HAS("cbback"),
-    "Batch B, phase 4. The reveal shows What it is and What it could be side by side, the difference in dollars and in years, what you counted (each one opens its deeper feature) and the finished chart with every switch. The moves before FI and the Yes, but card keep their months on their own line, and an i says why. The last screen has three buttons: Save my plan, Share my card, Tell Eli what broke. The card is an image with ages and names and no dollar amount. Your top 3 moves are cards on Next Steps, with Add to my steps. Home starts with the two numbers and a small chart, and a tap opens the flow where you left off. On a later day the tile says what changed since last time.",
+    "Batch B, phase 4. The reveal shows What it is and What it could be side by side, the difference in dollars and in years, what you counted (each one opens its deeper feature) and the finished chart with every switch. The moves before FI and the Yes, but card keep their months on their own line, and an i says why. The last screen has three buttons: Keep my plan, Share my card, Tell Eli what broke. The card is an image with ages and names and no dollar amount. Your top 3 moves are cards on Next Steps, with Add to my steps. Home starts with the two numbers and a small chart, and a tap opens the flow where you left off. On a later day the tile says what changed since last time.",
     "cb",
   ],
   [

@@ -434,3 +434,14 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
   649); a new player sees "No drop yet" on the tax way; state rules for retirement income; a pension's own start age;
   a last day for the calmer bar; Where am I does not point back to an unfinished "Finish setup"; the add-on switch for
   the held pages; the web app still shows those pages to everyone.
+
+
+## Run SLAM-ONBOARD-1, worker 1 (Nov 27 2026)
+
+- **The order of the first screens.** `cbOpen()` sets `W.step` to `wants` for a new player, and `cbSheet()` draws `wnView()` for it (`features/wants.js`). "Next: four quick taps" and "Skip for now" set `W.step` to `entry`. Then the steps of `CB_STEPS`. The wants screen is not in `CB_STEPS`: `cbStepAdd` puts a step after the entry, before the reveal.
+- **The picks.** Before the player is made: `W.wp` (ids of `WN_LIST`), `W.own` (names from Add my own), then `W.o.wants` (`[{ k, n }]`). After: goals in `c.goals` with the name of the chip (`g.n`), Someday (`era` null), no rank. During the rest of setup they are in `W.o.goals`. No new key on a profile.
+- **Read a pick.** `wnMatch(c, tags)` gives the first want that is about one of the tags, or null: a lever (`interest`, `income`, `spending`, `taxes`), a round (`D`, `A`, `I`, `T`, `E`) or `fi`. In a setup round pass `W.o` as the profile. Change the tags in `WN_LIST`.
+- **A typical answer.** `c.x.cb.a[q].typ` is true. `cbTypUsed(c)` lists them until the rest of setup is done. Sources: spend, BLS Consumer Expenditure Survey 2024 by age (total less personal insurance and pensions); invested, the Fed's Survey of Consumer Finances 2025 (read through a web search, not yet checked on the Fed's page); saved, the BEA personal saving rate on the typical spending of the age.
+- **The strip.** `cbSlim(step)` is false for `is`, `chart` and `layer`, true for every other step. A new step of the flow gets the strip by itself.
+- **Taps.** 6 to the first number, 9 to the reveal, 10 to the last screen (one more than before: the new screen).
+- **A test player.** `X("start"); X("wnskip");` then the four taps. A tap on a range chip does nothing while What you want is open.

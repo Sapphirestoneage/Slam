@@ -376,7 +376,10 @@
   doorGate(done);
   doorStart();
   chk("the copy of the account is put away", store[KEY + ".was"] === "the game of user-1" && !("su_uid" in store));
-  chk("and the visitor starts the first question on a new game", G.demo && W && W.kind === "cb" && W.step === "entry");
+  chk(
+    "and the visitor starts the first screen (What you want) on a new game",
+    G.demo && W && W.kind === "cb" && W.step === "wants"
+  );
   closeSheet();
   UX_NOSAMPLE = true; /* the harness turns the welcome screen off; this check needs it */
   render();
