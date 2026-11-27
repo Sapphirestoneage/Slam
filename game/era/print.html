@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find your era: the one-page handout</title>
+<style>
+/* One US Letter page. On paper: dark ink on white, so it prints clean on any printer. On a screen: the sheet on
+   the dark sapphire of the game, with a Print button above it. */
+@page{size:letter;margin:0}
+:root{--ink:#02061a;--panel:#071030;--line:#1d3684;--sap:#2046d4;--muted:#44527f;--a3:#7d9cff}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ink);color:#fff;font:16px/1.4 "Source Sans 3","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tools{max-width:8.5in;margin:0 auto;padding:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.tools p{margin:0;font-size:14px;color:#c6d1f7;flex:1;min-width:200px}
+button,a.linkbtn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:10px;border:2px solid var(--a3);background:#3f6dff;color:#fff;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.45);text-decoration:none;display:inline-flex;align-items:center}
+a.linkbtn{background:#0b1a47;border-color:var(--line);font-weight:600}
+button:focus-visible,a:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.fit{overflow:hidden}
+.sheet{width:8.5in;height:11in;margin:0 auto 24px;background:#fff;color:var(--ink);padding:.6in .7in;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:space-between;transform-origin:top left}
+.brand{font-size:15pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sap)}
+h1{margin:.08in 0 0;font-size:46pt;line-height:1.05;text-wrap:balance}
+.promise{margin:.1in 0 0;font-size:20pt;color:var(--muted)}
+.qr{width:4.6in;height:4.6in;border:6pt solid var(--ink);border-radius:.25in;padding:.12in;background:#fff}
+.qr svg{display:block;width:100%;height:100%}
+.link{font-size:19pt;font-weight:700;word-break:break-word}
+.link small{display:block;font-size:12pt;font-weight:400;color:var(--muted)}
+ol{list-style:none;margin:0;padding:0;display:flex;gap:.25in;width:100%}
+ol li{flex:1;border:1.5pt solid var(--line);border-radius:.14in;padding:.12in .1in;font-size:13pt;line-height:1.25}
+ol b{display:block;font-size:20pt;color:var(--sap)}
+.by{font-size:14pt;font-weight:700}
+.fine{font-size:10pt;color:var(--muted)}
+@media print{
+  body{background:#fff}
+  .tools{display:none}
+  .fit{overflow:visible;height:auto!important}
+  .sheet{margin:0;transform:none!important;page-break-after:avoid}
+}
+</style>
+</head>
+<body>
+<div class="tools">
+  <button id="print">Print this page</button>
+  <a class="linkbtn" href="./">Open the demo</a>
+  <p>One US Letter page. In the print window choose Letter, 100% scale and no headers or footers.</p>
+</div>
+<div class="fit" id="fit">
+<div class="sheet" id="sheet">
+  <div>
+    <div class="brand">SLAM the Game</div>
+    <h1>Find your money era in 60 seconds</h1>
+    <p class="promise">Taps only. No typing. No account.</p>
+  </div>
+  <div class="qr">
+<!-- QR:START made by tools/qr_era.py, do not edit by hand -->
+<svg viewBox="0 0 45 45" role="img" aria-label="QR code for Find your era" shape-rendering="crispEdges"><rect width="45" height="45" fill="#fff"/><path d="M4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM7,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM10,4h1v1h-1zM12,4h1v1h-1zM13,4h1v1h-1zM14,4h1v1h-1zM15,4h1v1h-1zM18,4h1v1h-1zM19,4h1v1h-1zM23,4h1v1h-1zM25,4h1v1h-1zM28,4h1v1h-1zM29,4h1v1h-1zM31,4h1v1h-1zM34,4h1v1h-1zM35,4h1v1h-1zM36,4h1v1h-1zM37,4h1v1h-1zM38,4h1v1h-1zM39,4h1v1h-1zM40,4h1v1h-1zM4,5h1v1h-1zM10,5h1v1h-1zM12,5h1v1h-1zM13,5h1v1h-1zM14,5h1v1h-1zM16,5h1v1h-1zM18,5h1v1h-1zM20,5h1v1h-1zM25,5h1v1h-1zM27,5h1v1h-1zM28,5h1v1h-1zM29,5h1v1h-1zM30,5h1v1h-1zM31,5h1v1h-1zM32,5h1v1h-1zM34,5h1v1h-1zM40,5h1v1h-1zM4,6h1v1h-1zM6,6h1v1h-1zM7,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM17,6h1v1h-1zM21,6h1v1h-1zM23,6h1v1h-1zM28,6h1v1h-1zM31,6h1v1h-1zM32,6h1v1h-1zM34,6h1v1h-1zM36,6h1v1h-1zM37,6h1v1h-1zM38,6h1v1h-1zM40,6h1v1h-1zM4,7h1v1h-1zM6,7h1v1h-1zM7,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM13,7h1v1h-1zM16,7h1v1h-1zM17,7h1v1h-1zM19,7h1v1h-1zM20,7h1v1h-1zM23,7h1v1h-1zM24,7h1v1h-1zM27,7h1v1h-1zM31,7h1v1h-1zM34,7h1v1h-1zM36,7h1v1h-1zM37,7h1v1h-1zM38,7h1v1h-1zM40,7h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM12,8h1v1h-1zM13,8h1v1h-1zM15,8h1v1h-1zM16,8h1v1h-1zM17,8h1v1h-1zM18,8h1v1h-1zM22,8h1v1h-1zM24,8h1v1h-1zM26,8h1v1h-1zM27,8h1v1h-1zM30,8h1v1h-1zM31,8h1v1h-1zM32,8h1v1h-1zM34,8h1v1h-1zM36,8h1v1h-1zM37,8h1v1h-1zM38,8h1v1h-1zM40,8h1v1h-1zM4,9h1v1h-1zM10,9h1v1h-1zM14,9h1v1h-1zM15,9h1v1h-1zM18,9h1v1h-1zM23,9h1v1h-1zM25,9h1v1h-1zM26,9h1v1h-1zM27,9h1v1h-1zM28,9h1v1h-1zM29,9h1v1h-1zM31,9h1v1h-1zM32,9h1v1h-1zM34,9h1v1h-1zM40,9h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM7,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM16,10h1v1h-1zM18,10h1v1h-1zM20,10h1v1h-1zM22,10h1v1h-1zM24,10h1v1h-1zM26,10h1v1h-1zM28,10h1v1h-1zM30,10h1v1h-1zM32,10h1v1h-1zM34,10h1v1h-1zM35,10h1v1h-1zM36,10h1v1h-1zM37,10h1v1h-1zM38,10h1v1h-1zM39,10h1v1h-1zM40,10h1v1h-1zM12,11h1v1h-1zM14,11h1v1h-1zM17,11h1v1h-1zM21,11h1v1h-1zM22,11h1v1h-1zM24,11h1v1h-1zM25,11h1v1h-1zM26,11h1v1h-1zM27,11h1v1h-1zM28,11h1v1h-1zM29,11h1v1h-1zM30,11h1v1h-1zM32,11h1v1h-1zM5,12h1v1h-1zM6,12h1v1h-1zM8,12h1v1h-1zM10,12h1v1h-1zM11,12h1v1h-1zM16,12h1v1h-1zM18,12h1v1h-1zM19,12h1v1h-1zM20,12h1v1h-1zM23,12h1v1h-1zM24,12h1v1h-1zM25,12h1v1h-1zM27,12h1v1h-1zM30,12h1v1h-1zM31,12h1v1h-1zM32,12h1v1h-1zM34,12h1v1h-1zM36,12h1v1h-1zM37,12h1v1h-1zM38,12h1v1h-1zM39,12h1v1h-1zM40,12h1v1h-1zM6,13h1v1h-1zM7,13h1v1h-1zM9,13h1v1h-1zM14,13h1v1h-1zM15,13h1v1h-1zM16,13h1v1h-1zM18,13h1v1h-1zM22,13h1v1h-1zM23,13h1v1h-1zM24,13h1v1h-1zM25,13h1v1h-1zM26,13h1v1h-1zM28,13h1v1h-1zM30,13h1v1h-1zM31,13h1v1h-1zM32,13h1v1h-1zM35,13h1v1h-1zM37,13h1v1h-1zM39,13h1v1h-1zM40,13h1v1h-1zM6,14h1v1h-1zM8,14h1v1h-1zM10,14h1v1h-1zM11,14h1v1h-1zM14,14h1v1h-1zM19,14h1v1h-1zM20,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM23,14h1v1h-1zM29,14h1v1h-1zM31,14h1v1h-1zM32,14h1v1h-1zM34,14h1v1h-1zM35,14h1v1h-1zM36,14h1v1h-1zM37,14h1v1h-1zM38,14h1v1h-1zM39,14h1v1h-1zM40,14h1v1h-1zM5,15h1v1h-1zM6,15h1v1h-1zM9,15h1v1h-1zM11,15h1v1h-1zM14,15h1v1h-1zM15,15h1v1h-1zM17,15h1v1h-1zM18,15h1v1h-1zM19,15h1v1h-1zM21,15h1v1h-1zM24,15h1v1h-1zM25,15h1v1h-1zM26,15h1v1h-1zM28,15h1v1h-1zM29,15h1v1h-1zM30,15h1v1h-1zM32,15h1v1h-1zM33,15h1v1h-1zM35,15h1v1h-1zM37,15h1v1h-1zM40,15h1v1h-1zM5,16h1v1h-1zM9,16h1v1h-1zM10,16h1v1h-1zM11,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM14,16h1v1h-1zM15,16h1v1h-1zM18,16h1v1h-1zM20,16h1v1h-1zM24,16h1v1h-1zM25,16h1v1h-1zM26,16h1v1h-1zM27,16h1v1h-1zM29,16h1v1h-1zM31,16h1v1h-1zM32,16h1v1h-1zM33,16h1v1h-1zM34,16h1v1h-1zM39,16h1v1h-1zM4,17h1v1h-1zM7,17h1v1h-1zM18,17h1v1h-1zM21,17h1v1h-1zM24,17h1v1h-1zM28,17h1v1h-1zM29,17h1v1h-1zM30,17h1v1h-1zM32,17h1v1h-1zM34,17h1v1h-1zM35,17h1v1h-1zM37,17h1v1h-1zM38,17h1v1h-1zM40,17h1v1h-1zM5,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM10,18h1v1h-1zM11,18h1v1h-1zM13,18h1v1h-1zM14,18h1v1h-1zM16,18h1v1h-1zM19,18h1v1h-1zM24,18h1v1h-1zM25,18h1v1h-1zM29,18h1v1h-1zM30,18h1v1h-1zM34,18h1v1h-1zM35,18h1v1h-1zM36,18h1v1h-1zM38,18h1v1h-1zM39,18h1v1h-1zM40,18h1v1h-1zM4,19h1v1h-1zM8,19h1v1h-1zM11,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM17,19h1v1h-1zM20,19h1v1h-1zM22,19h1v1h-1zM24,19h1v1h-1zM27,19h1v1h-1zM29,19h1v1h-1zM30,19h1v1h-1zM32,19h1v1h-1zM34,19h1v1h-1zM35,19h1v1h-1zM36,19h1v1h-1zM39,19h1v1h-1zM4,20h1v1h-1zM6,20h1v1h-1zM10,20h1v1h-1zM11,20h1v1h-1zM12,20h1v1h-1zM13,20h1v1h-1zM15,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM21,20h1v1h-1zM23,20h1v1h-1zM28,20h1v1h-1zM29,20h1v1h-1zM31,20h1v1h-1zM33,20h1v1h-1zM34,20h1v1h-1zM35,20h1v1h-1zM37,20h1v1h-1zM39,20h1v1h-1zM40,20h1v1h-1zM4,21h1v1h-1zM8,21h1v1h-1zM9,21h1v1h-1zM12,21h1v1h-1zM13,21h1v1h-1zM15,21h1v1h-1zM16,21h1v1h-1zM17,21h1v1h-1zM21,21h1v1h-1zM22,21h1v1h-1zM27,21h1v1h-1zM28,21h1v1h-1zM32,21h1v1h-1zM33,21h1v1h-1zM34,21h1v1h-1zM37,21h1v1h-1zM39,21h1v1h-1zM40,21h1v1h-1zM4,22h1v1h-1zM7,22h1v1h-1zM10,22h1v1h-1zM11,22h1v1h-1zM14,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM20,22h1v1h-1zM21,22h1v1h-1zM23,22h1v1h-1zM24,22h1v1h-1zM25,22h1v1h-1zM27,22h1v1h-1zM28,22h1v1h-1zM29,22h1v1h-1zM33,22h1v1h-1zM35,22h1v1h-1zM39,22h1v1h-1zM40,22h1v1h-1zM4,23h1v1h-1zM7,23h1v1h-1zM9,23h1v1h-1zM13,23h1v1h-1zM15,23h1v1h-1zM16,23h1v1h-1zM21,23h1v1h-1zM24,23h1v1h-1zM25,23h1v1h-1zM28,23h1v1h-1zM29,23h1v1h-1zM30,23h1v1h-1zM31,23h1v1h-1zM32,23h1v1h-1zM33,23h1v1h-1zM34,23h1v1h-1zM35,23h1v1h-1zM40,23h1v1h-1zM4,24h1v1h-1zM5,24h1v1h-1zM6,24h1v1h-1zM7,24h1v1h-1zM9,24h1v1h-1zM10,24h1v1h-1zM11,24h1v1h-1zM14,24h1v1h-1zM17,24h1v1h-1zM18,24h1v1h-1zM20,24h1v1h-1zM25,24h1v1h-1zM27,24h1v1h-1zM28,24h1v1h-1zM29,24h1v1h-1zM32,24h1v1h-1zM33,24h1v1h-1zM34,24h1v1h-1zM35,24h1v1h-1zM39,24h1v1h-1zM4,25h1v1h-1zM5,25h1v1h-1zM6,25h1v1h-1zM7,25h1v1h-1zM8,25h1v1h-1zM9,25h1v1h-1zM12,25h1v1h-1zM15,25h1v1h-1zM19,25h1v1h-1zM20,25h1v1h-1zM24,25h1v1h-1zM25,25h1v1h-1zM26,25h1v1h-1zM28,25h1v1h-1zM33,25h1v1h-1zM34,25h1v1h-1zM38,25h1v1h-1zM39,25h1v1h-1zM40,25h1v1h-1zM4,26h1v1h-1zM5,26h1v1h-1zM6,26h1v1h-1zM7,26h1v1h-1zM10,26h1v1h-1zM11,26h1v1h-1zM12,26h1v1h-1zM15,26h1v1h-1zM18,26h1v1h-1zM20,26h1v1h-1zM23,26h1v1h-1zM24,26h1v1h-1zM29,26h1v1h-1zM32,26h1v1h-1zM33,26h1v1h-1zM36,26h1v1h-1zM39,26h1v1h-1zM40,26h1v1h-1zM4,27h1v1h-1zM5,27h1v1h-1zM7,27h1v1h-1zM11,27h1v1h-1zM13,27h1v1h-1zM14,27h1v1h-1zM15,27h1v1h-1zM16,27h1v1h-1zM18,27h1v1h-1zM20,27h1v1h-1zM21,27h1v1h-1zM22,27h1v1h-1zM23,27h1v1h-1zM24,27h1v1h-1zM25,27h1v1h-1zM27,27h1v1h-1zM33,27h1v1h-1zM34,27h1v1h-1zM39,27h1v1h-1zM40,27h1v1h-1zM4,28h1v1h-1zM7,28h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM10,28h1v1h-1zM11,28h1v1h-1zM12,28h1v1h-1zM16,28h1v1h-1zM18,28h1v1h-1zM19,28h1v1h-1zM20,28h1v1h-1zM23,28h1v1h-1zM24,28h1v1h-1zM25,28h1v1h-1zM28,28h1v1h-1zM31,28h1v1h-1zM33,28h1v1h-1zM36,28h1v1h-1zM40,28h1v1h-1zM6,29h1v1h-1zM7,29h1v1h-1zM8,29h1v1h-1zM9,29h1v1h-1zM12,29h1v1h-1zM13,29h1v1h-1zM15,29h1v1h-1zM20,29h1v1h-1zM23,29h1v1h-1zM28,29h1v1h-1zM29,29h1v1h-1zM31,29h1v1h-1zM33,29h1v1h-1zM36,29h1v1h-1zM38,29h1v1h-1zM39,29h1v1h-1zM40,29h1v1h-1zM4,30h1v1h-1zM6,30h1v1h-1zM10,30h1v1h-1zM12,30h1v1h-1zM14,30h1v1h-1zM15,30h1v1h-1zM17,30h1v1h-1zM18,30h1v1h-1zM19,30h1v1h-1zM20,30h1v1h-1zM21,30h1v1h-1zM23,30h1v1h-1zM25,30h1v1h-1zM28,30h1v1h-1zM30,30h1v1h-1zM34,30h1v1h-1zM37,30h1v1h-1zM39,30h1v1h-1zM40,30h1v1h-1zM5,31h1v1h-1zM6,31h1v1h-1zM7,31h1v1h-1zM8,31h1v1h-1zM11,31h1v1h-1zM13,31h1v1h-1zM14,31h1v1h-1zM15,31h1v1h-1zM18,31h1v1h-1zM20,31h1v1h-1zM22,31h1v1h-1zM23,31h1v1h-1zM24,31h1v1h-1zM25,31h1v1h-1zM26,31h1v1h-1zM29,31h1v1h-1zM31,31h1v1h-1zM34,31h1v1h-1zM36,31h1v1h-1zM37,31h1v1h-1zM4,32h1v1h-1zM6,32h1v1h-1zM7,32h1v1h-1zM8,32h1v1h-1zM10,32h1v1h-1zM14,32h1v1h-1zM15,32h1v1h-1zM18,32h1v1h-1zM19,32h1v1h-1zM25,32h1v1h-1zM28,32h1v1h-1zM29,32h1v1h-1zM32,32h1v1h-1zM33,32h1v1h-1zM34,32h1v1h-1zM35,32h1v1h-1zM36,32h1v1h-1zM38,32h1v1h-1zM39,32h1v1h-1zM12,33h1v1h-1zM13,33h1v1h-1zM14,33h1v1h-1zM18,33h1v1h-1zM19,33h1v1h-1zM20,33h1v1h-1zM21,33h1v1h-1zM22,33h1v1h-1zM23,33h1v1h-1zM25,33h1v1h-1zM28,33h1v1h-1zM29,33h1v1h-1zM31,33h1v1h-1zM32,33h1v1h-1zM36,33h1v1h-1zM40,33h1v1h-1zM4,34h1v1h-1zM5,34h1v1h-1zM6,34h1v1h-1zM7,34h1v1h-1zM8,34h1v1h-1zM9,34h1v1h-1zM10,34h1v1h-1zM12,34h1v1h-1zM13,34h1v1h-1zM17,34h1v1h-1zM19,34h1v1h-1zM22,34h1v1h-1zM23,34h1v1h-1zM24,34h1v1h-1zM26,34h1v1h-1zM28,34h1v1h-1zM30,34h1v1h-1zM31,34h1v1h-1zM32,34h1v1h-1zM34,34h1v1h-1zM36,34h1v1h-1zM38,34h1v1h-1zM39,34h1v1h-1zM40,34h1v1h-1zM4,35h1v1h-1zM10,35h1v1h-1zM13,35h1v1h-1zM14,35h1v1h-1zM16,35h1v1h-1zM17,35h1v1h-1zM18,35h1v1h-1zM19,35h1v1h-1zM20,35h1v1h-1zM24,35h1v1h-1zM25,35h1v1h-1zM26,35h1v1h-1zM27,35h1v1h-1zM28,35h1v1h-1zM29,35h1v1h-1zM30,35h1v1h-1zM32,35h1v1h-1zM36,35h1v1h-1zM40,35h1v1h-1zM4,36h1v1h-1zM6,36h1v1h-1zM7,36h1v1h-1zM8,36h1v1h-1zM10,36h1v1h-1zM12,36h1v1h-1zM13,36h1v1h-1zM14,36h1v1h-1zM16,36h1v1h-1zM17,36h1v1h-1zM19,36h1v1h-1zM21,36h1v1h-1zM24,36h1v1h-1zM26,36h1v1h-1zM27,36h1v1h-1zM29,36h1v1h-1zM32,36h1v1h-1zM33,36h1v1h-1zM34,36h1v1h-1zM35,36h1v1h-1zM36,36h1v1h-1zM37,36h1v1h-1zM40,36h1v1h-1zM4,37h1v1h-1zM6,37h1v1h-1zM7,37h1v1h-1zM8,37h1v1h-1zM10,37h1v1h-1zM13,37h1v1h-1zM14,37h1v1h-1zM17,37h1v1h-1zM20,37h1v1h-1zM21,37h1v1h-1zM23,37h1v1h-1zM24,37h1v1h-1zM25,37h1v1h-1zM26,37h1v1h-1zM27,37h1v1h-1zM29,37h1v1h-1zM32,37h1v1h-1zM33,37h1v1h-1zM36,37h1v1h-1zM39,37h1v1h-1zM40,37h1v1h-1zM4,38h1v1h-1zM6,38h1v1h-1zM7,38h1v1h-1zM8,38h1v1h-1zM10,38h1v1h-1zM12,38h1v1h-1zM14,38h1v1h-1zM20,38h1v1h-1zM21,38h1v1h-1zM23,38h1v1h-1zM24,38h1v1h-1zM29,38h1v1h-1zM32,38h1v1h-1zM33,38h1v1h-1zM35,38h1v1h-1zM36,38h1v1h-1zM37,38h1v1h-1zM38,38h1v1h-1zM40,38h1v1h-1zM4,39h1v1h-1zM10,39h1v1h-1zM12,39h1v1h-1zM13,39h1v1h-1zM14,39h1v1h-1zM15,39h1v1h-1zM17,39h1v1h-1zM22,39h1v1h-1zM24,39h1v1h-1zM25,39h1v1h-1zM26,39h1v1h-1zM27,39h1v1h-1zM29,39h1v1h-1zM30,39h1v1h-1zM31,39h1v1h-1zM32,39h1v1h-1zM34,39h1v1h-1zM39,39h1v1h-1zM4,40h1v1h-1zM5,40h1v1h-1zM6,40h1v1h-1zM7,40h1v1h-1zM8,40h1v1h-1zM9,40h1v1h-1zM10,40h1v1h-1zM13,40h1v1h-1zM16,40h1v1h-1zM17,40h1v1h-1zM18,40h1v1h-1zM20,40h1v1h-1zM23,40h1v1h-1zM25,40h1v1h-1zM28,40h1v1h-1zM29,40h1v1h-1zM31,40h1v1h-1zM32,40h1v1h-1zM34,40h1v1h-1zM35,40h1v1h-1zM36,40h1v1h-1zM37,40h1v1h-1zM39,40h1v1h-1zM40,40h1v1h-1z"/></svg>
+<!-- QR:END -->
+  </div>
+  <div class="link">play.stresslessaboutmoney.com/game/era/<small>Point your phone camera at the code, or type the address.</small></div>
+  <ol>
+    <li><b>1</b>Scan the code</li>
+    <li><b>2</b>Tap your answers</li>
+    <li><b>3</b>See your era and your one next move</li>
+  </ol>
+  <div>
+    <div class="by">Built by Eli Saperstein, money coach. 250+ people coached.</div>
+    <div class="fine"><span id="edu"></span> Nothing is sent: your answers stay on your phone.</div>
+  </div>
+</div>
+</div>
+<script src="../account/trust.js"></script>
+<script>
+/* The one line "education, not advice" of the game (account/trust.js). */
+if (typeof TRUST_LINE === "string") document.getElementById("edu").textContent = TRUST_LINE;
+document.getElementById("print").addEventListener("click", () => window.print());
+/* On a screen narrower than the sheet, show the whole sheet smaller. Paper is not changed. */
+function fit() {
+  const s = document.getElementById("sheet"),
+    f = document.getElementById("fit"),
+    k = Math.min(1, document.documentElement.clientWidth / s.offsetWidth);
+  s.style.transform = k < 1 ? "scale(" + k + ")" : "";
+  s.style.marginLeft = k < 1 ? "0" : "";
+  f.style.height = k < 1 ? s.offsetHeight * k + "px" : "";
+}
+window.addEventListener("resize", fit);
+fit();
+</script>
+</body>
+</html>

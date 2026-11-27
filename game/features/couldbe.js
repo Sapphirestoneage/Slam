@@ -1377,6 +1377,7 @@ function cbStart() {
     if (!G.demo) return false;
     cbOpen();
     CB.taps = 1; /* the tap on Start */
+    if (typeof erIn === "function") erIn(); /* erain.js: the answers of the demo Find your era come in */
     return true;
   } catch (e) {
     report(e, "couldbe.js: cbStart");
