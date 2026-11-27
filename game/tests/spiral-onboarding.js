@@ -49,7 +49,7 @@
   X("set", "I rent", "homeQ");
   X("tog", "Roommates", "live");
   X("smdone", null, "live");
-  chk("roommates: how many (amounts.js)", ov().includes("How many roommates?"));
+  chk("roommates: how many (amounts.js)", ov().includes("How many roommates live with you?"));
   X("set", "2", "roommateQ");
   chk("then your people", W.step === 3, W.step);
   X("set", "Single by choice", "rel");
@@ -58,7 +58,7 @@
   h = ov();
   chk(
     "About you ends on how money feels: the page waits for it",
-    W.step === 3 && h.includes("When you think about your money") && h.includes('data-a="smskip"'),
+    W.step === 3 && h.includes("How do you feel when you think about money?") && h.includes('data-a="smskip"'),
     W.step
   );
   X("set", "Mostly fine", "feel0");
@@ -108,7 +108,7 @@
   N();
   chk("A asks each account next (amounts.js)", W.step === 11, W.step);
   N();
-  chk("A has a second page: your cushion", W.step === 7 && /A \$1,000 surprise bill/.test(ov()));
+  chk("A has a second page: your cushion", W.step === 7 && /A surprise \$1,000 bill/.test(ov()));
   X("set", "No", "can1k");
   chk("the checklist shows the answer as a line above", ov().includes("✓ <b>A $1,000 surprise:</b> No"));
   X("set", "Less than a month", "cover");
@@ -152,7 +152,7 @@
   h = ov();
   chk(
     "E has a last page with one optional tap: Social Security",
-    W.step === 6 && h.includes("Social Security") && !h.includes("When you think about your money"),
+    W.step === 6 && h.includes("Social Security") && !h.includes("How do you feel when you think about money?"),
     W.step
   );
   X("set", "Yes, in full", "ssq");

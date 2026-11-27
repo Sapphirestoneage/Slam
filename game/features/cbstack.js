@@ -92,12 +92,12 @@ function cbStackView() {
     /* the chip beside a row says counted or not; the row adds only what the chip cannot say */
     state = w => (w.state.how === "did" ? ". Already yours" : w.state.how === "no" ? ". Left out" : ""),
     wayRow = w =>
-      `<div class="cbstkrow" data-fid="cb:stkway"><button class="rowbtn" data-a="cbgo" data-v="${w.id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${esc(w.words || "Open it to see the drop")}${state(w)}.</div></span><span class="caret">›</span></button>${chip(w.id, w.stacked)}</div>`,
+      `<div class="cbstkrow" data-fid="cb:stkway"><button class="rowbtn" data-a="cbgo" data-v="${w.id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${esc(w.words || "Open it to see the drop")}${state(w)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${chip(w.id, w.stacked)}</div>`,
     moveRow = r =>
-      `<div class="cbstkrow" data-fid="cb:stkmove"><button class="rowbtn" data-a="cbgo" data-v="move" data-k="${r.id}"><span><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.notyet ? ". Not yet: " + esc(r.notyet.block.toLowerCase()) : ""}${r.how === "did" ? ". Already yours" : r.how === "no" ? ". Left out" : ""}.</div></span><span class="caret">›</span></button>${chip(r.id, r.stacked)}</div>`,
+      `<div class="cbstkrow" data-fid="cb:stkmove"><button class="rowbtn" data-a="cbgo" data-v="move" data-k="${r.id}"><span><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.notyet ? ". Not yet: " + esc(r.notyet.block.toLowerCase()) : ""}${r.how === "did" ? ". Already yours" : r.how === "no" ? ". Left out" : ""}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${chip(r.id, r.stacked)}</div>`,
     hid = (list, open, name) =>
       list.length
-        ? `<details class="math cbhid" data-fid="cb:hidden"><summary><span class="i" aria-hidden="true">i</span> ${list.length} ${list.length === 1 ? "way" : "ways"} that cannot apply to you yet, and why</summary><div class="inner stack" style="gap:6px">${list.map(x => `<button class="rowbtn" data-a="cbgo" ${open(x)}><span><b>${esc(name(x))}</b><div class="tiny muted">${esc(x.why)}</div></span><span class="caret">›</span></button>`).join("")}</div></details>`
+        ? `<details class="math cbhid" data-fid="cb:hidden"><summary><span class="i" aria-hidden="true">i</span> ${list.length} ${list.length === 1 ? "way" : "ways"} that cannot apply to you yet, and why</summary><div class="inner stack" style="gap:6px">${list.map(x => `<button class="rowbtn" data-a="cbgo" ${open(x)}><span><b>${esc(name(x))}</b><div class="tiny muted">${esc(x.why)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div></details>`
         : "",
     first = W.all ? S.moves : S.moves.slice(0, CBS_FIRST);
   return (

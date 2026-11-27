@@ -213,7 +213,7 @@ function careSheet() {
                 .map(q => {
                   const S = careKeys(q).filter(([k]) => careOf(c).dates[k]).length,
                     isDue = due.some(x => x.q === q.id) || season.some(x => careQuestOf(x.id) === q);
-                  return `<button class="rowbtn cqrow" data-a="care" data-v="${q.id}"><span style="min-width:0"><b class="small">${esc(q.n)}</b><div class="tiny muted">${esc(q.steps[0])}</div></span><span class="row" style="gap:6px;flex:none">${isDue ? dkPill("Due") : S ? dkPill("Date set") : ""}<span class="caret">›</span></span></button>`;
+                  return `<button class="rowbtn cqrow" data-a="care" data-v="${q.id}"><span style="min-width:0"><b class="small">${esc(q.n)}</b><div class="tiny muted">${esc(q.steps[0])}</div></span><span class="row" style="gap:6px;flex:none">${isDue ? dkPill("Due") : S ? dkPill("Date set") : ""}<span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`;
                 })
                 .join(""),
             { right: ib("term:job_" + r) }

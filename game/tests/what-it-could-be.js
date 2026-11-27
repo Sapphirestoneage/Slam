@@ -55,7 +55,7 @@
   X("cbset", "", "", { q: "age", i: 1 });
   chk(
     "one question at a time: the second is spending",
-    W.q === 1 && /spend in a month/.test(ov()) && /Back one question/.test(ov())
+    W.q === 1 && /spend in one month/.test(ov()) && /Back one question/.test(ov())
   );
   X("cbset", "", "", { q: "spend", i: 2 });
   /* an exact amount is optional: I know it opens the box in the same spot */
@@ -197,7 +197,7 @@
   );
   chk(
     "the single years have a visible Back, and Earlier and Later",
-    /‹ Back to all years/.test(h) && /Earlier/.test(h) && /Later/.test(h)
+    /<i class=chevl aria-hidden=true><\/i> Back to all years/.test(h) && /Earlier/.test(h) && /Later/.test(h)
   );
   chk("a color in a single year opens its layer", /<rect[^>]*data-a="cblayer" data-v="inv"/.test(h));
   X("cbzoom", "");

@@ -616,7 +616,7 @@ function hhxSheet() {
 }
 /* Part of hsSheet() in house.js: the row that opens this sheet. */
 function hxSheetRow() {
-  return `<button class="rowbtn" data-a="hhx"><span><b>Households together</b><div class="tiny muted">Same question, FI together, a shared home, share by email</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="hhx"><span><b>Households together</b><div class="tiny muted">Same question, FI together, a shared home, share by email</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 
 /* ---------- actions ---------- */

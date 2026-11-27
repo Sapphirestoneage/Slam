@@ -146,7 +146,7 @@ function homeDoorRow(h) {
     if (G.demo || typeof doorGuest !== "function" || !doorGuest() || typeof homeRowAdd !== "function") return h;
     return homeRowAdd(
       h,
-      `<div class="homerow rskeep"><button class="rowbtn" data-a="doorsave"><span><b>Keep this game: make a free account</b><div class="tiny muted">Right now it is saved on this device only.</div></span><span class="caret">›</span></button></div>`
+      `<div class="homerow rskeep"><button class="rowbtn" data-a="doorsave"><span><b>Keep this game: make a free account</b><div class="tiny muted">Right now it is saved on this device only.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>`
     );
   } catch (e) {
     report(e, "okay.js: homeDoorRow");

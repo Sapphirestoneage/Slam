@@ -417,7 +417,7 @@ function cbRevealView() {
     U = cbTypUsed(c) /* couldbe.js: the answers that are a typical value */,
     row = x =>
       x.deep
-        ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Go deeper: ${esc(x.deep.l)}.</div></span><span class="caret">›</span></button>`
+        ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Go deeper: ${esc(x.deep.l)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         : `<div class="tile small" data-fid="cb:revitem"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}.</div></div>`,
     /* in the order of the flow, so that a chip stays in its place when it is tapped */
     ways = S.after
@@ -510,7 +510,7 @@ function homeCbTile(c) {
       Sn = H.since;
     return (
       `<div class="card dkcard cbhome" data-fid="cb:home"><div class="row between dkhead"><span class="dklabel">Your two numbers</span>${kitPill(N.st)}</div>` +
-      `<button class="cbhomego" data-a="cbback" data-fid="cb:homego" aria-label="Open What it is, What it could be at ${esc(H.atName)}"><span class="cbhnums">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</span>${cbChartHtml(H.K, { small: true })}<span class="row between cbhgo"><span class="tiny">Pick up where you left off: ${esc(H.atName)}</span><span class="caret">›</span></span></button>` +
+      `<button class="cbhomego" data-a="cbback" data-fid="cb:homego" aria-label="Open What it is, What it could be at ${esc(H.atName)}"><span class="cbhnums">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</span>${cbChartHtml(H.K, { small: true })}<span class="row between cbhgo"><span class="tiny">Pick up where you left off: ${esc(H.atName)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>` +
       (Sn
         ? `<div class="cbsince" data-fid="cb:since"><b class="small">Since last time, ${Sn.days === 1 ? "1 day ago" : Sn.days + " days ago"}</b>${Sn.lines.length ? rcpHtml({ lines: Sn.lines, teaser: null, next: null }) : `<div class="tiny muted">Nothing moved. Your numbers are where you left them.</div>`}</div>`
         : "") +
@@ -525,7 +525,7 @@ function homeCbTile(c) {
           ", 5 years a bar. The card opens the full math.",
       ]) +
       (H.rest
-        ? `<button class="rowbtn" data-a="cbrest" data-fid="cb:homerest"><span><b>Finish setup: five short rounds</b><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div></span><span class="caret">›</span></button>`
+        ? `<button class="rowbtn" data-a="cbrest" data-fid="cb:homerest"><span><b>Finish setup: five short rounds</b><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         : "") +
       `</div>`
     );
@@ -556,7 +556,7 @@ function cbTopRows(c) {
       T.length === 1 ? "Your top move" : "Your top " + T.length + " moves",
       `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:topmoves">${T.map(
         r =>
-          `<div class="cbstkrow" data-fid="cb:topmove"><button class="rowbtn" data-a="${esc(r.open.a)}" data-v="${esc(r.open.v)}"><span style="min-width:0"><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.counted ? ". Counted in your stack" : ""}.</div></span><span class="caret">›</span></button>${r.canAdd ? `<button class="chip cbcnt" data-a="cbaddstep" data-k="${esc(r.key)}">Add to my steps</button>` : r.added ? `<span class="pill okp">On your steps</span>` : ""}</div>`
+          `<div class="cbstkrow" data-fid="cb:topmove"><button class="rowbtn" data-a="${esc(r.open.a)}" data-v="${esc(r.open.v)}"><span style="min-width:0"><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.counted ? ". Counted in your stack" : ""}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${r.canAdd ? `<button class="chip cbcnt" data-a="cbaddstep" data-k="${esc(r.key)}">Add to my steps</button>` : r.added ? `<span class="pill okp">On your steps</span>` : ""}</div>`
       ).join("")}</div>`,
       { cap: "From What it could be: what you counted first, then the most days sooner. Tap one for its full card." }
     );

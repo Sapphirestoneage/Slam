@@ -53,7 +53,7 @@ function homeSleptRow(h) {
     const S = sleptCalc(c);
     return homeRowAdd(
       h,
-      `<button class="rowbtn bare homerow sleptrow" data-a="slept"><span class="small">Your money earned <b class="${S.st === "Guess" ? "guess" : ""}">${cents(S.day * (8 / 24))}</b> while you slept${S.cross ? " · crossover ✓" : ""}</span><span class="caret">›</span></button>`
+      `<button class="rowbtn bare homerow sleptrow" data-a="slept"><span class="small">Your money earned <b class="${S.st === "Guess" ? "guess" : ""}">${cents(S.day * (8 / 24))}</b> while you slept${S.cross ? " · crossover ✓" : ""}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     );
   } catch (e) {
     report(e, "slept.js: homeSleptRow");

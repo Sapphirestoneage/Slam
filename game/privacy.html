@@ -20,11 +20,13 @@ button.amber{border-color:var(--amber);color:var(--amber);background:transparent
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--a3);outline-offset:2px}
 button[disabled]{opacity:.6;cursor:default}
 details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}details>div{padding-bottom:12px;display:flex;flex-direction:column;gap:8px}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
 </style>
 </head>
 <body>
 <main>
-<div class="row"><a class="btn" href="./">‹ Back to the game</a></div>
+<div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>
 <h1>Privacy, in plain words</h1>
 <p class="muted">Last checked against the code and the database on November 25, 2026. <span id="edu"></span></p>
 

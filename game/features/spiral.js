@@ -404,7 +404,7 @@ function spChecklistHtml(w, r, all) {
     got = L.filter(x => x.v != null),
     miss = L.filter(x => x.v == null);
   if (!L.length || (!got.length && !all)) return "";
-  return `<div class="spcheck">${got.map(x => `<button class="spline" data-a="spline" data-v="${x.p}" data-k="${esc(x.k || "")}"><span>✓ <b>${esc(x.s)}:</b> ${esc(String(x.v).length > 40 ? String(x.v).slice(0, 38) + "…" : x.v)}</span><span class="caret">›</span></button>`).join("")}${miss.length ? `<div class="tiny muted">Still to come: ${esc(miss.map(x => x.s).join(", "))}</div>` : ""}</div>`;
+  return `<div class="spcheck">${got.map(x => `<button class="spline" data-a="spline" data-v="${x.p}" data-k="${esc(x.k || "")}"><span>✓ <b>${esc(x.s)}:</b> ${esc(String(x.v).length > 40 ? String(x.v).slice(0, 38) + "…" : x.v)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}${miss.length ? `<div class="tiny muted">Still to come: ${esc(miss.map(x => x.s).join(", "))}</div>` : ""}</div>`;
 }
 /* Part of setupSheetBase() in ui.js: the top of a page of setup. Null in edit mode. */
 function spHead(w) {
@@ -474,7 +474,7 @@ function spChain(r, c, d) {
     const N = spNumber(R.L, c, d);
     return `<span class="spl ${k === r - 1 ? "spnew" : ""}"><b>${R.L}</b> ${esc(N.short)}</span>`;
   });
-  return `<div class="spchain" aria-label="How your numbers link">${items.join('<i class="sparr" aria-hidden="true">›</i>')}</div>`;
+  return `<div class="spchain" aria-label="How your numbers link">${items.join('<i class="sparr chev" aria-hidden="true"></i>')}</div>`;
 }
 /* One line that links the number of this round to the numbers before it. */
 function spConnect(L, c, d, rt) {

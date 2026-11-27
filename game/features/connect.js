@@ -222,7 +222,7 @@ function cxTreeCard(c, d, t) {
          .map((i, k) => {
            const s = SKILLS[t].skills[i],
              lk = cxLink(t, i);
-           return `<div class="stack" style="gap:4px"><button class="rowbtn" data-a="skill" data-v="${t}:${i}" style="gap:8px"><span style="min-width:0">${k === 0 ? "➤ " : ""}${esc(s[0])}</span><span class="caret">›</span></button>${lk ? `<button class="ghost slim" style="align-self:flex-start" data-a="cxdo" data-k="${lk.a}" data-v="${lk.v}">In the game: ${esc(lk.l)}</button>` : ""}</div>`;
+           return `<div class="stack" style="gap:4px"><button class="rowbtn" data-a="skill" data-v="${t}:${i}" style="gap:8px"><span style="min-width:0">${k === 0 ? "➤ " : ""}${esc(s[0])}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${lk ? `<button class="ghost slim" style="align-self:flex-start" data-a="cxdo" data-k="${lk.a}" data-v="${lk.v}">In the game: ${esc(lk.l)}</button>` : ""}</div>`;
          })
          .join("")}</div>`
      : ""

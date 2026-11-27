@@ -215,6 +215,7 @@ function cbMoveView() {
           .join("")}</div>`
       : "") +
     `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
+    cbWayUnsure() +
     said +
     mathBox(
       r.math.concat([

@@ -248,7 +248,7 @@ function elSheet() {
     return (
       head(w.plan ? "Your first plan · tap 1 of 2" : "Meet your character", w.plan ? "" : "3 of " + N) +
       `<h2 data-fid="el:big">Does this feel accurate?</h2><div class="small muted">One tap. There is no wrong answer, and you can change it later.</div>` +
-      `<div class="stack" style="gap:8px">${EL_ACC.map((a, k) => `<button class="rowbtn ${X.acc === a ? "sel" : !X.acc && k === 0 ? "pulse" : ""}" data-a="elacc" data-v="${a}"><b>${a}</b><span class="caret">›</span></button>`).join("")}</div>` +
+      `<div class="stack" style="gap:8px">${EL_ACC.map((a, k) => `<button class="rowbtn ${X.acc === a ? "sel" : !X.acc && k === 0 ? "pulse" : ""}" data-a="elacc" data-v="${a}"><b>${a}</b><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` +
       (X.acc === "Not really"
         ? `<div class="tile small">That is useful to know. The picture is built from guesses for people like you. A few taps on your real numbers fix it.<button class="ghost wide slim" style="margin-top:8px" data-a="best">Make my numbers real</button></div>`
         : "") +
@@ -264,7 +264,7 @@ function elSheet() {
         .reverse()
         .map(
           (s, k) =>
-            `<button class="rowbtn ${X.focus === s.id ? "sel" : !X.focus && k === 0 ? "pulse" : ""}" data-a="elfocus" data-v="${s.id}"><span><b>${esc(s.n)}</b><div class="tiny muted ${s.st === "Guess" ? "guess" : ""}">${esc(s.txt)}</div></span><span class="caret">›</span></button>`
+            `<button class="rowbtn ${X.focus === s.id ? "sel" : !X.focus && k === 0 ? "pulse" : ""}" data-a="elfocus" data-v="${s.id}"><span><b>${esc(s.n)}</b><div class="tiny muted ${s.st === "Guess" ? "guess" : ""}">${esc(s.txt)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         )
         .join("")}</div>` +
       dots
@@ -297,7 +297,7 @@ function finishSetupReveal(c) {
 }
 /* Part of rvSheet() in reveal.js. Adds one row to the character sheet. */
 function rvSheetElement(h) {
-  const row = `<button class="rowbtn" data-a="elem"><span><b>Strengths and your element</b><div class="tiny muted">Your numbers in plain words, and what your element is strong against</div></span><span class="caret">›</span></button>`;
+  const row = `<button class="rowbtn" data-a="elem"><span><b>Strengths and your element</b><div class="tiny muted">Your numbers in plain words, and what your element is strong against</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
   return h.replace(
     '<div class="tiny muted">No dollar amounts on this sheet',
     () => row + '<div class="tiny muted">No dollar amounts on this sheet'

@@ -91,7 +91,7 @@ function sgSheet() {
       top(1, "What would this loan pay for?") +
       askParts({
         what: null,
-        body: `<div class="stack" style="gap:6px">${SG_FOR.map(x => `<button class="rowbtn ${o.for === x[0] ? "sel" : ""}" data-a="sgset" data-k="for" data-v="${x[0]}"><span>${x[1]}</span><span class="caret">›</span></button>`).join("")}</div>`,
+        body: `<div class="stack" style="gap:6px">${SG_FOR.map(x => `<button class="rowbtn ${o.for === x[0] ? "sel" : ""}" data-a="sgset" data-k="for" data-v="${x[0]}"><span>${x[1]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`,
         why: "Different loans come with different rates and lengths. Your answer sets a starting guess.",
         find: "Nowhere to look. You know this one.",
       })

@@ -600,7 +600,7 @@ function planTabPath(h) {
     const c = C(),
       id = c && c.x && c.x.paths && c.x.paths.pick;
     if (!id || !PATHS_NAMES[id]) return h;
-    const row = `<button class="rowbtn pathrowpick" data-a="paths"><span><b>Your path: ${esc(PATHS_NAMES[id])}</b><div class="tiny muted">Picked ${nice(c.x.paths.picked || todayISO())}. Tap to see it next to the others.</div></span><span class="caret">›</span></button>`;
+    const row = `<button class="rowbtn pathrowpick" data-a="paths"><span><b>Your path: ${esc(PATHS_NAMES[id])}</b><div class="tiny muted">Picked ${nice(c.x.paths.picked || todayISO())}. Tap to see it next to the others.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
     return /<div class="seg plseg">[\s\S]*?<\/div>/.test(h)
       ? h.replace(/(<div class="seg plseg">[\s\S]*?<\/div>)/, m => m + row)
       : h.replace('<div class="stack">', () => '<div class="stack">' + row);

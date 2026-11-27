@@ -118,7 +118,7 @@ function kwAll(c, d) {
 }
 function kwStrip(c, d) {
   const K = kwAll(c, d);
-  return `<button class="rowbtn homerow kwstrip" data-a="know" aria-label="What you already know"><span style="min-width:0;flex:1"><b class="small">You already know ${K.known} of ${K.total} things</b><span class="kwrow">${K.A.map(a => `<span class="kwl ${a.pct >= 100 ? "done" : ""}"><b>${a.k}</b><i><u style="width:${Math.max(4, a.pct)}%"></u></i><em>${a.pct}%</em></span>`).join("")}</span></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn homerow kwstrip" data-a="know" aria-label="What you already know"><span style="min-width:0;flex:1"><b class="small">You already know ${K.known} of ${K.total} things</b><span class="kwrow">${K.A.map(a => `<span class="kwl ${a.pct >= 100 ? "done" : ""}"><b>${a.k}</b><i><u style="width:${Math.max(4, a.pct)}%"></u></i><em>${a.pct}%</em></span>`).join("")}</span></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 function kwSheet() {
   const c = C(),
@@ -141,7 +141,7 @@ function kwSheet() {
           .map(f =>
             f.v >= 1
               ? `<div class="row between small kwfact" style="gap:8px"><span>✓ ${esc(f.t)}</span><span class="pill okp" style="flex:none">Exact</span></div>${f.note ? `<div class="tiny muted">${esc(f.note)}</div>` : ""}`
-              : `<button class="rowbtn" data-a="kwgo" data-k="${f.a}" data-v="${f.av || ""}" style="gap:8px"><span style="min-width:0">○ ${esc(f.t)}</span><span class="pill ${f.v > 0 ? "warn" : ""}" style="flex:none">${kwWord(f.v)} ›</span></button>`
+              : `<button class="rowbtn" data-a="kwgo" data-k="${f.a}" data-v="${f.av || ""}" style="gap:8px"><span style="min-width:0">○ ${esc(f.t)}</span><span class="pill ${f.v > 0 ? "warn" : ""}" style="flex:none">${kwWord(f.v)} <i class=chev aria-hidden=true></i></span></button>`
           )
           .join("")}</div>`
       : ""

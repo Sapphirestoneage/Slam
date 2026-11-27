@@ -146,11 +146,11 @@ function tkSheet() {
             .trim()
             .charAt(0)
             .toUpperCase()
-        )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Three tasks, on their own numbers</div></span><span class="pill">Start ›</span></button>`
+        )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Three tasks, on their own numbers</div></span><span class="pill">Start <i class=chev aria-hidden=true></i></span></button>`
     )
     .join("")}</div>` +
       (past.length
-        ? `<b class="small">Past tests</b><div class="stack" style="gap:6px">${past.map((r, i) => `<button class="rowbtn prow" data-a="tkview" data-v="${i}"><span class="pn"><b>${esc(r.who)}</b><div class="tiny muted">${r.d} · alone ${r.tasks.filter(x => x.o === "alone").length}, nudge ${r.tasks.filter(x => x.o === "nudge").length}, stuck ${r.tasks.filter(x => x.o === "stuck").length}</div></span><span>›</span></button>`).join("")}</div>`
+        ? `<b class="small">Past tests</b><div class="stack" style="gap:6px">${past.map((r, i) => `<button class="rowbtn prow" data-a="tkview" data-v="${i}"><span class="pn"><b>${esc(r.who)}</b><div class="tiny muted">${r.d} · alone ${r.tasks.filter(x => x.o === "alone").length}, nudge ${r.tasks.filter(x => x.o === "nudge").length}, stuck ${r.tasks.filter(x => x.o === "stuck").length}</div></span><span><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`
         : "")
     );
   }
@@ -168,7 +168,7 @@ function tkSheet() {
       ]
         .map(
           o =>
-            `<button class="rowbtn ${r.o === o[0] ? "on" : ""}" data-a="tkout" data-v="${o[0]}"><span><b>${o[1]}</b><div class="tiny muted">${o[2]}</div></span><span>${r.o === o[0] ? "✓" : "›"}</span></button>`
+            `<button class="rowbtn ${r.o === o[0] ? "on" : ""}" data-a="tkout" data-v="${o[0]}"><span><b>${o[1]}</b><div class="tiny muted">${o[2]}</div></span><span>${r.o === o[0] ? "✓" : "<i class=chev aria-hidden=true></i>"}</span></button>`
         )
         .join("")}</div>` +
       (r.o && r.o !== "alone"

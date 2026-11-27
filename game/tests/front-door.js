@@ -245,7 +245,7 @@
   R();
   P(5);
   P(11);
-  chk("the gut checks are in round 2 (Assets)", W.step === 7 && /A \$1,000 surprise bill/.test(ov()));
+  chk("the gut checks are in round 2 (Assets)", W.step === 7 && /A surprise \$1,000 bill/.test(ov()));
   T("set", "No", "can1k");
   T("set", "Less than a month", "cover");
   T("set", "No", "invest");

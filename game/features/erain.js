@@ -7,9 +7,10 @@
                the game work an era out with one rule, and (2) erIn(): a new player who comes from the
                demo does not answer the same questions again.
    INPUT       The answers of the demo, as one plain object A: { age, spend, inv, save (the number of
-               the range chip of the entry, CB_RNG), cush (one id of erCushOpts), debts (names of
-               DEBT_KINDS), tax ("yes", "some" or "no") }. In the game: the device storage (ER_KEY).
-   OUTPUT      Data: ER_KEY, ER_V, ER_DAYS, ER_QS, ER_TAX, ER_WORDS. Math: erCushOpts, erClean, erCb,
+               the range chip of the entry, CB_RNG; or "typ" for spend, inv and save: "I'm not sure",
+               the typical value for the age), cush (one id of erCushOpts), debts (names of DEBT_KINDS),
+               tax ("yes", "some" or "no") }. An answer of "I'm not sure" with no typical value is left out. In the game: the device storage (ER_KEY).
+   OUTPUT      Data: ER_KEY, ER_V, ER_DAYS, ER_TYP, ER_QS, ER_TAX, ER_WORDS. Math: erCushOpts, erClean, erCb, erTyp,
                erBase, erProfile, erName, erNext, erResult, erAsked, erPack, erUnpack. Part of a function
                in a different file: erIn (cbStart in couldbe.js, wnLeave in wants.js). Storage: erRead, erDrop, erSigned.
    DEPENDS ON  core/engine.js (newChar, derive, applyTypical, eraSteps, ERAS, NODES, COVER, DEBT_KINDS,
@@ -30,14 +31,16 @@
                { v: 1, at: an ISO day, a: A }. A text with a different v, or older than ER_DAYS days, is
                passed over.
    ========================================================================= */
+/* The answer of a range question (spend, inv, save) when the visitor taps "I'm not sure". */
+const ER_TYP = "typ";
 const ER_KEY = "slam.era",
   ER_V = 1,
   ER_DAYS = 1;
-/* The answers of the question about tax-friendly accounts: the words of the game's own question (Make your
-   numbers real), and the value of c.tax for each. */
+/* The answers of the question about tax-friendly accounts (the words of run 16, C8), and the value of c.tax for
+   each. "I'm not sure" (NOT_SURE) is the fourth choice of every question: the screen adds it (era.js). */
 const ER_TAX = [
-  ["All of them are full", "yes"],
-  ["I put in some", "some"],
+  ["Yes, the max", "yes"],
+  ["Some", "some"],
   ["Not yet", "no"],
 ];
 /* The questions, in order. kind cb: a range question of the entry (its words and chips are CB_QS and CB_RNG).
@@ -48,25 +51,25 @@ const ER_QS = [
   {
     id: "cush",
     kind: "one",
-    l: "If money stopped coming in, how long could your cash cover your bills?",
-    h: "Cash you can reach fast: checking and savings. Not investments.",
+    l: "If your pay stopped today, how long could you pay your bills?",
+    h: "Count cash you can get today, like checking and savings. Do not count investments.",
   },
   {
     id: "debts",
     kind: "many",
-    l: "Do you owe on any of these?",
-    h: "Tap each kind you have. No amounts. A mortgage does not count here.",
+    l: "Do you owe money on any of these?",
+    h: "Tap each kind you have. No amounts. Do not count a home loan here.",
   },
   { id: "inv", kind: "cb" },
   { id: "save", kind: "cb" },
   {
     id: "tax",
     kind: "one",
-    l: "How full are your tax-friendly accounts each year?",
-    h: "Tax-friendly accounts are a Roth IRA, an HSA, and the retirement plan at work. Money inside them is taxed less, so it grows faster.",
+    l: "Do you put the max into your 401(k) or IRA each year?",
+    h: "A 401(k) and an IRA are accounts for when you are older. The law sets the most you can put in each year. That is the max.",
     when: A => {
-      const r = cbRng("inv", A.inv);
-      return !!r && !r.zero;
+      const a = erCb(A).inv;
+      return !!a && a.v > 0;
     },
   },
 ];
@@ -93,6 +96,11 @@ function erClean(A) {
   if (!A || typeof A !== "object") return out;
   CB_QS.forEach(Q => {
     if (Number.isInteger(A[Q.id]) && cbRng(Q.id, A[Q.id])) out[Q.id] = A[Q.id];
+    /* "I'm not sure": the typical value for the age stands in (ER_TYP). Age has none. */ else if (
+      A[Q.id] === ER_TYP &&
+      Q.id !== "age"
+    )
+      out[Q.id] = ER_TYP;
   });
   if (erCushOpts().some(o => o.id === A.cush)) out.cush = A.cush;
   if (Array.isArray(A.debts)) out.debts = DEBT_KINDS.map(d => d[0]).filter(k => A.debts.includes(k));
@@ -106,7 +114,18 @@ function erCb(A) {
     const r = Number.isInteger(A[Q.id]) ? cbRng(Q.id, A[Q.id]) : null;
     if (r) a[Q.id] = { v: r.v, i: A[Q.id], cf: 1, rg: [r.lo, r.hi] };
   });
+  /* "I'm not sure": the typical value for the age, as the chip of the entry writes it (ACT.cbtyp in couldbe.js).
+     With no row for the age there is no answer. */
+  CB_QS.forEach(Q => {
+    const T = A[Q.id] === ER_TYP && a.age ? erTyp(Q.id, a.age.v) : null;
+    if (T) a[Q.id] = { v: T.v, cf: 1, typ: true, band: T.band };
+  });
   return a;
+}
+/* The typical value of a range question for an age: cbTypical of couldbe.js, the one source. null when the page
+   has no reference data, or the data has no row for the age. */
+function erTyp(q, age) {
+  return typeof cbTypical === "function" ? cbTypical(q, age) : null;
 }
 /* The new profile before setup finishes it: what cbMake() in couldbe.js makes from the four answers, plus the
    setup answers of the demo. null while one of the four answers is missing. */

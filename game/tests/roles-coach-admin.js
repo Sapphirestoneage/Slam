@@ -339,7 +339,9 @@
   );
   chk(
     "a visible way back on both pages",
-    cp.includes("Back to the game") && admin.includes("‹ Back to the game") && admin.includes('roHatsHTML("admin"')
+    cp.includes("Back to the game") &&
+      admin.includes("<i class=chevl aria-hidden=true></i> Back to the game") &&
+      admin.includes('roHatsHTML("admin"')
   );
   chk(
     "inputs have visible borders on the coach page",

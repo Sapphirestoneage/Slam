@@ -448,13 +448,13 @@ function yearCards(c, d) {
   const X = YX(c),
     tot = fundSum(c),
     ch = chance(c, d);
-  return `<button class="card rowbtn" data-a="funds"><span><b>True expenses</b> <div class="tiny muted">${tot > 0 ? money(tot / 12) + " a month covers " + X.funds.length + " irregular cost" + (X.funds.length === 1 ? "" : "s") : "The costs that don't come monthly"} · your money is about ${ageOfMoney(c, d)} days old</div></span><span>›</span></button><button class="card rowbtn" data-a="chance"><span><b>Chance test</b><div class="tiny muted">${ch ? ch.pct + " in 100 made-up futures hold" : "Wakes up once you have a gap"}</div></span><span>›</span></button>`;
+  return `<button class="card rowbtn" data-a="funds"><span><b>True expenses</b> <div class="tiny muted">${tot > 0 ? money(tot / 12) + " a month covers " + X.funds.length + " irregular cost" + (X.funds.length === 1 ? "" : "s") : "The costs that don't come monthly"} · your money is about ${ageOfMoney(c, d)} days old</div></span><span><i class=chev aria-hidden=true></i></span></button><button class="card rowbtn" data-a="chance"><span><b>Chance test</b><div class="tiny muted">${ch ? ch.pct + " in 100 made-up futures hold" : "Wakes up once you have a gap"}</div></span><span><i class=chev aria-hidden=true></i></span></button>`;
 }
 function calsCard(c) {
   const X = YX(c),
     on = Object.keys(CALS).filter(id => calOn(c, id)),
     rd = revDate(c);
-  return `<div class="card stack" style="gap:6px"><div class="row between"><h3>Your year</h3>${ib("term:review")}</div><button class="rowbtn" data-a="ahead"><span>The year ahead</span><span>›</span></button><button class="rowbtn" data-a="cals"><span>Calendars<div class="tiny muted">${on.length ? on.map(id => CALS[id].n).join(", ") : "None on yet"}</div></span><span>›</span></button><button class="rowbtn" data-a="review"><span>Yearly Review<div class="tiny muted">${rd ? (rd.due ? "Ready when you are" : "Next: " + dfmt(rd.next)) : "Pick your date"}</div></span><span>›</span></button></div>`;
+  return `<div class="card stack" style="gap:6px"><div class="row between"><h3>Your year</h3>${ib("term:review")}</div><button class="rowbtn" data-a="ahead"><span>The year ahead</span><span><i class=chev aria-hidden=true></i></span></button><button class="rowbtn" data-a="cals"><span>Calendars<div class="tiny muted">${on.length ? on.map(id => CALS[id].n).join(", ") : "None on yet"}</div></span><span><i class=chev aria-hidden=true></i></span></button><button class="rowbtn" data-a="review"><span>Yearly Review<div class="tiny muted">${rd ? (rd.due ? "Ready when you are" : "Next: " + dfmt(rd.next)) : "Pick your date"}</div></span><span><i class=chev aria-hidden=true></i></span></button></div>`;
 }
 function seasonBlock(c, g, sim) {
   const at = sim.goalAt[g.id],
@@ -584,7 +584,7 @@ function reviewSheetBase() {
     (ya.top
       ? `<div class="tile"><div class="row between small"><span>Biggest month coming</span><b>${ya.top.n}: +${money(ya.top.hit)}</b></div><div class="row between small"><span>Monthly set-aside that covers the year</span><b>${money(ya.perMonth)}</b></div></div>`
       : `<div class="tile small">No spikes on your year yet.</div>`) +
-    `<button class="ghost wide slim" data-a="ahead">See all 12 months</button>${chg.length ? `<div class="small">You said these changed. Update them when you're ready:</div>${chg.map(k => `<button class="rowbtn" data-a="${{ job: "life", home: "life", people: "party", goals: "draft" }[k]}"><span>${{ job: "Work", home: "Home", people: "Your people", goals: "Things you want" }[k]}</span><span>Update ›</span></button>`).join("")}` : ""}` +
+    `<button class="ghost wide slim" data-a="ahead">See all 12 months</button>${chg.length ? `<div class="small">You said these changed. Update them when you're ready:</div>${chg.map(k => `<button class="rowbtn" data-a="${{ job: "life", home: "life", people: "party", goals: "draft" }[k]}"><span>${{ job: "Work", home: "Home", people: "Your people", goals: "Things you want" }[k]}</span><span>Update <i class=chev aria-hidden=true></i></span></button>`).join("")}` : ""}` +
     `<button class="primary wide" data-a="revdone">Finish the review</button>`
   );
 }

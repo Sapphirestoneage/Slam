@@ -116,7 +116,7 @@ function rgReadPart(c, mine) {
    the theme is off by default for this person (account/gate.js, adThemeOff). */
 function rgTryRow(mine) {
   if (rgOn() || !mine || (typeof adThemeOff === "function" && adThemeOff("rings"))) return "";
-  return `<button class="rowbtn" data-a="themes"><span style="min-width:0"><b>See your read as the Rings</b><div class="tiny muted">A theme: seven rings, a ruler for each sin, and you escaping. Pick it under Theme.</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="themes"><span style="min-width:0"><b>See your read as the Rings</b><div class="tiny muted">A theme: seven rings, a ruler for each sin, and you escaping. Pick it under Theme.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 Object.assign(ACT, {
   rgleave: () => {

@@ -228,7 +228,7 @@ kitScreen(
 function jobCard(c, N, r) {
   const R = JOB_ROLES[r.id],
     b = N.L.byRole[r.id] || { n: 0, m: 0 };
-  return `<div class="row jbrow" style="gap:6px;align-items:center"><button class="rowbtn jbrole" data-a="job" data-v="${r.id}" style="flex:1;min-width:0"><span style="min-width:0;flex:1"><b>${esc(R.n)}</b><div class="tiny muted">${esc(r.why[0] || "Everyone holds this job a little")}</div><div class="tiny"><b data-fid="jb:${r.id}">${b.n} of ${b.m}</b> tasks off your plate</div>${dkProgress(b.m ? (b.n / b.m) * 100 : 0)}</span><span class="caret">›</span></button>${ib("term:job_" + r.id)}</div>`;
+  return `<div class="row jbrow" style="gap:6px;align-items:center"><button class="rowbtn jbrole" data-a="job" data-v="${r.id}" style="flex:1;min-width:0"><span style="min-width:0;flex:1"><b>${esc(R.n)}</b><div class="tiny muted">${esc(r.why[0] || "Everyone holds this job a little")}</div><div class="tiny"><b data-fid="jb:${r.id}">${b.n} of ${b.m}</b> tasks off your plate</div>${dkProgress(b.m ? (b.n / b.m) * 100 : 0)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${ib("term:job_" + r.id)}</div>`;
 }
 /* The block "You already work 6 jobs nobody pays you for.": the top 3, and See all. */
 function jobsBlock(c, all, seeAct) {
@@ -398,7 +398,7 @@ function homeJobsRow(h) {
     const N = jobNow(c);
     return homeRowAdd(
       h,
-      `<div class="homerow jbhome">${dkCard("Your money's admin time", jobBars(N) + `<button class="ghost wide slim" data-a="jobs">See your 6 unpaid jobs ›</button>`, { right: ib("term:livingit"), cap: "Hours a month running your money, and the time you got back" })}</div>`
+      `<div class="homerow jbhome">${dkCard("Your money's admin time", jobBars(N) + `<button class="ghost wide slim" data-a="jobs">See your 6 unpaid jobs <i class=chev aria-hidden=true></i></button>`, { right: ib("term:livingit"), cap: "Hours a month running your money, and the time you got back" })}</div>`
     );
   } catch (e) {
     report(e, "jobs.js: homeJobsRow");

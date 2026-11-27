@@ -332,6 +332,7 @@ function cbTaxView() {
       ? planTile +
         `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">The plan against the usual order, both with the tax counted. ${St.counted ? "" : "Count this and the tax comes into your number, the lower way."}</div></div>` +
         `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
+        cbWayUnsure() +
         said
       : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cbtax:why">${esc(cbTaxWhy(P))}</div>${P.acctGuess && P.why === "onekind" ? `<div class="tiny muted">Until you list your accounts, the game counts all of it as a traditional plan at work.</div>` : ""}</div>` +
         (P.acctGuess && !setupDone

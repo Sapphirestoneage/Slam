@@ -373,7 +373,7 @@ Object.assign(ACT, {
 function meTabValues(h) {
   const c = C(),
     R = vlResult(c),
-    row = `<button class="rowbtn" data-a="values"><span><b>Is my money going where I want?</b><div class="tiny muted">${R.complete ? R.pct + "% goes to your top values" : "Rank what matters, then link each place your money goes"}</div></span><span class="caret">›</span></button>`,
+    row = `<button class="rowbtn" data-a="values"><span><b>Is my money going where I want?</b><div class="tiny muted">${R.complete ? R.pct + "% goes to your top values" : "Rank what matters, then link each place your money goes"}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`,
     a = '<button class="rowbtn" data-a="reveal">';
   return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h.replace(/(<h1>[^<]*<\/h1>)/, m => m + row);
 }

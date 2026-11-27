@@ -1237,7 +1237,7 @@ function mcqSheet() {
       .reverse()
       .map(
         s =>
-          `<button class="rowbtn" data-a="mcans" data-k="${it.id}" data-v="${s[0]}"><span>${s[1]}</span><span>›</span></button>`
+          `<button class="rowbtn" data-a="mcans" data-k="${it.id}" data-v="${s[0]}"><span>${s[1]}</span><span><i class=chev aria-hidden=true></i></span></button>`
       )
       .join("")}</div>${w.hist.length ? `<button class="ghost wide slim" data-a="mcback">Back one</button>` : ""}`
   );

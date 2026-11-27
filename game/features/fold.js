@@ -32,7 +32,7 @@ function msBoardMore(h, c, d) {
   if (i < 0) return h;
   return (
     h.slice(0, i) +
-    `<div class="tile stack fdmore" style="gap:6px"><button class="kwhead" data-a="fdmore" aria-expanded="${FDX.more}"><span style="flex:1;min-width:0;text-align:left"><b class="small">More steps from your path</b><span class="tiny muted" style="display:block">For when you want one. Pick a day, or do it now.</span></span><span class="caret">${FDX.more ? "⌃" : "›"}</span></button>${
+    `<div class="tile stack fdmore" style="gap:6px"><button class="kwhead" data-a="fdmore" aria-expanded="${FDX.more}"><span style="flex:1;min-width:0;text-align:left"><b class="small">More steps from your path</b><span class="tiny muted" style="display:block">For when you want one. Pick a day, or do it now.</span></span><span class="caret">${FDX.more ? "⌃" : "<i class=chev aria-hidden=true></i>"}</span></button>${
       FDX.more
         ? rest
             .slice(0, 5)

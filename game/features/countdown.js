@@ -198,7 +198,7 @@ function cdnSheet() {
       head("My Goals", "Countdowns") +
       `<div class="small muted">Each goal can be a countdown ${kitInfo("countdown")}: a target, what is saved, and a monthly amount or a date. Tap a goal.</div>` +
       (L.length
-        ? `<div class="stack" style="gap:6px">${L.map(x => `<button class="rowbtn" data-a="cdn" data-v="${x.g.id}"><span style="min-width:0"><b class="small">${esc(x.g.n)}</b><div class="tiny muted">${esc(cdnLine(x.K))} · ${money(x.K.saved)} of ${money(x.K.target)}</div></span><span class="caret">›</span></button>`).join("")}</div>`
+        ? `<div class="stack" style="gap:6px">${L.map(x => `<button class="rowbtn" data-a="cdn" data-v="${x.g.id}"><span style="min-width:0"><b class="small">${esc(x.g.n)}</b><div class="tiny muted">${esc(cdnLine(x.K))} · ${money(x.K.saved)} of ${money(x.K.target)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`
         : `<div class="tile small">No goals yet. Add a goal first: a down payment, a quit fund, a wedding, or anything you want.</div>`) +
       `<button class="${L.length ? "ghost" : "primary"} wide" data-a="gadd">Add a goal</button>`
     );
@@ -365,7 +365,7 @@ function goalsTabCountdown(h) {
   if (!c || !(c.goals || []).some(g => !g.done)) return h;
   return h.replace(
     /<\/div>\s*$/,
-    `<button class="ghost wide cdnbtn" data-a="cdn" data-v="">Countdowns: how long to each goal ›</button></div>`
+    `<button class="ghost wide cdnbtn" data-a="cdn" data-v="">Countdowns: how long to each goal <i class=chev aria-hidden=true></i></button></div>`
   );
 }
 /* Part of goalView() in ui.js. Adds one button with the countdown of this goal. */
@@ -376,7 +376,7 @@ function goalViewCountdown(h) {
     if (!g || g.done) return h;
     return (
       h +
-      `<button class="rowbtn cdnrow" data-a="cdn" data-v="${g.id}"><span style="min-width:0"><b class="small">Countdown</b><div class="tiny muted">${esc(cdnLine(cdnCalc(c, g)))}</div></span><span class="caret">›</span></button>`
+      `<button class="rowbtn cdnrow" data-a="cdn" data-v="${g.id}"><span style="min-width:0"><b class="small">Countdown</b><div class="tiny muted">${esc(cdnLine(cdnCalc(c, g)))}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     );
   } catch (e) {
     report(e, "countdown.js: goalViewCountdown");

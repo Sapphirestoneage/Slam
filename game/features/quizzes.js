@@ -106,7 +106,7 @@ function qzAskPart(def, q, n, of, back) {
     taps =
       q.style === "cards"
         ? `<div class="qzcards">${opts.map(o => `<button class="qzcard" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span class="qzicon" aria-hidden="true">${esc(o[2] || "")}</span><span>${esc(o[1])}</span></button>`).join("")}</div>`
-        : `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span>${esc(o[1])}</span><span class="caret">›</span></button>`).join("")}</div>`;
+        : `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn" data-a="qzans" data-k="${esc(q.id)}" data-v="${esc(String(o[0]))}"><span>${esc(o[1])}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`;
   return (
     `<div class="tile"><div class="tiny muted">${q.style === "cards" ? "Tap the one you like best" : q.options ? "Tap the one closest to you" : "How true is this for you?"}</div><h2 style="margin:6px 0 0" data-fid="qz:q">${esc(q.ask || q.text)}</h2></div>${bar((n / of) * 100)}` +
     taps +
@@ -168,7 +168,7 @@ function qzDailyPart(c) {
     body +=
       `<div class="small">Your latest quiz, ${esc(L.def.name)}: <b>${esc(L.card.title)}</b></div>` +
       (sk
-        ? `<button class="ghost wide" data-a="skill" data-v="${sk.tree}:${sk.level - 1}">${esc(nx.label)} ›</button>`
+        ? `<button class="ghost wide" data-a="skill" data-v="${sk.tree}:${sk.level - 1}">${esc(nx.label)} <i class=chev aria-hidden=true></i></button>`
         : "") +
       (rd
         ? `<div class="tile small"><div class="tiny muted">A short read. People say: "${esc(R.readings[rd].advice)}"</div>${esc(R.readings[rd].line)}</div>`
@@ -264,14 +264,14 @@ function qzListSheet() {
           return N.card
             ? `<div class="tile"><b class="small">${esc(def.name)}</b><div class="tiny muted">${esc(sub)}</div></div>`
             : "";
-        return `<button class="rowbtn" data-a="qzopen" data-v="${def.id}"><span style="min-width:0"><b>${esc(def.name)}</b><div class="tiny muted">${esc(sub)}</div></span>${N.card ? `<span class="caret">›</span>` : `<span class="pill">${N.taps.max} taps</span>`}</button>`;
+        return `<button class="rowbtn" data-a="qzopen" data-v="${def.id}"><span style="min-width:0"><b>${esc(def.name)}</b><div class="tiny muted">${esc(sub)}</div></span>${N.card ? `<span class="caret"><i class=chev aria-hidden=true></i></span>` : `<span class="pill">${N.taps.max} taps</span>`}</button>`;
       })
       .join("");
   return (
     head("Me", "Quizzes") +
     `<div class="small muted">Each one is a game lens: a playful way to look at how you handle money. None is a test or a diagnosis. Your results stay with you unless you choose to show them.</div>` +
     (mine
-      ? `<button class="rowbtn" data-a="chart"><span style="min-width:0"><b>The Money Chart</b><div class="tiny muted">Ten statements, five elements. It sets your money element.</div></span><span class="caret">›</span></button>`
+      ? `<button class="rowbtn" data-a="chart"><span style="min-width:0"><b>The Money Chart</b><div class="tiny muted">Ten statements, five elements. It sets your money element.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
       : "") +
     `<div class="stack" style="gap:8px">${rows || `<div class="tile small">No result is shared.</div>`}</div>` +
     `<button class="ghost wide slim" data-a="close">Done</button>`
@@ -313,7 +313,7 @@ function qzSheet() {
 }
 /* Part of meTab() in ui.js. Adds the row "Quizzes" below the row for the character sheet. */
 function meTabQuiz(h) {
-  const row = `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">Money scripts, the Enneagram, your FIRE flavor, Quantum Collapse and more. Each is a game lens.</div></span><span class="caret">›</span></button>`;
+  const row = `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">Money scripts, the Enneagram, your FIRE flavor, Quantum Collapse and more. Each is a game lens.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
   return h.replace(/(<button class="rowbtn[^"]*" data-a="reveal">.*?<\/button>)/, m => m + row);
 }
 /* Part of rvSheet() in reveal.js. Adds the results that the player chose to show, and one row to the quizzes. */
@@ -325,7 +325,7 @@ function rvSheetQuiz(h) {
         ? `<div class="tile stack" style="gap:8px">${L.map(x => `<div class="row between" style="align-items:flex-start;gap:10px"><span class="tiny muted" style="flex:none">${esc(x.label)}</span><b class="small" style="text-align:right">${esc(x.value)}</b></div>`).join("")}</div>`
         : "") +
       (qzMine()
-        ? `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">A result shows here only when you turn it on</div></span><span class="caret">›</span></button>`
+        ? `<button class="rowbtn" data-a="qz"><span><b>Quizzes</b><div class="tiny muted">A result shows here only when you turn it on</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         : "");
   return h.replace(
     '<div class="tiny muted">No dollar amounts on this sheet',

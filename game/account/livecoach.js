@@ -129,7 +129,7 @@ function lcCard() {
               r.state === "sent" && r.inv.token
                 ? `<button data-a="lccopy" data-v="${cpEsc(r.inv.token)}">Copy the link</button>`
                 : s && !lcDemo()
-                  ? `<a class="btn" href="./session.html?s=${encodeURIComponent(s.id)}">Open the room ›</a>`
+                  ? `<a class="btn" href="./session.html?s=${encodeURIComponent(s.id)}">Open the room <i class=chev aria-hidden=true></i></a>`
                   : ""
             }</div>`;
           })

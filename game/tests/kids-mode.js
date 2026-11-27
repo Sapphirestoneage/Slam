@@ -87,9 +87,13 @@
   const S = kidStats(k, todayISO());
   chk("the stats", S.done === 1 && S.asked === 2 && S.right === 1 && S.today);
   X("close");
+  /* run 16, D12: the row is on the Me tab now, and the sheet People only switches people */
   X("people");
-  chk("People has the row", ov().includes("Kids mode"));
+  const noRow = !ov().includes("Kids mode");
   X("close");
+  X("tab", "me");
+  chk("Me has the row, and the sheet People does not", app().includes('data-a="kids"') && noRow);
+  X("tab", "home");
   chk("built list", btRows().some(r => r.n.startsWith("Kids mode") && r.st === "b") && btCount(btRows()).x === 0);
   G.chars.length = n0;
   G.active = 0;

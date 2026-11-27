@@ -5,7 +5,7 @@
                person adds the code in their own game.
    INPUT       The game: G.active, G.chars, G.demo, G.gone. The profile: c.x.plan. The open sheet
                (W.kind): handoff, mlog. The taps of the player (the actions in OUTPUT).
-   OUTPUT      11 functions. Parts of functions in other files: profSheetHandoff, moneyTabLogLink.
+   OUTPUT      11 functions. Parts of functions in other files: mePeopleHandoff, moneyTabLogLink.
                Actions (ACT): mlog, lgmonth, lgall, lgcopy, handoff, hopick, hocopy, hoadd.
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js.
    RULES       The money log is read-only. The code contains the numbers of that one person only: no
@@ -157,7 +157,7 @@ function hoSheet() {
     const c = G.chars[w.pick];
     return (
       head("Profiles", "Hand " + esc(c.name) + " their game") +
-      `<div class="small">1. Tap copy. 2. Send it to ${esc(c.name)} any way you like. 3. They open the game, tap their name at the top, then <b>More options</b>, then <b>Add from a code</b>, and paste.</div><div class="field"><textarea readonly rows="3" aria-label="The code">${esc(hoCode(c))}</textarea></div><button class="primary wide" data-a="hocopy">${w.copied ? "Copied ✓" : "Copy " + esc(c.name) + "'s code"}</button><div class="tiny muted">The code holds ${esc(c.name)}'s numbers and nothing else: no other people, nothing from your account. Anyone who gets it can see those numbers, so send it only to them.</div><button class="ghost wide slim" data-a="handoff">Back one</button>`
+      `<div class="small">1. Tap copy. 2. Send it to ${esc(c.name)} any way you like. 3. They open the game, tap <b>Me</b>, then <b>People settings</b>, then <b>Send or add a person with a code</b>, and paste it under <b>Add from a code</b>.</div><div class="field"><textarea readonly rows="3" aria-label="The code">${esc(hoCode(c))}</textarea></div><button class="primary wide" data-a="hocopy">${w.copied ? "Copied ✓" : "Copy " + esc(c.name) + "'s code"}</button><div class="tiny muted">The code holds ${esc(c.name)}'s numbers and nothing else: no other people, nothing from your account. Anyone who gets it can see those numbers, so send it only to them.</div><button class="ghost wide slim" data-a="handoff">Back one</button>`
     );
   }
   return (
@@ -172,7 +172,7 @@ function hoSheet() {
                   .trim()
                   .charAt(0)
                   .toUpperCase()
-              )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Copy a code they paste into their own game</div></span><span class="caret">›</span></button>`
+              )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Copy a code they paste into their own game</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
           )
           .join("")}</div>`) +
     `<b class="small">Add from a code</b><div class="field"><textarea data-k="imp" rows="3" placeholder="Paste the code someone sent you" aria-label="Paste the code">${esc(o.imp || "")}</textarea></div>${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}<button class="primary wide" data-a="hoadd">Add this person</button><div class="tiny muted">They are added next to whoever is already here. No one is replaced.</div><button class="ghost wide slim" data-a="people">Back to profiles</button>`
@@ -232,15 +232,9 @@ Object.assign(ACT, {
     celebrate(nm + " is here", ["Added from a code"], "Tap the name at the top any time to switch between people.");
   },
 });
-/* Part of profSheet() in profiles.js. Adds the button "Send or add a person with a code" in the longer list of options. */
-function profSheetHandoff(h) {
-  const a = '<button class="ghost wide slim" data-a="profmore">Fewer options</button>';
-  return h.indexOf(a) < 0
-    ? h
-    : h.replace(
-        a,
-        () => `<button class="ghost wide slim" data-a="handoff">Send or add a person with a code</button>` + a
-      );
+/* Part of meTabPeople() in profiles.js. Adds the button "Send or add a person with a code" to "People settings" of Me. */
+function mePeopleHandoff(h) {
+  return h + `<button class="ghost wide slim" data-a="handoff">Send or add a person with a code</button>`;
 }
 
 /* Part of moneyTab() in ui.js. Adds the button that opens the money log. */

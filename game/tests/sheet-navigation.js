@@ -40,7 +40,7 @@
   chk(
     "every sheet header has Back, an i, and an X",
     o.includes('data-a="navback"') &&
-      o.includes("‹ Back") &&
+      o.includes("<i class=chevl aria-hidden=true></i> Back") &&
       o.includes('data-a="navclose"') &&
       o.includes('data-k="gloss:scr_lever"') &&
       !o.includes('data-a="navfwd"') &&

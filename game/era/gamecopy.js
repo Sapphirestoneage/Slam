@@ -3,13 +3,13 @@
    PURPOSE     The parts of the game that the demo "Find your era" (era/index.html) shows and that cannot
                load alone: the range chips of the entry and their labels, and the money words.
    INPUT       Nothing.
-   OUTPUT      roughOn, money, esc, lkK, CB_RNG, CB_QS, cbRng, cbRows, cbLab, and G (empty: the demo has no saved game).
+   OUTPUT      roughOn, money, esc, lkK, CB_RNG, CB_QS, cbRng, cbRows, cbM, cbLab, cbTypical, and G (empty: the demo has no saved game).
    DEPENDS ON  core/engine.js (SPEND_K, SPLIT).
    RULES       GENERATED FILE. Do not edit it. Each part is a word-for-word copy of a declaration in
                screens/ui.js, features/look.js, features/couldbe.js.
                tools/game_era_build.mjs makes it. Change the source, then run the tool.
                The game does not load this file. Prettier does not format it (.prettierignore).
-   SOURCE-HASH  389928f6dc07da04
+   SOURCE-HASH  581356d38bf97dbc
    ========================================================================= */
 /* The demo has no saved game. The money words read G for the switch "Rough numbers". */
 const G = null;
@@ -88,23 +88,23 @@ const CB_RNG = {
   ],
 };
 const CB_QS = [
-  { id: "age", l: "How old are you?", h: "A range is fine.", zero: "" },
+  { id: "age", l: "How old are you?", h: "Pick the group your age is in.", zero: "" },
   {
     id: "spend",
-    l: "About how much do you spend in a month?",
-    h: "Everything that goes out: rent, food, bills, fun. A rough range is fine.",
+    l: "How much money do you spend in one month?",
+    h: "Count it all: rent, food, bills and fun. Your best guess is fine.",
     zero: "",
   },
   {
     id: "inv",
-    l: "About how much do you have invested?",
-    h: "Retirement accounts and other investments together. Not your checking or savings.",
+    l: "How much money do you have in investments?",
+    h: "Investments are money in a 401(k), an IRA, or stocks and funds. Do not count checking or savings.",
     zero: "Nothing yet",
   },
   {
     id: "save",
-    l: "About how much do you save or invest in a month?",
-    h: "What is left after spending and goes into savings or investments.",
+    l: "How much money do you put away each month?",
+    h: "Count money you move into savings, a 401(k), an IRA or other investments.",
     zero: "Nothing right now",
   },
 ];
@@ -146,6 +146,8 @@ function cbRows(a) {
         : [],
   };
 }
+/* ---------- THE VIEWS ---------- */
+const cbM = v => money(Math.round(v));
 /* The label of a range chip, from the one money formatter. */
 function cbLab(q, i) {
   const r = cbRng(q, i),
@@ -154,4 +156,68 @@ function cbLab(q, i) {
   if (q === "age") return i === 0 ? "Under " + (r.hi + 1) : r.lo + " to " + r.hi;
   if (r.open) return f(r.lo) + " or more";
   return r.lo === 0 || (i === 0 && q === "spend") ? "Under " + f(r.hi) : f(r.lo) + " to " + f(r.hi);
+}
+/* THE TYPICAL VALUE of one question for an age (the chip "I'm not sure", NOT_SURE; run SLAM-ONBOARD-1 and run 16). q: spend, inv
+   or save. It comes from the reference data (LY_TYP_REF in core/paylayers.js), never from a guess of the game:
+   spend: what households of that age spend in a year, over 12 (BLS). inv: the median balance of the families of that
+   age that have a retirement account (the Fed's survey). save: the typical spending of the age times the share of
+   income after tax that the country saves (BEA): spending x rate / (1 - rate). Returns { v, band, who, source, date,
+   math }, or null when the data has no row for the age. */
+function cbTypical(q, age) {
+  if (typeof LY_TYP_REF === "undefined" || typeof peInBand !== "function" || !(age > 0)) return null;
+  const T = LY_TYP_REF,
+    S = T.spend.rows.find(r => peInBand(r, age)) || null,
+    month = S ? S.year / 12 : null,
+    r10 = v => Math.round(v / 10) * 10;
+  if (q === "spend")
+    return S
+      ? {
+          v: r10(month),
+          band: S.band,
+          who: T.spend.who,
+          source: T.spend.source,
+          date: T.spend.date,
+          math: [cbM(S.year) + " a year for ages " + S.band + ", over 12, to the nearest $10."],
+        }
+      : null;
+  if (q === "inv") {
+    const I = T.inv.rows.find(r => peInBand(r, age)) || null;
+    return I
+      ? {
+          v: I.median,
+          band: I.ages[0] == null ? "under " + (I.ages[1] + 1) : I.ages[0] + " to " + I.ages[1],
+          who: T.inv.who,
+          source: T.inv.source,
+          date: T.inv.date,
+          math: ["The median balance of the families of that age that have a retirement account."],
+        }
+      : null;
+  }
+  if (q === "save") {
+    const rate = T.saveRate.share;
+    return S && rate > 0 && rate < 1
+      ? {
+          v: r10((month * rate) / (1 - rate)),
+          band: S.band,
+          who: "the whole country, on the typical spending of ages " + S.band,
+          source: T.saveRate.source + ". The spending: " + T.spend.source,
+          date: T.saveRate.date,
+          rate,
+          month,
+          math: [
+            "The country saves " +
+              Math.round(rate * 1000) / 10 +
+              "% of its income after tax. Typical spending for ages " +
+              S.band +
+              ": " +
+              cbM(month) +
+              " a month.",
+            "Saving = spending x rate / (1 - rate) = " +
+              cbM((month * rate) / (1 - rate)) +
+              " a month, to the nearest $10.",
+          ],
+        }
+      : null;
+  }
+  return null;
 }

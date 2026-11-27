@@ -356,7 +356,7 @@ function cardsSheet() {
       .map(o => {
         const on = w.open === o.i;
         return (
-          `<div class="tile stack" style="gap:6px"><button class="rowbtn" data-a="cdopen" data-v="${o.i}" aria-expanded="${on}"><span>${esc(o.name)}<div class="tiny muted">${esc(cardTag(o))}</div></span><span class="row">${kitPill(o.st)}<b class="${o.st === "Guess" ? "guess" : ""}">${money(o.bal)}</b><span class="caret">${on ? "⌄" : "›"}</span></span></button>` +
+          `<div class="tile stack" style="gap:6px"><button class="rowbtn" data-a="cdopen" data-v="${o.i}" aria-expanded="${on}"><span>${esc(o.name)}<div class="tiny muted">${esc(cardTag(o))}</div></span><span class="row">${kitPill(o.st)}<b class="${o.st === "Guess" ? "guess" : ""}">${money(o.bal)}</b><span class="caret">${on ? "⌄" : "<i class=chev aria-hidden=true></i>"}</span></span></button>` +
           (on
             ? `<div class="stack" style="gap:6px">${cardOpenBody(o, c)}<button class="ghost wide" data-a="${o.rough ? "cdrough" : "cdedit"}" data-v="${o.i}">${o.rough ? "Change the total" : "Change this card"}</button>${o.rough ? "" : `<button class="ghost wide" data-a="cdname" data-v="${o.i}">${o.x.nick ? "Change the name" : "Name this card"}</button>`}<button class="ghost wide" data-a="cddel" data-v="${o.i}">Remove this card</button></div>`
             : "") +
@@ -420,7 +420,7 @@ function cardAddSheet(i, st) {
       const L = cardVault(k.iss);
       return (
         top("Which " + esc(k.iss) + " card is it?") +
-        `<div class="stack" style="gap:6px">${L.map(o => `<button class="rowbtn" data-a="cdvault" data-v="${esc(o.id)}"><span>${esc(o.n)}<div class="tiny muted">${o.fee ? money(o.fee) + " a year" : "No yearly fee"}</div></span><span class="caret">›</span></button>`).join("")}</div>` +
+        `<div class="stack" style="gap:6px">${L.map(o => `<button class="rowbtn" data-a="cdvault" data-v="${esc(o.id)}"><span>${esc(o.n)}<div class="tiny muted">${o.fee ? money(o.fee) + " a year" : "No yearly fee"}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` +
         `<button class="ghost wide" data-a="cdvault" data-v="">Skip this</button>` +
         `<div class="tiny muted">Optional. It fills in the yearly fee and the usual 0% offer.</div>` +
         back

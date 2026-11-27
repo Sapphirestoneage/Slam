@@ -380,7 +380,9 @@
     const h = ov();
     chk(
       "a sheet has Back and Home on its top row",
-      /data-a="navback">‹ Back<\/button><button class="ghost slim rshome" data-a="gohome"/.test(h)
+      /data-a="navback"><i class=chevl aria-hidden=true><\/i> Back<\/button><button class="ghost slim rshome" data-a="gohome"/.test(
+        h
+      )
     );
     X("gohome");
     chk("Home closes the sheet and goes Home", SH === null && tab === "home");

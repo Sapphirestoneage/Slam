@@ -266,7 +266,7 @@ function coverRows(c, prow) {
     C2.rows
       .map(
         r =>
-          `<button class="rowbtn" data-a="cover"><span>${esc(r.n)} cover<div class="tiny muted">${esc(r.next[0])}</div></span><span class="row"><b class="${r.st === "Guess" ? "guess" : ""}">${coverGapText(r)}</b><span class="caret">›</span></span></button>`
+          `<button class="rowbtn" data-a="cover"><span>${esc(r.n)} cover<div class="tiny muted">${esc(r.next[0])}</div></span><span class="row"><b class="${r.st === "Guess" ? "guess" : ""}">${coverGapText(r)}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`
       )
       .join("")
   );

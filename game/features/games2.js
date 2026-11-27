@@ -976,7 +976,7 @@ function bossCard(c) {
   const live = bosses(c).filter(b => b.hp > 0);
   if (!live.length) return "";
   const t = live.find(b => b.first) || live[0];
-  return `<button class="card rowbtn" data-a="boss"><span><b>Boss fights</b><div class="tiny muted">${live.length} standing. Next: ${esc(t.k)}, ${money(t.hp)} left</div></span><span>›</span></button>`;
+  return `<button class="card rowbtn" data-a="boss"><span><b>Boss fights</b><div class="tiny muted">${live.length} standing. Next: ${esc(t.k)}, ${money(t.hp)} left</div></span><span><i class=chev aria-hidden=true></i></span></button>`;
 }
 /* ghost */
 function ghostSheet() {
@@ -1066,7 +1066,7 @@ function nwgSheet() {
       "Same page · player " + (who === "a" ? 1 : 2) + " · " + (i + 1) + " of " + NWG.length + " " + ib("term:samepage"),
       esc(q[0])
     ) +
-    `<div class="stack" style="gap:6px">${q[1].map(o => `<button class="rowbtn" data-a="nwgans" data-v="${esc(o)}"><span>${esc(o)}</span><span>›</span></button>`).join("")}</div>`
+    `<div class="stack" style="gap:6px">${q[1].map(o => `<button class="rowbtn" data-a="nwgans" data-v="${esc(o)}"><span>${esc(o)}</span><span><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`
   );
 }
 /* all games, one list */

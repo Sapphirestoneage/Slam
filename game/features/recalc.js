@@ -162,7 +162,7 @@ function rcgRow(c, d) {
       : X.triage
         ? "This month is " + money(X.triage.short) + " short. See the order to pay in"
         : "Cushion refill: " + money(X.refill.gap) + " to put back";
-  return `<button class="rowbtn bare homerow rcrow rskeep" data-a="rc"><span class="small"><b>${k && k.words.win ? esc(k.words.head) : esc(typeof rgT === "function" ? rgT("escape", "Recalculating") : "Recalculating")}</b> · ${esc(say)}</span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn bare homerow rcrow rskeep" data-a="rc"><span class="small"><b>${k && k.words.win ? esc(k.words.head) : esc(typeof rgT === "function" ? rgT("escape", "Recalculating") : "Recalculating")}</b> · ${esc(say)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 /* Part of home() in ui.js. One calm row under the top numbers. */
 function homeRcRow(h) {

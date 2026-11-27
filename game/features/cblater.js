@@ -184,6 +184,7 @@ function cbLaterView() {
       ? `<div class="tile small" data-fid="cblater:parts"><b>What shows up, and when</b>${P.parts.map(x => `<div>${esc(x.name)}: ${x.kind === "ends" ? cbM(x.year) + " a year less to pay for, from age " + x.from : cbM(x.year) + " a year, from age " + x.from}.</div>`).join("")}</div>` +
         `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With these counted, against not counting them." : "If you count it."}</div></div>` +
         `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
+        cbWayUnsure() +
         said
       : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cblater:why">${esc(cbLaterWhy())}</div></div>`) +
     cbChartCard(

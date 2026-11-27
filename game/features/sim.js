@@ -234,7 +234,7 @@ function simListSheet() {
     `<div class="small muted">One decision at a time, run month by month on your own numbers. Each one shows where the answer flips.</div><div class="stack">${SIM_ORDER.map(
       id => {
         const s = SIMS[id];
-        return `<button class="rowbtn simrow" data-a="simopen" data-v="${id}"><span><b>${esc(s.n)}</b><div class="tiny muted">${esc(s.ask)}</div></span><span class="caret">›</span></button>`;
+        return `<button class="rowbtn simrow" data-a="simopen" data-v="${id}"><span><b>${esc(s.n)}</b><div class="tiny muted">${esc(s.ask)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
       }
     ).join("")}</div>`
   );

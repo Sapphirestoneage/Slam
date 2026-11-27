@@ -272,7 +272,7 @@ function pfSheet() {
           .map(id => {
             const p = P[id],
               s = SKILLS[id.split(":")[0]].skills[+id.split(":")[1]];
-            return `<button class="rowbtn" data-a="skill" data-v="${id}"><span><b>${esc(s[0])}</b><div class="tiny muted">${esc((PF_KINDS.find(k => k[0] === p.k) || [, ""])[1])}${p.n != null ? ", " + money(p.n) : ""}, ${esc(nice(p.d))}</div></span><span class="caret">›</span></button>`;
+            return `<button class="rowbtn" data-a="skill" data-v="${id}"><span><b>${esc(s[0])}</b><div class="tiny muted">${esc((PF_KINDS.find(k => k[0] === p.k) || [, ""])[1])}${p.n != null ? ", " + money(p.n) : ""}, ${esc(nice(p.d))}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
           })
           .join("")}</div>`
       : `<div class="tile small">No proof kept yet. Open a done step and tap the kind of proof you have.</div>`) +
@@ -387,7 +387,7 @@ function bcFor(idOrTree) {
 }
 function bcRow(b) {
   const I = IG[b.idea];
-  return `<button class="rowbtn" data-a="idea" data-v="${b.idea}"><span><b>${esc(b.title)}</b><div class="tiny muted">${esc(I.by)}. The idea in the game: ${esc(I.n)}.</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="idea" data-v="${b.idea}"><span><b>${esc(b.title)}</b><div class="tiny muted">${esc(I.by)}. The idea in the game: ${esc(I.n)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 /* Part of skillSheetBase() in ui.js: a book for this step. */
 function bcStepPart(c, id) {

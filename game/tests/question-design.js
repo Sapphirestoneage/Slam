@@ -35,8 +35,8 @@
   X("set", "Between jobs", "work");
   let h = ov();
   chk(
-    "About you asks: What money comes in? with plain names",
-    h.includes("What money comes in?") && h.includes(">Allowance or family help<") && h.includes(">Job<")
+    "About you asks: Where does your money come from? with plain names",
+    h.includes("Where does your money come from?") && h.includes(">Allowance or family help<") && h.includes(">Job<")
   );
   X("tog", "A main job", "incKinds");
   X("tog", "Help from family", "incKinds");
@@ -45,7 +45,7 @@
   X("set", "I rent", "homeQ");
   X("tog", "Roommates", "live");
   X("smdone", null, "live");
-  chk("roommates: how many", ov().includes("How many roommates?") && ov().includes('data-v="4+"'));
+  chk("roommates: how many", ov().includes("How many roommates live with you?") && ov().includes('data-v="4+"'));
   X("set", "2", "roommateQ");
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");
@@ -64,32 +64,38 @@
   chk("then it counts the cards", W.step === 9 && h.includes("How many credit cards do you have?"), W.step);
   A("cards.n", 3, "3");
   h = ov();
-  chk("then how many carry a balance", h.includes("How many carry a balance month to month?") && h.includes("All 3"));
+  chk(
+    "then how many carry a balance",
+    h.includes("On how many cards do you still owe money after you pay each month?") && h.includes("All 3")
+  );
   A("cards.carry", 2, "2");
   h = ov();
   chk(
     "the card count page moves on by itself to each card on its own screen: Card 1 of 2, the bank first",
-    W.step === 10 && h.includes("Card 1 of 2") && h.includes("Which bank is it from?") && h.includes('data-v="Chase"'),
+    W.step === 10 &&
+      h.includes("Card 1 of 2") &&
+      h.includes("Which bank gave you this card?") &&
+      h.includes('data-v="Chase"'),
     W.step
   );
   A("card.1.iss", "Chase");
   h = ov();
   chk(
     "about how much is left, with its helper under the chips",
-    h.includes("About how much is left to pay back?") &&
-      h.indexOf("I know it") < h.indexOf("The whole amount left, not the monthly payment.") &&
+    h.includes("How much do you still owe on it?") &&
+      h.indexOf("I know it") < h.indexOf("Count all that is left to pay back, not the payment for one month.") &&
       h.includes("$5k to $10k")
   );
   R("card.1.amt", "card", 1);
   R("card.1.amt", "card", 1);
   chk(
     "a second tap on the same chip does nothing (the rate is still next)",
-    W.o.am["card.1.amt"].v === 1250 && ov().includes("What's the interest rate (APR)?")
+    W.o.am["card.1.amt"].v === 1250 && ov().includes("What interest rate does it charge each year?")
   );
   h = ov();
   chk(
-    "the rate chips: 8% or more, less than 8%, 0% promo, I don't know, I know it",
-    ["8% or more", "Less than 8%", "0% promo", "I don't know", "I know it"].every(t => h.includes(t))
+    "the rate chips: 8% or more, less than 8%, 0% promo, I'm not sure, I know it",
+    ["8% or more", "Less than 8%", "0% promo", "I'm not sure", "I know it"].every(t => h.includes(t))
   );
   A("card.1.rate", "hi", "8% or more");
   chk("Card 2 of 2 comes next", ov().includes("Card 2 of 2"));
@@ -104,7 +110,10 @@
   X("amuse", undefined, undefined, { q: "card.2.amt" });
   A("card.2.rate", "promo", "0% promo");
   h = ov();
-  chk("a 0% promo asks when it ends, by month chips", h.includes("When does the 0% end?") && h.includes("Not sure"));
+  chk(
+    "a 0% promo asks when it ends, by month chips",
+    h.includes("In what month does the 0% deal end?") && h.includes("I'm not sure")
+  );
   const ym = cardAddMonths(todayISO(), 6);
   A("card.2.end", ym, cardMonthName(ym));
   h = ov();
@@ -164,7 +173,11 @@
   h = ov();
   chk(
     "each account under a breadcrumb",
-    W.step === 11 && h.includes("What you own › Cash › Checking") && /<h2 class="amhead">Checking<\/h2>/.test(h),
+    W.step === 11 &&
+      h.includes(
+        "What you own <i class=chev aria-hidden=true></i> Cash <i class=chev aria-hidden=true></i> Checking"
+      ) &&
+      /<h2 class="amhead">Checking<\/h2>/.test(h),
     W.step
   );
   R("a:checking", "cash", 1);
@@ -172,7 +185,9 @@
   h = ov();
   chk(
     "the Roth IRA has its own screen and the tax line",
-    h.includes("What you own › Investments › Roth IRA") && h.includes("Before taxes.")
+    h.includes(
+      "What you own <i class=chev aria-hidden=true></i> Investments <i class=chev aria-hidden=true></i> Roth IRA"
+    ) && h.includes("Before taxes.")
   );
   chk("the cash total, in plain words", h.includes("💵 <b>Cash: $1,500</b>"));
   chk(
@@ -182,7 +197,7 @@
   X("amhave", "Rolled over", undefined, { n: "401(k) or work plan" });
   R("a:rothira", "inv", 3);
   h = ov();
-  chk("then where it went", h.includes("Where did your 401(k) or work plan go?"));
+  chk("then where it went", h.includes("Where did you move the money from your 401(k) or work plan?"));
   A("roll:401korworkplan", "Roth IRA");
   chk("A moves on to the cushion", W.step === 7, W.step);
   W.step = 11;
@@ -209,12 +224,12 @@
   h = ov();
   chk(
     "then each source: how often first",
-    W.step === 12 && h.includes("How often does it come in?") && h.includes("Paid by the shift or gig"),
+    W.step === 12 && h.includes("How often do you get this money?") && h.includes("Paid by the shift or gig"),
     W.step
   );
   A("i:amainjob:f", "Weekly");
   h = ov();
-  chk("the amount ranges follow the rhythm", h.includes("About how much lands a week?") && h.includes("$2,500+"));
+  chk("the amount ranges follow the rhythm", h.includes("How much do you get a week?") && h.includes("$2,500+"));
   T("i:amainjob:amt", 869);
   h = ov();
   chk(

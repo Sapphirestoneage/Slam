@@ -291,7 +291,7 @@ function fdSheetBase() {
     `<div class="small muted">Pick a money fear. See it run on your own numbers, then do one small thing in real life. Practicing the scary thing while it is calm is how it gets smaller.</div><div class="stack" style="gap:6px">${L.map(
       x => {
         const n = (done[x.id] || {}).n || 0;
-        return `<button class="rowbtn" data-a="fdopen" data-v="${x.id}"><span style="min-width:0"><b>${esc(x.fear)}</b><div class="tiny muted">${esc(x.big)}${x.real ? "" : " · guess"}${n ? " · practiced " + n + "x" : ""}</div></span>${x.calm ? `<span class="pill okp" style="flex:none">Covered</span>` : n ? `<span class="pill info" style="flex:none">Practiced ✓</span>` : `<span class="caret">›</span>`}</button>`;
+        return `<button class="rowbtn" data-a="fdopen" data-v="${x.id}"><span style="min-width:0"><b>${esc(x.fear)}</b><div class="tiny muted">${esc(x.big)}${x.real ? "" : " · guess"}${n ? " · practiced " + n + "x" : ""}</div></span>${x.calm ? `<span class="pill okp" style="flex:none">Covered</span>` : n ? `<span class="pill info" style="flex:none">Practiced ✓</span>` : `<span class="caret"><i class=chev aria-hidden=true></i></span>`}</button>`;
       }
     ).join("")}</div>
  <button class="ghost wide slim" data-a="ladder">If the pay stopped: what would I use first?</button>`

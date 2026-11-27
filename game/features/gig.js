@@ -617,7 +617,7 @@ function moneyTabTaxRow(h) {
   if (!gxOn(c)) return h;
   const S = gxState(c),
     u = gxUnit(c),
-    row = `<button class="rowbtn" data-a="gig"><span style="min-width:0"><b>Tax money</b><div class="tiny muted">${money(Math.round(S.T.set))} set aside · next date around ${S.nx.txt}${u ? " · 1 " + esc(u.n) + " = " + money(u.v) : ""}</div></span>${S.behind > 0 ? `<span class="pill warn" style="flex:none">${money(S.behind)} to catch up</span>` : `<span class="caret">›</span>`}</button>`,
+    row = `<button class="rowbtn" data-a="gig"><span style="min-width:0"><b>Tax money</b><div class="tiny muted">${money(Math.round(S.T.set))} set aside · next date around ${S.nx.txt}${u ? " · 1 " + esc(u.n) + " = " + money(u.v) : ""}</div></span>${S.behind > 0 ? `<span class="pill warn" style="flex:none">${money(S.behind)} to catch up</span>` : `<span class="caret"><i class=chev aria-hidden=true></i></span>`}</button>`,
     th = typeof tabHead === "function" ? tabHead() : "";
   return th && h.indexOf(th) >= 0
     ? h.replace(th, () => th + row)

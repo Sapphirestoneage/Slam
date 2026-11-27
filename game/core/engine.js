@@ -611,6 +611,12 @@ const TYP = {
   "Self-employed": [4200, 3600],
   Retired: [3800, 3800],
 };
+/* The words of every question of the opening, the demo and setup (run 16, C8 and C9). NOT_SURE: the one choice of a
+   player who does not know. It counts as a Guess: the game uses a typical value where it has one, and keeps nothing
+   where it has none (the question stays open, or the stock number of the profile stays a Guess). It took the place
+   of "No idea, use typical", "I don't know", "Not sure" and "Skip". TAP_ONE: the helper line under the choices. */
+const NOT_SURE = "I'm not sure",
+  TAP_ONE = "Tap one to keep going.";
 const COVER = { "Less than a month": 0.5, "1 to 3 months": 2, "3 to 6 months": 4.5, "Longer than 6 months": 8 };
 const SHARP_Q = {
   take: "Money coming in",

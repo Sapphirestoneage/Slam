@@ -279,7 +279,7 @@ function jobsSheetRoleMap(h) {
       n = rmPeople(c).length;
     return (
       h +
-      `<button class="rowbtn" data-a="rolemap"><span><b>Who carries what</b><div class="tiny muted">${n > 1 ? "Share the six jobs with the " + (n - 1) + (n === 2 ? " person" : " people") + " in your home" : "Share the jobs with the people in your home"}</div></span><span class="caret">›</span></button>`
+      `<button class="rowbtn" data-a="rolemap"><span><b>Who carries what</b><div class="tiny muted">${n > 1 ? "Share the six jobs with the " + (n - 1) + (n === 2 ? " person" : " people") + " in your home" : "Share the jobs with the people in your home"}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     );
   } catch (e) {
     report(e, "rolemap.js: jobsSheetRoleMap");

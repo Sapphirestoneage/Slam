@@ -55,9 +55,9 @@
   );
   chk("no typing: no box until Something else is tapped", !/<input/.test(h));
   chk(
-    "the two buttons: Next: four quick taps (the one primary) and Skip for now (ghost)",
+    "the two buttons: Next: four quick taps (the one primary) and I'm not sure (ghost)",
     /class="primary wide go" data-a="wnnext">Next: four quick taps</.test(h) &&
-      /class="ghost wide" data-a="wnskip">Skip for now</.test(h) &&
+      /class="ghost wide" data-a="wnskip">I'm not sure</.test(h) &&
       (h.match(/class="primary/g) || []).length === 1
   );
   chk("no ranking on this screen", !/data-a="grup"|Rank them/.test(h));
@@ -249,13 +249,19 @@
   );
   start();
   X("wnskip");
-  chk("the age question has no such chip", !/data-a="cbtyp"/.test(ov()));
+  /* run 16, C8: every question has "I'm not sure". Age has no typical value: nothing is kept, the question waits. */
+  chk("the age question has the chip too", /data-a="cbtyp" data-q="age"[^>]*>I'm not sure</.test(ov()));
+  X("cbtyp", "", "", { q: "age" });
+  chk(
+    "on age it keeps nothing and says why the question waits",
+    W.q === 0 && !(W.o.a && W.o.a.age) && /Your age is the one answer this number needs/.test(fid(ov(), "cb:unsure"))
+  );
   X("cbset", "", "", { q: "age", i: 2 });
   h = ov();
   chk(
-    "spend has the chip No idea, use typical, with the value under the chips",
-    /data-a="cbtyp" data-q="spend">No idea, use typical</.test(h) &&
-      fid(h, "cb:typhint").includes("Typical for ages 25 to 34: " + money(sp.v) + " a month")
+    "spend has the chip I'm not sure, with the typical value under the chips",
+    /data-a="cbtyp" data-q="spend"[^>]*>I'm not sure</.test(h) &&
+      fid(h, "cb:typhint").includes("typical for ages 25 to 34: " + money(sp.v) + " a month")
   );
   X("cbtyp", "", "", { q: "spend" });
   chk(
@@ -321,7 +327,7 @@
     W.step === "entry" &&
       W.q === 1 &&
       W.one === true &&
-      /About how much do you spend in a month\?/.test(h) &&
+      /How much money do you spend in one month\?/.test(h) &&
       /One answer/.test(h)
   );
   X("cbset", "", "", { q: "spend", i: 1 });

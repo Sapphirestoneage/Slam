@@ -52,13 +52,13 @@ const lrEsc = s =>
   String(s == null ? "" : s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m]);
 const lrHome = () => (LR.side === "coach" ? "./coach.html" : "./");
 const lrBackLink = () =>
-  `<div class="row"><a class="btn" href="${lrHome()}">‹ ${LR.side === "coach" ? "Back to the coach page" : "Back to the game"}</a></div>`;
+  `<div class="row"><a class="btn" href="${lrHome()}"><i class=chevl aria-hidden=true></i> ${LR.side === "coach" ? "Back to the coach page" : "Back to the game"}</a></div>`;
 
 /* ---------- HTML only ---------- */
 /* The switch is off: one calm card, and the way back. */
 function lrSoon() {
   return (
-    `<div class="row"><a class="btn" href="./">‹ Back to the game</a></div><h1>Live sessions</h1>` +
+    `<div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div><h1>Live sessions</h1>` +
     `<div class="card">${soonPart("A coaching call that fills in your profile", "This part is being built. Nothing of yours changed, and the game works as before.")}</div>`
   );
 }
@@ -95,7 +95,7 @@ function lrDeadHTML(state, coachName, signedIn) {
     (signedIn
       ? `<button class="wide" data-a="lrmine">Look for my session</button>`
       : `<button class="wide" data-a="lrform" data-v="in">I already have an account. Sign in</button>`) +
-    `<a class="btn" href="./">‹ Back to the game</a></div>`
+    `<a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>`
   );
 }
 /* No invite in the address and nobody signed in. */
@@ -105,16 +105,16 @@ function lrSignInHTML(em) {
       `<button type="button" class="wide" data-a="lrform" data-v="new">I'm new. Create my account</button>`,
       ""
     ) +
-    `<p class="muted">New here? Open the invite link from your coach. It makes your account.</p><div class="row"><a class="btn" href="./">‹ Back to the game</a></div>`
+    `<p class="muted">New here? Open the invite link from your coach. It makes your account.</p><div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>`
   );
 }
 /* Signed in, and no session is open for this account. */
 function lrNoneHTML(msg) {
-  return `<h1>No session is open yet</h1><div class="card"><p>${lrEsc(msg || "Your coach opens the session. When they do, this page takes you into the room.")}</p><button class="primary wide" data-a="lrmine">Check again</button><a class="btn" href="./">‹ Back to the game</a></div>`;
+  return `<h1>No session is open yet</h1><div class="card"><p>${lrEsc(msg || "Your coach opens the session. When they do, this page takes you into the room.")}</p><button class="primary wide" data-a="lrmine">Check again</button><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>`;
 }
 /* The database file has not run yet. */
 function lrWaitHTML() {
-  return `<h1>Live sessions</h1><div class="card"><p>This part waits for one database file (supabase/migrations/20261125210000_live_sessions.sql). The person who runs SLAM runs it one time. Nothing of yours changed.</p><button class="wide" data-a="lrreload">Check again</button><a class="btn" href="./">‹ Back to the game</a></div>`;
+  return `<h1>Live sessions</h1><div class="card"><p>This part waits for one database file (supabase/migrations/20261125210000_live_sessions.sql). The person who runs SLAM runs it one time. Nothing of yours changed.</p><button class="wide" data-a="lrreload">Check again</button><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>`;
 }
 /* The pill and the two lights. */
 function lrLights(R, now) {

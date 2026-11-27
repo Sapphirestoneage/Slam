@@ -17,7 +17,7 @@
    SOURCE-HASH  f6085affe6033070
    ========================================================================= */
 // Ratios on Key numbers (run Not built, groups 1 to 5, Part 9, Nov 26 2026). One function for each ratio, for the web
-// app (Report › Overview, the section Ratios) and the game (Key numbers, the part Ratios; game/core/ratios.js is a copy
+// app (Report, Overview, the section Ratios) and the game (Key numbers, the part Ratios; game/core/ratios.js is a copy
 // made by tools/game_ratios_build.mjs). Pure: plain numbers in, a plain result out. It reads no household and no
 // screen, and it works out none of its inputs: each app hands in the numbers it already has (net worth, cash, debts,
 // income, spending, fixed and variable, the home, the confidence rating).

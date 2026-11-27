@@ -33,6 +33,8 @@ table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba
 .lclink{border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:14px;overflow-wrap:anywhere;user-select:all}.lcrow{border-top:1px solid var(--line);padding-top:8px}button[disabled]{opacity:.55;cursor:default}.soonpart{border:1px dashed var(--line);border-radius:10px;padding:10px}.tiny{font-size:13px}
 #cpxprint{display:none}
 @media print{body{background:#fff;color:#000}main{display:none}#cpxprint{display:block;padding:24px;font:14px/1.5 system-ui,sans-serif}#cpxprint pre{white-space:pre-wrap;font:inherit}}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
 </style>
 </head>
 <body>
@@ -43,14 +45,14 @@ table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba
 <script src="core/soon.js?v=cafe08bf"></script>
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/supa.js?v=cfa58c3f"></script>
-<script src="core/engine.js?v=baaaaae1"></script>
+<script src="core/engine.js?v=41fdc22f"></script>
 <script src="account/roles.js?v=16f6dd76"></script>
-<script src="account/coachpage.js?v=5037ccaf"></script>
+<script src="account/coachpage.js?v=f1b9b77d"></script>
 <script src="account/coachplus.js?v=cb375456"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
 <script src="account/live.js?v=3db94988"></script>
 <script src="account/liveio.js?v=7e40296e"></script>
-<script src="account/livecoach.js?v=2b06a0f7"></script>
+<script src="account/livecoach.js?v=da60ec39"></script>
 <script>
 /* The coach page. The database checks everything again: an account with no coach role gets no client back, whatever this page shows. */
 CP.sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});

@@ -24,7 +24,7 @@ function freeLine(c, d) {
   if (G.demo) return "";
   const f = freeToSpend(c, d),
     tight = f.free <= 0 || f.short > 0;
-  return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight ? "Nothing free right now" : money(f.week) + " a week"}</b> <span class="pill ${tight ? "warn" : ""}">${tight ? "Tight" : f.real ? "Close" : "Guess"}</span></div><div class="tiny muted">${tight ? "Tap to see what a spend would move." : money(f.free) + " a month after bills and goals. Tap to check a purchase."}</div></span><span>›</span></button>`;
+  return `<button class="rowbtn keep freeline" data-a="safe"><span><span class="tiny muted">Free to spend</span><div><b data-fid="v:freewk">${tight ? "Nothing free right now" : money(f.week) + " a week"}</b> <span class="pill ${tight ? "warn" : ""}">${tight ? "Tight" : f.real ? "Close" : "Guess"}</span></div><div class="tiny muted">${tight ? "Tap to see what a spend would move." : money(f.free) + " a month after bills and goals. Tap to check a purchase."}</div></span><span><i class=chev aria-hidden=true></i></span></button>`;
 }
 
 /* From ui.js. */
@@ -38,7 +38,7 @@ function moveSheet() {
       `<div class="stack">${Object.keys(MOVE_T)
         .map(
           k =>
-            `<button class="rowbtn" data-a="mvtype" data-v="${k}"><span>${MOVE_T[k]}</span><span class="caret">›</span></button>`
+            `<button class="rowbtn" data-a="mvtype" data-v="${k}"><span>${MOVE_T[k]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         )
         .join("")}</div>`
     );

@@ -162,7 +162,7 @@ function lkBreakList(c, sec, sign) {
   return (
     L.map(o => {
       const st = c.led ? knSt([o.x]) : "Guess";
-      return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${o.i}"><span>${esc(lkName(o.x, sec))}${LK_RETIRE.test(o.x.k) && sec === "invs" ? `<div class="tiny muted">Before taxes</div>` : ""}</span><span class="row" style="gap:8px"><b class="${st === "Guess" ? "guess" : ""}">${sign}${money(o.x.amt)}</b>${kitPill(st)}<span class="caret">›</span></span></button>`;
+      return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${o.i}"><span>${esc(lkName(o.x, sec))}${LK_RETIRE.test(o.x.k) && sec === "invs" ? `<div class="tiny muted">Before taxes</div>` : ""}</span><span class="row" style="gap:8px"><b class="${st === "Guess" ? "guess" : ""}">${sign}${money(o.x.amt)}</b>${kitPill(st)}<span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`;
     }).join("") +
     (anyRet ? `<div class="tiny muted">Before taxes. Some of this goes to taxes when you take it out.</div>` : "")
   );

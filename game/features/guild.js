@@ -10,13 +10,13 @@
                prompts to tap through together, and the next date.
    INPUT       G.chars, G.coach, G.demo, G.guild (the name and the date), c.x.gd of each profile (the switches).
    OUTPUT      Functions: gdX, gdMembers, gdView, gdFinished, gdMentors, gdMentorPart, gdNext, gdDateSteps,
-               profSheetGuild, gdSheet, gdDateSheet. Parts of functions in other files: profSheetGuild
-               (profSheet in profiles.js), gdMentorPart (skillSheetBase in ui.js). Named functions Home can
+               mePeopleGuild, gdSheet, gdDateSheet. Parts of functions in other files: mePeopleGuild
+               (meTabPeople in profiles.js), gdMentorPart (skillSheetBase in ui.js). Named functions Home can
                call later: gdNext (the next money date), gdMembers. Actions (ACT): guild, gdjoin, gdshow,
                gdmentor, gdname, gdday, gddate, gdstep, gdheld. Menu: "Your guild".
    DEPENDS ON  core/report.js, core/play.js (plNextMonthly), core/engine.js (derive, nextSkill, treeSize),
                screens/ui.js (esc, head, sheet, onoff, nextStep, eraN, trackN), screens/dash.js (the kit),
-               screens/profiles.js (profSheet).
+               screens/profiles.js (meTabPeople).
    RULES       Sharing between accounts needs the tables of supabase/migrations/20261126120000_guilds.sql,
                which is NOT APPLIED. Until Eli applies it, a guild is the people of this one game.
    ========================================================================= */
@@ -128,12 +128,12 @@ function gdDateSteps() {
   ].filter(Boolean);
 }
 /* Part of profSheet() in profiles.js: the row of the guild. */
-function profSheetGuild(h) {
+function mePeopleGuild(h) {
   if (G.demo || (G.chars || []).length < 2) return h;
   const n = gdMembers().length;
   return (
     h +
-    `<button class="rowbtn" data-a="guild"><span><b>Your guild</b><div class="tiny muted">${n ? n + " joined. " : ""}A private group of the people in this game, and a monthly money date</div></span><span class="caret">›</span></button>`
+    `<button class="rowbtn" data-a="guild"><span><b>Your guild</b><div class="tiny muted">${n ? n + " joined. " : ""}A private group of the people in this game, and a monthly money date</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
   );
 }
 function gdSheet() {

@@ -137,7 +137,7 @@ function tlBig3Card(c) {
   return `<div class="card stack tlbig3"><div class="row between"><h3>The big three</h3>${ib("term:big3")}</div><div class="small">Home, getting around and food are <b class="${gc}">${tlPct(B.ofSpend)}</b> of what you spend (${tlPct(B.ofTake)} of what comes in)${B.real ? "" : " · <b>Guess</b>"}.</div>${B.rows
     .map(r =>
       idx(r.k) >= 0
-        ? `<button class="rowbtn" data-a="rowedit" data-k="spends" data-v="${idx(r.k)}"><span>${esc(r.k)}</span><span class="row"><b class="${gc}">${money(r.amt)} · ${tlPct(r.ofSpend)}</b><span class="caret">›</span></span></button>`
+        ? `<button class="rowbtn" data-a="rowedit" data-k="spends" data-v="${idx(r.k)}"><span>${esc(r.k)}</span><span class="row"><b class="${gc}">${money(r.amt)} · ${tlPct(r.ofSpend)}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`
         : ""
     )
     .join(

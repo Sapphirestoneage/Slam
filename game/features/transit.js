@@ -332,7 +332,7 @@ function goalsTabTransit(h) {
   if (!c || G.demo || !c.placed) return h;
   return h.replace(
     /<\/div>\s*$/,
-    `<button class="rowbtn trrow" data-a="transit"><span><b>Break in case of emergency</b><div class="tiny muted">If the pay stopped: the number, the tripwires, the plan</div></span><span class="caret">›</span></button></div>`
+    `<button class="rowbtn trrow" data-a="transit"><span><b>Break in case of emergency</b><div class="tiny muted">If the pay stopped: the number, the tripwires, the plan</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>`
   );
 }
 kitTerms({

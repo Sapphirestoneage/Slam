@@ -3,7 +3,7 @@
    PURPOSE     The amounts inside the setup rounds (UX pass, phase 4). Count first, then one at a time.
                D: how many credit cards, how many carry a balance, then each card on its own screen ("Card 1
                of 2": the bank, about how much is left, the rate, the end of a 0% promo), then each other debt
-               the same way. A: each account under a breadcrumb ("What you own › Investments › Roth IRA"),
+               the same way. A: each account under a breadcrumb ("What you own, then Investments, then Roth IRA"),
                the cash total, and "Accounts you don't have" (Yes, No, Rolled over). I: each source of money,
                how often and about how much. E: how many roommates and kids, then spending group by group,
                each group with its lines and a live total.
@@ -24,7 +24,7 @@
                cardMonthName), features/kit.js (kitPill).
    RULES       A tap SETS an answer, it never adds. A range chip gives the middle of the range, Close, and the
                row keeps the range (x.rg = [low, high, amount]) so net worth shows a range. A typed number is
-               Exact. "I don't know" keeps the stock number, a Guess (for a card rate, about 24%).
+               Exact. "I'm not sure" keeps the stock number, a Guess (for a card rate, about 24%).
                Each card is its own row of c.debts. A card paid in full each month is a card (x.card.full
                "Yes", amount 0), not a debt. An IRA and a Roth IRA are two rows of the kind "IRA or Roth IRA",
                named by x.nick. A spending group keeps its lines in x.parts; while the lines are not all in,
@@ -307,7 +307,7 @@ function amDebtLines(o) {
     .filter(k => k !== CARD_K)
     .forEach(k => {
       const cnt = AM_COUNT[k] ? amA(o, "d:" + amSlug(k) + ".n") : null,
-        m = cnt ? cnt.v : 1,
+        m = cnt && cnt.v ? cnt.v : 1 /* "I'm not sure" how many: one line for all of them */,
         one = m === 1 && cnt && /combined/i.test(cnt.lab || "");
       for (let i = 1; i <= m; i++)
         out.push({
@@ -329,7 +329,7 @@ function amRateOpts(k) {
     ["Less than 8%", "lo"],
   ]
     .concat(card ? [["0% promo", "promo"]] : [], /famil|friend|medical/i.test(k) ? [["No interest", "zero"]] : [])
-    .concat([["I don't know", "dk"]]);
+    .concat([[NOT_SURE, "dk"]]);
 }
 /* A rate answer on a debt row. */
 function amRateSet(x, a) {
@@ -568,7 +568,7 @@ function finishSetupAm() {
    answer in words) }. */
 function amAnsWords(a) {
   if (!a) return null;
-  if (a.skip) return "Skipped";
+  if (a.skip) return "Not sure yet";
   return a.lab || (a.v != null ? money(a.v) : null);
 }
 function amSteps(w, p) {
@@ -596,8 +596,8 @@ function amSteps(w, p) {
       add({
         id: "cards.carry",
         grp: "Credit cards",
-        l: "How many carry a balance month to month?",
-        h: "A card you pay in full each month doesn't count. It stays on your list of cards, not your debts.",
+        l: "On how many cards do you still owe money after you pay each month?",
+        h: "A card you pay in full each month does not count. It stays on your list of cards, not your debts.",
         t: "ch",
         opts: [["None", 0]].concat(
           Array.from({ length: n.v }, (_, i) => [n.v > 1 && i + 1 === n.v ? "All " + n.v : String(i + 1), i + 1])
@@ -624,16 +624,16 @@ function amSteps(w, p) {
           id: slug + ".iss",
           grp: L.grp,
           head,
-          l: "Which bank is it from?",
+          l: "Which bank gave you this card?",
           t: "ch",
-          opts: CARD_ISS.map(b => [b, b]).concat([["Skip", "skip"]]),
+          opts: CARD_ISS.map(b => [b, b]).concat([[NOT_SURE, "skip"]]),
         });
       add({
         id: slug + ".amt",
         grp: L.grp,
         head,
-        l: "About how much is left to pay back?",
-        h: "The whole amount left, not the monthly payment.",
+        l: "How much do you still owe on it?",
+        h: "Count all that is left to pay back, not the payment for one month.",
         t: "rng",
         rk: AM_DEBT_RK[L.k] || "mid",
       });
@@ -641,8 +641,8 @@ function amSteps(w, p) {
         id: slug + ".rate",
         grp: L.grp,
         head,
-        l: "What's the interest rate (APR)?",
-        h: "Your app or statement shows the APR.",
+        l: "What interest rate does it charge each year?",
+        h: "Interest is what the lender charges you to borrow. Your app or statement shows the yearly rate as APR.",
         t: "rate",
         k: L.k,
       });
@@ -654,10 +654,10 @@ function amSteps(w, p) {
           id: slug + ".end",
           grp: L.grp,
           head,
-          l: "When does the 0% end?",
-          h: "After that month, the card takes its usual rate.",
+          l: "In what month does the 0% deal end?",
+          h: "After that month, the card charges its usual rate.",
           t: "ch",
-          opts: months.map(m => [cardMonthName(m), m]).concat([["Not sure", "ns"]]),
+          opts: months.map(m => [cardMonthName(m), m]).concat([[NOT_SURE, "ns"]]),
         });
       }
     });
@@ -668,7 +668,7 @@ function amSteps(w, p) {
         grp: r[2],
         head: r[1],
         crumb: ["What you own", r[2], r[1]],
-        l: "About how much is in it today?",
+        l: "How much money is in it today?",
         h:
           r[2] === "Investments" && r[0] !== "HSA"
             ? "Before taxes. Some of this goes to taxes when you take it out."
@@ -684,7 +684,7 @@ function amSteps(w, p) {
           id: "roll:" + amSlug(f),
           grp: "Rolled over",
           head: f,
-          l: "Where did your " + f + " go?",
+          l: "Where did you move the money from your " + f + "?",
           t: "ch",
           opts: AM_ROLL_TO.filter(x => x !== f).map(x => [x, x]),
         });
@@ -700,7 +700,7 @@ function amSteps(w, p) {
         id: "i:" + amSlug(k) + ":f",
         grp: nm,
         head,
-        l: "How often does it come in?",
+        l: "How often do you get this money?",
         t: "ch",
         opts: AM_FREQ.map(r => [r[0], r[0]]),
       });
@@ -708,8 +708,8 @@ function amSteps(w, p) {
         id: "i:" + amSlug(k) + ":amt",
         grp: nm,
         head,
-        l: "About how much lands " + (fr ? fr[3] : "each time") + "?",
-        h: "What lands in your account, after taxes.",
+        l: "How much do you get " + (fr ? fr[3] : "each time") + "?",
+        h: "Count what comes into your account, after taxes.",
         t: "rng",
         rk: fr ? fr[2] : "mo",
       });
@@ -816,11 +816,15 @@ function amStepHtml(w, st) {
           `<button class="chip ${cur && String(cur.v) === String(r[1]) ? "on" : ""}" data-a="amset" data-q="${esc(st.id)}" data-v="${esc(r[1])}" data-lab="${esc(r[0])}">${esc(r[0])}</button>`
       )
       .join("")}</div>`;
-  const crumb = st.crumb ? `<div class="tiny muted amcrumb">${st.crumb.map(esc).join(" › ")}</div>` : "";
+  const crumb = st.crumb
+    ? `<div class="tiny muted amcrumb">${st.crumb.map(esc).join(" <i class=chev aria-hidden=true></i> ")}</div>`
+    : "";
   return (
-    `<div class="field smopen amstep">${crumb}${st.head ? `<h2 class="amhead">${esc(st.head)}</h2>` : ""}<div class="small"><b>${esc(st.l)}</b></div>${inner}${st.h ? `<div class="tiny muted">${esc(st.h)}</div>` : ""}` +
-    (st.t === "rng" || st.t === "rate"
-      ? `<button class="ghost slim" data-a="amskip" data-q="${esc(st.id)}">Skip, keep a guess</button>`
+    `<div class="field smopen amstep">${crumb}${st.head ? `<h2 class="amhead">${esc(st.head)}</h2>` : ""}<div class="small"><b>${esc(st.l)}</b></div>${inner}<div class="tiny muted" data-fid="am:tapone">${TAP_ONE}</div>${st.h ? `<div class="tiny muted">${esc(st.h)}</div>` : ""}` +
+    /* I'm not sure (run 16, C8): nothing is kept, and the stock number of the profile stays a Guess. A list that has
+       the choice among its chips (the rate, the bank, the month the 0% ends) needs no second one. */
+    (st.t === "rng" || (st.t === "ch" && !st.opts.some(r => r[0] === NOT_SURE))
+      ? `<button class="ghost slim" data-a="amskip" data-q="${esc(st.id)}">${NOT_SURE}</button>`
       : "") +
     `</div>`
   );
@@ -838,7 +842,7 @@ function amGroupHtml(w, st) {
     /* fewer.js: when the lines left move little, say so and make "That's all" the main button */
     few = !all && typeof fqGroupFew === "function" ? fqGroupFew(g, L) : null;
   return (
-    `<div class="field smopen amstep amgrp"><div class="tiny muted amcrumb">Money going out › ${esc(g[0])}</div><h2 class="amhead"><span aria-hidden="true">${g[1]}</span> ${esc(g[0])}</h2><div class="small muted">${esc(g[2])}</div>` +
+    `<div class="field smopen amstep amgrp"><div class="tiny muted amcrumb">Money going out <i class=chev aria-hidden=true></i> ${esc(g[0])}</div><h2 class="amhead"><span aria-hidden="true">${g[1]}</span> ${esc(g[0])}</h2><div class="small muted">${esc(g[2])}</div>` +
     `<div class="tile amtotal" role="status"><span class="small">${esc(g[0])} total</span> <b class="amtot">${money(T.amt)}</b> <span class="tiny muted">a month</span>${T.rest > 0 && L.some(l => l.amt != null) ? `<div class="tiny muted">${money(T.rest)} not split up yet</div>` : !L.some(l => l.amt != null) ? `<div class="tiny muted">${GG.mine ? "From your quick answer, a Guess. Tap your lines to make it yours." : "A typical amount for now. Tap your lines."}</div>` : ""}</div>` +
     L.map((l, j) => {
       const id = "s:" + amSlug(g[0]) + ":" + j,
@@ -846,7 +850,10 @@ function amGroupHtml(w, st) {
       return `<div class="amline"><div class="small"><b>${esc(l.n)}</b>${l.amt != null ? ` <span class="tiny muted">✓ ${money(l.amt)}</span>` : ""}</div>${amChipsRng(w, id, g[3][j][1], cur)}</div>`;
     }).join("") +
     (few ? few.html : "") +
-    `<button class="${all || few ? "primary go" : "ghost"} wide slim" data-a="amgrp" data-q="${esc(st.id)}">${all ? "Done with " + esc(g[0]) : "That's all for " + esc(g[0])}</button></div>`
+    `<button class="${all || few ? "primary go" : "ghost"} wide slim" data-a="amgrp" data-q="${esc(st.id)}">${all ? "Done with " + esc(g[0]) : "That's all for " + esc(g[0])}</button>` +
+    /* I'm not sure: the lines with no answer keep the typical amount, a Guess (the same action as "That's all") */
+    (all ? "" : `<button class="ghost wide slim" data-a="amgrp" data-q="${esc(st.id)}">${NOT_SURE}</button>`) +
+    `<div class="tiny muted" data-fid="am:tapone">${TAP_ONE}</div></div>`
   );
 }
 /* The body of a page: the step that is open, or the first one with no answer. */
@@ -949,9 +956,14 @@ function amHouseQs(w, base) {
   const asked = smState(w).md.live;
   if (!live.includes("Roommates")) delete o.roommateQ;
   else if (asked)
-    out.push({ k: "roommateQ", l: "How many roommates?", s: "Roommates", o: ["1", "2", "3", "4+", "Skip"] });
+    out.push({
+      k: "roommateQ",
+      l: "How many roommates live with you?",
+      s: "Roommates",
+      o: ["1", "2", "3", "4+", "Skip"],
+    });
   if (!live.includes("Kids")) delete o.kidQ;
-  else if (asked) out.push({ k: "kidQ", l: "How many kids?", s: "Kids", o: ["1", "2", "3", "4+", "Skip"] });
+  else if (asked) out.push({ k: "kidQ", l: "How many kids do you have?", s: "Kids", o: ["1", "2", "3", "4+", "Skip"] });
   return out;
 }
 /* Part of spChecklist() in spiral.js: what pages 9 to 13 have so far. Returns true for those pages. */

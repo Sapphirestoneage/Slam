@@ -5,7 +5,7 @@
                lawyer. (3) A money agreement with five safeguards. Also one page for a planner.
    INPUT       The game: G.chars, G.hh. The open sheet (W.kind): house, onepage. The taps of the player
                (the actions in OUTPUT).
-   OUTPUT      15 functions. Parts of functions in other files: profSheetHouse. Actions (ACT): house,
+   OUTPUT      15 functions. Parts of functions in other files: mePeopleHouse. Actions (ACT): house,
                hstab, hssample, hsdoc, hsag, hssafe, hsend, hscopy, onepage, opcopy. Menu: "Our
                household", "One page for a planner".
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js,
@@ -465,11 +465,10 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-/* Part of profSheet() in profiles.js. Adds the row "Our household" above the row "Sharing costs fairly". */
-function profSheetHouse(h) {
-  const a = '<button class="rowbtn" data-a="fair">';
-  const row = `<button class="rowbtn" data-a="house"><span><b>Our household</b><div class="tiny muted">Everyone's money together, the paperwork, a money agreement</div></span><span class="caret">›</span></button>`;
-  return h.indexOf(a) >= 0 ? h.replace(a, () => row + a) : h;
+/* Part of meTabPeople() in profiles.js. Adds the row "Our household" to the card "Your people" of Me. */
+function mePeopleHouse(h) {
+  const row = `<button class="rowbtn" data-a="house"><span><b>Our household</b><div class="tiny muted">Everyone's money together, the paperwork, a money agreement</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
+  return h + row;
 }
 
 if (typeof MENU !== "undefined" && Array.isArray(MENU)) {

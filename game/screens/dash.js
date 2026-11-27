@@ -43,7 +43,7 @@ function dkTile(label, value, o) {
     num = `<b class="dknum ${o.guess ? "guess" : ""}"${mv}>${value}</b>`,
     rest = `${o.sub ? `<span class="tiny muted">${esc(o.sub)}</span>` : ""}${o.spark && o.spark.length > 1 ? dkSpark(o.spark) : ""}`;
   if (o.info && o.act)
-    return `<div class="dktile dkti"><span class="row between dktih"><span class="dklabel">${esc(label)}</span>${ib("term:" + o.info)}</span><button class="dktigo" data-a="${o.act}" data-v="${o.v == null ? "" : esc(o.v)}" aria-label="${esc(label)}: see more">${num}${rest}<span class="caret" aria-hidden="true">›</span></button></div>`;
+    return `<div class="dktile dkti"><span class="row between dktih"><span class="dklabel">${esc(label)}</span>${ib("term:" + o.info)}</span><button class="dktigo" data-a="${o.act}" data-v="${o.v == null ? "" : esc(o.v)}" aria-label="${esc(label)}: see more">${num}${rest}<span class="caret" aria-hidden="true"><i class=chev aria-hidden=true></i></span></button></div>`;
   const inner = `<span class="dklabel">${esc(label)}</span>${num}${rest}`;
   return o.act
     ? `<button class="dktile" data-a="${o.act}" data-v="${o.v == null ? "" : esc(o.v)}">${inner}</button>`
@@ -216,7 +216,7 @@ function dkDonut(parts, o) {
   }).join("");
   const line = (s, i) => {
     const a = o.act ? o.act(s.p) : null,
-      inner = `<span><i style="background:${DK_COLORS[i % DK_COLORS.length]}"></i>${esc(s.p.l)}</span><b>${o.amt ? money(s.p.v) + " · " : ""}${Math.round(s.share * 100)}%${a ? ' <span class="caret">›</span>' : ""}</b>`;
+      inner = `<span><i style="background:${DK_COLORS[i % DK_COLORS.length]}"></i>${esc(s.p.l)}</span><b>${o.amt ? money(s.p.v) + " · " : ""}${Math.round(s.share * 100)}%${a ? ' <span class="caret"><i class=chev aria-hidden=true></i></span>' : ""}</b>`;
     return a
       ? `<button class="row between small dkpart" data-a="${a[0]}" data-v="${esc(a[1] == null ? "" : a[1])}" data-k="${esc(a[2] == null ? "" : a[2])}">${inner}</button>`
       : `<div class="row between small">${inner}</div>`;

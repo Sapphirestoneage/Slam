@@ -66,8 +66,11 @@
     MENU.some(m => m[1] === "house") &&
       MENU.some(m => m[1] === "onepage") &&
       (() => {
+        X("tab", "me"); /* run 16, D12: the row is on the Me tab, not on the sheet People */
+        const me = app().includes('data-a="house"');
+        X("tab", "home");
         X("people");
-        const ok = ov().includes('data-a="house"');
+        const ok = me && !ov().includes('data-a="house"');
         X("close");
         return ok;
       })()

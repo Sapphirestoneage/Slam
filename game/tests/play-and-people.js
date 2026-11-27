@@ -223,7 +223,15 @@
   for (let i = 1; i < 5; i++) X("gdstep", String(i));
   X("gdheld");
   chk("held: counted, and the next date is after today", G.guild.held.length === 1 && gdNext() > todayISO());
-  chk("the People sheet has the guild row", profSheet().includes('data-a="guild"'));
+  chk(
+    "Me has the guild row (run 16, D12: the sheet People only switches people)",
+    (() => {
+      X("people");
+      const none = !ov().includes('data-a="guild"');
+      X("close");
+      return none && meTab().includes('data-a="guild"');
+    })()
+  );
   chk(
     "the guild tables are a migration marked NOT APPLIED with grants",
     (() => {

@@ -187,7 +187,7 @@ function blocksSheet() {
       isOn = on.indexOf(b[0]) >= 0;
     if (!r) return;
     const end = blocksAt(r, S.months);
-    h += `<div class="tile stack blrow ${isOn ? "kithot" : ""}" style="gap:6px"><div class="row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(b[1])}</b><div class="tiny muted">${esc(b[4])}. Now: ${esc(r.opt)}.</div></span><button class="ghost slim" style="flex:none" data-a="blockstog" data-v="${b[0]}">${isOn ? "In the stack ✓ Remove" : "Add to the stack"}</button></div><div class="row between small" style="gap:8px"><span>${signed(Math.round(end))} net worth after ${yrs}, ${signed(Math.round(-r.extra))} a month</span><button class="ghost slim" style="flex:none" data-a="simopen" data-v="${b[2]}">Change its numbers ›</button></div></div>`;
+    h += `<div class="tile stack blrow ${isOn ? "kithot" : ""}" style="gap:6px"><div class="row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(b[1])}</b><div class="tiny muted">${esc(b[4])}. Now: ${esc(r.opt)}.</div></span><button class="ghost slim" style="flex:none" data-a="blockstog" data-v="${b[0]}">${isOn ? "In the stack ✓ Remove" : "Add to the stack"}</button></div><div class="row between small" style="gap:8px"><span>${signed(Math.round(end))} net worth after ${yrs}, ${signed(Math.round(-r.extra))} a month</span><button class="ghost slim" style="flex:none" data-a="simopen" data-v="${b[2]}">Change its numbers <i class=chev aria-hidden=true></i></button></div></div>`;
   });
   h += `</div>`;
   if (on.indexOf("car") >= 0)

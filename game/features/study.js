@@ -358,7 +358,7 @@ function slChips(k, opts, cur, f) {
   return `<div class="chips">${opts.map(v => `<button class="chip ${cur === v ? "on" : ""}" data-a="slset" data-k="${k}" data-v="${v}">${f(v)}</button>`).join("")}</div>`;
 }
 function slRows(k, opts, cur) {
-  return `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="slset" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret">›</span></button>`).join("")}</div>`;
+  return `<div class="stack" style="gap:6px">${opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="slset" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`;
 }
 function slSheet() {
   const c = C(),

@@ -479,11 +479,11 @@ function vaultAddHtml(c) {
       .filter(o => o.bank === A.bank && !held.includes(o.id))
       .map(
         o =>
-          `<button class="rowbtn" data-a="vaultpick" data-k="id" data-v="${esc(o.id)}"><span class="small">${esc(o.n)}${o.biz ? " (business)" : ""}</span><span class="tiny muted">${o.fee ? money(o.fee) + " a year" : "No yearly fee"} ›</span></button>`
+          `<button class="rowbtn" data-a="vaultpick" data-k="id" data-v="${esc(o.id)}"><span class="small">${esc(o.n)}${o.biz ? " (business)" : ""}</span><span class="tiny muted">${o.fee ? money(o.fee) + " a year" : "No yearly fee"} <i class=chev aria-hidden=true></i></span></button>`
       )
       .join(
         ""
-      )}<button class="rowbtn" data-a="vaultpick" data-k="id" data-v="other"><span class="small">A different ${esc(A.bank)} card</span><span class="caret">›</span></button></div>`;
+      )}<button class="rowbtn" data-a="vaultpick" data-k="id" data-v="other"><span class="small">A different ${esc(A.bank)} card</span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>`;
   else if (!A.y)
     body = `<div class="small"><b>Which year did you open it?</b></div><div class="chips">${[y0, y0 - 1, y0 - 2].map(y => chip("y", y, String(y))).join("")}${chip("y", "old", "Before " + (y0 - 2))}</div>`;
   else
@@ -524,7 +524,7 @@ function vaultSheet() {
     ? `<div class="stack" style="gap:6px">${V.cards
         .map(
           (x, i) =>
-            `<div class="tile row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(x.bank + " " + x.n)}</b><div class="tiny muted">${x.ym ? "Opened " + vaultMonthWords(vaultYm(x.ym)) : "Opened more than 2 years ago"}${x.fee ? " · " + money(x.fee) + " a year" : " · no yearly fee"}</div></span><span class="row" style="gap:6px;flex:none">${vaultOffer(x.id) ? `<button class="ghost slim" data-a="vaultcard" data-v="${esc(x.id)}">Details ›</button>` : ""}<button class="ghost slim" data-a="vaultdel" data-v="${i}">Remove</button></span></div>`
+            `<div class="tile row between" style="gap:8px"><span style="min-width:0"><b class="small">${esc(x.bank + " " + x.n)}</b><div class="tiny muted">${x.ym ? "Opened " + vaultMonthWords(vaultYm(x.ym)) : "Opened more than 2 years ago"}${x.fee ? " · " + money(x.fee) + " a year" : " · no yearly fee"}</div></span><span class="row" style="gap:6px;flex:none">${vaultOffer(x.id) ? `<button class="ghost slim" data-a="vaultcard" data-v="${esc(x.id)}">Details <i class=chev aria-hidden=true></i></button>` : ""}<button class="ghost slim" data-a="vaultdel" data-v="${i}">Remove</button></span></div>`
         )
         .join("")}</div>`
     : `<div class="tile small muted">No cards here yet. Add the cards you have, so the count and the dates are yours.</div>`;
@@ -561,7 +561,7 @@ function vaultSheet() {
                 ["First-year value after the fee " + kitInfo("vt_net"), money(m.net)],
                 ["Months of your usual spending", String(m.months)],
               ]
-            )}${m.fit.reasons.map(r => `<div class="tiny muted">${esc(r)}</div>`).join("")}<button class="ghost slim" data-a="vaultcard" data-v="${esc(m.o.id)}">See the whole card ›</button></div></details>`
+            )}${m.fit.reasons.map(r => `<div class="tiny muted">${esc(r)}</div>`).join("")}<button class="ghost slim" data-a="vaultcard" data-v="${esc(m.o.id)}">See the whole card <i class=chev aria-hidden=true></i></button></div></details>`
         )
         .join("")}</div>` +
       (V.moves.length > VAULT_SHOW && !o.more
@@ -926,7 +926,7 @@ function vaultBestHtml(c) {
     !B.suggest
       ? `<div class="small muted">New cards wait while you have high-interest debt, so no other card is named here.</div>`
       : B.single
-        ? `<div class="small">The best single card you do not hold, ${name(B.single.o)}, would earn about <b class="${g}">${money(B.single.net)}</b> a year${B.single.fee > 0 ? ", after its " + money(B.single.fee) + " yearly fee" : ""}.</div><button class="ghost slim" data-a="vaultcard" data-v="${esc(B.single.o.id)}">See the whole card ›</button>`
+        ? `<div class="small">The best single card you do not hold, ${name(B.single.o)}, would earn about <b class="${g}">${money(B.single.net)}</b> a year${B.single.fee > 0 ? ", after its " + money(B.single.fee) + " yearly fee" : ""}.</div><button class="ghost slim" data-a="vaultcard" data-v="${esc(B.single.o.id)}">See the whole card <i class=chev aria-hidden=true></i></button>`
         : ""
   }</div>`;
   h += `<div class="stack vaultlines" style="gap:6px">${B.rows

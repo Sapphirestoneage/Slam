@@ -256,7 +256,7 @@ function cbYbStackRow(c) {
   if (!P.has) return "";
   return dkCard(
     "Yes, but: a cut that pays for a keep",
-    `<button class="rowbtn" style="margin-top:6px;min-height:48px" data-a="cbgo" data-v="yesbut" data-fid="cb:ybrow"><span><b>${P.n ? "Your card: " + esc(P.net.words.replace(/^./, m => m.toLowerCase())) : "Make a card"}</b><div class="tiny muted">${P.n ? "Tap to change it, or to save it as an image." : "Two taps: one cut, and what you keep because of it."}</div></span><span class="caret">›</span></button>`,
+    `<button class="rowbtn" style="margin-top:6px;min-height:48px" data-a="cbgo" data-v="yesbut" data-fid="cb:ybrow"><span><b>${P.n ? "Your card: " + esc(P.net.words.replace(/^./, m => m.toLowerCase())) : "Make a card"}</b><div class="tiny muted">${P.n ? "Tap to change it, or to save it as an image." : "Two taps: one cut, and what you keep because of it."}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`,
     { cap: "A what-if between the two groups. It changes no number on this screen." }
   );
 }

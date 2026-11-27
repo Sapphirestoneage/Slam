@@ -110,7 +110,7 @@
   chk(
     "setup opens on one question, with no numbered circles",
     o.includes("How old are you?") &&
-      !o.includes("Exactly how old?") &&
+      !o.includes("What is your exact age?") &&
       !o.includes("field smopen") &&
       !o.includes('class="smdot ') &&
       /data-fid="su:taps">\d+ questions left/.test(o) === false
@@ -120,7 +120,7 @@
   o = ov();
   chk(
     "the decade is not stacked above: only the exact age is asked",
-    o.includes("Exactly how old?") && !o.includes('data-a="agedec"') && !o.includes("smans")
+    o.includes("What is your exact age?") && !o.includes('data-a="agedec"') && !o.includes("smans")
   );
   X("setn", "34", "age");
   o = ov();

@@ -204,7 +204,7 @@ function snCheckSheet() {
   return (
     head("One quick thing", esc(typeof rgT === "function" ? rgT("checkin", "What was this?") : "What was this?")) +
     `<div class="tile small">${esc(w.why)}</div>` +
-    `<div class="stack" style="gap:6px">${SN_TAGS.map(t => `<button class="rowbtn" data-a="sncheck" data-v="${t.id}"><span>${esc(t.label)}</span><span class="caret">›</span></button>`).join("")}</div>` +
+    `<div class="stack" style="gap:6px">${SN_TAGS.map(t => `<button class="rowbtn" data-a="sncheck" data-v="${t.id}"><span>${esc(t.label)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` +
     `<button class="ghost wide" data-a="snskip">Skip this</button><div class="tiny muted">One tap. It stays with you and helps your money read. Never more than ${SN_RULES.perWeek} a week.</div>`
   );
 }
@@ -233,7 +233,7 @@ function snCardRow() {
   } catch (e) {
     report(e, "sins.js: snCardRow");
   }
-  return `<button class="rowbtn" data-a="sins"><span style="min-width:0"><b>${K ? "You are " + esc(K.arch.name) : "Your money read"}</b><div class="tiny muted">Your result card, why we think so, and one move to test for a month</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="sins"><span style="min-width:0"><b>${K ? "You are " + esc(K.arch.name) : "Your money read"}</b><div class="tiny muted">Your result card, why we think so, and one move to test for a month</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 kitScreen(
   "sins",

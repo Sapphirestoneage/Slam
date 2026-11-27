@@ -310,7 +310,7 @@ function sharpSheetAsk2() {
     askParts({
       what: A.what,
       body:
-        `<div class="stack" style="gap:6px">${A.opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="set" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret">›</span></button>`).join("")}</div>` +
+        `<div class="stack" style="gap:6px">${A.opts.map(o => `<button class="rowbtn ${cur === o[0] ? "sel" : ""}" data-a="set" data-k="${k}" data-v="${o[0]}"><span>${o[1]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` +
         (k === "tax" ? askBtn("sharpskip", "I'm not sure", "ghost") : ""),
       why: A.why,
       find: SHARP_FIND[k],

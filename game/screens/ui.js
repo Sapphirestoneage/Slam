@@ -759,7 +759,7 @@ function homeBase() {
      ? `<div class="tiny muted" style="margin-top:8px">Faded numbers are guesses for people like you. They don't count until you make them real.</div><div class="stack" style="margin-top:6px">${sl
          .map(k => {
            const ok = isSharp(c, k);
-           return `<button class="rowbtn ${ok ? "okrow" : k === ns.v ? "sel" : ""}" data-a="sharp" data-v="${k}"><span>${SHARP_Q[k]}</span><span class="row">${sharpVal(c, k, ok)}<b class="tiny">${ok ? "Real ✓" : k === ns.v ? "Start here ›" : "›"}</b></span></button>`;
+           return `<button class="rowbtn ${ok ? "okrow" : k === ns.v ? "sel" : ""}" data-a="sharp" data-v="${k}"><span>${SHARP_Q[k]}</span><span class="row">${sharpVal(c, k, ok)}<b class="tiny">${ok ? "Real ✓" : k === ns.v ? "Start here <i class=chev aria-hidden=true></i>" : "<i class=chev aria-hidden=true></i>"}</b></span></button>`;
          })
          .join("")}</div>`
      : `<button class="primary wide" style="margin-top:10px" data-a="${ns.a}" data-v="${ns.v || ""}">${ns.l}</button>`
@@ -961,7 +961,7 @@ function mapTabBase() {
   const c = C(),
     d = D,
     reg = MP.r ? REGIONS.find(r => r.id === MP.r) : null;
-  const crumbs = `<div class="row wrap crumbs"><button class="ghost slim" data-a="mp" data-l="root">All areas</button>${reg ? `<span class="muted">›</span><button class="ghost slim" data-a="mp" data-l="r" data-id="${reg.id}">${reg.n}</button>` : ""}${MP.t ? `<span class="muted">›</span><span class="small"><b>${MP.t === "start" ? "Start here" : esc(trackN(MP.t))}</b></span>` : ""}</div>`;
+  const crumbs = `<div class="row wrap crumbs"><button class="ghost slim" data-a="mp" data-l="root">All areas</button>${reg ? `<span class="muted"><i class=chev aria-hidden=true></i></span><button class="ghost slim" data-a="mp" data-l="r" data-id="${reg.id}">${reg.n}</button>` : ""}${MP.t ? `<span class="muted"><i class=chev aria-hidden=true></i></span><span class="small"><b>${MP.t === "start" ? "Start here" : esc(trackN(MP.t))}</b></span>` : ""}</div>`;
   let body;
   if (MP.t) body = treeView();
   else {
@@ -1074,7 +1074,7 @@ function ledRowBase(sec, i, x) {
     typeof rowName === "function"
       ? rowName(x, sec)
       : x.k; /* mycards.js: the player's own name, or the name of a card */
-  return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(nm)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret">›</span></span></button>`;
+  return `<button class="rowbtn" data-a="rowedit" data-k="${sec}" data-v="${i}"><span>${esc(nm)}${x.s ? rowTag(x, sec) : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${x.s ? "" : "guess"}" data-fid="v:${sec}${i}">${money(x.amt)}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`;
 }
 const LVN = [
   ["Amounts", "How much is in each one"],
@@ -1160,7 +1160,7 @@ function detailSheet() {
     ) +
     q(
       it.q,
-      `<div class="stack">${it.opts.map(o => `<button class="rowbtn ${it.cur === o ? "sel" : ""}" data-a="dans" data-v="${o}"><span>${o}</span><span class="caret">›</span></button>`).join("")}</div>`,
+      `<div class="stack">${it.opts.map(o => `<button class="rowbtn ${it.cur === o ? "sel" : ""}" data-a="dans" data-v="${o}"><span>${o}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`,
       it.help
     ) +
     (it.lv === 2 ? ratePad() : "") +
@@ -1198,7 +1198,7 @@ function moneyTabBase() {
   const sec = (title, key, rows, total, addLabel) =>
     `<div class="card"><div class="row between"><h3>${title}</h3>${tot(total, rows)}</div>${typeof allocBar === "function" ? allocBar(c, ALLOC_BY_ROWS[key], null, { slim: true, end: true }) : ""}${typeof ledSortChips === "function" ? ledSortChips(c, key, rows) : ""}<div class="stack" style="margin-top:8px">${(typeof ledOrder === "function" ? ledOrder(c, key, rows) : rows.map((x, i) => ({ x, i }))).map(o => ledRow(key, o.i, o.x)).join("") || (typeof UX_ON !== "undefined" && UX_ON ? emptyState(key) : `<div class="small muted">Nothing here.</div>`)}${addLabel ? `<button class="ghost slim" data-a="rowadd" data-v="${key}">${addLabel}</button>` : ""}</div></div>`;
   const prow = (label, val, key) =>
-    `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret">›</span></span></button>`;
+    `<button class="rowbtn" data-a="detail" data-v="${key}"><span>${label}</span><span class="row"><b class="${val ? "" : "guess"}">${val || "Tap to answer"}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`;
   const S =
     typeof dkSec === "function" ? dkSec : (id, i, t, one, v, body) => body; /* dash.js: a section that starts closed */
   return `<div class="stack"><h1>Money</h1><div class="small muted">Every number the game uses lives here. Tap any line to change it. It updates everywhere at once. Faded numbers are guesses that don't count yet.</div>
@@ -1209,7 +1209,7 @@ function moneyTabBase() {
    "What you have and owe",
    "Each account and each debt. Tap a line to change it.",
    typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw),
-   `<div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div><button class="ghost slim" style="margin-top:6px" data-a="lkbrk" data-v="nw">See each account ›</button></div>
+   `<div class="card next"><div class="row between"><span class="tiny muted">What you have, minus what you owe ${ib("term:ownowe")}</span>${allReal ? "" : `<span class="pill warn">Has guesses in it</span>`}</div><div class="big ${allReal ? "" : "guess"}" data-fid="v:nw">${typeof lkNwText === "function" ? lkNwText(c, d).txt : money(d.nw)}</div><div class="tiny muted">${money(cash + c.inv)} you have, minus ${money(c.debt)} you owe</div><button class="ghost slim" style="margin-top:6px" data-a="lkbrk" data-v="nw">See each account <i class=chev aria-hidden=true></i></button></div>
  ${sec("Cash", "cashes", c.cashes, cash, "Add an account")}
  ${sec("Investments", "invs", c.invs, c.inv, "Add an account")}
  ${sec("What you owe", "debts", c.debts, c.debt, "Add a debt")}
@@ -1226,7 +1226,7 @@ function moneyTabBase() {
    "What comes in and what goes out each month.",
    money(c.take - c.spend) + " left",
    `${sec("Money coming in each month", "incs", c.incs, c.take, "Add another source")}
- ${c.steady !== "Steady" ? `<button class="rowbtn" data-a="rowedit" data-k="low" data-v="0"><span>In a low month${c.sharp.low ? "" : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${c.sharp.low ? "" : "guess"}">${money(c.low)}</b><span class="caret">›</span></span></button>` : ""}
+ ${c.steady !== "Steady" ? `<button class="rowbtn" data-a="rowedit" data-k="low" data-v="0"><span>In a low month${c.sharp.low ? "" : `<div class="tiny muted">Guess · tap to make it exact</div>`}</span><span class="row"><b class="${c.sharp.low ? "" : "guess"}">${money(c.low)}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>` : ""}
  <div class="card"><div class="row between"><h3>Money going out each month</h3>${tot(c.spend, c.spends)}</div>${typeof allocBar === "function" ? allocBar(c, "spend", null, { slim: true, end: true }) : ""}<div class="stack" style="margin-top:8px">${(() => {
    const ms = monthSpent(c, todayISO().slice(0, 7));
    return c.spends
@@ -1238,7 +1238,7 @@ function moneyTabBase() {
            : "")
      )
      .join("");
- })()}${c.home === "With family" ? `<button class="rowbtn" data-a="rowedit" data-k="moveOut" data-v="0"><span>Extra it would cost to move out<div class="tiny muted">Keeps your freedom number honest</div></span><span class="row"><b>${money(c.moveOut)}</b><span class="caret">›</span></span></button>` : ""}</div><div class="tiny muted" style="margin-top:6px">Left over each month: ${money(c.take - c.spend)}</div></div>`,
+ })()}${c.home === "With family" ? `<button class="rowbtn" data-a="rowedit" data-k="moveOut" data-v="0"><span>Extra it would cost to move out<div class="tiny muted">Keeps your freedom number honest</div></span><span class="row"><b>${money(c.moveOut)}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>` : ""}</div><div class="tiny muted" style="margin-top:6px">Left over each month: ${money(c.take - c.spend)}</div></div>`,
    ["Left each month: " + money(c.take) + " in − " + money(c.spend) + " out = " + money(c.take - c.spend) + "."]
  )}
  ${S("machine", "⚙️", "Your money machine", "What your money earns you, against what your debts cost you.", "", machineCard(c, d) + (typeof bossCard === "function" ? bossCard(c) : ""))}
@@ -1273,7 +1273,7 @@ function moneyTabBase() {
    "How complete your numbers are, and the cover that protects them.",
    lv === 0 ? "Level 1" : "Level " + lv + " of 5",
    `<div class="card"><div class="row between"><h3>How complete is your picture</h3><b>${lv === 0 ? "Working on Level 1" : "Level " + lv + " of 5"}</b></div><div class="lvls">${LVN.map((x, i) => `<div class="lvl ${i < lv ? "on" : i === lv ? "cur" : ""}"><b>${i < lv ? "✓" : i + 1}</b><span>${x[0]}</span></div>`).join("")}</div>${nl ? `<div class="small" style="margin-top:8px"><b>Level ${nl}: ${LVN[nl - 1][0]}.</b> ${LVN[nl - 1][1]}.</div><button class="primary go wide" style="margin-top:8px" data-a="${lv === 0 ? "sharp" : "detail"}" data-v="${lv === 0 ? sharpList(c).find(k => !isSharp(c, k)) || "take" : ""}">${lv === 0 ? "Make my numbers real" : dk.length ? "Fill in Level " + nl + " · all taps" : "Level " + nl + " is waiting on answers you said you'd find"}</button>` : `<div class="small muted" style="margin-top:8px">Levels 1 to 3 are done. Levels 4 and 5 are coming later.</div>`}</div>
- <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret">›</span></span></button>` : ""}${
+ <div class="card"><div class="row between"><h3>Work benefits and protection</h3><span class="tiny muted">Levels 2 and 3</span></div><div class="stack" style="margin-top:8px">${isEmployee(c) ? `<button class="rowbtn" data-a="sharp" data-v="match"><span>Retirement match at work</span><span class="row"><b class="${c.sharp.match ? "" : "guess"}">${c.sharp.match ? (c.match === "yes" ? "Yes, getting all of it" : c.match === "no" ? "Yes, not getting all of it" : "No match offered") : "Tap to answer"}</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>` : ""}${
    /* cover.js: the insurance needs, with the gap in dollars, in place of the yes / no rows */
    typeof coverRows === "function"
      ? coverRows(c, prow)
@@ -1309,6 +1309,7 @@ function meTab() {
   if (typeof meTabQuiz === "function") h = meTabQuiz(h); /* quizzes.js: the row "Quizzes" */
   if (typeof meTabValues === "function") h = meTabValues(h); /* values.js: the row "Is my money going where I want?" */
   if (typeof meTabFounding === "function") h = meTabFounding(h); /* founding.js: the mark "Founding Tester" */
+  if (typeof meTabPeople === "function") h = meTabPeople(h); /* profiles.js: the card "Your people" */
   return h;
 }
 function meTabBase() {
@@ -2288,7 +2289,7 @@ function paySheetBase() {
           .join(
             ", "
           )}. ${sug.why}${o.impact ? " At this pace, " + o.impact.goal + " takes about " + o.impact.n + " more paycheck" + (o.impact.n === 1 ? "" : "s") + "." : ""}</div>
-   ${w.practice ? "" : o.moved === null ? q("Did you actually move the money?", `<div class="stack"><button class="rowbtn" data-a="pmoved" data-v="1"><span>Yes, I moved it</span><span class="caret">›</span></button><button class="rowbtn" data-a="pmoved" data-v="0"><span>Not yet, I'll do it later</span><span class="caret">›</span></button></div>`, "If yes, your debts and savings update everywhere right now.") : o.moved ? `<div class="tile small"><b>Updated:</b>${o.done.map(x => `<div>${esc(x)}</div>`).join("") || "<div>Nothing needed updating.</div>"}</div>` : `<div class="tiny muted">No problem. When you do, tap + Log at the bottom and your numbers update.</div>`}
+   ${w.practice ? "" : o.moved === null ? q("Did you actually move the money?", `<div class="stack"><button class="rowbtn" data-a="pmoved" data-v="1"><span>Yes, I moved it</span><span class="caret"><i class=chev aria-hidden=true></i></span></button><button class="rowbtn" data-a="pmoved" data-v="0"><span>Not yet, I'll do it later</span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>`, "If yes, your debts and savings update everywhere right now.") : o.moved ? `<div class="tile small"><b>Updated:</b>${o.done.map(x => `<div>${esc(x)}</div>`).join("") || "<div>Nothing needed updating.</div>"}</div>` : `<div class="tiny muted">No problem. When you do, tap + Log at the bottom and your numbers update.</div>`}
    ${w.practice || o.moved !== null ? `<button class="primary wide go" data-a="wnext">Next game</button>` : ""}`
       : `<div class="row between"><span class="small ${m.rem > 0 ? "muted" : ""}">${m.rem > 0 ? money(m.rem) + " left to place" : "All placed"}</span><button class="ghost slim" data-a="pclear">Start over</button></div>${w.err ? `<div class="err">Tap a share first.</div>` : ""}<button class="${m.placed > 0 ? "primary" : "ghost"} wide" data-a="plock">${m.rem > 0 && m.placed > 0 ? "Lock it in · the other " + money(m.rem) + " stays as spending money" : "Lock it in"}</button>`
   }`
@@ -2574,7 +2575,7 @@ function backupSheet() {
 }
 function flagSheet() {
   if (typeof fbOpen === "function") return fbOpen(); /* fbreport.js: the one sheet "Report a bug or idea" */
-  const where = tab + (tab === "map" && MP.r ? " › " + MP.r + (MP.t ? " › " + MP.t : "") : "");
+  const where = tab + (tab === "map" && MP.r ? ", " + MP.r + (MP.t ? ", " + MP.t : "") : "");
   sheet(
     () =>
       head("Flag this screen", where) +
@@ -2662,7 +2663,7 @@ function rowAdd(sec) {
   sheet(
     () =>
       head("Money · " + S[1], "Add one") +
-      `<div class="stack">${opts.map(k => `<button class="rowbtn" data-a="rowaddk" data-k="${sec}" data-v="${k}"><span>${k}</span><span class="caret">›</span></button>`).join("") || `<div class="small muted">You've added every kind.</div>`}</div>`
+      `<div class="stack">${opts.map(k => `<button class="rowbtn" data-a="rowaddk" data-k="${sec}" data-v="${k}"><span>${k}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("") || `<div class="small muted">You've added every kind.</div>`}</div>`
   );
 }
 
@@ -3473,7 +3474,7 @@ function catchSheet(id, after) {
       head("One quick thing", esc(nodeTitle(id))) +
       q(
         k.q,
-        `<div class="stack">${k.opts.map(o => `<button class="rowbtn" data-a="caught" data-v="${o}"><span>${o}</span><span class="caret">›</span></button>`).join("")}</div>`,
+        `<div class="stack">${k.opts.map(o => `<button class="rowbtn" data-a="caught" data-v="${o}"><span>${o}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`,
         k.h || "So the game remembers what actually happened."
       ) +
       `<button class="ghost wide" data-a="caught" data-v="">Skip this</button>`
@@ -3495,7 +3496,7 @@ function winSheet(id, after) {
         head("One quick thing", esc(skillOf(id)[0])) +
         q(
           "Did this put money in your pocket?",
-          `<div class="stack">${WIN_Q.map(x => `<button class="rowbtn" data-a="winkind" data-v="${x}"><span>${x}</span><span class="caret">›</span></button>`).join("")}</div>`,
+          `<div class="stack">${WIN_Q.map(x => `<button class="rowbtn" data-a="winkind" data-v="${x}"><span>${x}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`,
           "The game keeps a running total of what your skills earned you."
         )
       );
@@ -3992,7 +3993,7 @@ function flowSheetBase() {
       `<div class="stack">${Object.keys(FLOW_T)
         .map(
           k =>
-            `<button class="rowbtn" data-a="ftype" data-v="${k}"><span>${FLOW_T[k]}</span><span class="caret">›</span></button>`
+            `<button class="rowbtn" data-a="ftype" data-v="${k}"><span>${FLOW_T[k]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         )
         .join(
           ""
@@ -5041,7 +5042,7 @@ function statementsCard() {
   ]
     .map(
       x =>
-        `<button class="rowbtn" data-a="stmt" data-v="${x[0]}"><span>${x[1]}<div class="tiny muted">${x[2]}</div></span><span class="caret">›</span></button>`
+        `<button class="rowbtn" data-a="stmt" data-v="${x[0]}"><span>${x[1]}<div class="tiny muted">${x[2]}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     )
     .join("")}</div></div>`;
 }
@@ -5572,7 +5573,7 @@ function goalAddSheet() {
   if (w.step === 0)
     return (
       head("Someday list · 1 of 3", "What's the goal?") +
-      `<div class="stack">${GOAL_K.map(k => `<button class="rowbtn" data-a="gkind" data-v="${k[0]}"><span><b>${k[0]}</b><div class="tiny muted">${GOAL_ONE[k[0]]}</div></span><span class="caret">›</span></button>`).join("")}</div>`
+      `<div class="stack">${GOAL_K.map(k => `<button class="rowbtn" data-a="gkind" data-v="${k[0]}"><span><b>${k[0]}</b><div class="tiny muted">${GOAL_ONE[k[0]]}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`
     );
   if (w.step === 1)
     return (
@@ -6315,7 +6316,7 @@ function lifeCard(c) {
   if (!(c.placed || G.demo) || G.demo) return "";
   const n = lifeQs(c).length;
   return n
-    ? `<button class="rowbtn" data-a="life"><span><b>Make your dates exact</b><div class="tiny muted">${n} quick tap${n === 1 ? "" : "s"}. Each one only shows up because of an earlier answer.</div></span><span class="caret">›</span></button>`
+    ? `<button class="rowbtn" data-a="life"><span><b>Make your dates exact</b><div class="tiny muted">${n} quick tap${n === 1 ? "" : "s"}. Each one only shows up because of an earlier answer.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     : "";
 }
 function lifeSheet() {
@@ -6327,7 +6328,7 @@ function lifeSheet() {
   let b = head("Make it exact", q ? esc(q.q) : "All caught up");
   if (w.moved) b += `<div class="banner small pop">${esc(w.moved)}</div>`;
   if (q)
-    b += `${q.h ? `<div class="small muted">${esc(q.h)}</div>` : ""}<div class="stack">${q.o.map((o, i) => `<button class="rowbtn" data-a="lifeans" data-k="${q.id}" data-v="${i}"><b>${esc(o[0])}</b><span class="caret">›</span></button>`).join("")}</div><button class="ghost wide" data-a="lifeskip" data-k="${q.id}">Skip this one</button><div class="tiny muted">${w.edit ? "" : qs.length + " left. "}A guess is fine. You can change any answer later.</div>`;
+    b += `${q.h ? `<div class="small muted">${esc(q.h)}</div>` : ""}<div class="stack">${q.o.map((o, i) => `<button class="rowbtn" data-a="lifeans" data-k="${q.id}" data-v="${i}"><b>${esc(o[0])}</b><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div><button class="ghost wide" data-a="lifeskip" data-k="${q.id}">Skip this one</button><div class="tiny muted">${w.edit ? "" : qs.length + " left. "}A guess is fine. You can change any answer later.</div>`;
   else
     b += `<div class="small muted">Nothing else to ask right now. New questions only show up when your answers call for them.</div>`;
   if (ans.length)
@@ -6375,7 +6376,7 @@ function movesCard(c, d) {
     pm = pin && ms.find(r => r.id === pin);
   if (!t) return "";
   const r = pm || t;
-  return `<button class="rowbtn" data-a="moves"><span><b>${pm ? "Your move: " + esc(r.mv.n) : "Try a move"}</b><div class="tiny muted">${pm ? "" : esc(r.mv.n) + ": "}${moveShort(r).toLowerCase()}${sh ? " · your shape: " + esc((SHAPE_N[sh] || sh).toLowerCase()) : ""}</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="moves"><span><b>${pm ? "Your move: " + esc(r.mv.n) : "Try a move"}</b><div class="tiny muted">${pm ? "" : esc(r.mv.n) + ": "}${moveShort(r).toLowerCase()}${sh ? " · your shape: " + esc((SHAPE_N[sh] || sh).toLowerCase()) : ""}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 const SHAPE_N = { steady: "Steady", sprint: "Sprint, then ease off", seasons: "Seasons", flex: "Flexible work" };
 /* THE SHEET "MOVES".
@@ -6446,7 +6447,7 @@ function movesSheetBase() {
       MENTORS.map(m => {
         const open = w.open === m.id,
           rows = m.moves.map(id => ms.find(r => r.id === id)).filter(Boolean);
-        return `<button class="rowbtn ${open ? "sel" : ""}" data-a="mvopen" data-v="${m.id}"><span><b>${esc(m.n)}</b><div class="tiny muted">${esc(m.line)}</div></span><span class="caret">${open ? "⌃" : "›"}</span></button>${open ? `<div class="tile stack" style="gap:6px"><div class="small"><b>What to borrow:</b> ${esc(m.lesson)}</div>${rows.length ? `<div class="tiny muted">A move like theirs, on your numbers</div>` + rows.map(r => `<div class="row between small"><span>${esc(r.mv.n)}</span><b class="${r.mv.cost ? "bad" : "good"}">${moveShort(r)}</b></div>`).join("") : `<div class="tiny muted">Their kind of move doesn't fit your situation right now.</div>`}</div>` : ""}`;
+        return `<button class="rowbtn ${open ? "sel" : ""}" data-a="mvopen" data-v="${m.id}"><span><b>${esc(m.n)}</b><div class="tiny muted">${esc(m.line)}</div></span><span class="caret">${open ? "⌃" : "<i class=chev aria-hidden=true></i>"}</span></button>${open ? `<div class="tile stack" style="gap:6px"><div class="small"><b>What to borrow:</b> ${esc(m.lesson)}</div>${rows.length ? `<div class="tiny muted">A move like theirs, on your numbers</div>` + rows.map(r => `<div class="row between small"><span>${esc(r.mv.n)}</span><b class="${r.mv.cost ? "bad" : "good"}">${moveShort(r)}</b></div>`).join("") : `<div class="tiny muted">Their kind of move doesn't fit your situation right now.</div>`}</div>` : ""}`;
       }).join("");
   return b + `<button class="ghost wide" data-a="close">Close</button>`;
 }

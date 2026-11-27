@@ -244,7 +244,7 @@ function frontDoBody(c) {
         G2.slice(1, 3)
           .map(
             x =>
-              `<button class="rowbtn" data-a="${x.go[1]}" data-v="${esc(x.go[2])}"><span><b>${esc(x.n)}</b><div class="tiny muted">${esc(x.impact)}</div></span><span class="caret">›</span></button>`
+              `<button class="rowbtn" data-a="${x.go[1]}" data-v="${esc(x.go[2])}"><span><b>${esc(x.n)}</b><div class="tiny muted">${esc(x.impact)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
           )
           .join("")
       : "") +

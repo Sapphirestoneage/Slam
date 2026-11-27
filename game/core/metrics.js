@@ -1592,7 +1592,7 @@ function knCard(c, d) {
   const M = knMetrics(c, d),
     top = knTop(M, 4);
   if (!top.length) return "";
-  return `<div class="card stack kncard" style="gap:8px"><div class="row between"><h3>Key numbers</h3><button class="ghost slim" data-a="keynums">See all ${M.length} ›</button></div><div class="kgrid">${top.map(knTile).join("")}</div></div>`;
+  return `<div class="card stack kncard" style="gap:8px"><div class="row between"><h3>Key numbers</h3><button class="ghost slim" data-a="keynums">See all ${M.length} <i class=chev aria-hidden=true></i></button></div><div class="kgrid">${top.map(knTile).join("")}</div></div>`;
 }
 /* knSheet() makes the full sheet "Key numbers". knSheetBase() is the part from this file. */
 function knSheet() {

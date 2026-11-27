@@ -242,6 +242,7 @@ function cbFlexView() {
         `<div class="tile small" data-fid="cbflex:cut"><b>What a cut looks like</b><div>The deepest cut in the years that held: to ${P.paidPct}% of your spending, ${cbM(P.paidYear)} a year. Your needs are ${P.needsPct}% of your spending, ${cbM(P.needsYear)} a year. ${P.needsFit ? "They fit inside it: a cut takes wants only." : "They do not fit inside it yet: a deep cut would reach your needs."}</div></div>` +
         `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With this rule, against the fixed rule." : "If you count it."}</div></div>` +
         `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
+        cbWayUnsure() +
         said
       : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cbflex:why">${esc(cbFlexWhy(P))}</div></div>`) +
     cbChartCard(

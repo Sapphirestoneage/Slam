@@ -106,7 +106,7 @@ const fwCount = n => `<span class="pill mncount">${n}</span>`;
 const fwGroup = (id, ico, name, n, inner, nest) =>
   `<details class="mng${nest ? " mng2" : ""}" name="${nest ? "mng2" : "mng"}" data-g="${id}"><summary><span class="mngh">${ico ? `<span class="mnico" aria-hidden="true">${ico}</span>` : ""}<b>${name}</b>${fwCount(n)}</span></summary><div class="stack mnrows">${inner}</div></details>`;
 const fwLibRow = r =>
-  `<a class="rowbtn menurow fwlib" href="../${r[0]}" target="_blank" rel="noopener" data-p="${r[0]}"><span><b>${esc(r[1])}</b></span><span class="caret">›</span></a>`;
+  `<a class="rowbtn menurow fwlib" href="../${r[0]}" target="_blank" rel="noopener" data-p="${r[0]}"><span><b>${esc(r[1])}</b></span><span class="caret"><i class=chev aria-hidden=true></i></span></a>`;
 /* The group "Tool library": the standalone pages, each group of the web app's front door as a group inside it. */
 function fwLibGroup() {
   if (typeof TOOL_LIB === "undefined" || !TOOL_LIB.length) return "";

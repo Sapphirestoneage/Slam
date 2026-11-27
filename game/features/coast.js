@@ -246,7 +246,7 @@ function stOptionsHtml(opts) {
   return (opts || [])
     .map(
       o =>
-        `<button class="rowbtn stopt" data-a="${esc(o.game)}" data-fid="st:${esc(o.id)}"><span class="stack" style="gap:2px;text-align:left"><b class="small">${esc(o.t)}</b><span class="tiny muted">${esc(o.why)}</span></span><span class="tiny">View ›</span></button>`
+        `<button class="rowbtn stopt" data-a="${esc(o.game)}" data-fid="st:${esc(o.id)}"><span class="stack" style="gap:2px;text-align:left"><b class="small">${esc(o.t)}</b><span class="tiny muted">${esc(o.why)}</span></span><span class="tiny">View <i class=chev aria-hidden=true></i></span></button>`
     )
     .join("");
 }

@@ -2033,7 +2033,7 @@ function btSheet() {
       if (!rs.length) return "";
       return `<b class="small" style="margin-top:6px">${g[1]}</b><div class="stack" style="gap:6px">${rs
         .map(r => {
-          const pill = `<span class="pill ${r.st === "b" ? "okp" : r.st === "p" || r.st === "x" ? "warn" : ""}" style="flex:none">${r.st === "b" ? "Built ✓" : WB_WORD[r.st]}${r.a ? " ›" : ""}</span>`,
+          const pill = `<span class="pill ${r.st === "b" ? "okp" : r.st === "p" || r.st === "x" ? "warn" : ""}" style="flex:none">${r.st === "b" ? "Built ✓" : WB_WORD[r.st]}${r.a ? " <i class=chev aria-hidden=true></i>" : ""}</span>`,
             body = `<span style="min-width:0"><b class="small">${esc(r.n)}</b>${r.note ? `<div class="tiny muted">${esc(r.note)}</div>` : ""}</span>`;
           return r.a
             ? `<button class="rowbtn" data-a="${r.a}" style="gap:8px">${body}${pill}</button>`

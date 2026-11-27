@@ -474,11 +474,11 @@ function qmSheetBase() {
       )
         .map(
           id =>
-            `<button class="rowbtn" data-a="qmopen" data-v="${id}"><span><b>${QM[id].n}</b><div class="tiny muted">${QM[id].d}</div></span><span class="caret">›</span></button>`
+            `<button class="rowbtn" data-a="qmopen" data-v="${id}"><span><b>${QM[id].n}</b><div class="tiny muted">${QM[id].d}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         )
         .join(
           ""
-        )}<button class="rowbtn" data-a="hrs"><span><b>What do I really earn an hour?</b><div class="tiny muted">Your pay after the hours the job itself takes</div></span><span class="caret">›</span></button><button class="rowbtn" data-a="safe"><span><b>Can I afford it?</b><div class="tiny muted">Where the money would come from, never a flat no</div></span><span class="caret">›</span></button></div>
+        )}<button class="rowbtn" data-a="hrs"><span><b>What do I really earn an hour?</b><div class="tiny muted">Your pay after the hours the job itself takes</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button><button class="rowbtn" data-a="safe"><span><b>Can I afford it?</b><div class="tiny muted">Where the money would come from, never a flat no</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>
   <details class="math"><summary>The same rules on what you have today</summary><div class="inner stack" style="gap:6px">${[
     ["yearsfi", "Years to freedom"],
     ["coast", "Coast"],
@@ -489,7 +489,7 @@ function qmSheetBase() {
   ]
     .map(
       x =>
-        `<button class="rowbtn" data-a="metric" data-v="${x[0]}"><span>${x[1]}</span><span class="caret">›</span></button>`
+        `<button class="rowbtn" data-a="metric" data-v="${x[0]}"><span>${x[1]}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
     )
     .join("")}</div></details>`
     );

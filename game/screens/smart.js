@@ -3,13 +3,17 @@
    PURPOSE     The setup questions change with each answer. The probable answers come first, the
                improbable answers fade, and answers that cannot be true together go behind "Show more".
    INPUT       The profile: c.x.cal, c.x.incFreq. The taps of the player (the actions in OUTPUT).
-   OUTPUT      Functions. The order of the pages: SM_ORDER, SM_ORDER_V, smSkip, smLive, smNextPage. Parts of
+   OUTPUT      Functions. The order of the pages: SM_ORDER, SM_ORDER_V, smSkip, smLive, smNextPage. The one
+               choice "I'm not sure": SM_OWN, SM_UNSURE, SM_CUSH, smLab, smUnsureFill, smCushOk, smListUnsure. Parts of
                functions in other files: finishSetupPay, ledRowFreq, smSpotFix (openSetupQuest in
                questlog.js, cbRestSpot in couldbe.js). Actions
                (ACT): smage, set, setn, tog, togb, agedec, wback, wnext, smopen, small, smskip, smdone,
                incfreq.
    DEPENDS ON  core/engine.js, screens/ui.js.
-   RULES       No answer is locked. Each answer is one tap away.
+   RULES       No answer is locked. Each answer is one tap away. Each question has "I'm not sure".
+   COMPAT      One optional key on a profile (run 16): c.x.unsure, the names of the setup answers that were
+               "I'm not sure" (a Guess of the game). An old saved game has none: every answer is the
+               player's own, as before. The values that the questions keep did not change.
    ========================================================================= */
 const SM_EMP = ["First job", "Established", "A few jobs or gigs"],
   SM_SINGLE = ["Single by choice", "Single, seeking"];
@@ -165,14 +169,14 @@ const SM_Q = {
   1: [
     {
       k: "work",
-      l: "What's your work right now?",
+      l: "What is your work right now?",
       s: "Work",
       o: ["Student", "First job", "A few jobs or gigs", "Established", "Between jobs", "Self-employed", "Retired"],
       h: "Tap the closest one. You'll see what it means.",
     },
     {
       k: "incKinds",
-      l: "What money comes in?",
+      l: "Where does your money come from?",
       s: "Money comes from",
       o: INC_KINDS,
       m: 1,
@@ -183,21 +187,29 @@ const SM_Q = {
         "Side gigs": "Side gig",
         "Other income": "Other",
       },
-      h: "Tap all that fit. How much and how often come next, one at a time.",
+      h: "Tap each one you have. How much and how often come next, one at a time.",
     },
     {
       k: "steady",
-      l: "Is your money about the same each month, or does it move around?",
+      l: "Is your pay about the same each month?",
       s: "Same each month?",
       o: ["Steady", "Changes month to month"],
-      h: "When each kind of money lands gets set later, on your month.",
+      lab: { Steady: "Yes, about the same", "Changes month to month": "No, it changes" },
+      h: "The day each pay comes is set later, on your month.",
     },
   ],
   2: [
-    { k: "homeQ", l: "Where do you live?", s: "Home", o: Object.keys(HOMEMAP), h: "Rent, own, or no cost to you." },
+    {
+      k: "homeQ",
+      l: "Do you rent or own your home?",
+      s: "Home",
+      o: Object.keys(HOMEMAP),
+      lab: { "No cost": "I live for free, with family for example" },
+      h: "Rent means you pay a landlord. Own means the home is yours, with or without a home loan.",
+    },
     {
       k: "live",
-      l: "Who lives there with you?",
+      l: "Who lives with you?",
       s: "Lives with you",
       o: ["On my own", "Roommates", "A partner", "Kids", "Parents or family"],
       m: 1,
@@ -206,27 +218,28 @@ const SM_Q = {
   3: [
     {
       k: "rel",
-      l: "Relationship",
+      l: "Are you in a relationship?",
       s: "Relationship",
       o: ["Single by choice", "Single, seeking", "Dating", "Partnered", "Married"],
     },
     {
       k: "deps",
-      l: "Does anyone rely on you for money?",
+      l: "Do you pay for anyone else, like a kid or a parent?",
       s: "Relies on you",
       o: ["None", "Planning", "Kids", "Supporting a parent", "Pets"],
+      lab: { None: "No one", Planning: "Not yet, but I plan to", "Supporting a parent": "A parent" },
     },
     {
       k: "share",
-      l: "Do you combine money with anyone?",
+      l: "Do you share your money with anyone, like a joint bank account?",
       s: "Combine money with",
       o: ["No one", "A partner", "More than one partner", "Family"],
-      h: "Splitting rent or bills with a roommate doesn't count. This is about shared accounts or shared goals.",
+      h: "Splitting rent or bills with a roommate does not count.",
     },
     /* the last question of About you (run SLAM-ONBOARD-1): "I'd rather not look" turns gentle mode on at once */
     {
       k: "feel0",
-      l: "When you think about your money, what's closest?",
+      l: "How do you feel when you think about money?",
       s: "How money feels",
       o: ["Mostly fine", "A bit stressed", "I'd rather not look"],
       opt: 1,
@@ -235,24 +248,34 @@ const SM_Q = {
   0: [
     {
       k: "can1k",
-      l: "A $1,000 surprise bill lands today. Could you pay it without borrowing?",
+      l: "A surprise $1,000 bill comes today. Could you pay it with your own money?",
       s: "A $1,000 surprise",
       o: ["Yes", "No"],
     },
     {
       k: "cover",
-      l: "If money stopped coming in, how long could you cover your bills?",
+      l: "If your pay stopped today, how long could you pay your bills?",
       s: "Could cover bills for",
       o: Object.keys(COVER),
     },
-    { k: "invest", l: "Do you put money into investments?", s: "Investing", o: ["No", "Sometimes", "Every month"] },
+    {
+      k: "invest",
+      l: "Do you put money into investments, like a 401(k) or stocks?",
+      s: "Investing",
+      o: ["No", "Sometimes", "Every month"],
+    },
   ],
   6: [
     {
       k: "ssq",
-      l: "Should the game count Social Security in your plan?",
+      l: "Should your plan count on Social Security?",
       s: "Social Security",
       o: ["Yes, at three quarters, to be careful", "Yes, in full", "No, leave it out"],
+      lab: {
+        "Yes, at three quarters, to be careful": "Yes, but only 3/4 of it, to be safe",
+        "Yes, in full": "Yes, all of it",
+      },
+      h: "Social Security is money the government pays you each month when you are older.",
       opt: 1,
     },
   ],
@@ -301,23 +324,26 @@ const smLive = w => SM_ORDER.filter(p => p === (w && w.step) || !smSkip(w, p) ||
 SM_Q[8] = [
   {
     k: "taxQ",
-    l: "About how much of your pay goes to taxes before it lands?",
+    l: "How much of your pay goes to taxes?",
     s: "Taxes off the top",
     o: ["About 10%", "About 15%", "About 20%", "About 25%", "About 30%", "I don't know"],
-    h: "A pay stub shows pay before taxes at the top and what lands at the bottom. A guess is fine.",
+    h: "Look at a pay stub. The top number is your pay. The bottom number is what you get. Your best guess is fine.",
   },
   {
     k: "matchQ",
-    l: "Does your job add money when you save for retirement (a match)?",
+    l: "Does your job add free money to your retirement plan?",
     s: "Match from your job",
     o: ["Yes, and I get all of it", "Yes, but not all of it", "My job has no match", "I don't know"],
-    h: "A match is money your job adds when you put money in its retirement plan.",
+    lab: { "My job has no match": "No, my job does not do that" },
+    h: "This is called a match: you put money in the plan at work, and your job adds some too.",
   },
   {
     k: "taxAcctQ",
-    l: "Do you put money into a tax-friendly account, like a 401(k), an IRA or an HSA?",
+    l: "Do you put the max into your 401(k) or IRA each year?",
     s: "Tax-friendly saving",
     o: ["Yes, the most I'm allowed", "Yes, some", "Not this year", "I don't know"],
+    lab: { "Yes, the most I'm allowed": "Yes, the max", "Yes, some": "Some", "Not this year": "Not yet" },
+    h: "A 401(k) and an IRA are accounts for when you are older. The law sets the most you can put in each year. That is the max.",
   },
 ];
 const SM_TAXACCT = ["Retirement plan at work", "IRA or Roth IRA", "HSA"];
@@ -383,6 +409,14 @@ function smSpotFix(w) {
 }
 /* Part of finishSetup() in ui.js. The answers of the taxes round go to the profile, then the work keys go. */
 function finishSetupTax() {
+  /* the names of the answers that were "I'm not sure": a Guess of the game, not the player's own (c.x.unsure) */
+  const sk = (W.sm && W.sm.sk) || {},
+    un = Object.keys(SM_UNSURE)
+      .concat(SM_CUSH)
+      .filter(k => sk[k]);
+  W.o.x = W.o.x || {};
+  if (un.length) W.o.x.unsure = un;
+  else delete W.o.x.unsure;
   smTaxApply(W.o);
   ["taxQ", "matchQ", "taxAcctQ"].forEach(k => delete W.o[k]);
 }
@@ -430,7 +464,7 @@ function incFreqEd(k) {
   const c = C(),
     cur = incFreqOf(c, k);
   return q(
-    "How often does it come in?",
+    "How often do you get this money?",
     `<div class="chips">${smOrder("pf:" + k, PF_O, {})
       .list.map(
         v =>
@@ -445,6 +479,8 @@ function smState(w) {
     if (w.mode === "edit") {
       ["incKinds", "live"].forEach(k => (w.sm.md[k] = true));
       ["ssq", "feel0"].forEach(k => (w.sm.sk[k] = true));
+      /* the answers that were "I'm not sure" (c.x.unsure) are not sure still */
+      ((w.o.x && w.o.x.unsure) || []).forEach(k => (w.sm.sk[k] = true));
       w.sm.pfg = !!(w.o.x && w.o.x.payGuess);
     }
   }
@@ -471,21 +507,55 @@ function smOrder(k, opts, o, all) {
     moved: r.first.length > 0 || hid.length > 0,
   };
 }
+/* THE ONE CHOICE "I'M NOT SURE" (run 16, C8). Each question has it, with the helper line TAP_ONE under the choices.
+   A question whose list already had such a choice ("I don't know", "Skip") keeps the value it stores, and shows it
+   with the words NOT_SURE (SM_OWN). Every other question gets one more chip (the action smskip). For a question of
+   About you the game then uses the most likely choice for the answers so far, else the stock answer of a new
+   profile (SM_UNSURE), and says so under the chips: it is a Guess. For the cushion and the optional questions the
+   game keeps nothing. The names of the answers that are not the player's own go to c.x.unsure when setup ends
+   (finishSetupTax), so that "Change my answers" shows them open again. */
+const SM_OWN = ["I don't know", "Skip"];
+const SM_UNSURE = {
+  work: "First job",
+  incKinds: ["A main job"],
+  steady: "Steady",
+  homeQ: "I rent",
+  live: ["On my own"],
+  rel: "Single, seeking",
+  deps: "None",
+  share: "No one",
+};
+const SM_CUSH = ["can1k", "cover", "invest"];
+const smLab = (q, v) => (SM_OWN.includes(v) ? NOT_SURE : (q.lab && q.lab[v]) || v);
+function smUnsureFill(w, q) {
+  if (!(q.k in SM_UNSURE)) return null;
+  const top = smRule(q.k, w.o).first.find(v => q.o.includes(v));
+  return q.m ? [top || SM_UNSURE[q.k][0]] : top || SM_UNSURE[q.k];
+}
 function smChips(w, q) {
   const s = smState(w),
     o = w.o,
     cur = o[q.k],
     multi = !!q.m,
-    sel = v => (multi ? (cur || []).includes(v) : cur === v),
+    un = !!s.sk[q.k],
+    own = q.o.some(v => SM_OWN.includes(v)),
+    sel = v => !un && (multi ? (cur || []).includes(v) : cur === v),
     od = smOrder(q.k, q.o, o, s.all[q.k]),
-    none = multi ? !(cur || []).length : !cur,
-    top = od.r.first.find(v => od.list.includes(v));
-  return `<div class="chips">${od.list.map(v => `<button class="chip ${sel(v) ? "on" : ""} ${none && v === top ? "likely" : ""} ${od.r.dim.includes(v) && !sel(v) ? "dim" : ""}" data-a="${multi ? "tog" : "set"}" data-k="${q.k}" data-v="${esc(v)}">${esc((q.lab && q.lab[v]) || v)}</button>`).join("")}${od.hid.length ? `<button class="chip more" data-a="small" data-k="${q.k}">Show ${od.hid.length} more</button>` : ""}${q.opt ? `<button class="chip more" data-a="smskip" data-k="${q.k}">Skip</button>` : ""}</div>${od.moved && od.r.why && none ? `<div class="tiny muted">Most likely first, because ${od.r.why}.${od.hid.length ? " The rest are one tap away." : ""}</div>` : ""}`;
+    none = !un && (multi ? !(cur || []).length : !cur),
+    top = od.r.first.find(v => od.list.includes(v)),
+    used =
+      un && cur != null && String(cur) !== ""
+        ? []
+            .concat(cur)
+            .map(v => smLab(q, v))
+            .join(", ")
+        : "";
+  return `<div class="chips">${od.list.map(v => `<button class="chip ${sel(v) ? "on" : ""} ${none && v === top ? "likely" : ""} ${od.r.dim.includes(v) && !sel(v) ? "dim" : ""}" data-a="${multi ? "tog" : "set"}" data-k="${q.k}" data-v="${esc(v)}">${esc(smLab(q, v))}</button>`).join("")}${od.hid.length ? `<button class="chip more" data-a="small" data-k="${q.k}">Show ${od.hid.length} more</button>` : ""}${own ? "" : `<button class="chip ${un ? "on" : ""}" data-a="smskip" data-k="${q.k}" aria-pressed="${un ? "true" : "false"}">${NOT_SURE}</button>`}</div><div class="tiny muted" data-fid="sm:tapone">${TAP_ONE}</div>${used ? `<div class="tiny muted" data-fid="sm:unsure" role="status">Not sure is fine. For now the game uses "${esc(used)}", as a Guess. Tap your own answer any time.</div>` : ""}${od.moved && od.r.why && none ? `<div class="tiny muted">Most likely first, because ${od.r.why}.${od.hid.length ? " The rest are one tap away." : ""}</div>` : ""}`;
 }
 const smAns = (w, q) => {
   const s = smState(w),
     v = w.o[q.k];
-  return q.m ? (v || []).length > 0 && !!s.md[q.k] : (v != null && v !== "") || !!(q.opt && s.sk[q.k]);
+  return !!s.sk[q.k] || (q.m ? (v || []).length > 0 && !!s.md[q.k] : v != null && v !== "");
 };
 /* one question on screen at a time. Above it, a row of numbered circles: a tick when answered, lit for the one you are on. Tap a circle to go back and change that answer. Answers no longer stack up and push the question down. */
 function smDots(w, qs, open, pre) {
@@ -514,7 +584,7 @@ function smBody(w, qs, pre) {
     pi = (q ? qs.indexOf(q) : qs.length) - 1,
     pv = pi >= 0 ? qs[pi] : null,
     echo =
-      pv && !pv.m && smAns(w, pv) && OPT_DESC[o[pv.k]]
+      pv && !pv.m && !s.sk[pv.k] && smAns(w, pv) && OPT_DESC[o[pv.k]]
         ? `<div class="tiny muted">✓ <b>${esc(o[pv.k])}:</b> ${OPT_DESC[o[pv.k]]}</div>`
         : "",
     auto = qs.filter(x => s.auto[x.k] && smAns(w, x) && x.k !== open).map(x => x.s);
@@ -524,7 +594,7 @@ function smBody(w, qs, pre) {
       : smDots(w, qs, open, pre)) /* spiral.js: the checklist of the round takes its place */ +
     echo +
     (q
-      ? `<div class="field smopen ${missing(w, q.k) ? "miss" : ""}"><div class="small"><b>${q.l}</b>${q.m ? " Tap all that fit." : ""}${q.opt ? " (optional)" : ""}</div>${smChips(w, q)}${!q.m && OPT_DESC[o[q.k]] ? `<div class="tile small"><b>${o[q.k]}:</b> ${OPT_DESC[o[q.k]]}</div>` : q.h ? `<div class="tiny muted">${q.h}</div>` : ""}${q.m ? `<button class="${(o[q.k] || []).length ? "primary go" : "ghost"} wide slim" data-a="smdone" data-k="${q.k}">That's all</button>` : ""}</div>`
+      ? `<div class="field smopen ${missing(w, q.k) ? "miss" : ""}"><div class="small"><b>${q.l}</b>${q.m ? " Tap each one that fits." : ""}${q.opt ? " (optional)" : ""}</div>${smChips(w, q)}${!q.m && !s.sk[q.k] && OPT_DESC[o[q.k]] ? `<div class="tile small"><b>${o[q.k]}:</b> ${OPT_DESC[o[q.k]]}</div>` : q.h ? `<div class="tiny muted">${q.h}</div>` : ""}${q.m ? `<button class="${(o[q.k] || []).length ? "primary go" : "ghost"} wide slim" data-a="smdone" data-k="${q.k}">That's all</button>` : ""}</div>`
       : "") +
     (auto.length
       ? `<div class="tiny muted">Filled in for you from what you already said: ${esc(auto.join(", "))}. Tap its number to change it.</div>`
@@ -566,7 +636,8 @@ SETUP[0].b = w => {
   if (o.age != null && typeof spOn === "function" && spOn(w) && w.cbRest) return nm + smAgeRow(w);
   if (o.age != null) return nm + smBody(w, [], { now: false });
   const dots = typeof spOn === "function" && spOn(w) ? "" : smDots(w, [], null, { now: true });
-  if (!o.ageDec) return nm + dots + q("How old are you?", chipsRow("ageDec", Object.keys(DECADES), "", "agedec"));
+  const un = `<button class="ghost wide slim" data-a="smskip" data-k="age">${NOT_SURE}</button><div class="tiny muted" data-fid="sm:tapone">${TAP_ONE}</div>${smState(w).note ? `<div class="tile tiny" role="status">${esc(smState(w).note)}</div>` : ""}`;
+  if (!o.ageDec) return nm + dots + q("How old are you?", chipsRow("ageDec", Object.keys(DECADES), "", "agedec")) + un;
   const r = DECADES[o.ageDec],
     as = [];
   for (let a = r[0]; a <= r[1]; a++) as.push(a);
@@ -574,9 +645,10 @@ SETUP[0].b = w => {
     nm +
     dots +
     q(
-      "Exactly how old? You picked your " + esc(o.ageDec) + ".",
+      "What is your exact age? You picked your " + esc(o.ageDec) + ".",
       `<div class="chips">${as.map(a => `<button class="chip" data-a="setn" data-k="age" data-v="${a}">${a}</button>`).join("")}</div>`
-    )
+    ) +
+    un
   );
 };
 Object.assign(ACT, {
@@ -596,8 +668,15 @@ Object.assign(ACT, {
 });
 SETUP[6].b = w => smBody(w, smQs(w, 6)) + (w.add || smQs(w, 6).some(q => !smAns(w, q)) ? "" : smName(w));
 SETUP[6].t = "A last one";
+/* The three questions of the cushion have an answer, or the player said "I'm not sure" (nothing is kept then, and
+   the cushion of the profile stays the stock Guess). The last page needs the same. */
+function smCushOk(w) {
+  const s = smState(w);
+  return SM_CUSH.every(k => !!w.o[k] || !!s.sk[k]);
+}
+SETUP[6].req = w => smCushOk(w);
 SETUP.push(
-  { t: "Your cushion", req: w => !!(w.o.can1k && w.o.cover && w.o.invest), b: w => smBody(w, smQs(w, 7)) },
+  { t: "Your cushion", req: w => smCushOk(w), b: w => smBody(w, smQs(w, 7)) },
   { t: "What comes off the top", req: w => true, b: w => smBody(w, smQs(w, 8)) }
 );
 SETUP[4].b = w =>
@@ -606,21 +685,26 @@ SETUP[4].b = w =>
     "debtKinds",
     DEBT_KINDS.map(d => d[0]).concat("Mortgage"),
     typeof spOn === "function" && spOn(w) && !w.add
-      ? "Tap every kind you have. Your cards and how much come next, one at a time. If none, just tap Next."
-      : "Tap every kind you have. No amounts. If you have none, just tap Next.",
+      ? "Tap each kind of debt you have. Your cards and how much come next, one at a time. If you have none, tap Next."
+      : "Tap each kind of debt you have. No amounts. If you have none, tap Next.",
     (v, lk, dm) => {
       const m = v === "Mortgage",
         on = m ? !!w.o.mort : w.o.debtKinds.includes(v);
       return `<button class="rowbtn ${on ? "sel" : ""} ${dm && !on ? "dim" : ""}" data-a="${m ? "togb" : "tog"}" data-k="${m ? "mort" : "debtKinds"}" data-v="${esc(v)}"><span>${esc(v)}${lk && !on ? ` <span class="pill info">Likely</span>` : ""}</span><b>${on ? "Yes" : ""}</b></button>`;
     }
-  );
+  ) + smListUnsure();
 SETUP[5].b = w =>
-  smList(w, "accts", ACCT_KINDS, "Tap every kind of account you have. If none, just tap Next.", (v, lk, dm) => {
+  smList(w, "accts", ACCT_KINDS, "Tap each kind of account you have. If you have none, tap Next.", (v, lk, dm) => {
     if (typeof amAcctRow === "function" && amAcctRow(w, v) != null)
       return amAcctRow(w, v); /* amounts.js: IRA, Roth IRA */
     const on = w.o.accts.includes(v);
     return `<button class="rowbtn ${on ? "sel" : ""} ${dm && !on ? "dim" : ""}" data-a="tog" data-k="accts" data-v="${esc(v)}"><span>${esc(v)}${lk && !on ? ` <span class="pill info">Likely</span>` : ""}${ACCT_HELP[v] ? `<div class="tiny muted">${ACCT_HELP[v]}</div>` : ""}</span><b>${on ? "Yes" : ""}</b></button>`;
-  });
+  }) + smListUnsure();
+/* "I'm not sure" on a list of kinds (what you owe, where your money lives): nothing more is kept, and setup goes on
+   as Next does. The stock amounts of the profile stay a Guess. */
+function smListUnsure() {
+  return `<button class="ghost wide slim" data-a="wnext">${NOT_SURE}</button><div class="tiny muted" data-fid="sm:tapone">${TAP_ONE}</div>`;
+}
 /* when an answer changes: clear later answers it rules out, fill in ones it settles, and move on if the step is complete */
 function smCascade(w, k, seen) {
   const s = smState(w),
@@ -730,7 +814,9 @@ function smAfter(w, k, was) {
       v = t.dataset.v;
     s.adv = 0;
     s.note = null;
-    let a = w.o[k] || [];
+    /* a tap after "I'm not sure" starts the player's own list */
+    let a = s.sk[k] ? [] : w.o[k] || [];
+    delete s.sk[k];
     a = a.includes(v) ? a.filter(x => x !== v) : a.concat(v);
     if (k === "live" && a.includes(v)) a = v === "On my own" ? ["On my own"] : a.filter(x => x !== "On my own");
     w.o[k] = a;
@@ -790,13 +876,23 @@ Object.assign(ACT, {
     smState(W).all[t.dataset.k] = true;
     drawSheet();
   },
+  /* I'm not sure (run 16, C8). Age has no typical value: nothing is kept, and the page says why it waits. A
+     question of About you takes the most likely answer as a Guess (smUnsureFill). Any other one keeps nothing. */
   smskip: t => {
     const w = W,
       s = smState(w),
       k = t.dataset.k;
-    const was = smFull(w);
+    if (k === "age") {
+      s.note = "Your age is the one answer the plan needs. Your best guess is fine.";
+      drawSheet();
+      return;
+    }
+    const was = smFull(w),
+      q = [].concat(SM_Q[0], SM_Q[1], SM_Q[2], SM_Q[3], SM_Q[6], SM_Q[8], smQs(w, w.step) || []).find(x => x.k === k),
+      fill = q ? smUnsureFill(w, q) : null;
     s.sk[k] = true;
-    w.o[k] = null;
+    s.note = null;
+    w.o[k] = fill != null ? fill : q && q.m ? [] : null;
     smAfter(w, k, was);
   },
   smdone: t => {

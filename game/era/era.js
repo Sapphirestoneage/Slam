@@ -9,13 +9,13 @@
    OUTPUT      The page. One text in the device storage (ER_KEY), written by the button "Start my first
                move", so the game does not ask the same questions again and opens on Home.
    DEPENDS ON  core/engine.js (DEBT_KINDS, ERAS), era/gamecopy.js (CB_QS, CB_RNG, cbLab, esc),
-               features/erain.js (ER_QS, ER_TAX, ER_WORDS, ER_KEY, erAsked, erCushOpts, erResult,
-               erPack, erSigned), account/trust.js (TRUST_LINE).
+               features/erain.js (ER_QS, ER_TAX, ER_TYP, ER_WORDS, ER_KEY, erAsked, erCb, erCushOpts,
+               erResult, erPack, erSigned), account/trust.js (TRUST_LINE), core/engine.js (NOT_SURE, TAP_ONE).
    RULES       This file shows what erain.js returns. It does not calculate. No account, no network
                request, no measurement. A link inside the demo is relative, so the page works at each
                address of the game.
    ========================================================================= */
-const ERA = { A: {}, at: 0, info: "", kept: true };
+const ERA = { A: {}, at: 0, info: "", kept: true, un: {}, stay: "" };
 const eraEl = () => document.getElementById("era");
 
 /* The words and the choices of one question. */
@@ -48,7 +48,8 @@ function eraQuestion(list, i) {
     Q = eraQ(q),
     cur = ERA.A[q.id],
     many = q.kind === "many",
-    on = v => (many ? (cur || []).includes(v) : cur === v);
+    on = v => (many ? (cur || []).includes(v) : cur === v),
+    un = !!ERA.un[q.id];
   return (
     eraTop() +
     (i === 0
@@ -57,12 +58,18 @@ function eraQuestion(list, i) {
     `<div class="dots" aria-hidden="true">${list.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
     `<section class="card"><div class="small muted">Question ${i + 1} of ${list.length}</div>` +
     `<h2 class="ql">${esc(Q.l)} ${eraI("q", Q.l)}</h2>${eraNote("q", Q.h)}` +
-    `<div class="chips">${Q.opts.map(o => `<button class="chip ${on(o.v) ? "on" : ""}" data-a="${many ? "tog" : "pick"}" data-v="${esc(o.v)}" aria-pressed="${on(o.v)}">${esc(o.l)}</button>`).join("")}</div>` +
+    `<div class="chips">${Q.opts.map(o => `<button class="chip ${on(o.v) ? "on" : ""}" data-a="${many ? "tog" : "pick"}" data-v="${esc(o.v)}" aria-pressed="${on(o.v)}">${esc(o.l)}</button>`).join("")}<button class="chip ${un ? "on" : ""}" data-a="unsure" aria-pressed="${un}">${esc(NOT_SURE)}</button></div>` +
+    `<div class="tiny muted" id="tapone">${esc(TAP_ONE)}</div>` +
+    (ERA.stay === q.id
+      ? `<div class="note" role="status">${q.id === "age" ? "Your age is the one answer this needs. Your best guess is fine." : "There is no typical amount for your age yet. Pick the closest one. Your best guess is fine."}</div>`
+      : "") +
     (many
       ? `<div class="tiny muted">Tap each kind you have, then Next.</div><button class="primary wide" data-a="next">${(cur || []).length ? "Next" : "None of these"}</button>`
-      : `<div class="tiny muted">A rough answer is fine. One tap goes on.</div>`) +
+      : "") +
     `</section>` +
-    (i > 0 ? `<div class="row"><button class="ghost slim" data-a="back">‹ Back</button></div>` : "") +
+    (i > 0
+      ? `<div class="row"><button class="ghost slim" data-a="back"><i class=chevl aria-hidden=true></i> Back</button></div>`
+      : "") +
     eraFoot()
   );
 }
@@ -84,7 +91,7 @@ function eraResult(list) {
     (ERA.kept
       ? ""
       : `<div class="note" role="status">This browser does not keep answers right now (private mode does that). Home, at the top, opens the game, and it asks the first four again.</div>`) +
-    `<div class="row"><button class="ghost slim" data-a="back">‹ Back</button></div>` +
+    `<div class="row"><button class="ghost slim" data-a="back"><i class=chevl aria-hidden=true></i> Back</button></div>` +
     eraFoot()
   );
 }
@@ -102,16 +109,36 @@ function eraTap(t) {
   if (a === "info") ERA.info = ERA.info === t.dataset.v ? "" : t.dataset.v;
   else {
     ERA.info = "";
-    if (a === "pick" && q) {
+    ERA.stay = "";
+    if (a === "unsure" && q) {
+      /* I'm not sure (run 16, C8): a range question takes the typical value for the age, as a Guess. Any other
+         question keeps nothing. Age has no typical value: the question stays open, with one line of help. */
+      const typ =
+        q.kind === "cb" &&
+        q.id !== "age" &&
+        Number.isInteger(ERA.A.age) &&
+        erCb({ age: ERA.A.age, [q.id]: ER_TYP })[q.id];
+      if (q.kind === "cb" && !typ) ERA.stay = q.id;
+      else {
+        if (typ) ERA.A[q.id] = ER_TYP;
+        else delete ERA.A[q.id];
+        ERA.un[q.id] = true;
+        ER_QS.filter(x => x.when && !x.when(ERA.A)).forEach(x => delete ERA.A[x.id]);
+        ERA.at++;
+      }
+    } else if (a === "pick" && q) {
+      delete ERA.un[q.id];
       ERA.A[q.id] = q.kind === "cb" ? +t.dataset.v : t.dataset.v;
       /* an answer that takes a later question away also takes its answer away */
       ER_QS.filter(x => x.when && !x.when(ERA.A)).forEach(x => delete ERA.A[x.id]);
       ERA.at++;
     } else if (a === "tog" && q) {
+      delete ERA.un[q.id];
       const cur = ERA.A[q.id] || [],
         v = t.dataset.v;
       ERA.A[q.id] = cur.includes(v) ? cur.filter(x => x !== v) : cur.concat([v]);
     } else if (a === "next" && q) {
+      delete ERA.un[q.id];
       ERA.A[q.id] = ERA.A[q.id] || [];
       ERA.at++;
     } else if (a === "back") ERA.at--;

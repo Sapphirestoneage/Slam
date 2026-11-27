@@ -122,7 +122,7 @@
   h = ov();
   chk(
     "the last question of About you is how money feels",
-    W.step === 3 && /When you think about your money, what's closest\?/.test(h) && /I'd rather not look/.test(h),
+    W.step === 3 && /How do you feel when you think about money\?/.test(h) && /I'd rather not look/.test(h),
     W.step
   );
   X("set", "I'd rather not look", "feel0");

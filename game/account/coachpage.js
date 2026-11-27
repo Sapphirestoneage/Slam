@@ -378,7 +378,7 @@ function cpDraw() {
     el.innerHTML = `<p class="muted">Checking…</p>`;
     return;
   }
-  const top = `<div class="row"><a class="back btn" href="./">‹ Back to the game</a><button data-a="out">Sign out</button></div>${roHatsHTML("coach", CP.roles, true)}`;
+  const top = `<div class="row"><a class="back btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a><button data-a="out">Sign out</button></div>${roHatsHTML("coach", CP.roles, true)}`;
   if (!CP.roles.coach && !CP.roles.admin) {
     /* roles.js: the route guard. A player who opens the coach page lands on Home. */
     const to = typeof roGuardTo === "function" ? roGuardTo("coach", CP.roles) : "./";

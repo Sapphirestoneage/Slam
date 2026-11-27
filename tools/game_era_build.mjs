@@ -16,7 +16,7 @@ const root = new URL('../game/', import.meta.url), to = new URL('era/gamecopy.js
 const PARTS = [
   ['screens/ui.js', ['roughOn', 'money', 'esc']],
   ['features/look.js', ['lkK']],
-  ['features/couldbe.js', ['CB_RNG', 'CB_QS', 'cbRng', 'cbRows', 'cbLab']],
+  ['features/couldbe.js', ['CB_RNG', 'CB_QS', 'cbRng', 'cbRows', 'cbM', 'cbLab', 'cbTypical']],
 ];
 
 // One top-level declaration: its first line starts at column 0 with "const NAME =" or "function NAME(". It goes on
@@ -73,7 +73,7 @@ const LOOK = [
   'button:focus-visible,', 'button.i{', '.chips{', '.chip{', '.chip.on{', '.pill{display:inline-block',
   ' .pulse,button.go{', ':root{--warn', 'body{font-family:"Space Grotesk"', 'h1,h2,h3,.tabtitle{font-family:"Space Grotesk"',
   '@media (prefers-reduced-motion:reduce){', 'body[data-color="midnight"]{', '@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--glow),0),0 0 6px',
-  '.dklabel{',
+  '.dklabel{', '.chev,.chevl{',
 ];
 const page = readFileSync(new URL('index.html', root), 'utf8').split('\n');
 const FONT = page.find(l => l.startsWith('<link href="https://fonts.googleapis.com/css2?family='));

@@ -361,7 +361,7 @@ function lvPill(x) {
 }
 function lvRow(x, max) {
   const w = x.yr > 0 && max > 0 ? Math.max(4, Math.round((x.yr / max) * 100)) : 0;
-  return `<button class="rowbtn lvrow" data-a="lvopen" data-v="${x.k}"><span style="min-width:0;flex:1"><span class="row between" style="gap:8px"><b>${x.n}</b><b style="white-space:nowrap">${x.lock || x.done ? "" : money(Math.round(x.yr)) + " a year"}</b></span><div class="tiny muted">${x.lock || x.what}</div><div class="bar" style="margin-top:5px"><i style="width:${w}%"></i></div></span><span class="stack" style="gap:4px;align-items:flex-end">${lvPill(x)}<span class="caret">›</span></span></button>`;
+  return `<button class="rowbtn lvrow" data-a="lvopen" data-v="${x.k}"><span style="min-width:0;flex:1"><span class="row between" style="gap:8px"><b>${x.n}</b><b style="white-space:nowrap">${x.lock || x.done ? "" : money(Math.round(x.yr)) + " a year"}</b></span><div class="tiny muted">${x.lock || x.what}</div><div class="bar" style="margin-top:5px"><i style="width:${w}%"></i></div></span><span class="stack" style="gap:4px;align-items:flex-end">${lvPill(x)}<span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`;
 }
 function lvTwo(c, o) {
   const y = Math.max(1, LV_END - (c.age || 30)),
@@ -470,7 +470,7 @@ function lvQuizSheet() {
       ) || 1;
   return (
     head("Guess which one wins", w.i + 1 + " of " + Rs.length) +
-    `<div class="tile"><b>${r.t}</b><div class="small">${r.ask}</div></div><div class="stack" style="gap:6px">${r.opts.map(o => (shown ? `<div class="tile lvans ${r.ok.includes(o.k) ? "win" : ""}"><div class="row between" style="gap:8px"><b class="small">${o.n}${w.pick === o.k ? " (your pick)" : ""}</b><b>${o.v < 0 ? "costs " + money(Math.round(-o.v)) : "+" + money(Math.round(o.v))}</b></div><div class="bar" style="margin-top:5px"><i style="width:${Math.max(4, Math.round((Math.abs(o.v) / mx) * 100))}%"></i></div>${r.ok.includes(o.k) ? `<div class="tiny">${r.ok.length > 1 ? "A tie at the top" : "The biggest"}</div>` : ""}</div>` : `<button class="rowbtn" data-a="lvpick" data-v="${o.k}"><span><b>${o.n}</b></span><span class="caret">›</span></button>`)).join("")}</div>` +
+    `<div class="tile"><b>${r.t}</b><div class="small">${r.ask}</div></div><div class="stack" style="gap:6px">${r.opts.map(o => (shown ? `<div class="tile lvans ${r.ok.includes(o.k) ? "win" : ""}"><div class="row between" style="gap:8px"><b class="small">${o.n}${w.pick === o.k ? " (your pick)" : ""}</b><b>${o.v < 0 ? "costs " + money(Math.round(-o.v)) : "+" + money(Math.round(o.v))}</b></div><div class="bar" style="margin-top:5px"><i style="width:${Math.max(4, Math.round((Math.abs(o.v) / mx) * 100))}%"></i></div>${r.ok.includes(o.k) ? `<div class="tiny">${r.ok.length > 1 ? "A tie at the top" : "The biggest"}</div>` : ""}</div>` : `<button class="rowbtn" data-a="lvpick" data-v="${o.k}"><span><b>${o.n}</b></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`)).join("")}</div>` +
     (shown
       ? `<div class="tile small"><b>${r.ok.includes(w.pick) ? "You called it." : "Most people guess that one."}</b> ${r.why}</div>` +
         mathBox(r.math.concat(["In today's dollars. A long-run average, not a promise."])) +

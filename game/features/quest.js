@@ -608,7 +608,7 @@ function qvAskBody(c) {
         ? L.length
           ? L.map(
               x =>
-                `<button class="rowbtn" data-a="skill" data-v="${esc(x.id)}"><span><b class="small">${esc(x.name)}</b><div class="tiny muted">${esc(x.text)}</div></span><span class="caret">›</span></button>`
+                `<button class="rowbtn" data-a="skill" data-v="${esc(x.id)}"><span><b class="small">${esc(x.name)}</b><div class="tiny muted">${esc(x.text)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
             ).join("")
           : `<div class="small muted">Nothing in the library on this yet.</div>`
         : "");
@@ -623,7 +623,7 @@ function qvAskBody(c) {
   }
   return (
     `<div class="small muted">Tap a question. The answer comes from your own plan and the game's library. Nothing leaves this device.</div>` +
-    `<div class="stack" style="gap:6px">${QS_ASK.map(a => `<button class="rowbtn ${k === a[0] ? "on" : ""}" data-a="qxset" data-k="ask" data-v="${a[0]}"><span class="small">${esc(a[1])}</span><span class="caret">›</span></button>`).join("")}</div>` +
+    `<div class="stack" style="gap:6px">${QS_ASK.map(a => `<button class="rowbtn ${k === a[0] ? "on" : ""}" data-a="qxset" data-k="ask" data-v="${a[0]}"><span class="small">${esc(a[1])}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` +
     ans
   );
 }
@@ -645,7 +645,7 @@ function qvPacksBody(c) {
                     const p = id.split(":"),
                       sk = SKILLS[p[0]] && SKILLS[p[0]].skills[+p[1]];
                     return sk
-                      ? `<button class="rowbtn" data-a="skill" data-v="${esc(id)}"><span class="small">${skillDone(c, id) ? "Done: " : id === r.next ? "Next: " : ""}${esc(sk[0])}</span><span class="caret">›</span></button>`
+                      ? `<button class="rowbtn" data-a="skill" data-v="${esc(id)}"><span class="small">${skillDone(c, id) ? "Done: " : id === r.next ? "Next: " : ""}${esc(sk[0])}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
                       : "";
                   })
                   .join("")}</div>`
@@ -715,7 +715,7 @@ function qvSheet() {
 }
 /* Part of rvSheet() in reveal.js. Adds the row "Quest mode" over the copy button of the character sheet. */
 function rvSheetQuest(h) {
-  const row = `<button class="rowbtn" data-a="qmode"><span><b>Quest mode</b><div class="tiny muted">Health, armor, six stats, rivals, the judge and graduating</div></span><span class="caret">›</span></button>`;
+  const row = `<button class="rowbtn" data-a="qmode"><span><b>Quest mode</b><div class="tiny muted">Health, armor, six stats, rivals, the judge and graduating</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
   const i = h.indexOf('<button class="primary wide" data-a="rvcopy"');
   return i < 0 ? h : h.slice(0, i) + row + h.slice(i);
 }

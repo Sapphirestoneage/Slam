@@ -5,7 +5,7 @@
                Same left over, and By use (nights at home).
    INPUT       The game: G.chars, G.demo, G.fair. The open sheet (W.kind): fair. The taps of the player
                (the actions in OUTPUT).
-   OUTPUT      11 functions. Parts of functions in other files: profSheetFair. Actions (ACT): fair,
+   OUTPUT      11 functions. Parts of functions in other files: mePeopleFair. Actions (ACT): fair,
                fred, frset, fradd, frdel, frtotal, frrate, frpick, frpayer, frcopy. Menu: "Sharing costs
                fairly".
    DEPENDS ON  core/report.js, screens/ui.js, screens/planner.js, features/compare.js.
@@ -144,7 +144,7 @@ function frSheet() {
     tot = opts.includes(dT) ? opts : opts.concat([dT]).sort((a, b) => a - b);
   const person = (p, i) => {
     const on = ed === i;
-    return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="fred" data-v="${i}" aria-expanded="${on}"><span class="ava2">${esc(p.n.trim().charAt(0).toUpperCase())}</span><span style="flex:1;min-width:0;text-align:left"><b>${esc(p.n)}</b><span class="tiny muted" style="display:block">${money(p.inc)} a month${p.linked ? " (from their profile)" : ""} · ${p.hrs} hrs of home work a week${p.adm > 0 ? " · " + jobHoursWords(p.adm * 60) + " of money admin a month" : ""} · ${p.nights} nights</span></span><span class="caret">${on ? "⌄" : "›"}</span></button>
+    return `<div class="tile stack" style="gap:6px"><button class="kwhead" data-a="fred" data-v="${i}" aria-expanded="${on}"><span class="ava2">${esc(p.n.trim().charAt(0).toUpperCase())}</span><span style="flex:1;min-width:0;text-align:left"><b>${esc(p.n)}</b><span class="tiny muted" style="display:block">${money(p.inc)} a month${p.linked ? " (from their profile)" : ""} · ${p.hrs} hrs of home work a week${p.adm > 0 ? " · " + jobHoursWords(p.adm * 60) + " of money admin a month" : ""} · ${p.nights} nights</span></span><span class="caret">${on ? "⌄" : "<i class=chev aria-hidden=true></i>"}</span></button>
   ${
     on
       ? `${
@@ -277,13 +277,10 @@ Object.assign(ACT, {
     drawSheet();
   },
 });
-/* Part of profSheet() in profiles.js. Adds the row "Sharing costs fairly". */
-function profSheetFair(h) {
-  const a = '<button class="ghost wide slim" data-a="coach">';
-  const row = `<button class="rowbtn" data-a="fair"><span><b>Sharing costs fairly</b><div class="tiny muted">Two people or six: five ways to split what you share</div></span><span class="caret">›</span></button>`;
-  return h.indexOf(a) >= 0
-    ? h.replace(a, () => row + a)
-    : h.replace(/(<button class="ghost wide slim" data-a="profmore">)/, m => row + m);
+/* Part of meTabPeople() in profiles.js. Adds the row "Sharing costs fairly" to the card "Your people" of Me. */
+function mePeopleFair(h) {
+  const row = `<button class="rowbtn" data-a="fair"><span><b>Sharing costs fairly</b><div class="tiny muted">Two people or six: five ways to split what you share</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
+  return h + row;
 }
 
 if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "fair")) {

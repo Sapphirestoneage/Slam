@@ -93,7 +93,7 @@
       return (
         ov().includes("✓ Whether you have anything invested") &&
         ov().includes("○ Cash you can reach") &&
-        ov().includes("Close ›")
+        ov().includes("Close <i class=chev aria-hidden=true></i>")
       );
     })()
   );

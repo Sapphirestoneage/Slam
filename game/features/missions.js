@@ -287,7 +287,7 @@ function msBoardBase(c, d) {
     w = typeof MSX !== "undefined" ? MSX : {};
   return `<div class="stack msboard" style="gap:8px">
  ${S ? `<div class="tile stack mscard" style="gap:8px"><div class="row between"><span class="eyebrow">${msW("Do this first", "Story mission")}</span><span class="tiny muted">${M.done.length} done so far</span></div><b style="font-size:18px" data-fid="ms:story">${esc(S.t)}</b>${S.why ? `<div class="small">${esc(S.why)}</div>` : ""}${msPills(S)}<button class="primary wide go" data-a="${S.a}" data-v="${esc(String(S.v))}">${esc(S.l)}</button></div>` : ""}
- ${side.length ? `<b class="small">${msW("Also worth doing", "Side missions")} <span class="tiny muted">optional, any order</span></b><div class="stack" style="gap:6px">${side.map(m => `<button class="rowbtn" data-a="msgo" data-k="${m.a}" data-v="${esc(String(m.v))}" data-l="${m.k || ""}" style="gap:8px"><span style="min-width:0"><b>${esc(m.t)}</b><div class="tiny muted">${m.mins} min · ${esc(m.pay)}</div></span><span class="caret">›</span></button>`).join("")}</div>` : ""}
+ ${side.length ? `<b class="small">${msW("Also worth doing", "Side missions")} <span class="tiny muted">optional, any order</span></b><div class="stack" style="gap:6px">${side.map(m => `<button class="rowbtn" data-a="msgo" data-k="${m.a}" data-v="${esc(String(m.v))}" data-l="${m.k || ""}" style="gap:8px"><span style="min-width:0"><b>${esc(m.t)}</b><div class="tiny muted">${m.mins} min · ${esc(m.pay)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>` : ""}
  ${
    openH.length
      ? `<b class="small">${msW("Bigger projects", "Heists")} <span class="tiny muted">a stage at a time</span></b><div class="stack" style="gap:6px">${openH

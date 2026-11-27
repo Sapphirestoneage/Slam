@@ -387,7 +387,7 @@ function plMonthView(c) {
     (d, i) => i < 35 || parseISO(d).getMonth() === m
   );
   const routs = (c.routines || []).map(r => r.next);
-  return `<div class="card"><div class="row between"><button class="ghost slim" data-a="plmon" data-v="-1" ${PLM <= 0 ? "disabled style='opacity:.35'" : ""} aria-label="Previous month">‹</button><h3>${base.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3><button class="ghost slim" data-a="plmon" data-v="1" aria-label="Next month">›</button></div>
+  return `<div class="card"><div class="row between"><button class="ghost slim" data-a="plmon" data-v="-1" ${PLM <= 0 ? "disabled style='opacity:.35'" : ""} aria-label="Previous month"><i class=chevl aria-hidden=true></i></button><h3>${base.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3><button class="ghost slim" data-a="plmon" data-v="1" aria-label="Next month"><i class=chev aria-hidden=true></i></button></div>
  <div class="calgrid" style="margin-top:8px">${PL_DOW.map(d => `<div class="tiny muted" style="text-align:center">${d[0]}</div>`).join("")}${cells
    .map(d => {
      const inM = parseISO(d).getMonth() === m,
@@ -453,7 +453,7 @@ function plPayStrip(c) {
       )}</div><div class="tiny muted" style="margin-top:6px">${c.payFreq && c.payFreq !== "It varies" ? "You said you're paid " + c.payFreq.toLowerCase() + "." : "If it varies, pick the next one you expect."}</div></div>`;
   const pp = plPayPlan(c),
     dd = daysBetween(t, pd.pay);
-  return `<button class="rowbtn plpaystrip" data-a="${pp ? "plpre" : "plpre"}"><span><span class="tiny muted">Next payday · ${dd <= 0 ? "today" : dd === 1 ? "tomorrow" : "in " + dd + " days"}</span><div><b>${pp ? "Planned: " + pp.jobs.map(j => j.k.toLowerCase()).join(", ") : "What's this paycheck for?"}</b></div></span><span class="tiny">${pp ? "Change" : "Plan it ›"}</span></button>`;
+  return `<button class="rowbtn plpaystrip" data-a="${pp ? "plpre" : "plpre"}"><span><span class="tiny muted">Next payday · ${dd <= 0 ? "today" : dd === 1 ? "tomorrow" : "in " + dd + " days"}</span><div><b>${pp ? "Planned: " + pp.jobs.map(j => j.k.toLowerCase()).join(", ") : "What's this paycheck for?"}</b></div></span><span class="tiny">${pp ? "Change" : "Plan it <i class=chev aria-hidden=true></i>"}</span></button>`;
 }
 /* NEXT STEPS TAB (the plan).
    planTab() makes the full tab. It calls each part by name, in the load order of the files.
@@ -923,12 +923,12 @@ function menuRecent(items) {
     .map(a => ok[a]);
 }
 function menuRow(m, due) {
-  return `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret">›</span>`}</button>`;
+  return `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret"><i class=chev aria-hidden=true></i></span>`}</button>`;
 }
 /* One group of the menu. nest: the group is inside another group (firstweek.js), so it opens by itself. */
 function menuGroupHtml(g, due, nest) {
   const pages = { coach: ["Open the coach page", "coach"], admin: ["Open the admin page", "admin"] };
-  return `<details class="mng${nest ? " mng2" : ""}" name="${nest ? "mng2" : "mng"}" data-g="${g.id}"><summary><span class="mngh"><span class="mnico" aria-hidden="true">${g.ico}</span><b>${g.n}</b><span class="pill mncount">${g.items.length + (pages[g.id] ? 1 : 0)}</span></span></summary><div class="stack mnrows">${g.items.map(m => menuRow(m, due)).join("")}${pages[g.id] ? `<button class="rowbtn menurow" data-a="hat" data-v="${pages[g.id][1]}"><span><b>${pages[g.id][0]}</b><div class="tiny muted">The ${g.id} page, in a new screen</div></span><span class="caret">›</span></button>` : ""}${g.id === "people" && !G.demo ? `<button class="rowbtn menurow" data-a="menugo" data-k="act" data-v="addperson"><span><b>Add another person</b><div class="tiny muted">A partner, a kid or someone you help</div></span><span class="caret">›</span></button>` : ""}</div></details>`;
+  return `<details class="mng${nest ? " mng2" : ""}" name="${nest ? "mng2" : "mng"}" data-g="${g.id}"><summary><span class="mngh"><span class="mnico" aria-hidden="true">${g.ico}</span><b>${g.n}</b><span class="pill mncount">${g.items.length + (pages[g.id] ? 1 : 0)}</span></span></summary><div class="stack mnrows">${g.items.map(m => menuRow(m, due)).join("")}${pages[g.id] ? `<button class="rowbtn menurow" data-a="hat" data-v="${pages[g.id][1]}"><span><b>${pages[g.id][0]}</b><div class="tiny muted">The ${g.id} page, in a new screen</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>` : ""}${g.id === "people" && !G.demo ? `<button class="rowbtn menurow" data-a="menugo" data-k="act" data-v="addperson"><span><b>Add another person</b><div class="tiny muted">A partner, a kid or someone you help</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>` : ""}</div></details>`;
 }
 function menuSheetBase() {
   const c = C(),
@@ -995,7 +995,7 @@ function topbarHTML() {
   const nb = NAV.back.length,
     nf = NAV.fwd.length,
     calm = typeof fwCalm === "function" && fwCalm(); /* firstweek.js: Safe to spend and Where am I wait in the menu */
-  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button>${typeof topbarHome === "function" ? topbarHome() : "" /* results.js: Home, always in view */}</span>${whoBtn()}${calm ? "" : `<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>`}${!calm && typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
+  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}><i class=chevl aria-hidden=true></i></button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}><i class=chev aria-hidden=true></i></button>${typeof topbarHome === "function" ? topbarHome() : "" /* results.js: Home, always in view */}</span>${whoBtn()}${calm ? "" : `<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>`}${!calm && typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
 }
 function tabsHTML() {
   const c = C(),
@@ -1166,7 +1166,7 @@ function homePlanLine(h) {
   if (G.demo) return h;
   const t = todayISO(),
     open = plAutoToday(c).concat(plTasksOn(c, t).filter(plOpen));
-  const line = `<button class="rowbtn plhomeline" data-a="tab" data-v="plan"><span><span class="tiny muted">Today's plan</span><div><b>${open.length ? open.length + " thing" + (open.length === 1 ? "" : "s") + ", about " + plMins(open) + " min" : "All done for today ✓"}</b></div></span><span class="caret">›</span></button>`;
+  const line = `<button class="rowbtn plhomeline" data-a="tab" data-v="plan"><span><span class="tiny muted">Today's plan</span><div><b>${open.length ? open.length + " thing" + (open.length === 1 ? "" : "s") + ", about " + plMins(open) + " min" : "All done for today ✓"}</b></div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
   return h.replace(/(<div class="card[^"]*"><div class="row between"><div class="eyebrow">)/, line + "$1");
 }
 

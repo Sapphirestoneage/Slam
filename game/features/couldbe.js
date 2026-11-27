@@ -26,7 +26,7 @@
                finishSetupCb (finishSetupBase in ui.js), openSetupCb (openSetup in ui.js),
                drawSheetCb (drawSheetOnce in ui.js), planTabCb (planTab in planner.js). Actions (ACT):
                cb, cbset, cbknow, cbuse, cbgo, cbtog, cbsplit, cbzoom, cblayer, cbcount, cbrest,
-               cbpick, cbdo, cbback, cbtyp (No idea, use typical), cbmine (Make it mine).
+               cbpick, cbdo, cbback, cbtyp (I'm not sure), cbmine (Make it mine).
    DEPENDS ON  core/report.js, core/paylayers.js (lyNumbers, lyYears, lyBars, lyNeedsAge, lyLayerSum,
                lyCoverage, lyReceipt, lyShapeBands, lyLifetime, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, LY_END,
                LY_MEDICARE, LY_SHAPE_REF, LY_SS_REF),
@@ -136,23 +136,23 @@ const CB_RNG = {
   ],
 };
 const CB_QS = [
-  { id: "age", l: "How old are you?", h: "A range is fine.", zero: "" },
+  { id: "age", l: "How old are you?", h: "Pick the group your age is in.", zero: "" },
   {
     id: "spend",
-    l: "About how much do you spend in a month?",
-    h: "Everything that goes out: rent, food, bills, fun. A rough range is fine.",
+    l: "How much money do you spend in one month?",
+    h: "Count it all: rent, food, bills and fun. Your best guess is fine.",
     zero: "",
   },
   {
     id: "inv",
-    l: "About how much do you have invested?",
-    h: "Retirement accounts and other investments together. Not your checking or savings.",
+    l: "How much money do you have in investments?",
+    h: "Investments are money in a 401(k), an IRA, or stocks and funds. Do not count checking or savings.",
     zero: "Nothing yet",
   },
   {
     id: "save",
-    l: "About how much do you save or invest in a month?",
-    h: "What is left after spending and goes into savings or investments.",
+    l: "How much money do you put away each month?",
+    h: "Count money you move into savings, a 401(k), an IRA or other investments.",
     zero: "Nothing right now",
   },
 ];
@@ -213,7 +213,7 @@ function cbRows(a) {
         : [],
   };
 }
-/* THE TYPICAL VALUE of one question for an age (the chip "No idea, use typical"; run SLAM-ONBOARD-1). q: spend, inv
+/* THE TYPICAL VALUE of one question for an age (the chip "I'm not sure", NOT_SURE; run SLAM-ONBOARD-1 and run 16). q: spend, inv
    or save. It comes from the reference data (LY_TYP_REF in core/paylayers.js), never from a guess of the game:
    spend: what households of that age spend in a year, over 12 (BLS). inv: the median balance of the families of that
    age that have a retirement account (the Fed's survey). save: the typical spending of the age times the share of
@@ -660,13 +660,13 @@ const CB_WAYS = {
     title: "Spending eases as you age",
     why: "Most people spend less in their late 70s and 80s than in the first years after work. The 25 times rule counts today's spending for every year.",
     term: "cbshape",
-    ask: "Which shape?",
+    ask: "How much less will you spend when you are older?",
   },
   ss: {
     title: "Social Security pays part of it",
     why: "A monthly payment for life from 67 means your investments have less to pay for. The 25 times rule leaves it out.",
     term: "cbss",
-    ask: "How much of it?",
+    ask: "How much of your Social Security should the plan count?",
   },
 };
 /* The share of "Count part of it": a part share the profile already holds (setup offers 75%; c.x.ss is its one
@@ -1013,16 +1013,21 @@ function drawSheetCb() {
     report(e, "couldbe.js: drawSheetCb");
   }
 }
-/* The chips of one question, with "I know it" and its number box in the same spot. */
+/* The chips of one question, with "I know it" and its number box in the same spot. The last chip is "I'm not sure"
+   (run 16, C8): the typical value as a Guess where the reference data has one (spend, inv and save, with a row for
+   the age; the typical plan for health). Where it has none, nothing is kept and the question stays open. */
 function cbChips(w, q, cur) {
   const open = w.know === q,
-    /* the chip "No idea, use typical": spend, inv and save, when the reference data has a row for the age */
-    typ = ["spend", "inv", "save"].includes(q) && w.o.a && w.o.a.age ? cbTypical(q, w.o.a.age.v) : null;
+    typ = ["spend", "inv", "save"].includes(q) && w.o.a && w.o.a.age ? cbTypical(q, w.o.a.age.v) : null,
+    un = q === "health" ? !cur : !!(cur && cur.typ) || w.unsure === q;
   return (
-    `<div class="chips">${CB_RNG[q].map((r, i) => `<button class="chip ${cur && cur.cf !== 3 && cur.i === i ? "on" : ""}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(cbLab(q, i))}</button>`).join("")}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}" data-a="cbknow" data-q="${q}">I know it</button>${typ ? `<button class="chip cbtyp ${cur && cur.typ ? "on" : ""}" data-a="cbtyp" data-q="${q}">No idea, use typical</button>` : ""}</div>` +
+    `<div class="chips">${CB_RNG[q].map((r, i) => `<button class="chip ${cur && cur.cf !== 3 && cur.i === i ? "on" : ""}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(cbLab(q, i))}</button>`).join("")}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}" data-a="cbknow" data-q="${q}">I know it</button><button class="chip cbtyp ${un ? "on" : ""}" data-a="cbtyp" data-q="${q}" aria-pressed="${un ? "true" : "false"}">${NOT_SURE}</button></div>` +
+    `<div class="tiny muted" data-fid="cb:tapone">${TAP_ONE}</div>` +
     (typ
-      ? `<div class="tiny muted" data-fid="cb:typhint">Typical for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess, and you can make it yours later.</div>`
-      : "") +
+      ? `<div class="tiny muted" data-fid="cb:typhint">Not sure? The game uses what is typical for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess, and you can make it yours later.</div>`
+      : w.unsure === q
+        ? `<div class="tiny muted" data-fid="cb:unsure" role="status">${q === "age" ? "Your age is the one answer this number needs. Your best guess is fine." : "The game has no typical amount for your age yet. Pick the closest one. Your best guess is fine."}</div>`
+        : "") +
     (open
       ? `<div class="amknow row" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;margin:0"><label class="small" for="cbIn">${q === "age" ? "Your age" : "The amount, in dollars"}</label><input type="text" id="cbIn" inputmode="decimal" data-k="cbIn" value="${esc(w.o.cbIn != null ? w.o.cbIn : cur && cur.cf === 3 ? String(cur.v) : "")}" autocomplete="off"></div><button class="primary" data-a="cbuse" data-q="${q}">Use this</button></div>${w.err ? `<div class="tiny cbwarn">That needs a number, 0 or more.</div>` : ""}`
       : "")
@@ -1191,7 +1196,7 @@ function cbLayerToggles(K) {
     chips = K.layers
       .map(
         l =>
-          `<div class="cblay"><button class="chip cbchip ${l.off ? "" : "on"}" data-a="cbtog" data-v="${l.id}" aria-pressed="${l.off ? "false" : "true"}">${sq(l.color)}<span>${esc(l.name)}</span><span class="tiny cbonoff">${l.off ? "Off" : "On"}</span></button><button class="ghost slim cbview" data-a="cblayer" data-v="${l.id}" aria-label="${esc(l.name)}: what it is">View ›</button></div>`
+          `<div class="cblay"><button class="chip cbchip ${l.off ? "" : "on"}" data-a="cbtog" data-v="${l.id}" aria-pressed="${l.off ? "false" : "true"}">${sq(l.color)}<span>${esc(l.name)}</span><span class="tiny cbonoff">${l.off ? "Off" : "On"}</span></button><button class="ghost slim cbview" data-a="cblayer" data-v="${l.id}" aria-label="${esc(l.name)}: what it is">View <i class=chev aria-hidden=true></i></button></div>`
       )
       .join("");
   return `<div class="stack" style="gap:6px" data-fid="cb:toggles"><b class="small">The layers: tap one to switch it off or on</b><div class="cblays">${chips}</div><button class="ghost wide" data-a="cbsplit" aria-pressed="${K.split ? "true" : "false"}">${K.split ? "Show Investments as one layer" : "Split by account"}</button></div>`;
@@ -1206,7 +1211,7 @@ function cbChartView() {
     gapLine = cbGapLine(K),
     needsLine = cbNeedsLine(K),
     costRow = (id, S, extra) =>
-      `<div class="cbcost"><button class="rowbtn" data-a="cblayer" data-v="${id}"><span>${sq(CB_COL[id])}<b>${esc(LY_SPENDING.find(x => x.id === id).name)}</b><div class="tiny muted">${extra}</div></span><span class="caret">›</span></button>${
+      `<div class="cbcost"><button class="rowbtn" data-a="cblayer" data-v="${id}"><span>${sq(CB_COL[id])}<b>${esc(LY_SPENDING.find(x => x.id === id).name)}</b><div class="tiny muted">${extra}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${
         LY_SPENDING.find(x => x.id === id).cost
           ? `<button class="${cnt[id] ? "chip on" : "chip"} cbcnt" data-a="cbcount" data-v="${id}" aria-pressed="${cnt[id] ? "true" : "false"}">${cnt[id] ? "Counted in the number" : "Count this in the number"}</button>`
           : ""
@@ -1220,7 +1225,7 @@ function cbChartView() {
         ? "Ages " + zoom[0].age + " to " + zoom[zoom.length - 1].age + ", year by year"
         : "From " + K.p.age + " to " + LY_END + ", 5 years a bar",
       (zoom
-        ? `<div class="row between cbzrow"><button class="ghost" data-a="cbzoom" data-v="">‹ Back to all years</button><span class="row" style="gap:6px"><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age - 5}" ${zoom[0].age - 5 < K.p.age ? "disabled" : ""} aria-label="The 5 years before">‹ Earlier</button><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age + 5}" ${zoom[0].age + 5 > LY_END ? "disabled" : ""} aria-label="The 5 years after">Later ›</button></span></div>`
+        ? `<div class="row between cbzrow"><button class="ghost" data-a="cbzoom" data-v=""><i class=chevl aria-hidden=true></i> Back to all years</button><span class="row" style="gap:6px"><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age - 5}" ${zoom[0].age - 5 < K.p.age ? "disabled" : ""} aria-label="The 5 years before"><i class=chevl aria-hidden=true></i> Earlier</button><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age + 5}" ${zoom[0].age + 5 > LY_END ? "disabled" : ""} aria-label="The 5 years after">Later <i class=chev aria-hidden=true></i></button></span></div>`
         : "") +
         cbChartHtml(K) +
         `<div class="cbkey tiny muted"><span><i class="cbln"></i>The line: what the year costs</span><span><i class="cbln dash"></i>Needs</span><span><i class="cbsq hatch"></i>Not covered yet</span></div>` +
@@ -1330,6 +1335,12 @@ function cbChartCard(K, title, cap) {
     { cap }
   );
 }
+/* Part of each way screen (cbWayView here, and cbflex.js, cbtax.js, cblater.js, cbmoves.js). The fourth choice of a
+   way: "I'm not sure" (run 16, C8). Nothing is kept: the way stays open on the list of the ways, and the flow goes
+   on. Under it, the helper line of every question. */
+function cbWayUnsure() {
+  return `<button class="ghost wide cbunsure" data-a="cbgo" data-v="next">${NOT_SURE}</button><div class="tiny muted" data-fid="cb:tapone">${TAP_ONE}</div>`;
+}
 /* The buttons under a way: Next, Back, and the way back to the list of all the ways. done: the player answered. */
 function cbWayNav(done) {
   return (
@@ -1435,6 +1446,7 @@ function cbWayView(id) {
     `<div class="stack" style="gap:6px"><b class="small">${esc(Wy.ask)}</b><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub)}</div></div>` +
     `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(id === "ss" ? "Guess" : cbState(c))}</div><b class="cbdropn">${esc(V.has ? cbReceiptWords(V.receipt) : "No estimate yet")}</b><div class="tiny muted">${St.counted ? "With the choice above, against not counting it." : "If you count it, with the choice above."}</div></div>` +
     `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
+    cbWayUnsure() +
     said +
     cbChartCard(
       K,
@@ -1463,7 +1475,7 @@ function cbEndView() {
       ? `<div class="tile cbfirst" data-fid="cb:first"><span class="dklabel">Your first move</span><b data-fid="cb:firstname">${esc(R.move.name)}</b><div class="small" data-fid="cb:firstwhy">${esc(R.move.why)}</div></div>`
       : "") +
     `<button class="primary wide go cbresgo" data-a="cbfirst">Start my first move</button>` +
-    `<div class="row"><button class="ghost slim" data-a="cbgo" data-v="prev">‹ Back</button></div>` +
+    `<div class="row"><button class="ghost slim" data-a="cbgo" data-v="prev"><i class=chevl aria-hidden=true></i> Back</button></div>` +
     `<div class="tiny muted" data-fid="cb:kept">${esc(R.kept)}</div>` +
     cbFoot()
   );
@@ -1609,7 +1621,11 @@ function finishSetupCb(w, o) {
   }
 }
 /* The answer of setup's question about tax-friendly accounts (SM_Q[8] in smart.js) for each value of c.tax. */
-const CB_TAXQ = { yes: "Yes, the most I'm allowed", some: "Yes, some", no: "Not this year" };
+const CB_TAXQ = {
+  yes: "Yes, the most I'm allowed",
+  some: "Yes, some",
+  no: "Not this year",
+}; /* the kept values of setup's question (smart.js shows them with new words) */
 /* Part of openSetup() in ui.js. The rest of setup, opened from this flow, keeps the four answers: the age, the
    rows and the notes of the flow go into the new answers. */
 function openSetupCb(base, mode) {
@@ -1672,8 +1688,8 @@ function planTabCb(h) {
       `<div class="stack cbplan" style="gap:6px">` +
       (c.x.cb.setup || !c.x.cb.a
         ? ""
-        : `<button class="rowbtn" data-a="cbrest"><span><b>Finish setup: five short rounds</b><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div></span><span class="caret">›</span></button>`) +
-      `<button class="rowbtn" data-a="cb"><span><b>What it is / What it could be</b><div class="tiny muted">Your FI number, and the chart of what pays for each year.</div></span><span class="caret">›</span></button></div>`;
+        : `<button class="rowbtn" data-a="cbrest"><span><b>Finish setup: five short rounds</b><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`) +
+      `<button class="rowbtn" data-a="cb"><span><b>What it is / What it could be</b><div class="tiny muted">Your FI number, and the chart of what pays for each year.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button></div>`;
     return h.indexOf("<!--moveshere-->") >= 0 ? h.replace("<!--moveshere-->", () => row + "<!--moveshere-->") : h;
   } catch (e) {
     report(e, "couldbe.js: planTabCb");
@@ -1684,6 +1700,7 @@ function planTabCb(h) {
 function cbAnswer(q, ans) {
   const w = W;
   w.know = null;
+  w.unsure = null;
   w.err = false;
   delete w.o.cbIn;
   if (q === "health") {
@@ -1742,12 +1759,24 @@ Object.assign(ACT, {
     if (!W || W.kind !== "cb" || W.step === "wants" || !r) return;
     cbAnswer(q, { v: r.v, i, cf: 1, rg: [r.lo, r.hi] });
   },
-  /* No idea, use typical: the typical value for the age, as a Guess */
+  /* I'm not sure: the typical value for the age, as a Guess. With no typical value nothing is kept, and the
+     question stays open with one line of help. Health: the player's own answer goes, and the typical plan stays. */
   cbtyp: t => {
-    if (!W || W.kind !== "cb" || W.step !== "entry" || !W.o.a || !W.o.a.age) return;
-    const q = t.dataset.q,
-      T = cbTypical(q, W.o.a.age.v);
-    if (!T) return;
+    if (!W || W.kind !== "cb") return;
+    const q = t.dataset.q;
+    if (q === "health") {
+      delete cbStore(C()).health;
+      save();
+      drawSheet();
+      return;
+    }
+    if (W.step !== "entry" || !CB_QS.some(x => x.id === q)) return;
+    const T = W.o.a && W.o.a.age ? cbTypical(q, W.o.a.age.v) : null;
+    if (!T) {
+      W.unsure = q;
+      drawSheet();
+      return;
+    }
     cbAnswer(q, { v: T.v, cf: 1, typ: true, band: T.band });
   },
   /* Make it mine (the reveal): open the one question whose answer is a typical value */

@@ -105,8 +105,11 @@
     "the menu and the people sheet both lead here",
     MENU.some(m => m[1] === "fair") &&
       (() => {
+        X("tab", "me"); /* run 16, D12: the row is on the Me tab, not on the sheet People */
+        const me = app().includes('data-a="fair"');
+        X("tab", "home");
         X("people");
-        const ok = ov().includes('data-a="fair"');
+        const ok = me && !ov().includes('data-a="fair"');
         X("close");
         return ok;
       })()

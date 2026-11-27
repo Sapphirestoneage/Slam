@@ -206,16 +206,16 @@ function ltColHtml(e) {
             : "Later";
   const pill =
     e.st === "done" || e.st === "here" ? "✓" : e.st === "current" ? "Now" : e.st === "next" ? "Next" : "Later";
-  return `<button class="ltcol ${e.st}" data-a="ltnode" data-v="${e.i}" data-fid="lt:${e.i}"><span class="row between tiny"><span class="muted">Era ${e.i}</span><span class="pill">${pill}</span></span><b class="small">${esc(e.n)}</b><span class="tiny muted">${esc(lab)}</span>${e.steps.length ? `<span class="ltdots" aria-label="${e.done} of ${e.steps.length} steps">${e.steps.map(s => `<i class="${s.done ? "on" : ""}"></i>`).join("")}</span>` : ""}${e.bonus ? `<span class="tiny ltbon">${esc(e.bonus.v)}</span>` : ""}<span class="tiny ltview">View ›</span></button>`;
+  return `<button class="ltcol ${e.st}" data-a="ltnode" data-v="${e.i}" data-fid="lt:${e.i}"><span class="row between tiny"><span class="muted">Era ${e.i}</span><span class="pill">${pill}</span></span><b class="small">${esc(e.n)}</b><span class="tiny muted">${esc(lab)}</span>${e.steps.length ? `<span class="ltdots" aria-label="${e.done} of ${e.steps.length} steps">${e.steps.map(s => `<i class="${s.done ? "on" : ""}"></i>`).join("")}</span>` : ""}${e.bonus ? `<span class="tiny ltbon">${esc(e.bonus.v)}</span>` : ""}<span class="tiny ltview">View <i class=chev aria-hidden=true></i></span></button>`;
 }
 /* One status marker between two eras. */
 function ltMarkHtml(m) {
-  return `<button class="ltmark${m.reached ? " reached" : ""}" data-a="ltstatus" data-v="${esc(m.key)}" data-fid="lt:st:${esc(m.key)}"><span class="tiny muted">Status</span><b class="small">${esc(m.name)}</b><span class="tiny">${money(Math.round(m.value))}</span><span class="tiny muted">${esc(m.when)}</span><span class="tiny ltview">View ›</span></button>`;
+  return `<button class="ltmark${m.reached ? " reached" : ""}" data-a="ltstatus" data-v="${esc(m.key)}" data-fid="lt:st:${esc(m.key)}"><span class="tiny muted">Status</span><b class="small">${esc(m.name)}</b><span class="tiny">${money(Math.round(m.value))}</span><span class="tiny muted">${esc(m.when)}</span><span class="tiny ltview">View <i class=chev aria-hidden=true></i></span></button>`;
 }
 /* The row of all six statuses under the map. */
 function ltStatusRow(M) {
   if (!M.statuses.length) return "";
-  return `<div class="dklabel">FIRE statuses on the way</div><div class="tiny muted">Markers, not steps. Reaching one opens options. Your next step stays the same.</div><div class="ltsts">${M.statuses.map(s => `<button class="ghost slim${s.reached ? " reached" : ""}${s.value == null ? " off" : ""}" data-a="ltstatus" data-v="${esc(s.key)}">${esc(s.name)}: ${s.value == null ? "no number yet" : s.reached ? "reached ✓" : M.stLevel === "Guess" ? money(Math.round(s.value)) : money(Math.round(s.value)) + ", " + esc(s.when)} ›</button>`).join("")}</div>`;
+  return `<div class="dklabel">FIRE statuses on the way</div><div class="tiny muted">Markers, not steps. Reaching one opens options. Your next step stays the same.</div><div class="ltsts">${M.statuses.map(s => `<button class="ghost slim${s.reached ? " reached" : ""}${s.value == null ? " off" : ""}" data-a="ltstatus" data-v="${esc(s.key)}">${esc(s.name)}: ${s.value == null ? "no number yet" : s.reached ? "reached ✓" : M.stLevel === "Guess" ? money(Math.round(s.value)) : money(Math.round(s.value)) + ", " + esc(s.when)} <i class=chev aria-hidden=true></i></button>`).join("")}</div>`;
 }
 function ltMapHtml(c, d) {
   const M = ltMap(c, d),
@@ -245,7 +245,7 @@ function ltSheet() {
     `<div class="row wrap" style="gap:6px"><span class="pill">${e.st === "done" || e.st === "here" ? "Reached" : e.st === "current" ? "Unlocking now" : e.st === "next" ? "Next" : "Later"}</span><span class="tiny muted">Era ${e.i} of 9</span></div>` +
     `<div class="tile stack" style="gap:6px"><div class="small"><span class="muted">What</span> ${esc(e.p)}: ${esc(e.gate)}.</div><div class="small"><span class="muted">Why</span> ${esc(e.one)}</div><div class="small"><span class="muted">Time</span> <b>${esc(X.time)}</b></div>${X.gap != null && X.gap > 0 ? `<div class="small"><span class="muted">Money</span> <b>${money(X.gap)}</b> to go</div>` : ""}${e.bonus ? `<div class="small"><span class="muted">Starting bonus</span> <b>${esc(e.bonus.v)}</b></div>` : ""}${mathBox(X.math)}</div>` +
     (e.steps.length
-      ? `<div class="stack" style="gap:6px"><div class="tiny muted">${e.done} of ${e.steps.length} steps done</div>${e.steps.map(s => `<button class="rowbtn ${s.done ? "okrow" : ""}" data-a="node" data-v="${esc(s.id)}"><span>${esc(s.title)}</span><span class="tiny">${s.done ? "Done ✓" : "›"}</span></button>`).join("")}</div>`
+      ? `<div class="stack" style="gap:6px"><div class="tiny muted">${e.done} of ${e.steps.length} steps done</div>${e.steps.map(s => `<button class="rowbtn ${s.done ? "okrow" : ""}" data-a="node" data-v="${esc(s.id)}"><span>${esc(s.title)}</span><span class="tiny">${s.done ? "Done ✓" : "<i class=chev aria-hidden=true></i>"}</span></button>`).join("")}</div>`
       : "") +
     (X.go
       ? `<button class="primary go wide" data-a="${esc(X.go.a)}" data-v="${esc(X.go.v)}">${esc(X.go.l)}</button>`

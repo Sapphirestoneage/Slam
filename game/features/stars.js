@@ -639,7 +639,7 @@ function starsPanel(c, id, next) {
       ? `<div class="small"><b>This opens…</b></div><div class="stack" style="gap:6px">${lanes.out
           .map(
             l =>
-              `<button class="rowbtn" data-a="starfly" data-v="${l.to}"><span style="min-width:0"><b class="small">${esc(trackN(l.to.split(":")[0]))}</b><div class="tiny muted">${esc(l.why)}</div></span><span class="caret">›</span></button>`
+              `<button class="rowbtn" data-a="starfly" data-v="${l.to}"><span style="min-width:0"><b class="small">${esc(trackN(l.to.split(":")[0]))}</b><div class="tiny muted">${esc(l.why)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
           )
           .join("")}</div>`
       : "") +
@@ -662,7 +662,7 @@ function starsSheet() {
     `<details><summary>Stars lit in each constellation</summary><div class="inner stack" style="gap:6px">${N.rows
       .map(
         r =>
-          `<button class="rowbtn" data-a="starcenter" data-v="${r.t}"><span class="small">${esc(trackN(r.t))}</span><span class="small"><b>${r.done}</b> of ${r.size - r.na} ›</span></button>`
+          `<button class="rowbtn" data-a="starcenter" data-v="${r.t}"><span class="small">${esc(trackN(r.t))}</span><span class="small"><b>${r.done}</b> of ${r.size - r.na} <i class=chev aria-hidden=true></i></span></button>`
       )
       .join("")}</div></details>` +
     `<button class="ghost wide" data-a="tab" data-v="map">See the skills as a list</button>`
@@ -674,12 +674,15 @@ function mapTabStars(h) {
     /<h1>Skills<\/h1>/,
     m =>
       m +
-      `<button class="ghost wide galaxybtn" data-a="galaxy">See it as a galaxy ›</button><div class="tiny muted" style="text-align:center">The same 625 skills as stars that spiral out to FI.</div>`
+      `<button class="ghost wide galaxybtn" data-a="galaxy">See it as a galaxy <i class=chev aria-hidden=true></i></button><div class="tiny muted" style="text-align:center">The same 625 skills as stars that spiral out to FI.</div>`
   );
 }
 /* Part of questSheet() in questlog.js. Adds the button "Galaxy" to the Quest Log. */
 function questSheetStars(h) {
-  return h + `<button class="ghost wide galaxybtn" data-a="galaxy">See the galaxy ›</button>`;
+  return (
+    h +
+    `<button class="ghost wide galaxybtn" data-a="galaxy">See the galaxy <i class=chev aria-hidden=true></i></button>`
+  );
 }
 kitTerms({
   galaxy: [

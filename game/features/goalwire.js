@@ -374,7 +374,7 @@ function goalViewWire(h) {
       g = (c.goals || []).find(x => W && x.id === W.id);
     if (!g || g.done) return h;
     const card = wireOf(g)
-      ? `<button class="rowbtn wirerow" data-a="wire" data-v="${esc(g.id)}"><span><b>Set once. Check in: quarterly.</b><div class="tiny muted">${money(g.wire.amt)} a month into ${esc(wireAcctWords(g.wire.acct))}</div></span><span class="caret">View ›</span></button>`
+      ? `<button class="rowbtn wirerow" data-a="wire" data-v="${esc(g.id)}"><span><b>Set once. Check in: quarterly.</b><div class="tiny muted">${money(g.wire.amt)} a month into ${esc(wireAcctWords(g.wire.acct))}</div></span><span class="caret">View <i class=chev aria-hidden=true></i></span></button>`
       : dkCard(
           "Wire it up",
           `<div class="small">One move: where the money lives, how much, and the day it moves. Three taps.</div><button class="primary wide" data-a="wire" data-v="${esc(g.id)}">Wire it up</button>`,

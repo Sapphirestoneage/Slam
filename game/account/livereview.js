@@ -352,7 +352,7 @@ function lrvItemHTML(c, x, rv, owner) {
       (rec ? `<span class="tiny done">${lsEsc(lrvDoneLine(c, x, rec))}</span>` : "") +
       `</span>`;
   if (rec && !w) return `<div class="rvitem rvdone">${head}</div>`;
-  const btn = `<button class="rvtap" data-a="rvopen" data-v="${lsEsc(x.id)}" aria-expanded="${open}">${head}<span class="caret" aria-hidden="true">${open ? "⌃" : "›"}</span></button>`;
+  const btn = `<button class="rvtap" data-a="rvopen" data-v="${lsEsc(x.id)}" aria-expanded="${open}">${head}<span class="caret" aria-hidden="true">${open ? "⌃" : "<i class=chev aria-hidden=true></i>"}</span></button>`;
   if (!open) return `<div class="rvitem">${btn}</div>`;
   return `<div class="rvitem on">${btn}<div class="rvfix">${w ? lrvWhatifHTML(c, x, w, owner) : lrvFixHTML(c, x)}</div></div>`;
 }

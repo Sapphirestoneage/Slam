@@ -82,12 +82,13 @@ function wnView() {
     n = wp.length + own.length;
   return (
     head("First", "What do you want?") +
-    `<div class="small muted">Tap all that fit. There is no order yet, and you can change them later.</div>` +
+    `<div class="small muted">Tap each one you want. You can change them later.</div>` +
     `<div class="chips wnchips" data-fid="wn:chips">${WN_LIST.map(x => `<button class="chip ${wp.includes(x.id) ? "on" : ""}" data-a="wnpick" data-v="${x.id}" aria-pressed="${wp.includes(x.id) ? "true" : "false"}">${esc(x.l)}</button>`).join("")}${own.map(o => `<button class="chip on" data-a="wnpick" data-k="own" data-v="${esc(o)}" aria-pressed="true">${esc(o)}</button>`).join("")}<button class="chip ${w.wnOwn ? "on" : ""}" data-a="wnown" aria-expanded="${w.wnOwn ? "true" : "false"}">Something else</button></div>` +
     (w.wnOwn ? grOwnField() : "") +
     `<button class="primary wide go" data-a="wnnext">Next: four quick taps</button>` +
-    `<button class="ghost wide" data-a="wnskip">Skip for now</button>` +
-    `<div class="tiny muted" data-fid="wn:count" role="status">${n ? (n === 1 ? "1 picked." : n + " picked.") + " They stay on your list of goals." : "Nothing picked yet. Skip is fine."}</div>` +
+    `<button class="ghost wide" data-a="wnskip">${NOT_SURE}</button>` +
+    `<div class="tiny muted" data-fid="wn:tapone">${TAP_ONE}</div>` +
+    `<div class="tiny muted" data-fid="wn:count" role="status">${n ? (n === 1 ? "1 picked." : n + " picked.") + " They stay on your list of goals." : "Nothing picked yet. Not sure is fine: you can pick later."}</div>` +
     cbFoot()
   );
 }
@@ -108,7 +109,7 @@ function wnBack(w) {
     ? `<div class="row"><button class="ghost" data-a="wnback">Back: what you want</button></div>`
     : "";
 }
-/* Leave the screen for the four questions. keep: false for "Skip for now" (no pick is kept). */
+/* Leave the screen for the four questions. keep: false for "I'm not sure" (no pick is kept). */
 function wnLeave(keep) {
   if (!W || W.kind !== "cb" || W.step !== "wants") return;
   W.o = W.o || {};

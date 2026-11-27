@@ -85,7 +85,7 @@ function tabHead() {
   const x = uxT(tab),
     k = x[0],
     tips = G.tips || {};
-  return `<div class="tabhead"><div class="row between"><b class="tabtitle">${tab === "play" ? `<button class="crumb" data-a="tab" data-v="home">Home</button> › Check in` : tab === "map" ? `<button class="crumb" data-a="tab" data-v="plan">Next Steps</button> › The big picture` : x[1]}</b><button class="ghost slim whatdo" data-a="whatdo" aria-label="What do I do here?" title="What do I do here?">?</button></div><div class="tabdesc">${tab === "play" ? "Payday and your one-minute check" : tab === "map" ? "The map, the eras and the skill trees. Optional." : x[2]}</div>${UX_HINT ? `<div class="tile small hint">${esc(UX_HINT)}</div>` : ""}</div>`;
+  return `<div class="tabhead"><div class="row between"><b class="tabtitle">${tab === "play" ? `<button class="crumb" data-a="tab" data-v="home">Home</button> <i class=chev aria-hidden=true></i> Check in` : tab === "map" ? `<button class="crumb" data-a="tab" data-v="plan">Next Steps</button> <i class=chev aria-hidden=true></i> The big picture` : x[1]}</b><button class="ghost slim whatdo" data-a="whatdo" aria-label="What do I do here?" title="What do I do here?">?</button></div><div class="tabdesc">${tab === "play" ? "Payday and your one-minute check" : tab === "map" ? "The map, the eras and the skill trees. Optional." : x[2]}</div>${UX_HINT ? `<div class="tile small hint">${esc(UX_HINT)}</div>` : ""}</div>`;
 }
 const uxLess = (h, more, n, act) =>
   more
@@ -193,7 +193,7 @@ function flowSheetLog(h) {
   if (W && W.o && !W.o.t && !G.demo)
     h = h.replace(
       /(<button class="rowbtn)/,
-      `<button class="rowbtn" data-a="uxpaid"><span><b>I got paid</b><div class="tiny muted">Split this paycheck in a few taps</div></span><span class="caret">›</span></button>$1`
+      `<button class="rowbtn" data-a="uxpaid"><span><b>I got paid</b><div class="tiny muted">Split this paycheck in a few taps</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>$1`
     );
   return h;
 }
@@ -220,7 +220,7 @@ function meTabHead(h) {
   const c = C();
   h = withHead(h).replace(
     /(<h1>[^<]*<\/h1>)/,
-    `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span>›</span></button>`
+    `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span><i class=chev aria-hidden=true></i></span></button>`
   );
   return uxLess(h, ME_MORE, 9, "memore");
 }
@@ -232,7 +232,9 @@ function planTabHead(h) {
   return withHead(
     h.replace(
       /(<div class="seg plseg">[\s\S]*?<\/div>)/,
-      m => m + `<button class="ghost slim wide" data-a="months">The next few months ›</button>`
+      m =>
+        m +
+        `<button class="ghost slim wide" data-a="months">The next few months <i class=chev aria-hidden=true></i></button>`
     )
   ).replace(
     /<\/div>\s*$/,
@@ -624,7 +626,7 @@ function drawSheetUx() {
   if (sh) {
     const cb = sh.querySelector('.row.between>[data-a="close"]');
     if (cb && cb.textContent.trim() === "Close") {
-      cb.textContent = "‹ Back";
+      cb.innerHTML = "<i class=chevl aria-hidden=true></i> Back";
       cb.classList.add("backbtn");
       cb.parentNode.classList.add("backrow");
     }

@@ -362,6 +362,9 @@ function nvApply(t) {
 }
 /* nvRow(small) makes the top row of a sheet: Back, Forward, Close. nvRowBase() is the part from this file. */
 function nvRow(small) {
+  /* the sheet "People" (run 16, D11): one row, Back on the left and Close on the right, and nothing else */
+  if (W && W.kind === "people")
+    return `<div class="row between nvhead nvtwo"><button class="ghost slim backbtn" data-a="navback"><i class=chevl aria-hidden=true></i> Back</button><span class="tiny muted nvsmall">${small}</span><button class="ghost slim" data-a="navclose" aria-label="Close">✕</button></div>`;
   let h = nvRowBase(small);
   if (typeof nvRowTidy === "function") h = nvRowTidy(h); /* tidy.js: where you came from, the progress track */
   return h;
@@ -373,7 +376,7 @@ function nvRowBase(small) {
       NV_INFO[k] &&
       !/data-a="info"/.test(small) &&
       !/^(In plain words|Glossary|What it means)/.test(String(small).trim());
-  return `<div class="row between nvhead"><span class="row" style="gap:6px;flex:none"><button class="ghost slim backbtn" data-a="navback">‹ Back</button>${typeof nvRowHome === "function" ? nvRowHome() : "" /* results.js: Home */}${typeof menuSheet === "function" && SH === menuSheet ? "" : `<button class="ghost slim nvmenu" data-a="menu" aria-label="Menu">☰</button>`}${NVX.fw.length ? `<button class="ghost slim" data-a="navfwd" aria-label="Forward to where you were">›</button>` : ""}</span><span class="tiny muted nvsmall">${small}</span><span class="row" style="gap:6px;flex:none">${typeof nvRowQuest === "function" && !(typeof fwCalm === "function" && fwCalm()) ? nvRowQuest() : "" /* firstweek.js: in the first week Where am I waits in the menu */}${info ? `<button class="ghost slim nvi" data-a="info" data-k="gloss:scr_${k}" aria-label="What is this screen?">i</button>` : ""}<button class="ghost slim" data-a="navclose" aria-label="Close">✕</button></span></div>`;
+  return `<div class="row between nvhead"><span class="row" style="gap:6px;flex:none"><button class="ghost slim backbtn" data-a="navback"><i class=chevl aria-hidden=true></i> Back</button>${typeof nvRowHome === "function" ? nvRowHome() : "" /* results.js: Home */}${typeof menuSheet === "function" && SH === menuSheet ? "" : `<button class="ghost slim nvmenu" data-a="menu" aria-label="Menu">☰</button>`}${NVX.fw.length ? `<button class="ghost slim" data-a="navfwd" aria-label="Forward to where you were"><i class=chev aria-hidden=true></i></button>` : ""}</span><span class="tiny muted nvsmall">${small}</span><span class="row" style="gap:6px;flex:none">${typeof nvRowQuest === "function" && !(typeof fwCalm === "function" && fwCalm()) ? nvRowQuest() : "" /* firstweek.js: in the first week Where am I waits in the menu */}${info ? `<button class="ghost slim nvi" data-a="info" data-k="gloss:scr_${k}" aria-label="What is this screen?">i</button>` : ""}<button class="ghost slim" data-a="navclose" aria-label="Close">✕</button></span></div>`;
 }
 const NV_HEAD =
   /<div class="row between"><span class="tiny muted">([\s\S]*?)<\/span><button class="ghost slim" data-a="close">Close<\/button><\/div>/;

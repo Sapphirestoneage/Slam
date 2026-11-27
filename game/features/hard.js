@@ -405,7 +405,7 @@ function hardSheet() {
 }
 /* Part of trSheet() in transit.js. One row under Break in case of emergency: the other hard moments. */
 function trHardRow() {
-  return `<button class="rowbtn" data-a="hard"><span><b>Other hard moments</b><div class="tiny muted">A breakup, a roommate leaving, a death, medical bills, saying no, a fire or a flood, a private plan</div></span><span class="caret">›</span></button>`;
+  return `<button class="rowbtn" data-a="hard"><span><b>Other hard moments</b><div class="tiny muted">A breakup, a roommate leaving, a death, medical bills, saying no, a fire or a flood, a private plan</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
 }
 /* The spreadsheet of the plan: the kept untangle totals only (nothing that is not kept, and nothing for a coach the
    player did not let in). */

@@ -59,7 +59,8 @@ function questIcon() {
 }
 /* The button "Where am I". cls is "slim" for the sheet header. */
 function questButton(cls) {
-  return `<button class="questbtn ${cls || ""}" data-a="quest" aria-label="Where am I">${questIcon()}<span>Where am I</span></button>`;
+  /* the highlight border only when Where am I is the next step: a setup that was left at a page (run 16, D18) */
+  return `<button class="questbtn ${cls || ""}${questSetupSpot() ? " next" : ""}" data-a="quest" aria-label="Where am I">${questIcon()}<span>Where am I</span></button>`;
 }
 /* The name of a screen: the "i" registry of nav.js, a part of the journey, or the kind. */
 function questLabel(c, kind, v) {
@@ -371,7 +372,7 @@ function questAreasTab(c) {
   return kwAreas(c, D || derive(c))
     .map(
       a =>
-        `<button class="rowbtn qarea" ${a.next ? `data-a="kwgo" data-k="${esc(a.next.a)}" data-v="${esc(a.next.av || "")}"` : `data-a="know"`}><span><b>${a.k} · ${esc(a.n)}</b><div class="tiny muted">${a.next ? "Next: " + esc(a.next.t) : "All known ✓"}</div></span><span class="row" style="gap:6px"><b>${a.pct}%</b><span class="caret">›</span></span></button>`
+        `<button class="rowbtn qarea" ${a.next ? `data-a="kwgo" data-k="${esc(a.next.a)}" data-v="${esc(a.next.av || "")}"` : `data-a="know"`}><span><b>${a.k} · ${esc(a.n)}</b><div class="tiny muted">${a.next ? "Next: " + esc(a.next.t) : "All known ✓"}</div></span><span class="row" style="gap:6px"><b>${a.pct}%</b><span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`
     )
     .join("");
 }
@@ -389,19 +390,19 @@ function questTimeTab(c) {
     today = auto
       .map(
         p =>
-          `<button class="rowbtn" data-a="${esc(p.a)}" data-v="${esc(p.v || "")}"><span>${esc(p.t)}</span><span class="caret">›</span></button>`
+          `<button class="rowbtn" data-a="${esc(p.a)}" data-v="${esc(p.v || "")}"><span>${esc(p.t)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
       )
       .concat(
         tasks.map(
           p =>
-            `<button class="rowbtn" data-a="plgo" data-v="${esc(p.id)}"><span>${esc(p.t)}</span><span class="caret">›</span></button>`
+            `<button class="rowbtn" data-a="plgo" data-v="${esc(p.id)}"><span>${esc(p.t)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         )
       );
   return (
     `<div class="small"><b>Today</b> ${kitInfo("q_today")}</div>` +
     (today.length ? today.slice(0, 5).join("") : `<div class="small muted">Nothing is due today.</div>`) +
-    `<button class="rowbtn" data-a="questplan" data-v="week"><span><b>This week</b><div class="tiny muted">${wk} more on Next Steps</div></span><span class="caret">›</span></button>` +
-    `<button class="rowbtn" data-a="questplan" data-v="month"><span><b>This month</b><div class="tiny muted">${mo} more on Next Steps</div></span><span class="caret">›</span></button>` +
+    `<button class="rowbtn" data-a="questplan" data-v="week"><span><b>This week</b><div class="tiny muted">${wk} more on Next Steps</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>` +
+    `<button class="rowbtn" data-a="questplan" data-v="month"><span><b>This month</b><div class="tiny muted">${mo} more on Next Steps</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>` +
     `<div class="small" style="margin-top:6px"><b>Check in</b></div><div class="row wrap" style="gap:6px"><button class="ghost slim" data-a="daily">Daily check</button><button class="ghost slim" data-a="payday">Payday</button><button class="ghost slim" data-a="month">Monthly session</button></div>`
   );
 }
@@ -419,7 +420,7 @@ function questSheet() {
   h += `<div class="row between" style="gap:8px">${kitTabs("questtab", tab, QUEST_TABS)}${kitInfo("q_" + tab)}</div>`;
   h += `<div class="stack qtab" style="gap:6px">${tab === "areas" ? questAreasTab(c) : tab === "questions" ? questQuestionsTab() : tab === "time" ? questTimeTab(c) : questJourneyTab(c)}</div>`;
   if (recent.length)
-    h += `<div class="stack qrecent" style="gap:2px"><div class="tiny muted">Recent ${kitInfo("q_recent")}</div>${recent.map(e => `<button class="rowbtn bare" data-a="questgo" data-k="${esc(e.kind === "setup" ? "start" : e.kind)}" data-v="${esc(e.v)}"><span class="small">${esc(e.label)}</span><span class="caret">›</span></button>`).join("")}</div>`;
+    h += `<div class="stack qrecent" style="gap:2px"><div class="tiny muted">Recent ${kitInfo("q_recent")}</div>${recent.map(e => `<button class="rowbtn bare" data-a="questgo" data-k="${esc(e.kind === "setup" ? "start" : e.kind)}" data-v="${esc(e.v)}"><span class="small">${esc(e.label)}</span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`;
   h += `<button class="linkish" data-a="tab" data-v="map">See the big picture</button>`;
   if (typeof questSheetStars === "function") h = questSheetStars(h); /* stars.js: the button "See the galaxy" */
   return h;

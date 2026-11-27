@@ -401,7 +401,7 @@ function oddsSheet() {
     term: "stockshare",
     help: "The rest is in bonds. The game uses your investment mix when you have filled it in.",
   });
-  h += `<details class="math"><summary>Try another way to take money out</summary><div class="inner stack" style="gap:6px">${RETIRE_METHODS.map(m => `<button class="rowbtn ${m[0] === P.method ? "sel" : ""}" data-a="kitset" data-k="odds|method" data-v="${m[0]}" data-t="s"><span><b>${esc(m[1])}</b>${m[0] === RETIRE_METHODS[0][0] ? " (the default)" : ""}<div class="tiny muted">${esc(m[2])}</div></span><span class="caret">${m[0] === P.method ? "✓" : "›"}</span></button>`).join("")}</div></details>`;
+  h += `<details class="math"><summary>Try another way to take money out</summary><div class="inner stack" style="gap:6px">${RETIRE_METHODS.map(m => `<button class="rowbtn ${m[0] === P.method ? "sel" : ""}" data-a="kitset" data-k="odds|method" data-v="${m[0]}" data-t="s"><span><b>${esc(m[1])}</b>${m[0] === RETIRE_METHODS[0][0] ? " (the default)" : ""}<div class="tiny muted">${esc(m[2])}</div></span><span class="caret">${m[0] === P.method ? "✓" : "<i class=chev aria-hidden=true></i>"}</span></button>`).join("")}</div></details>`;
   h += mathBox([
     "Now: " + money(P.inv) + " invested, plus " + money(P.monthly) + " a month until age " + P.ret + ".",
     "In retirement: " +

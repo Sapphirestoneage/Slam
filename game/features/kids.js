@@ -10,7 +10,7 @@
                open sheet (W.kind): kids, with W.k (the kid), W.l (the lesson), W.s (the step), W.pick.
    OUTPUT      Functions: kidRunNext, lpRec, lpLessons, kidLessonsOf, kidRecOf, kidNext, kidStats,
                kidSheet, lpTopPart. Actions (ACT): lp, kids, kidadd, kidopen, kidlesson, kidgo, kidpick,
-               kidback, kidrm. Parts of functions in other files: profSheetKids (profSheet in profiles.js).
+               kidback, kidrm. Parts of functions in other files: mePeopleKids (meTabPeople in profiles.js).
                Menu: "Kids mode", "Daily lessons".
    DEPENDS ON  core/report.js, core/engine.js (todayISO, daysBetween), screens/ui.js, features/kit.js,
                data/kidlessons.js, screens/dash.js (dkCaption).
@@ -82,7 +82,7 @@ function kidSheet() {
       (L.length
         ? `<div class="stack" style="gap:6px">${L.map((x, i) => {
             const S = kidStats(x, t);
-            return `<button class="rowbtn ${!S.today && i === 0 ? "pulse" : ""}" data-a="kidopen" data-v="${i}"><span><b>${esc(x.name)}</b><div class="tiny muted">${S.done} of ${S.of} lessons${S.run > 1 ? " · " + S.run + " days in a row" : ""}${S.today ? " · done today" : ""}</div></span><span class="caret">›</span></button>`;
+            return `<button class="rowbtn ${!S.today && i === 0 ? "pulse" : ""}" data-a="kidopen" data-v="${i}"><span><b>${esc(x.name)}</b><div class="tiny muted">${S.done} of ${S.of} lessons${S.run > 1 ? " · " + S.run + " days in a row" : ""}${S.today ? " · done today" : ""}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`;
           }).join("")}</div>`
         : "") +
       `<b class="small">Add a kid</b><div class="chips">${KID_NAMES.filter(n => !L.some(x => x.name === n))
@@ -108,7 +108,7 @@ function kidSheet() {
       `<div class="stack" style="gap:6px">${LS.map((l, i) => {
         const dn = !!(k.done || {})[l.id],
           hot = nx && nx.id === l.id;
-        return `<button class="rowbtn ${hot && !S.today ? "pulse" : ""}" style="${dn || hot ? "" : "opacity:.7"}" data-a="kidlesson" data-v="${i}"><span><b>${i + 1}. ${esc(l.t)}</b>${hot ? `<div class="tiny muted">${S.today ? "Next up" : "Today's lesson · about 2 minutes"}</div>` : ""}</span><b>${dn ? "✓" : "›"}</b></button>`;
+        return `<button class="rowbtn ${hot && !S.today ? "pulse" : ""}" style="${dn || hot ? "" : "opacity:.7"}" data-a="kidlesson" data-v="${i}"><span><b>${i + 1}. ${esc(l.t)}</b>${hot ? `<div class="tiny muted">${S.today ? "Next up" : "Today's lesson · about 2 minutes"}</div>` : ""}</span><b>${dn ? "✓" : "<i class=chev aria-hidden=true></i>"}</b></button>`;
       }).join("")}</div>` +
       (me
         ? `<button class="ghost wide slim" data-a="close">Done</button>`
@@ -162,13 +162,13 @@ function lpTopPart() {
       : "One short lesson a day. Take a quiz and the lessons that fit your result move to the top."
   );
 }
-/* Part of profSheet() in profiles.js. Adds the row "Kids mode" to the sheet "People". */
-function profSheetKids(h) {
+/* Part of meTabPeople() in profiles.js. Adds the row "Kids mode" to the card "Your people" of Me. */
+function mePeopleKids(h) {
   if (G.demo) return h;
   const n = kidList().length;
   return (
     h +
-    `<button class="rowbtn" data-a="kids"><span><b>Kids mode</b><div class="tiny muted">${n ? n + (n === 1 ? " kid" : " kids") + ". Short daily money lessons" : "Add a kid: short daily money lessons, no money numbers"}</div></span><span class="caret">›</span></button>`
+    `<button class="rowbtn" data-a="kids"><span><b>Kids mode</b><div class="tiny muted">${n ? n + (n === 1 ? " kid" : " kids") + ". Short daily money lessons" : "Add a kid: short daily money lessons, no money numbers"}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
   );
 }
 kitScreen(

@@ -494,7 +494,7 @@ function rsWinCard(c, d) {
   const w = rsNextWin(c, d),
     g = rsGoal(c, d);
   /* the goal is a row to tap (a caret and its own words), not a second primary button */
-  const goal = `<button class="rowbtn rsgoal" data-a="${esc(g.a)}" data-v="${esc(g.v)}" data-fid="rs:goal"><span class="rsgoalt"><span class="dklabel">Your goal now</span><b>${esc(g.t)}</b>${g.s ? `<span class="tiny">${esc(g.s)}</span>` : ""}</span><span class="fkgo">${esc(g.go)} ›</span></button>`;
+  const goal = `<button class="rowbtn rsgoal" data-a="${esc(g.a)}" data-v="${esc(g.v)}" data-fid="rs:goal"><span class="rsgoalt"><span class="dklabel">Your goal now</span><b>${esc(g.t)}</b>${g.s ? `<span class="tiny">${esc(g.s)}</span>` : ""}</span><span class="fkgo">${esc(g.go)} <i class=chev aria-hidden=true></i></span></button>`;
   return `<div class="card dkcard rsq rswin" data-fid="rs:win"><div class="row between dkhead"><span class="dklabel">Your next win</span>${w.pending ? `<span class="pill">Check the fit</span>` : ""}</div>${goal}<div class="dklabel rsfast">Get there faster</div><b class="rswint">${esc(w.t)}</b><div class="rsnums">${w.amt > 0 ? `<span><b>${money(w.amt)}</b><i class="tiny muted">a month</i></span>` : ""}${w.days ? `<span><b>${w.days.toLocaleString()} days</b><i class="tiny muted">closer to ${esc(w.daysOf)}</i></span>` : ""}</div><button class="primary go wide" data-a="${esc(w.a)}" data-v="${esc(w.v)}">${esc(w.l)}</button>${w.unlock ? `<div class="tiny"><span class="muted">Unlocks</span> ${esc(w.unlock)}</div>` : ""}<details class="math"><summary>Why this one</summary><div class="inner tiny stack" style="gap:4px">${w.s ? `<div>${esc(w.s)}</div>` : ""}${w.math.map(l => `<div>${esc(l)}</div>`).join("")}<div>The goal is the step you are on. The move is the fastest easy way toward it.</div><button class="ghost slim" data-a="stratlib">See all moves</button></div></details></div>`;
 }
 function rsMonthCard(c, d) {
@@ -516,7 +516,7 @@ function rsMonthCard(c, d) {
 }
 function rsRouteCard(c, d) {
   const R = rsRoute(c, d);
-  return `<button class="card dkcard rsq rsroute" data-a="tab" data-v="map" data-fid="rs:route"><span class="row between dkhead"><span class="dklabel">You are here</span><span class="caret">›</span></span><span class="rsstrip" aria-hidden="true">${R.nodes.map(n => `<i class="${n.s}"></i>`).join("")}</span><b class="small">${esc(R.here)}</b><span class="tiny muted">${R.dest ? "Next: " + esc(R.dest.n) + ", " + esc(spWhen(R.dest.m)) : "Past every stop"}</span>${typeof rsRouteStatus === "function" ? rsRouteStatus(c, d) /* coast.js: the FIRE statuses reached, and the next one */ : ""}<span class="tiny rsgo">See the full map</span></button>`;
+  return `<button class="card dkcard rsq rsroute" data-a="tab" data-v="map" data-fid="rs:route"><span class="row between dkhead"><span class="dklabel">You are here</span><span class="caret"><i class=chev aria-hidden=true></i></span></span><span class="rsstrip" aria-hidden="true">${R.nodes.map(n => `<i class="${n.s}"></i>`).join("")}</span><b class="small">${esc(R.here)}</b><span class="tiny muted">${R.dest ? "Next: " + esc(R.dest.n) + ", " + esc(spWhen(R.dest.m)) : "Past every stop"}</span>${typeof rsRouteStatus === "function" ? rsRouteStatus(c, d) /* coast.js: the FIRE statuses reached, and the next one */ : ""}<span class="tiny rsgo">See the full map</span></button>`;
 }
 function rsTilesCard(c, d) {
   const T = rsTiles(c, d);

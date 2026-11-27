@@ -93,9 +93,18 @@
   chk("copy confirms", W.copied === ym);
   X("close");
   // handing over
+  /* run 16, D12: what More options held is on the Me tab, under People settings */
   X("people");
-  X("profmore");
-  chk("More options has the code hand-off", ov().includes('data-a="handoff"'));
+  const noCode = !ov().includes('data-a="handoff"');
+  X("close");
+  X("tab", "me");
+  X("ppmore");
+  chk(
+    "People settings on Me has the code hand-off, and the sheet People does not",
+    app().includes('data-a="handoff"') && noCode
+  );
+  X("ppmore");
+  X("tab", "home");
   X("handoff");
   chk(
     "pick a person or paste a code",

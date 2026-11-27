@@ -172,7 +172,7 @@ function partyBody(c) {
                 )
                 .concat(p.amt && p.amt.cost ? ["Costs about " + money(p.amt.cost) + " a month"] : []);
               return ls.length ? ls.join(" · ") : "Tap to say how money moves between you";
-            })()}</div></span><span class="caret">${w.per === i ? "⌃" : "›"}</span></button>${w.per === i ? personEd(p) : ""}`
+            })()}</div></span><span class="caret">${w.per === i ? "⌃" : "<i class=chev aria-hidden=true></i>"}</span></button>${w.per === i ? personEd(p) : ""}`
         ).join("")
       : `<div class="small muted">Who's in your money world? Roommates, partners, parents, kids, pets. Add as many of each as you have.</div>`) +
     `<div class="small" style="margin-top:6px">Add someone</div><div class="chips">${PARTY_K.map(k => `<button class="chip" data-a="pyadd" data-v="${k}">+ ${k}</button>`).join("")}</div>${(() => {
@@ -214,7 +214,7 @@ function plainNums(c) {
 }
 function lastBody(c) {
   const ch = (k, opts) =>
-    `<div class="stack">${opts.map(o => `<button class="rowbtn" data-a="l1set" data-k="${k}" data-v="${esc(o)}"><b>${o}</b><span class="caret">›</span></button>`).join("")}</div>`;
+    `<div class="stack">${opts.map(o => `<button class="rowbtn" data-a="l1set" data-k="${k}" data-v="${esc(o)}"><b>${o}</b><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div>`;
   if (isEmployee(c) && !c.sharp.match)
     return (
       `<h3>Does your job add money to your retirement savings when you do?</h3><div class="small muted">That's called a match. It's free money.</div>` +

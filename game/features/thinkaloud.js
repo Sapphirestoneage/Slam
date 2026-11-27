@@ -246,7 +246,7 @@ function taSheet() {
           `<div class="stack" style="gap:6px">${runs
             .map((r, i) => {
               const S = taSummary(r);
-              return `<button class="rowbtn prow" data-a="taview" data-v="${i}"><span class="pn"><b>${esc(r.d)}</b><div class="tiny muted">Done ${S.done} of ${S.n} · ${S.taps} taps</div></span><span class="pill">View ›</span></button>`;
+              return `<button class="rowbtn prow" data-a="taview" data-v="${i}"><span class="pn"><b>${esc(r.d)}</b><div class="tiny muted">Done ${S.done} of ${S.n} · ${S.taps} taps</div></span><span class="pill">View <i class=chev aria-hidden=true></i></span></button>`;
             })
             .join("")}</div>`
         )
