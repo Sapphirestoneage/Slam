@@ -421,8 +421,8 @@
     M && M.name
   );
   chk(
-    "the tile is above the three buttons",
-    h.indexOf('data-fid="cb:first"') > 0 && h.indexOf('data-fid="cb:first"') < h.indexOf('data-fid="cb:end3"')
+    "the tile is above the one button, Start my first move (run 16, A1)",
+    h.indexOf('data-fid="cb:first"') > 0 && h.indexOf('data-fid="cb:first"') < h.indexOf('data-a="cbfirst"')
   );
   chk(
     "it says what to do and why",
@@ -434,15 +434,15 @@
     M.why
   );
   chk(
-    "about how long comes from the minutes of the move's own steps, or the line is left off",
+    "about how long comes from the minutes of the move's own steps, or it is left off",
     M.src === "stg"
       ? M.time ===
           "About " +
             stgOf(M.key).quests.reduce((t, q) => t + (q.mins || 15), 0) +
             " min, in " +
             stgOf(M.key).quests.length +
-            (stgOf(M.key).quests.length === 1 ? " step" : " steps") && fid(h, "cb:firsttime").includes(M.time)
-      : M.time === null && !/data-fid="cb:firsttime"/.test(h),
+            (stgOf(M.key).quests.length === 1 ? " step" : " steps")
+      : M.time === null,
     M.time
   );
   chk(
@@ -455,33 +455,39 @@
     })()
   );
   chk(
-    "the three buttons: Keep my plan: make a free account (primary), Share my card and Tell Eli what broke (ghost)",
-    (fid(h, "cb:end3").match(/<button/g) || []).length === 3 &&
-      /class="primary wide go" data-a="cbsave">Keep my plan: make a free account</.test(h) &&
-      /class="ghost wide" data-a="cbshare">Share my card</.test(h) &&
-      /class="ghost wide" data-a="flag">Tell Eli what broke</.test(h) &&
+    "one button only: Start my first move (primary), and a small Back; the three old buttons are on the reveal",
+    /class="primary wide go cbresgo" data-a="cbfirst">Start my first move</.test(h) &&
       (h.match(/class="primary/g) || []).length === 1 &&
-      !/Save my plan/.test(h)
+      /class="ghost slim" data-a="cbgo" data-v="prev"/.test(h) &&
+      !/data-a="cbsave"|data-a="cbshare"|data-a="cbaddstep"/.test(h)
   );
-  if (M.canAdd) {
+  /* the tap lands on Home: the first move is the top card, and its button puts the steps on Next Steps */
+  X("cbfirst");
+  const hm = app();
+  chk(
+    "Start my first move lands on Home, with that move as the one next-step card, its why and about how long",
+    !SH &&
+      tab === "home" &&
+      C().x.cb.first === "cb" &&
+      fid(hm, "cb:homefirstname").includes(esc(M.name)) &&
+      fid(hm, "cb:homefirstwhy").includes(esc(M.why)) &&
+      (M.time === null || hm.includes(esc(M.time))) &&
+      !/data-fid="rs:win"/.test(hm)
+  );
+  X("cbfirstgo");
+  if (M.canAdd)
     chk(
-      "the tile has Add to my steps",
-      h
-        .split('data-fid="cb:first"')[1]
-        .split('data-fid="cb:end3"')[0]
-        .includes('data-a="cbaddstep" data-k="' + M.key + '">Add to my steps<')
-    );
-    X("cbaddstep", "", M.key);
-    const M2 = cbFirstMove(C());
-    chk(
-      "one tap puts its steps on Next Steps, and the tile says so",
+      "Start this move puts its steps on Next Steps, opens the move, and Home goes back to Your next win",
       stgAdded(C(), stgOf(M.key)) &&
-        M2.added &&
-        !M2.canAdd &&
-        /On your steps/.test(fid(ov(), "cb:first")) &&
-        !/data-a="cbaddstep"/.test(ov())
+        cbFirstMove(C()).added &&
+        !C().x.cb.first &&
+        !/data-fid="cb:homefirst"/.test(app()) &&
+        /data-fid="rs:win"/.test(app())
     );
-  } else chk("a move with no steps of its own opens its card", /See this move/.test(h) || M.added);
+  else chk("a move with no steps of its own opens its card", !C().x.cb.first && !/data-fid="cb:homefirst"/.test(app()));
+  closeSheet();
+  X("cb");
+  X("cbgo", "end");
   chk("the last screen has no junk", junk(ov()) === "", junk(ov()));
   chk(
     "with the want Get out of debt and a move about interest, the why names it",

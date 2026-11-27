@@ -161,11 +161,15 @@ async function setup(page, tap, step) {
     chk(`${tag}: the layer chart, with its layers and what is not covered yet`, (await page.locator('#ov svg.dkstack').isVisible()) && /Social Security/.test(chart) && /Not covered yet/.test(chart));
     await tap('#ov [data-a=cbgo][data-v=stack]'); await page.waitForTimeout(1000);
     await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
-    await step('the reveal');
+    const rev = await step('the reveal');
+    // run 16, A1: the three buttons of the old last screen are on the reveal; the result has one button
+    chk(`${tag}: the reveal has Keep my plan: make a free account, Share my card and Tell Eli what broke`, /Keep it, share it, or tell Eli/.test(rev) && /Keep my plan: make a free account/.test(await page.locator('#ov [data-fid="cb:end3"]').textContent()) && /Share my card/.test(await page.locator('#ov [data-fid="cb:end3"]').textContent()) && /Tell Eli what broke/.test(await page.locator('#ov [data-fid="cb:end3"]').textContent()));
     await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
-    const last = await step('the last screen of the flow');
-    chk(`${tag}: the last screen has Keep my plan: make a free account, Share my card and Tell Eli what broke`, /Keep my plan: make a free account/.test(last) && /Share my card/.test(last) && /Tell Eli what broke/.test(last));
-    await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
+    const last = await step('the result of the flow');
+    chk(`${tag}: the result has the era, the first move and one button, Start my first move`, /You are in/i.test(last) && /Your first move/i.test(last) && /Start my first move/.test(last) && /No account\. Nothing is sent\./.test(last) && (await page.locator('#ov .primary').count()) === 1);
+    await tap('#ov [data-a=cbfirst]'); await page.waitForTimeout(1000);
+    await step('Home, with the first move on top');
+    chk(`${tag}: Home has the four top numbers and the first move as the one next-step card`, (await page.locator('#app .dkstats .dkti').count()) === 4 && /Your first move/i.test(await page.locator('#app').innerText()) && (await page.locator('#app [data-fid="cb:homefirst"] .primary').isVisible()));
     await tap('#app [data-fid="cb:homerest"]'); await page.waitForTimeout(600);
     chk(`${tag}: the rest of setup opens under "Am I okay?"`, /Am I okay\?/.test(await page.locator('#ov').innerText()));
     const taps = await setup(page, tap, step);

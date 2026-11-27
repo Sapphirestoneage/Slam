@@ -458,3 +458,20 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
 - **Create account.** `suGateTop`, `suPwBox` and `homeConfirmRow` in `account/supa.js`. The row shows while `su_wait` holds an address and nobody is signed in.
 - **Taps.** 10 to the last screen of the flow, 44 to "Here's where you stand" with the simplest answers.
 - **Not built.** The cards page is still asked when the player did not tap "Credit card balance" (it also counts cards paid in full). The confirm row has no "I confirmed" button: the player signs in from "Keep this game" on Home.
+
+## Run 16, audit fixes batch 1, worker 1 (Nov 27 2026): sections A and B
+
+- **The last screen is the result.** `cbEndView()` shows what `cbResult(c)` returns (`features/cbreveal.js`): the era (`eraName`, `eraOne`), the first move, where the answers are kept. One primary button, `data-a="cbfirst"`, and one Back (`cbgo`, `prev`). The frame of the sheet is hidden on this one screen by a style line (`.sheet:has(.cbresgo)`).
+- **The three old buttons.** Keep my plan, Share my card and Tell Eli what broke are on the reveal, in the closed row "Keep it, share it, or tell Eli" (`data-fid="cb:end3"`). The actions did not change (`cbsave`, `cbshare`, `flag`).
+- **The first move.** `cbFirstPick(c, d, src)` is the one picker for the result and for Home. `src` "cb": `cbFirstMove(c)`. `src` "era", or no move: the key step of the next era (`erNext`). `c.x.cb.first` ("cb" or "era") is set by the tap on "Start my first move" and removed by "Start this move" on Home (`ACT.cbfirstgo`).
+- **Home.** `homeQuadTop()` in `screens/ux.js` sets the order: `homeStatRow` (four tiles, `features/look.js`), then ONE card (`homeFirstCard`, else `homeResults`: Your next win), then `.rsmore` (the tile of the two numbers, `homeResultsMore`). A new card for Home goes in `.rsmore` or under `<!--homerows-->`, never above the card.
+- **One pulse.** The next-step card has it. The style line `.hq.rs .rsmore .pulse ...` stills the rest. Do not add `pulse` or `go` to a card of `.rsmore`.
+- **A tile with an "i".** `dkTile(label, value, { info: "<glossary key>", act, v, move: { k, to } })`. With `info` the number is the button and the "i" sits next to the label.
+- **A number that moves.** Put `data-cbn="<key>"` and `data-to="<number>"` on the element, and call `cbNumsMove(elements, lastValues, format)` after the draw. `homeNumsMove()` does this for Home. It respects "less motion".
+- **From the demo.** `erIn()` makes the profile and Home opens (`W.erHome`, `finishSetupCb`). `c.x.cb.era` names the setup answers that the demo gave (`cush`, `debts`, `tax`). `openSetupCb()` copies only those into the rounds. The landing is passed over (`doorFromDemo` in `account/door.js`).
+- **Not asked twice.** The amount invested: `amCarryInv(base)` fills the account question with an answer that is not applied (`v: null`, `kept: true`), so the row stays a Guess. Spending: `amGroupGuess(o, i)` gives the share of the quick answer for a group. To carry one more answer, add it to `openSetupCb()`.
+- **The look of the demo page.** `game/era/gamelook.css` is a copy of style lines of `game/index.html`. Add a line to `LOOK` in `tools/game_era_build.mjs`, then run the tool.
+- **Taps.** 6 to the first number, 10 to the result, 11 to Home. From the demo: 8 or 9 taps to its result, one more to Home.
+- **A test player from the demo.** `box[ER_KEY] = erPack(A); X("start");` with a stand-in for `localStorage` (see `tests/onboarding-handoff-and-home.js`).
+- **Not built.** The demo cannot show the first move of the flow (it needs the whole game), so a demo player's first move is the key step of the next era. Income is still asked in the rounds: the opening never asked it.
+

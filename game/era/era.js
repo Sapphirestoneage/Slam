@@ -1,14 +1,16 @@
 /* ============================================================================
    SLAM the Game: era/era.js
    PURPOSE     The screens of the 60-second demo "Find your era" (era/index.html): one question on a
-               screen, answered by a tap, then the era, one next move and the button "Start my full
-               game".
-   INPUT       The taps of the visitor. Nothing is typed. Nothing is read from the device.
-   OUTPUT      The page. One text in the device storage (ER_KEY), written by the button "Start my full
-               game", so the game does not ask the same questions again.
+               screen, answered by a tap, then one result screen (run 16, A1): the name of the era, one
+               plain sentence on why, the one first move, one big button "Start my first move", and a
+               small Back. Each screen has a way out: Home, at the top (A5).
+   INPUT       The taps of the visitor. Nothing is typed. One thing is read from the device: whether an
+               account of the game is signed in here (erSigned), for the line about where answers go.
+   OUTPUT      The page. One text in the device storage (ER_KEY), written by the button "Start my first
+               move", so the game does not ask the same questions again and opens on Home.
    DEPENDS ON  core/engine.js (DEBT_KINDS, ERAS), era/gamecopy.js (CB_QS, CB_RNG, cbLab, esc),
                features/erain.js (ER_QS, ER_TAX, ER_WORDS, ER_KEY, erAsked, erCushOpts, erResult,
-               erPack), account/trust.js (TRUST_LINE).
+               erPack, erSigned), account/trust.js (TRUST_LINE).
    RULES       This file shows what erain.js returns. It does not calculate. No account, no network
                request, no measurement. A link inside the demo is relative, so the page works at each
                address of the game.
@@ -28,13 +30,18 @@ function eraQ(q) {
 }
 /* The small "i" button of a term, and the words it opens (below, on the page: no hover). */
 function eraI(id, name) {
-  return `<button class="ibtn" data-a="info" data-v="${id}" aria-expanded="${ERA.info === id}" aria-label="What does this mean: ${esc(name)}">i</button>`;
+  return `<button class="i" data-a="info" data-v="${id}" aria-expanded="${ERA.info === id}" aria-label="What does this mean: ${esc(name)}">i</button>`;
 }
 function eraNote(id, text) {
   return ERA.info === id ? `<div class="note" role="note">${esc(text)}</div>` : "";
 }
+/* Where the answers are kept (run 16, A4): the words about no account only for a visitor who is signed out. */
 function eraFoot() {
-  return `<p class="foot">No account. Nothing is sent. Your answers stay on this device.<br>${esc(TRUST_LINE)}</p>`;
+  return `<p class="foot"><span id="kept">${esc(erSigned() ? ER_WORDS.signed : ER_WORDS.out)}</span><br>${esc(TRUST_LINE)}</p>`;
+}
+/* The top row of each screen (run 16, A5): the name of the page, and the way out to the game's first screen. */
+function eraTop() {
+  return `<header class="row top"><div class="eyebrow">Find your era</div><a class="linkbtn" id="exit" href="../" aria-label="Home: leave this page and open the game">⌂ Home</a></header>`;
 }
 function eraQuestion(list, i) {
   const q = list[i],
@@ -43,9 +50,10 @@ function eraQuestion(list, i) {
     many = q.kind === "many",
     on = v => (many ? (cur || []).includes(v) : cur === v);
   return (
+    eraTop() +
     (i === 0
-      ? `<header class="hero"><div class="eyebrow">SLAM the Game</div><h1>Find your era</h1><p class="muted">60 seconds. Taps only. No typing, no account.</p></header>`
-      : `<header><div class="eyebrow">Find your era</div></header>`) +
+      ? `<div class="hero"><h1>Find your era</h1><p class="muted">60 seconds. Taps only. No typing.</p></div>`
+      : "") +
     `<div class="dots" aria-hidden="true">${list.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
     `<section class="card"><div class="small muted">Question ${i + 1} of ${list.length}</div>` +
     `<h2 class="ql">${esc(Q.l)} ${eraI("q", Q.l)}</h2>${eraNote("q", Q.h)}` +
@@ -54,34 +62,29 @@ function eraQuestion(list, i) {
       ? `<div class="tiny muted">Tap each kind you have, then Next.</div><button class="primary wide" data-a="next">${(cur || []).length ? "Next" : "None of these"}</button>`
       : `<div class="tiny muted">A rough answer is fine. One tap goes on.</div>`) +
     `</section>` +
-    `<div class="row">${i > 0 ? `<button class="ghost" data-a="back">‹ Back</button>` : `<a class="linkbtn" href="../">Open the full game instead</a>`}</div>` +
+    (i > 0 ? `<div class="row"><button class="ghost slim" data-a="back">‹ Back</button></div>` : "") +
     eraFoot()
   );
 }
+/* THE RESULT: the era, one sentence on why, the one first move, one button, a small Back. */
 function eraResult(list) {
   const R = erResult(ERA.A),
     n = R.next;
   return (
-    `<header><div class="eyebrow">Find your era</div></header>` +
-    `<section class="card lead" id="result"><div class="row between"><div class="small muted">You are in ${eraI("era", "era")}</div><span class="pill">${esc(R.st)} ${eraI("guess", "Guess")}</span></div>` +
-    `<h1 class="glow">${esc(R.name)}</h1>${R.one ? `<p>${esc(R.one)}</p>` : ""}` +
-    eraNote("era", ER_WORDS.era) +
-    eraNote("guess", ER_WORDS.guess) +
+    eraTop() +
+    `<section class="card lead" id="result"><div class="row between"><span class="dklabel">You are in</span><span class="pill">${esc(R.st)}</span></div>` +
+    `<h1 class="glow">${esc(R.name)}</h1><p id="why">${esc(R.one)}</p>` +
     `<div class="strip" aria-hidden="true">${ERAS.map((e, k) => `<i class="${k < R.era ? "done" : k === R.era ? "on" : ""}"></i>`).join("")}</div>` +
-    `<div class="tiny muted">Era ${R.era} of ${R.last}</div>` +
-    (R.is.length
-      ? `<details><summary>What this era looks like</summary><ul>${R.is.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>`
-      : "") +
+    `<div class="tiny muted">Era ${R.era} of ${R.last}. ${esc(ER_WORDS.guess)}</div>` +
     `</section>` +
     (n
-      ? `<section class="card" id="move"><div class="small muted">Your one next move ${eraI("move", "next move")}</div><h2>${esc(n.t)}</h2><p class="small">${esc(n.why)}</p>${eraNote("move", ER_WORDS.move)}<div class="tiny muted">It opens your next era: <b>${esc(n.opens)}</b></div></section>`
+      ? `<section class="tile" id="move"><span class="dklabel">Your first move</span><h2>${esc(n.t)}</h2><p class="small">${esc(n.why)}</p></section>`
       : "") +
-    `<section class="stack"><button class="primary wide big" data-a="go">Start my full game</button>` +
+    `<button class="primary wide big go" data-a="go">Start my first move</button>` +
     (ERA.kept
-      ? `<div class="tiny muted center">Your answers come with you. The game does not ask them again.</div>`
-      : `<div class="note" role="status">This browser does not keep answers right now (private mode does that). The game opens, and it asks the first four again.</div><a class="linkbtn" href="../">Open the game</a>`) +
-    `</section>` +
-    `<div class="row"><button class="ghost" data-a="back">‹ Back</button><button class="ghost" data-a="again">Start over</button></div>` +
+      ? ""
+      : `<div class="note" role="status">This browser does not keep answers right now (private mode does that). Home, at the top, opens the game, and it asks the first four again.</div>`) +
+    `<div class="row"><button class="ghost slim" data-a="back">‹ Back</button></div>` +
     eraFoot()
   );
 }
@@ -112,11 +115,7 @@ function eraTap(t) {
       ERA.A[q.id] = ERA.A[q.id] || [];
       ERA.at++;
     } else if (a === "back") ERA.at--;
-    else if (a === "again") {
-      ERA.A = {};
-      ERA.at = 0;
-      ERA.kept = true;
-    } else if (a === "go") {
+    else if (a === "go") {
       try {
         localStorage.setItem(ER_KEY, erPack(ERA.A));
       } catch (e) {

@@ -213,34 +213,34 @@
     cbNumbers(c).could.target === N1.could.target && cbNumbers(c).is.target === N1.is.target
   );
 
-  /* ---- 4. the last screen: three buttons only ---- */
-  go("end");
+  /* ---- 4. the three buttons live on the reveal; the last screen is the result (run 16, A1) ---- */
+  go("reveal");
   h = ov();
   const three = fid(h, "cb:end3");
   chk(
-    "the last screen has three buttons, in the owner's words and order",
-    W.step === "end" &&
-      (three.match(/<button/g) || []).length === 3 &&
+    "the reveal has the three buttons of the old last screen, in the owner's words and order, all quiet",
+    (three.match(/<button/g) || []).length === 3 &&
       /data-a="cbsave">Keep my plan: make a free account<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="flag">Tell Eli what broke</.test(
         three
-      )
-  );
-  chk(
-    "nothing else on it is a way on: no rest of setup, no step of the flow, no pitch",
-    !/data-a="cbrest"/.test(h) &&
-      !/data-a="cbgo"/.test(h) &&
-      !/coach|session|book a call/i.test(text(h)) &&
+      ) &&
+      !/class="primary/.test(three) &&
       (h.match(/class="primary/g) || []).length === 1
   );
+  go("end");
+  h = ov();
   chk(
-    "Back and Home are on the top row, and the two numbers, Show the math and the advice line are there",
-    /data-a="navback"/.test(h) &&
-      /data-a="gohome"/.test(h) &&
-      (h.match(/data-cbn=/g) || []).length === 2 &&
-      /<details class="math/.test(h) &&
-      text(h).includes(TRUST_LINE)
+    "the result has nothing else that is a way on: no rest of setup, no pitch, one primary button, one way back",
+    W.step === "end" &&
+      !/data-a="cbrest"/.test(h) &&
+      !/data-a="cbsave"|data-a="cbshare"/.test(h) &&
+      !/coach|session|book a call/i.test(text(h)) &&
+      (h.match(/class="primary/g) || []).length === 1 &&
+      (h.match(/data-a="cbgo"/g) || []).length === 1 &&
+      /data-a="cbgo" data-v="prev"/.test(h)
   );
+  chk("the result has the advice line", text(h).includes(TRUST_LINE));
   chk("the last screen is clean", junk(h) === "", junk(h));
+  go("reveal");
   chk("Tell Eli what broke is the report tool of the game", ACT.flag === ACT.flag && typeof flagSheet === "function");
   /* Keep my plan */
   {
@@ -365,10 +365,11 @@
   let tile = fid(h, "cb:home");
   const Nh = cbNumbers(c);
   chk(
-    "the tile of the two numbers is the first card of Home, before Your next win",
+    "the tile of the two numbers is on Home, below the four top numbers and the one next-step card (run 16, B6)",
     /class="rstop cbq"/.test(h) &&
-      h.indexOf('data-fid="cb:home"') > 0 &&
-      h.indexOf('data-fid="cb:home"') < h.indexOf('data-fid="rs:win"')
+      h.indexOf('class="dkstats"') > 0 &&
+      h.indexOf('class="dkstats"') < h.indexOf('data-fid="rs:win"') &&
+      h.indexOf('data-fid="rs:win"') < h.indexOf('data-fid="cb:home"')
   );
   chk(
     "it shows the two numbers of the flow: one source",
@@ -389,7 +390,7 @@
   );
   chk("on the first day the tile has no since last time", cbSince(c) === null && !/data-fid="cb:since"/.test(h));
   chk("Home is clean", junk(h) === "", junk(h));
-  chk("a tap opens the flow where the player left off", (X("cbback"), W.kind === "cb" && W.step === "end"));
+  chk("a tap opens the flow where the player left off", (X("cbback"), W.kind === "cb" && W.step === "reveal"));
   go("stack");
   go("move", mv.id);
   X("gohome");
@@ -459,8 +460,10 @@
     "nothing else pulses: the page stills every other pulse on the Home of a player of the flow",
     (() => {
       const css = require("fs").readFileSync(GAME_DIR + "index.html", "utf8");
-      return /\.rstop\.cbq \.rsstrip i\.here,\.rstop\.cbq~\.pulse,\.rstop\.cbq~\* \.pulse,\.rstop\.cbq~\* button\.go[^{]*\{animation:none\}/.test(
-        css
+      return (
+        /\.rstop\.cbq \.rsstrip i\.here,\.rstop\.cbq~\.pulse,\.rstop\.cbq~\* \.pulse,\.rstop\.cbq~\* button\.go[^{]*\{animation:none\}/.test(
+          css
+        ) && /\.hq\.rs \.rsmore \.pulse,\.hq\.rs \.rsmore button\.go[^{]*\{animation:none\}/.test(css)
       );
     })()
   );

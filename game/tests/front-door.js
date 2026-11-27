@@ -184,13 +184,19 @@
     "the game is the visitor's own after the four answers",
     !G.demo && G.chars.length === 1 && store.slam_guest === "2"
   );
-  /* the rest of setup: the last screen has three buttons only (Batch B, phase 4b), so it is on Home */
+  /* run 16, A1: the reveal has the way to a free account; the result has one button, and it lands on Home, where
+     the rest of setup is */
+  X("cbgo", "reveal");
+  chk("the reveal saves the plan with a free account", /data-a="cbsave"/.test(ov()));
   X("cbgo", "end");
   chk(
-    "the last screen saves the plan with a free account, and has no rest of setup",
-    /data-a="cbsave"/.test(ov()) && !/data-a="cbrest"/.test(ov())
+    "the result has one button, Start my first move, and no rest of setup",
+    /data-a="cbfirst">Start my first move</.test(ov()) &&
+      (ov().match(/class="primary/g) || []).length === 1 &&
+      !/data-a="cbrest"/.test(ov()) &&
+      !/data-a="cbsave"/.test(ov())
   );
-  X("gohome");
+  X("cbfirst");
   chk("the first tile of Home opens the rest of setup", !SH && /data-fid="cb:homerest"/.test(app()));
   X("cbrest");
   chk("the rest of setup is the setup by taps", W && W.kind === "setup" && W.door === true && W.cbRest === true);

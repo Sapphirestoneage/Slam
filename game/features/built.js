@@ -913,7 +913,7 @@ const WB = [
       WB_HAS("cbshare") &&
       WB_HAS("cbaddstep") &&
       WB_HAS("cbback"),
-    "Batch B, phase 4. The reveal shows What it is and What it could be side by side, the difference in dollars and in years, what you counted (each one opens its deeper feature) and the finished chart with every switch. The moves before FI and the Yes, but card keep their months on their own line, and an i says why. The last screen has three buttons: Keep my plan, Share my card, Tell Eli what broke. The card is an image with ages and names and no dollar amount. Your top 3 moves are cards on Next Steps, with Add to my steps. Home starts with the two numbers and a small chart, and a tap opens the flow where you left off. On a later day the tile says what changed since last time.",
+    "Batch B, phase 4. The reveal shows What it is and What it could be side by side, the difference in dollars and in years, what you counted (each one opens its deeper feature) and the finished chart with every switch. The moves before FI and the Yes, but card keep their months on their own line, and an i says why. Keep my plan, Share my card and Tell Eli what broke are on the reveal, under Keep it, share it, or tell Eli. The card is an image with ages and names and no dollar amount. Your top 3 moves are cards on Next Steps, with Add to my steps. Home has the two numbers and a small chart below its top row, and a tap opens the flow where you left off. On a later day the tile says what changed since last time.",
     "cb",
   ],
   [
@@ -1942,8 +1942,26 @@ const WB = [
     "in",
     "Find your era in 60 seconds: the demo page, and its answers come into the game",
     "b",
-    () => WB_FN("erIn") && WB_FN("erResult") && WB_FN("erNext") && WB_FN("erBase"),
-    "Run CC-1, item 7. One small page at game/era/ asks six or seven questions by taps: age, spending, cash cushion, what you owe, invested, saved a month, and tax-friendly accounts when you invest. It shows your era, one next move, and Start my full game. The era comes from the game's own rule. The answers stay on the device and come into the game, so a new player does not answer them again. A printable page with a QR code is at game/era/print.html.",
+    () => WB_FN("erIn") && WB_FN("erResult") && WB_FN("erNext") && WB_FN("erBase") && WB_FN("erSigned"),
+    "Run CC-1, item 7. One small page at game/era/ asks six or seven questions by taps: age, spending, cash cushion, what you owe, invested, saved a month, and tax-friendly accounts when you invest. It shows your era, one line on why, your first move, and one button, Start my first move. The era comes from the game's own rule. The answers come into the game as guesses, the game opens on Home with that move on top, and setup does not ask them again. The page has the look of the game and a Home button. A printable page with a QR code is at game/era/print.html.",
+    null,
+  ],
+  [
+    "see",
+    "One result, then Home: four top numbers and one next step",
+    "b",
+    () =>
+      WB_FN("cbResult") &&
+      WB_FN("cbHomeFirst") &&
+      WB_FN("homeFirstCard") &&
+      WB_FN("homeStatRow") &&
+      WB_FN("homeResultsMore") &&
+      WB_FN("homeNumsMove") &&
+      WB_FN("cbNumsMove") &&
+      WB_FN("amCarryInv") &&
+      WB_HAS("cbfirst") &&
+      WB_HAS("cbfirstgo"),
+    "Audit fixes, batch 1. The opening ends on one result: your era, one line on why, your first move, and one button, Start my first move. It lands on Home with that move as the top card. Home starts with four numbers in one row (free to spend this month, next goal, net worth, free of costly debt), each with an i, then one next-step card. Everything else is below. A number that an answer changed moves for a moment. Answers from the opening stay as guesses, and setup shows them filled.",
     null,
   ],
 ];

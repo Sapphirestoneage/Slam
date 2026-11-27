@@ -5804,8 +5804,8 @@ function safeSheetBase() {
 }
 function freeCard(c, d, sec) {
   const fs = freeToSpend(c, d);
-  return `<div class="card" ${sec || ""}><div class="row between"><span class="tiny muted">Free to spend</span>${ib("term:free")}</div><div class="row between"><div><div class="big ${fs.real ? "" : "guess"}" data-fid="v:free">${money(fs.week)} a week</div><div class="tiny muted">for food, fun and everything else${fs.real ? "" : " · guess"}</div></div>${fs.real ? "" : `<button class="ghost slim" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make it real</button>`}</div>
- <div class="tiny muted" style="margin-top:6px">${money(fs.in)} in, minus ${money(fs.bills)} for bills, minus ${money(fs.goal)} for your goals, leaves ${money(fs.free)} a month.${fs.short ? " Right now about " + money(fs.short) + " more goes out than comes in." : ""}</div><button class="ghost wide slim" style="margin-top:8px" data-a="safe">Is it safe to spend this?</button></div>`;
+  return `<div class="card" ${sec || ""}><div class="row between"><span class="tiny muted">Free to spend</span>${ib("term:free")}</div><div class="row between"><div><div class="big ${fs.real ? "" : "guess"}" data-fid="v:free">${money(fs.free)} this month</div><div class="tiny muted">about ${money(fs.week)} a week, for food, fun and everything else${fs.real ? "" : " · guess"}</div></div>${fs.real ? "" : `<button class="ghost slim" data-a="sharp" data-v="${isSharp(c, "take") ? "spend" : "take"}">Make it real</button>`}</div>
+ <div class="tiny muted" style="margin-top:6px">${money(fs.in)} in, minus ${money(fs.bills)} for bills, minus ${money(fs.goal)} for your goals, leaves ${money(fs.free)}.${fs.short ? " Right now about " + money(fs.short) + " more goes out than comes in." : ""}</div><button class="ghost wide slim" style="margin-top:8px" data-a="safe">Is it safe to spend this?</button></div>`;
 }
 
 /* ---- payday: goals join the split, and dates move live ---- */

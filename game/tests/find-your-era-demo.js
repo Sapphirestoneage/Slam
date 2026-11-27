@@ -27,6 +27,10 @@
       getItem: k => (k in box ? box[k] : null),
       setItem: (k, v) => (box[k] = String(v)),
       removeItem: k => delete box[k],
+      key: i => Object.keys(box)[i],
+      get length() {
+        return Object.keys(box).length;
+      },
     },
     newGame = () => {
       G = clone(G0);
@@ -38,8 +42,7 @@
     arrive = A => {
       newGame();
       box[ER_KEY] = erPack(A);
-      X("start");
-      X("wnskip"); /* What you want (run SLAM-ONBOARD-1) comes first: Skip for now */
+      X("start"); /* run 16: with all four answers the profile is made at once, and Home opens */
       return C();
     },
     FULL = { age: 2, spend: 2, inv: 3, save: 3, cush: "1 to 3 months", debts: ["Credit card balance"], tax: "some" };
@@ -164,36 +167,34 @@
     t
       .replace(/"id":"pl[a-z0-9]+"/g, '"id":""')
       .replace(/"mod":\d+/, '"mod":0')
-      .replace(/"t":"[^"]*Z"/g, '"t":""');
+      .replace(/"t":"[^"]*Z"/g, '"t":""')
+      /* run 16: a profile from the demo also says which setup answers the demo gave, and that its first move waits */
+      .replace(',"era":[]', "")
+      .replace(',"first":"era"', "")
+      /* the trail of the open sheets (questlog.js): the taps went through the flow, the demo player is on Home */
+      .replace(/,"quest":\{"st":\{\},"off":\{\}\},"trail":\[[^\]]*\]/, "");
   chk(
     "four answers from the demo make the profile that four taps in the entry make",
     same(JSON.stringify(c)) === same(tapped)
   );
   chk(
-    "the game is a real game now, and the flow goes on at What it is",
-    !G.demo && W && W.kind === "cb" && W.step === "is",
-    W && W.kind + " " + W.step
+    "the game is a real game now, and Home opens with no sheet (run 16, A3)",
+    !G.demo && !SH && !W && tab === "home",
+    (W && W.kind) + " " + tab
   );
-  chk("the entry is not asked again", !/Question 1 of/.test(ov()) && /What it is/.test(ov()));
-  chk("the key is removed after one use", !(ER_KEY in box));
-  /* run SLAM-ONBOARD-1: a demo visitor sees What you want first, and the picks become goals */
-  newGame();
-  box[ER_KEY] = erPack({ age: 2, spend: 2, inv: 3, save: 3 });
-  X("start");
-  chk("a demo visitor sees What you want first, and the key waits", G.demo && W.step === "wants" && ER_KEY in box);
-  X("wnpick", "home");
-  X("wnnext");
   chk(
-    "after it the four questions are passed over, and the pick is a goal",
-    !G.demo &&
-      W.kind === "cb" &&
-      W.step === "is" &&
-      C()
-        .goals.map(g => g.n)
-        .join() === "Buy a home" &&
-      !(ER_KEY in box),
-    W.kind + " " + W.step
+    "the first move of the demo is the first card of Home, and it is the move the demo showed",
+    c.x.cb.first === "era" &&
+      /data-fid="cb:homefirst"/.test(app()) &&
+      app().includes(esc(erResult({ age: 2, spend: 2, inv: 3, save: 3 }).next.t)),
+    c.x.cb.first
   );
+  chk(
+    "the entry is not asked: no question, no What you want",
+    !/Question 1 of/.test(ov()) && !/What do you want/.test(ov())
+  );
+  chk("the key is removed after one use", !(ER_KEY in box));
+  chk("no setup answer came from a demo with four answers only", c.x.cb.era.length === 0, c.x.cb.era);
   c = arrive(FULL);
   chk(
     "the setup answers of the demo are on the profile",
@@ -207,7 +208,8 @@
     "the four answers of the flow are on the profile",
     [2, 2, 3, 3].join() === CB_QS.map(Q => c.x.cb.a[Q.id].i).join()
   );
-  chk("the sheet has no undefined and no NaN", clean(ov()), junk(ov()));
+  chk("the profile says which setup answers the demo gave", c.x.cb.era.join() === "cush,debts,tax", c.x.cb.era);
+  chk("Home has no undefined and no NaN", clean(app()), junk(app()));
   /* a part only: the entry opens at the first open question */
   newGame();
   box[ER_KEY] = erPack({ age: 4, spend: 1 });
@@ -264,8 +266,8 @@
   );
   R = erResult({ age: 2, spend: 2, inv: 0, save: 0, cush: "no1k", debts: [] });
   chk(
-    "nothing owed and no cushion: Ground Floor, with no line about owing",
-    R.name === "Ground Floor" && R.one === "" && R.is.length === 0
+    "nothing owed and no cushion: Ground Floor, with its own line and no line about owing",
+    R.name === "Ground Floor" && R.one === ER_WORDS.ground && !/owe more/.test(R.one) && R.is.length === 0
   );
   chk("no answer of the entry: no result", erResult({ age: 1 }) === null);
   chk(
@@ -292,10 +294,62 @@
       !/fetch\(|XMLHttpRequest|sendBeacon|<form|gtag|analytics|WebSocket/i.test(s.replace(/\/\*[\s\S]*?\*\//g, ""))
     );
   });
+  /* run 16, A5: the page wears the look of the game. Its one address outside the game is the font link of the game,
+     the same line as in game/index.html; the styles are a generated copy of the game's own style lines. */
+  const fontLink = (read("index.html").match(/^<link href="https:\/\/fonts\.googleapis\.com[^\n]*$/m) || [""])[0],
+    pageIn = page.replace(fontLink, "");
   chk(
-    "the page loads its scripts and links by relative addresses only",
-    !/(src|href)="(https?:)?\/\//.test(page) && !/(src|href)="\//.test(page)
+    "the page loads its scripts and links by relative addresses only, but for the font of the game",
+    fontLink.length > 0 &&
+      page.includes(fontLink) &&
+      !/(src|href)="(https?:)?\/\//.test(pageIn) &&
+      !/(src|href)="\//.test(pageIn) &&
+      !/<script[^>]+src="https?:/.test(page)
   );
+  const lookCss = read("era/gamelook.css"),
+    gameCss = read("index.html");
+  chk(
+    "the look is the game's own: the stylesheet is a copy of style lines of the game, and the page sets no color of its own",
+    /<link rel="stylesheet" href="gamelook\.css">/.test(page) &&
+      /<body data-color="midnight">/.test(page) &&
+      lookCss
+        .split("\n")
+        .slice(5)
+        .filter(Boolean)
+        .every(l => gameCss.includes(l)) &&
+      /button\.primary\{/.test(lookCss) &&
+      /Space Grotesk/.test(lookCss) &&
+      !/#[0-9a-f]{6}\b/i.test((page.match(/<style>[\s\S]*<\/style>/) || [""])[0].replace(/#fff\b/g, ""))
+  );
+  chk(
+    "each screen has the way out, Home, and the result has one primary button and a small Back",
+    /function eraTop\(\)[\s\S]*?<a class="linkbtn" id="exit" href="\.\.\/"/.test(view) &&
+      (view.match(/eraTop\(\) \+/g) || []).length === 2 &&
+      (
+        view
+          .split("function eraResult")[1]
+          .split("function eraDraw")[0]
+          .match(/class="primary/g) || []
+      ).length === 1 &&
+      /Start my first move/.test(view) &&
+      !/Start my full game|Start over|<details/.test(view) &&
+      /class="ghost slim" data-a="back"/.test(view.split("function eraResult")[1])
+  );
+  chk(
+    "the line about no account shows only to a signed-out visitor (run 16, A4)",
+    /erSigned\(\) \? ER_WORDS\.signed : ER_WORDS\.out/.test(view) &&
+      ER_WORDS.out === "No account. Nothing is sent. Your answers stay on this device." &&
+      !/No account/.test(view.replace(/\/\*[\s\S]*?\*\//g, "")) &&
+      !/no account/i.test(ER_WORDS.signed)
+  );
+  /* erSigned(): the two marks that the account code keeps on the device */
+  chk("signed out: no mark on the device", erSigned() === false);
+  box.su_uid = "u1";
+  chk("the mark of an old account alone is not a sign-in", erSigned() === false);
+  box["sb-abc-auth-token"] = "{}";
+  chk("the mark of the account and the token of the sign-in: signed in", erSigned() === true);
+  delete box.su_uid;
+  delete box["sb-abc-auth-token"];
   chk(
     "the page loads the engine of the game, not a copy of it",
     /<script src="\.\.\/core\/engine\.js"><\/script>/.test(page) &&
@@ -310,7 +364,11 @@
   const r = cp.spawnSync(process.execPath, [path.join(ROOT, "tools", "game_era_build.mjs"), "--check"], {
     encoding: "utf8",
   });
-  chk("era/gamecopy.js is current (node tools/game_era_build.mjs)", r.status === 0, (r.stderr || "").trim());
+  chk(
+    "era/gamecopy.js and era/gamelook.css are current (node tools/game_era_build.mjs)",
+    r.status === 0,
+    (r.stderr || "").trim()
+  );
   chk(
     "the print page names the demo's address in words and holds one QR picture",
     /play\.stresslessaboutmoney\.com\/game\/era\//.test(print) && (print.match(/<svg/g) || []).length === 1

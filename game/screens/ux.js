@@ -111,7 +111,7 @@ function homeQuad(c, d) {
     fp = typeof fogPct === "function" ? fogPct(c, d) : 0,
     tight = f.free <= 0 || f.short > 0;
   return `<div class="quad"><div class="q q1"><span class="qn">1</span><div class="eyebrow">Do this</div><b class="qt">${esc(ns.t)}</b><button class="primary go" data-a="${ns.a}" data-v="${ns.v == null ? "" : ns.v}">${esc(ns.l || "Start")}</button></div>
- <button class="q q2" data-a="safe"><span class="qn">2</span><span class="eyebrow">Free to spend</span><b class="qt" data-fid="v:freewk">${tight ? "$0" : money(f.week)}</b><span class="tiny muted">${tight ? "tight right now" : "a week · " + (f.real ? "Close" : "Guess")}</span></button>
+ <button class="q q2" data-a="safe"><span class="qn">2</span><span class="eyebrow">Free to spend</span><b class="qt" data-fid="v:freewk">${tight ? "$0" : money(f.free)}</b><span class="tiny muted">${tight ? "tight right now" : "this month · " + (f.real ? "Close" : "Guess")}</span></button>
  <button class="q q3" data-a="tab" data-v="plan"><span class="qn">3</span><span class="eyebrow">Next steps</span><b class="qt">${open ? open + " to do" : "All clear"}</b><span class="tiny muted">today</span></button>
  <button class="q q4" data-a="fog"><span class="qn">4</span><span class="eyebrow">Your picture</span><b class="qt">${fp}%</b><span class="tiny muted">clear</span></button></div>`;
 }
@@ -126,15 +126,22 @@ function welcome() {
 function homeWelcome() {
   return G.demo && UX_NOSAMPLE ? welcome() : null;
 }
-/* Part of home() in ui.js. Adds the tab title and the four tiles at the top, and the button "Show more" at the bottom. */
+/* Part of home() in ui.js. Adds the tab title and the top of Home, and the button "See all of Home" at the bottom.
+   The top (run 16, B6): one row of the four top numbers (look.js: homeStatRow), then ONE next-step card: the first
+   move of the result while it waits (cbreveal.js: homeFirstCard), else Your next win (results.js: homeResults).
+   Everything else is below them, quiet: the two numbers, the end of the month, You are here, Your numbers. */
 function homeQuadTop(h) {
   if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
-  /* results.js: the four cards of results first (Your next win, By the end of this month, You are here, the tiles) */
+  /* results.js: the one next-step card, Your next win. null for the sample game. */
   const rs = typeof homeResults === "function" ? homeResults(C(), D) : null;
-  /* cbreveal.js: the two numbers and the small layer chart, the first tile of a player of What it could be */
+  /* cbreveal.js: the first move of the result takes the place of Your next win until the player starts it */
+  const first = rs !== null && typeof homeFirstCard === "function" ? homeFirstCard(C(), D) : "";
+  /* cbreveal.js: the two numbers and the small layer chart of a player of What it could be */
   const cb = rs !== null && typeof homeCbTile === "function" ? homeCbTile(C(), D) : "";
   /* firstweek.js: one line, "New for you", when the other tabs are back */
   const fw = typeof homeFwNote === "function" ? homeFwNote() : "";
+  /* look.js: the four top numbers, one row */
+  const stat = typeof homeStatRow === "function" ? homeStatRow(C(), D) : "";
   const top =
     tabHead() +
     (rs !== null
@@ -142,15 +149,14 @@ function homeQuadTop(h) {
         (cb ? " cbq" : "") +
         '">' +
         fw +
+        stat +
+        (first || rs) +
+        '<div class="rsmore">' +
         cb +
-        rs +
-        "</div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
-      : /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
-        '<div class="hqtop">' +
-        fw +
-        (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +
-        homeQuad(C(), D) +
-        "</div>");
+        (typeof homeResultsMore === "function" ? homeResultsMore(C(), D) : "") +
+        "</div></div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
+      : /* the sample game: the stat row, kept with the four boxes in one block so "Show less" keeps both */
+        '<div class="hqtop">' + fw + stat + homeQuad(C(), D) + "</div>");
   return h
     .replace(
       '<div class="stack">',
@@ -165,11 +171,12 @@ function homeQuadTop(h) {
         "</div>"
     );
 }
-/* Part of safeSheet() in ui.js. Adds the tile "Free to spend" below the title. */
+/* Part of safeSheet() in ui.js. Adds the tile "Free to spend" below the title. The month leads, as on Home (run 16,
+   B6: one unit for free to spend); the week is the same number in a smaller piece. */
 function safeSheetFree(h) {
   const c = C(),
     f = freeToSpend(c, D);
-  const tile = `<div class="tile small">Free to spend: <b>${f.free > 0 ? money(f.week) + " a week" : "nothing right now"}</b>${f.free > 0 ? " (" + money(f.free) + " a month)" : ""} <span class="pill">${f.real ? "Close" : "Guess"}</span></div>`;
+  const tile = `<div class="tile small">Free to spend this month: <b>${f.free > 0 ? money(f.free) : "nothing right now"}</b>${f.free > 0 ? " (about " + money(f.week) + " a week)" : ""} <span class="pill">${f.real ? "Close" : "Guess"}</span></div>`;
   return h.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, m => m + tile);
 }
 /* Part of flowSheet() in ui.js. The title becomes "Log money". Each question with no answer gets a mark. The row "I got paid" comes first. */
@@ -674,6 +681,7 @@ function renderUxEnd(wel) {
       tb = $("#tabs");
     if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
     if (typeof fwKeep === "function") fwKeep(); /* firstweek.js: note once that this game had the calmer week */
+    if (typeof homeNumsMove === "function") homeNumsMove(); /* look.js: a top number of Home that changed moves */
   } catch (e) {
     report(e, "ux.js: renderUxEnd");
   }

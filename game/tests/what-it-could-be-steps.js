@@ -442,10 +442,14 @@
     chk(name + ": every year adds up", every(k.rows));
     W = { kind: "cb", step: "reveal", o: {} };
     sheet(cbSheet);
-    chk(name + ": the reveal is clean", clean(ov()) && /dkstack/.test(ov()), junk(ov()));
+    chk(
+      name + ": the reveal is clean, and holds the three buttons of the old last screen",
+      clean(ov()) && /dkstack/.test(ov()) && /data-fid="cb:end3"/.test(ov()),
+      junk(ov())
+    );
     W = { kind: "cb", step: "end", o: {} };
     sheet(cbSheet);
-    chk(name + ": the last screen is clean", clean(ov()) && /data-fid="cb:end3"/.test(ov()), junk(ov()));
+    chk(name + ": the result is clean", clean(ov()) && /data-a="cbfirst"/.test(ov()), junk(ov()));
     closeSheet();
   });
   chk(

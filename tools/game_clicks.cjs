@@ -62,7 +62,8 @@ async function walk(browser, base, want) {
   }
   // Run A (Nov 27 2026): the one opening of a new player, What it is / What it could be: four range chips, then the
   // first number; then its screens to the last one, and from there the rest of setup.
-  let first = null;
+  let first = null,
+    home = null;
   // Run SLAM-ONBOARD-1 (Nov 27 2026): What you want comes first. The fastest path is one tap: Skip for now.
   if (await page.locator("#ov [data-a=wnskip]").count()) {
     await page.locator("#ov [data-a=wnskip]").click();
@@ -78,20 +79,21 @@ async function walk(browser, base, want) {
       await page.waitForTimeout(650);
     }
     if (await page.locator("#ov [data-cbn=is]").count()) first = taps;
-    /* Batch B, phase 4: What it is, the chart, the stack, the reveal, the last screen (three buttons), then Home,
-       where the rest of setup is (the first tile). */
+    /* Batch B, phase 4, and run 16: What it is, the chart, the stack, the reveal, the result (one button: Start my
+       first move), then Home, where the rest of setup is (the tile of the two numbers). */
     for (const [sel, name] of [
       ["#ov [data-a=cbgo][data-v=next]", "See what it could be"],
       ["#ov [data-a=cbgo][data-v=stack]", "Next (the chart)"],
       ["#ov [data-a=cbgo][data-v=reveal]", "See where this leaves you"],
       ["#ov [data-a=cbgo][data-v=end]", "Next (the reveal)"],
-      ["#ov [data-a=gohome]", "Home"],
+      ["#ov [data-a=cbfirst]", "Start my first move (the result): Home"],
     ]) {
       await page.locator(sel).first().click();
       taps++;
       trace.push(taps + ". " + name);
       await page.waitForTimeout(1000);
     }
+    home = taps;
     await page.locator('#app [data-fid="cb:homerest"]').click();
     taps++;
     trace.push(taps + ". Finish setup: five short rounds");
@@ -161,7 +163,7 @@ async function walk(browser, base, want) {
     Array.isArray(v) ? v.filter(x => !used[k + "=" + x]).map(x => k + " " + x) : used[k] ? [] : [k + " " + v]
   );
   await ctx.close();
-  return { taps, first, reveal, trace, missed, errs };
+  return { taps, first, home, reveal, trace, missed, errs };
 }
 (async () => {
   const srv = await serve(path.resolve(__dirname, "../game")),
@@ -176,6 +178,7 @@ async function walk(browser, base, want) {
       name +
         ": " +
         (r.first != null ? r.first + " taps from Start to the first number (What it is). " : "The first number did not show. ") +
+        (r.home != null ? r.home + " taps from Start to Home (the result's one button). " : "") +
         (r.reveal ? r.taps + " taps from Start, through the flow and the rest of setup, to \"Here's where you stand\"" : "did not reach the reveal after " + r.taps + " taps") +
         (r.missed.length ? ". Not asked (filled in from earlier taps, or not on the setup): " + r.missed.join(", ") : "") +
         (r.errs.length ? ". Page errors: " + r.errs.slice(0, 2).join(" | ") : "")

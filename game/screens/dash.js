@@ -33,10 +33,18 @@ function dkCard(title, body, o) {
   o = o || {};
   return `<div class="card dkcard ${o.cls || ""}">${title ? `<div class="row between dkhead"><span class="dklabel">${esc(title)}</span>${o.right || ""}</div>` : ""}${o.cap ? `<div class="tiny muted">${esc(o.cap)}</div>` : ""}${body}</div>`;
 }
-/* One stat tile. o: { sub, spark (numbers), guess, act, v } */
+/* One stat tile. o: { sub, spark (numbers), guess, act, v, info, move }. info: the key of a glossary word; the tile
+   then has its own "i" next to the label, and the number with its line is the button (a button cannot hold a
+   button). move: { k, to }: the number is marked for the short animation of a number that changed (cbNumsMove in
+   couldbe.js); to is the number, or null for a value in words. */
 function dkTile(label, value, o) {
   o = o || {};
-  const inner = `<span class="dklabel">${esc(label)}</span><b class="dknum ${o.guess ? "guess" : ""}">${value}</b>${o.sub ? `<span class="tiny muted">${esc(o.sub)}</span>` : ""}${o.spark && o.spark.length > 1 ? dkSpark(o.spark) : ""}`;
+  const mv = o.move ? ` data-cbn="${esc(o.move.k)}" data-to="${o.move.to == null ? "" : o.move.to}" data-txt="1"` : "",
+    num = `<b class="dknum ${o.guess ? "guess" : ""}"${mv}>${value}</b>`,
+    rest = `${o.sub ? `<span class="tiny muted">${esc(o.sub)}</span>` : ""}${o.spark && o.spark.length > 1 ? dkSpark(o.spark) : ""}`;
+  if (o.info && o.act)
+    return `<div class="dktile dkti"><span class="row between dktih"><span class="dklabel">${esc(label)}</span>${ib("term:" + o.info)}</span><button class="dktigo" data-a="${o.act}" data-v="${o.v == null ? "" : esc(o.v)}" aria-label="${esc(label)}: see more">${num}${rest}<span class="caret" aria-hidden="true">›</span></button></div>`;
+  const inner = `<span class="dklabel">${esc(label)}</span>${num}${rest}`;
   return o.act
     ? `<button class="dktile" data-a="${o.act}" data-v="${o.v == null ? "" : esc(o.v)}">${inner}</button>`
     : `<div class="dktile">${inner}</div>`;

@@ -11,7 +11,7 @@
                su_uid (the account that the copy on this device belongs to), the sign-in token of
                Supabase. The address of the page (a sign-in link that comes back from an email).
    OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, doorFireBtn, doorShow, doorHide,
-               doorGate, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
+               doorGate, doorFromDemo, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
                doorEarly, doorJustSaved, doorRedraw. The constant DOOR_LINK (the link for the slide and the QR code).
    DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton), account/trust.js (TRUST_LINE,
                TRUST_PAGE: the advice line and the privacy page). index.html loads both before this
@@ -128,7 +128,30 @@ function doorGate(done) {
   } else if (DOOR.guest) {
     /* The visitor tapped Start before this call. The game runs. */
   } else if (doorHasGame()) DOOR.guest = true;
+  else if (
+    doorGet("slam.era") &&
+    typeof erRead !== "function" &&
+    typeof window !== "undefined" &&
+    window.addEventListener
+  )
+    /* the sign-in check came back before the last script: decide when the page has loaded */
+    window.addEventListener("load", () => {
+      if (DOOR.guest || DOOR.el) return;
+      if (doorFromDemo()) doorStart();
+      else doorShow();
+    });
+  else if (doorFromDemo()) doorStart();
   else doorShow();
+}
+/* True when the visitor comes from the demo Find your era with its answers (features/erain.js: erRead). The tap on
+   "Start my first move" there was the tap on Start: the landing does not ask for it again (run 16, A3). */
+function doorFromDemo() {
+  try {
+    return typeof erRead === "function" && !!erRead();
+  } catch (e) {
+    report(e, "door.js: doorFromDemo");
+    return false;
+  }
 }
 /* The tap on Start. No account, no typing. */
 function doorStart() {
@@ -228,6 +251,8 @@ function doorEarly() {
   const back =
     /access_token=|refresh_token=|type=recovery|error_description=/.test(location.hash || "") ||
     /[?&]code=/.test(location.search || "");
-  if (!token && !back) doorShow();
+  /* the answers of the demo Find your era wait on this device: the landing waits for doorGate(), which starts the
+     game with them, or shows the landing when they are too old */
+  if (!token && !back && !doorGet("slam.era")) doorShow();
 }
 doorEarly();

@@ -341,13 +341,10 @@
   X("cbgo", "end");
   h = ov();
   chk(
-    "the last screen has both numbers and no dead end",
+    "the result (run 16) is no dead end: one button to Home, a Back, and the advice line",
     W.step === "end" &&
-      (h.match(/data-cbn=/g) || []).length === 2 &&
-      /data-a="cbsave"/.test(h) &&
-      /data-a="cbshare"/.test(h) &&
-      /data-a="flag"/.test(h) &&
-      /data-a="gohome"/.test(h) &&
+      /data-a="cbfirst">Start my first move</.test(h) &&
+      /data-a="cbgo" data-v="prev"/.test(h) &&
       h.includes(TRUST_LINE)
   );
   chk(

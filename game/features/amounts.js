@@ -11,7 +11,8 @@
                same spot, right under the chips.
    INPUT       The setup sheet (W.kind setup): W.o (the answers), W.o.am (the answers of this file, by
                question id), W.o.amIn (the typed number), W.amKnow (the question whose box is open).
-   OUTPUT      Math: AM_RNG, amSteps, amApply, amGroupTotal, amMonthly, amRateSet, amHouseQs (the two count
+   OUTPUT      Math: AM_RNG, amSteps, amApply, amGroupTotal, amGroupGuess, amCarryInv (part of openSetupCb in
+               couldbe.js), amMonthly, amRateSet, amHouseQs (the two count
                questions of page 2). Views: amBody, amAcctRow, amChecklist. Parts of functions in other files:
                finishSetupAm (finishSetup in ui.js), amApply (spPreview in spiral.js), amChecklist
                (spChecklist in spiral.js), amHouseQs (smQs in smart.js), amAcctRow (SETUP[5] in smart.js),
@@ -389,6 +390,34 @@ function amGroupTotal(lines, guess, all) {
   if (all) return { amt: sum, sum, rest: 0, done: true };
   return { amt: Math.max(guess, sum), sum, rest: Math.max(0, guess - sum), done: false };
 }
+/* The amount of spending group i before any of its lines is in: the share of the player's own quick answer (the
+   spending question of What it is / What it could be, spread over the groups by cbRows in couldbe.js) while that
+   row is still a Guess, else the stock number of the group (run 16, A2: an answer is carried, not asked again).
+   { amt, mine (true for the quick answer) }. oh: the answers with c.home set. */
+function amGroupGuess(oh, i) {
+  const a = oh.x && oh.x.cb && oh.x.cb.a && oh.x.cb.a.spend,
+    r = a ? (oh.spends || []).find(z => z.k === AM_GROUPS[i][0] && z.h && !z.s && !z.parts) : null;
+  return r && r.amt > 0 ? { amt: r.amt, mine: true } : { amt: typSpend(oh, i), mine: false };
+}
+/* Part of openSetupCb() in couldbe.js (run 16, A2). The amount invested that the player gave in the four questions
+   is not asked again in the rounds: with one investment account, its question comes filled, with one tap to change
+   it. The answer is kept apart from the row (v null): the row keeps its amount and its state, a Guess for a range
+   chip. */
+function amCarryInv(base) {
+  const a = base.x && base.x.cb && base.x.cb.a && base.x.cb.a.inv,
+    rows = (base.invs || []).filter(x => x.amt > 0),
+    r = a && rows.length === 1 ? AM_ACCTS.find(z => z[0] === rows[0].k && z[2] === "Investments") : null;
+  if (!r || r[0] === AM_IRA) return;
+  const exact = !!rows[0].s && (rows[0].cf || 0) >= 3;
+  base.am = base.am || {};
+  base.am["a:" + amSlug(r[1])] = {
+    v: null,
+    guess: rows[0].amt,
+    lab: (exact ? money(rows[0].amt) : "About " + money(rows[0].amt)) + ", from your quick answers",
+    cf: exact ? 3 : 0,
+    kept: true,
+  };
+}
 /* The lines of spending group g from the answers. */
 function amGroupLines(o, g) {
   return g[3].map((L, j) => {
@@ -509,7 +538,7 @@ function amApply(o) {
       st = amA(o, "s:" + amSlug(g[0]));
     if (!L.some(l => l.amt != null)) return;
     const all = L.every(l => l.amt != null || l.skip) || !!(st && st.all),
-      T = amGroupTotal(L, typSpend(oh, i), all),
+      T = amGroupTotal(L, amGroupGuess(oh, i).amt, all),
       cf = L.filter(l => l.amt != null).every(l => l.cf >= 3) ? 3 : 2,
       x = {
         k: g[0],
@@ -706,7 +735,7 @@ function amGroupWords(o, g) {
   const i = AM_GROUPS.indexOf(g),
     T = amGroupTotal(
       L,
-      typSpend(Object.assign({}, o, { home: HOMEMAP[o.homeQ] || o.home }), i),
+      amGroupGuess(Object.assign({}, o, { home: HOMEMAP[o.homeQ] || o.home }), i).amt,
       L.every(l => l.amt != null || l.skip)
     );
   return money(T.amt) + " a month";
@@ -802,14 +831,15 @@ function amGroupHtml(w, st) {
     g = st.g,
     i = AM_GROUPS.indexOf(g),
     L = amGroupLines(o, g),
-    guess = typSpend(Object.assign({}, o, { home: HOMEMAP[o.homeQ] || o.home }), i),
+    GG = amGroupGuess(Object.assign({}, o, { home: HOMEMAP[o.homeQ] || o.home }), i),
+    guess = GG.amt,
     all = L.every(l => l.amt != null || l.skip),
     T = amGroupTotal(L, guess, all),
     /* fewer.js: when the lines left move little, say so and make "That's all" the main button */
     few = !all && typeof fqGroupFew === "function" ? fqGroupFew(g, L) : null;
   return (
     `<div class="field smopen amstep amgrp"><div class="tiny muted amcrumb">Money going out › ${esc(g[0])}</div><h2 class="amhead"><span aria-hidden="true">${g[1]}</span> ${esc(g[0])}</h2><div class="small muted">${esc(g[2])}</div>` +
-    `<div class="tile amtotal" role="status"><span class="small">${esc(g[0])} total</span> <b class="amtot">${money(T.amt)}</b> <span class="tiny muted">a month</span>${T.rest > 0 && L.some(l => l.amt != null) ? `<div class="tiny muted">${money(T.rest)} not split up yet</div>` : !L.some(l => l.amt != null) ? `<div class="tiny muted">A typical amount for now. Tap your lines.</div>` : ""}</div>` +
+    `<div class="tile amtotal" role="status"><span class="small">${esc(g[0])} total</span> <b class="amtot">${money(T.amt)}</b> <span class="tiny muted">a month</span>${T.rest > 0 && L.some(l => l.amt != null) ? `<div class="tiny muted">${money(T.rest)} not split up yet</div>` : !L.some(l => l.amt != null) ? `<div class="tiny muted">${GG.mine ? "From your quick answer, a Guess. Tap your lines to make it yours." : "A typical amount for now. Tap your lines."}</div>` : ""}</div>` +
     L.map((l, j) => {
       const id = "s:" + amSlug(g[0]) + ":" + j,
         cur = amA(o, id);
@@ -859,8 +889,10 @@ function amAcctSummary(w) {
         .filter(r => r[2] === grp)
         .map(r => amA(o, "a:" + amSlug(r[1])))
         .filter(Boolean),
-    tot = rs => rs.reduce((t, a) => t + (a.v || 0), 0),
-    st = rs => (!rs.length ? "Guess" : rs.every(a => a.cf >= 3) ? "Exact" : "Close"),
+    /* an answer carried from the quick answers (amCarryInv) counts with its amount, and stays a Guess */
+    tot = rs => rs.reduce((t, a) => t + (a.v != null ? a.v : a.guess || 0), 0),
+    st = rs =>
+      !rs.length || rs.every(a => a.kept && a.cf < 3) ? "Guess" : rs.every(a => a.cf >= 3) ? "Exact" : "Close",
     cash = rows("cashes", "Cash"),
     inv = rows("invs", "Investments"),
     tag = s => (typeof kitPill === "function" ? kitPill(s) : `<span class="pill">${s}</span>`),

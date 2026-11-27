@@ -19,10 +19,17 @@
    ========================================================================= */
 
 /* ---------- math ---------- */
+/* True while nobody asked this player about debts: the profile came from the four questions of the opening, the
+   rest of setup is not done, and the demo Find your era did not ask either. */
+function lkDebtOpen(c) {
+  const s = c.x && c.x.cb;
+  return !!(s && s.a && !s.setup && !(s.era || []).includes("debts") && !(c.debts || []).length);
+}
 /* The four numbers of the Home stat row. */
 function lkHome(c, d) {
   const f = freeToSpend(c, d),
-    plan = c.led && typeof dbPlan === "function" ? dbPlan(c, "avalanche", 0) : null,
+    /* run 16: a player with debts on the profile has a payoff run before the ledger is on, as the Results cards do */
+    plan = typeof dbPlan === "function" && (c.led || dbLive(c).length) ? dbPlan(c, "avalanche", 0) : null,
     hi = plan ? plan.debts.filter(x => x.apr >= 0.08 && x.bal > 0) : [],
     gs = (c.goals || []).filter(g => !g.done);
   let goal = null;
@@ -41,10 +48,11 @@ function lkHome(c, d) {
       return { v: d.nw, real: !N.range && N.st !== "Guess", txt: N.txt, st: N.st };
     })(),
     goal,
-    hi: !c.led
+    hi: !plan
       ? { none: c.high !== "yes", months: null, guess: true }
       : !hi.length
-        ? { none: true }
+        ? /* a player of the opening who was not asked about debts yet: "nothing owed" is a Guess until setup asks */
+          { none: true, guess: lkDebtOpen(c) }
         : {
             none: false,
             months: hi.some(x => x.off == null) ? null : Math.max(...hi.map(x => x.off)),
@@ -325,35 +333,84 @@ function lkOrder(rows, sk, sec) {
 }
 
 /* ---------- Home ---------- */
-/* Part of the Home screen (ux.js): the stat row above the four boxes. */
+/* Part of homeQuadTop() in ux.js: the four top numbers of Home, one row (run 16, B6): free to spend this month,
+   the time to the next goal, net worth, and the date with no costly debt. Each tile has its "i"; one "Show the
+   math" under the row says where each number comes from. A number that stands on a guess is greyed and says Guess.
+   Every value is from lkHome(): this function calculates nothing. */
 function homeStatRow(c, d) {
-  if (!c.placed && !G.demo) return "";
-  const s = lkHome(c, d);
-  return dkStatRow([
-    dkTile("Free to spend", money(s.free.v), {
-      sub: "this month · " + (s.free.real ? "Close" : "Guess"),
-      guess: !s.free.real,
-      act: "safe",
-    }),
-    dkTile("Net worth", s.nw.txt, {
-      sub: "own minus owe · " + s.nw.st,
-      guess: s.nw.st === "Guess",
-      act: "lkbrk",
-      v: "nw",
-    }),
-    dkTile("Next goal", s.goal ? (s.goal.at <= 0 ? "Ready" : esc(fmtDur(s.goal.at))) : "None yet", {
-      sub: s.goal ? s.goal.n : "add one on My Goals",
-      guess: s.goal && !s.goal.real,
-      act: "tab",
-      v: "goals",
-    }),
-    dkTile("Free of costly debt", s.hi.none ? "Now" : s.hi.months == null ? "No end yet" : dkMonth(s.hi.months), {
-      sub: s.hi.none ? "nothing at 8% or more" : "debt at 8% or more" + (s.hi.guess ? " · Guess" : ""),
-      guess: !s.hi.none && s.hi.guess,
-      act: "debtplan",
-    }),
-  ]);
+  const s = lkHome(c, d),
+    goalV = s.goal ? (s.goal.at <= 0 ? "Ready" : esc(fmtDur(s.goal.at))) : "None yet",
+    hiV = s.hi.none ? "Now" : s.hi.months == null ? "No end yet" : dkMonth(s.hi.months);
+  return (
+    dkStatRow([
+      dkTile("Free to spend", money(s.free.v), {
+        sub: "this month · " + (s.free.real ? "Close" : "Guess"),
+        guess: !s.free.real,
+        act: "safe",
+        info: "free",
+        move: { k: "hqfree", to: Math.round(s.free.v) },
+      }),
+      dkTile("Next goal", goalV, {
+        sub: s.goal ? s.goal.n + (s.goal.real ? "" : " · Guess") : "add one on My Goals",
+        guess: !!s.goal && !s.goal.real,
+        act: "tab",
+        v: "goals",
+        info: "hqgoal",
+        move: { k: "hqgoal", to: null },
+      }),
+      dkTile("Net worth", s.nw.txt, {
+        sub: "own minus owe · " + s.nw.st,
+        guess: s.nw.st === "Guess",
+        act: "lkbrk",
+        v: "nw",
+        info: "hqnw",
+        move: { k: "hqnw", to: s.nw.real ? Math.round(s.nw.v) : null },
+      }),
+      dkTile("Free of costly debt", hiV, {
+        sub: (s.hi.none ? "none at 8% or more" : "at 8% or more") + (s.hi.guess ? " · Guess" : ""),
+        guess: !!s.hi.guess,
+        act: "debtplan",
+        info: "hqdebt",
+        move: { k: "hqdebt", to: null },
+      }),
+    ]) +
+    mathBox([
+      "Free to spend this month: the part of your monthly spending that is not a bill, like food and fun. When less comes in than goes out: money in less your bills.",
+      "Next goal: the goal that is funded first at today's pace, and how long that takes.",
+      "Net worth: what you own less what you owe. A range while any piece is a Guess.",
+      "Free of costly debt: your debts at 8% or more, paid at today's payments, the highest rate first. The month the last one ends.",
+      "Tap a tile for its own numbers and its full math.",
+    ])
+  );
 }
+/* Part of renderUxEnd() in ux.js (run 16, B7): a top number of Home that changed since the last draw moves for a
+   moment, so the player sees what an answer moved. The one animation of the game's numbers (cbNumsMove in
+   couldbe.js). A different player, or the sample game, starts with no animation. */
+const LK_HOME = { who: null, last: {} };
+function homeNumsMove() {
+  try {
+    if (typeof document === "undefined" || !document.querySelectorAll || typeof cbNumsMove !== "function") return;
+    const els = document.querySelectorAll("#app .dkstats [data-cbn]");
+    if (!els || !els.length) return;
+    const who = G.demo ? null : G.active + "|" + C().name;
+    if (LK_HOME.who !== who) LK_HOME.last = {};
+    LK_HOME.who = who;
+    LK_HOME.last = cbNumsMove(els, LK_HOME.last, v => money(Math.round(v)));
+  } catch (e) {
+    report(e, "look.js: homeNumsMove");
+  }
+}
+kitTerms({
+  hqgoal: [
+    "Next goal",
+    "The goal on My Goals that your money reaches first at today's pace, and how long that takes. It is a Guess while the amounts it stands on are guesses.",
+  ],
+  hqnw: ["Net worth", "What you own, minus what you owe. It shows as a range while any piece is a Guess."],
+  hqdebt: [
+    "Free of costly debt",
+    "Costly debt is any debt that charges 8% or more a year. This is the month the last of it ends at today's payments. More a month brings the date closer.",
+  ],
+});
 
 /* ---------- Debt plan ---------- */
 /* Part of dbSheet() in debts.js: the stat row, the order, and the Time-Money dial in place of the extra chips. */

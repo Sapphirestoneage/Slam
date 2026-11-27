@@ -11,7 +11,7 @@
                DEBT_KINDS), tax ("yes", "some" or "no") }. In the game: the device storage (ER_KEY).
    OUTPUT      Data: ER_KEY, ER_V, ER_DAYS, ER_QS, ER_TAX, ER_WORDS. Math: erCushOpts, erClean, erCb,
                erBase, erProfile, erName, erNext, erResult, erAsked, erPack, erUnpack. Part of a function
-               in a different file: erIn (cbStart in couldbe.js). Storage: erRead, erDrop.
+               in a different file: erIn (cbStart in couldbe.js, wnLeave in wants.js). Storage: erRead, erDrop, erSigned.
    DEPENDS ON  core/engine.js (newChar, derive, applyTypical, eraSteps, ERAS, NODES, COVER, DEBT_KINDS,
                todayISO, daysBetween), features/couldbe.js (CB_QS, cbRng, cbRows). In the game also:
                core/report.js, screens/ui.js (finishSetup, drawSheet). In the demo, era/gamecopy.js gives
@@ -24,7 +24,9 @@
                math. The demo sends nothing: the answers stay on the device under one key, ER_KEY.
                erIn() reads what it knows and passes over the rest. It runs for a new player only
                (G.demo), one time: it removes the key.
-   COMPAT      No new key on a profile. One new key in the device storage: ER_KEY, a JSON text
+   COMPAT      One optional key on a profile (run 16): c.x.cb.era, the names of the setup answers that came
+               from the demo (cush, debts, tax). An old saved game has none: the rest of setup then asks
+               them, as before. One new key in the device storage: ER_KEY, a JSON text
                { v: 1, at: an ISO day, a: A }. A text with a different v, or older than ER_DAYS days, is
                passed over.
    ========================================================================= */
@@ -68,12 +70,13 @@ const ER_QS = [
     },
   },
 ];
-/* The words under each "i" of the result. */
+/* The words of the result, and of the line about where the answers are kept. */
 const ER_WORDS = {
-  era: "An era is a stage of your money life. The game has ten. Each one opens when you meet its gate.",
-  guess:
-    "This is a guess from a few taps and typical amounts for people like you. The full game turns it into your real picture.",
-  move: "The one step that opens your next era. The full game gives you this step with your real numbers.",
+  guess: "A guess from a few taps and typical amounts. The game turns it into your real picture.",
+  ground: "You own more than you owe, but there's no cushion yet.",
+  /* run 16, A4: where the answers are kept. The first line shows only to a visitor who is signed out. */
+  out: "No account. Nothing is sent. Your answers stay on this device.",
+  signed: "You are signed in. Your answers save to your account when you start your first move.",
 };
 
 /* ---------- THE MATH ---------- */
@@ -130,7 +133,16 @@ function erBase(A0) {
         A.tax && has ? { tax: A.tax, sharp: { low: false, match: false, tax: true } } : {}
       )
     );
-  base.x = { cb: { a, count: {}, off: {} } };
+  /* which setup answers came from the demo, so that the rest of setup shows them filled (openSetupCb in couldbe.js).
+     A profile holds stock answers too (newChar): only the ones named here are the player's own. */
+  base.x = {
+    cb: {
+      a,
+      count: {},
+      off: {},
+      era: ["cush", "debts", "tax"].filter(k => (k === "tax" ? A.tax && has : A[k] != null)),
+    },
+  };
   return base;
 }
 /* The finished profile, for the demo: the same steps as finishSetupBase() in ui.js (the retirement age, then the
@@ -172,8 +184,8 @@ function erResult(A) {
     era: d.era,
     last: ERAS.length - 1,
     name: erName(d),
-    /* the line of era 0 speaks of owing more than you own: it is not shown on the Ground Floor */
-    one: ground ? "" : ERAS[d.era].one,
+    /* the line of era 0 speaks of owing more than you own: the Ground Floor has its own line (eraOne in ui.js) */
+    one: ground ? ER_WORDS.ground : ERAS[d.era].one,
     is: ground ? [] : ERAS[d.era].is.slice(),
     next: erNext(c, d),
     st: "Guess",
@@ -204,6 +216,20 @@ function erUnpack(text, day) {
   return erClean(P.a);
 }
 
+/* True when an account of the game is signed in on this device: the mark that supa.js keeps (su_uid, suLocal) and
+   the sign-in token of the account library. The demo has no account library, so it reads the two marks. */
+function erSigned() {
+  try {
+    if (!localStorage.getItem("su_uid")) return false;
+    for (let i = 0; i < localStorage.length; i++) if (/^sb-.*-auth-token/.test(localStorage.key(i) || "")) return true;
+    return false;
+  } catch (e) {
+    /* a browser that keeps nothing: nobody is signed in here */
+    if (typeof report === "function") report(e, "erain.js: erSigned");
+    return false;
+  }
+}
+
 /* ---------- IN THE GAME ---------- */
 function erRead() {
   try {
@@ -220,22 +246,23 @@ function erDrop() {
     report(e, "erain.js: erDrop");
   }
 }
-/* Part of cbStart() in couldbe.js and of wnLeave() in wants.js. Since run SLAM-ONBOARD-1 the first screen of a new
-   player is What you want: cbStart() opens it, this function does nothing there (the step is not the entry), and
-   wnLeave() calls it again when the player leaves that screen. A new player who comes from the demo: the four answers of the entry are filled
-   in. With all four, the profile is made the way cbMake() makes it, with the setup answers of the demo added, and
-   the flow goes on at "What it is". With fewer, the entry opens at the first open question. Returns true when it
-   made the profile. */
+/* Part of cbStart() in couldbe.js and of wnLeave() in wants.js. A new player who comes from the demo does not answer
+   the same questions again (run 16, A2 and A3). With all four answers of the entry, the profile is made the way
+   cbMake() makes it, with the setup answers of the demo added: every answer is a Guess of the profile. The player
+   lands on Home, with the one next move of the demo as the first card (W.erHome: finishSetupCb in couldbe.js). With
+   fewer answers (a text from an older page), the entry opens at the first open question; that case waits for the
+   entry, so wnLeave() calls this function again. Returns true when it made the profile. */
 function erIn() {
   try {
-    if (!G.demo || !W || W.kind !== "cb" || W.step !== "entry") return false;
+    if (!G.demo || !W || W.kind !== "cb") return false;
     const A = erRead();
     if (!A) return false;
+    const base = erBase(A);
+    if (!base && W.step !== "entry") return false;
     erDrop();
     const a = erCb(A);
     if (!Object.keys(a).length) return false;
-    const base = erBase(A),
-      wants = W.o && W.o.wants; /* wants.js: the picks of What you want, the screen before the entry */
+    const wants = W.o && W.o.wants; /* wants.js: the picks of What you want, when that screen came first */
     if (!base) {
       W.o.a = Object.assign(W.o.a || {}, a);
       W.q = Math.max(
@@ -248,7 +275,7 @@ function erIn() {
     /* the picks become goals, as cbMake() in couldbe.js makes them */
     if (wants && wants.length && typeof wnGoals === "function")
       base.goals = wnGoals(Object.assign({}, base, { spend: Math.max(1, Math.round(a.spend.v)) }), wants);
-    W = { kind: "setup", mode: "new", step: 0, o: base, cbMade: true };
+    W = { kind: "setup", mode: "new", step: 0, o: base, cbMade: true, erHome: true };
     finishSetup();
     return true;
   } catch (e) {

@@ -102,17 +102,29 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   const cw = await page.locator('#ov svg.dkstack').boundingBox();
   chk('the chart fits 390 wide', cw && cw.x >= 0 && cw.x + cw.width <= 390 && !(await sideways(page)) && !(await junk(page)), cw);
   await shot(page, '3c-chart-390');
-  // the stack, the reveal, the last screen (three buttons only), then Home, where the rest of setup is
+  // the stack, the reveal, the result (one button), then Home, where the rest of setup is
   await tap('#ov [data-a=cbgo][data-v=stack]'); await page.waitForTimeout(1000);
   await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
   chk('the reveal comes at the ninth tap, with the difference and the finished chart', taps === 9 && (await page.locator('#ov [data-fid="cb:diff"]').isVisible()) && (await page.locator('#ov svg.dkstack').count()) === 1 && !(await sideways(page)) && !(await junk(page)), taps);
   await shot(page, '3d-reveal-390');
+  // run 16, A1: the three buttons of the old last screen are on the reveal, closed by default
+  chk('the reveal holds Keep my plan: make a free account, Share my card and Tell Eli what broke, behind one closed row', (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && /Keep my plan: make a free account/.test(await page.locator('#ov [data-a=cbsave]').textContent()) && !(await page.locator('#ov [data-a=cbsave]').isVisible()));
+  await page.locator('#ov [data-fid="cb:end3"] summary').click(); await page.waitForTimeout(300);
+  chk('opened, the three are buttons a person can tap', (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await sideways(page)));
   await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
-  console.log(`     taps from the landing to the last screen of the flow: ${taps}`);
-  chk('the last screen has three buttons only: Keep my plan: make a free account, Share my card, Tell Eli what broke', /Keep my plan: make a free account/.test(await page.locator('#ov [data-a=cbsave]').innerText()) && (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await page.locator('#ov [data-a=cbrest]').count()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
+  console.log(`     taps from the landing to the result of the flow: ${taps}`);
+  const seen = await page.locator('#ov button').evaluateAll(a => a.filter(b => b.getClientRects().length && getComputedStyle(b).display !== 'none').map(b => b.innerText.trim()));
+  chk('the result has one primary button, Start my first move, and a small Back: no other button shows', seen.length === 2 && seen[0] === 'Start my first move' && /Back$/.test(seen[1]) && (await page.locator('#ov .primary').count()) === 1 && !(await page.locator('#ov [data-a=cbrest]').count()) && !(await sideways(page)) && !(await junk(page)), seen);
+  chk('it shows the era, why, and the first move; signed out, it says that nothing is sent', (await page.locator('#ov [data-fid="cb:resera"]').isVisible()) && (await page.locator('#ov [data-fid="cb:reswhy"]').isVisible()) && (await page.locator('#ov [data-fid="cb:firstname"]').isVisible()) && /No account\. Nothing is sent\. Your answers stay on this device\./.test(await page.locator('#ov [data-fid="cb:kept"]').innerText()));
   await shot(page, '3e-last-screen-390');
-  await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
-  chk('Home starts with the two numbers and the small chart, and has the rest of setup', (await page.locator('#app [data-fid="cb:home"] svg.dkstack').isVisible()) && (await page.locator('#app [data-fid="cb:homerest"]').isVisible()) && !(await sideways(page)) && !(await junk(page)));
+  await tap('#ov [data-a=cbfirst]'); await page.waitForTimeout(1000);
+  console.log(`     taps from the landing to Home: ${taps}`);
+  {
+    const box = async sel => page.locator(sel).first().boundingBox();
+    const tiles = await page.locator('#app .dkstats .dkti').count(), card = await box('#app [data-fid="cb:homefirst"]'), btn = await box('#app [data-fid="cb:homefirst"] .primary');
+    chk('Home: four top numbers, then the first move as the one next-step card, its button above the fold at 390 by 844', tiles === 4 && card && btn && btn.y + btn.height <= 844 - 76 && (await page.locator('#app .rstop > .rsq').count()) === 1 && !(await sideways(page)) && !(await junk(page)), { tiles, btn });
+  }
+  chk('below them, Home has the two numbers with the small chart, and the rest of setup', (await page.locator('#app [data-fid="cb:home"] svg.dkstack').isVisible()) && (await page.locator('#app [data-fid="cb:homerest"]').isVisible()) && !(await sideways(page)) && !(await junk(page)));
   await shot(page, '3f-home-390');
   await tap('#app [data-fid="cb:homerest"]'); await page.waitForTimeout(550);
   chk('the rest of setup opens under "Am I okay?"', /Am I okay\?/.test(await page.locator('#ov').innerText()) && (await page.evaluate(() => W && W.kind === 'setup' && W.cbRest === true)));

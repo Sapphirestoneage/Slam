@@ -13,10 +13,11 @@
                The open sheet (W.kind cb, W.step reveal or end; W.msg: one line after a tap).
    OUTPUT      Math (compositions of the flow's functions, no formula of their own): cbIn, cbReveal,
                cbPlanCard, cbTopMoves, cbTopIds, cbSnap, cbSince, cbSeenKeep, cbSaveState, cbHomeData,
-               cbFirstMove (the first move of the last screen), cbRevealBookRows (part of cbBook in
-               couldbe.js). Views: cbRevealView. Parts of functions in
-               other files: homeCbTile (homeQuadTop in ux.js), cbTopRows (planTabCb in couldbe.js), cbTopIds
-               (planTabStrat in strat.js). Actions (ACT): cbsave, cbshare, cbaddstep. A step of the flow, added
+               cbFirstMove (the first move of the flow), cbFirstPick, cbResult (the result: cbEndView in
+               couldbe.js), cbHomeFirst, cbRevealBookRows (part of cbBook in couldbe.js). Views:
+               cbRevealView. Parts of functions in
+               other files: homeCbTile and homeFirstCard (homeQuadTop in ux.js), cbTopRows (planTabCb in couldbe.js), cbTopIds
+               (planTabStrat in strat.js). Actions (ACT): cbsave, cbshare, cbaddstep, cbfirstgo. A step of the flow, added
                with cbStepAdd("reveal", ...).
    DEPENDS ON  core/report.js, core/paylayers.js (lyReceipt, LY_SPENDING, LY_END), core/engine.js (derive,
                todayISO, daysBetween), features/couldbe.js (cbHas, cbStore, cbNumbers, cbChart, cbChartHtml,
@@ -35,6 +36,8 @@
    COMPAT      New optional keys in c.x.cb: at (the screen of the flow the player left off on), rev (the day
                the reveal was first seen), seen and was ({ day, n }: the numbers the last time the player was
                here, and the time before that). An old saved game has none, and nothing here shows for it.
+               Run 16: first ("cb" or "era"), set by the tap on "Start my first move" and removed when the
+               player starts the move on Home. An old saved game has none: Home shows Your next win.
    STATE       None.
    ========================================================================= */
 /* How many of the moves become cards on Next Steps. */
@@ -58,7 +61,7 @@ const CBR_AT = {
   stack: "The stack",
   yesbut: "Yes, but",
   reveal: "The reveal",
-  end: "Your plan",
+  end: "Your result",
 };
 /* True for a player who has been in the flow. */
 function cbIn(c) {
@@ -231,6 +234,62 @@ function cbFirstMove(c) {
     open: T.open,
   };
 }
+/* THE ONE FIRST MOVE, for the result and for Home (run 16, A1 and A3). src "era": the player comes from the demo
+   Find your era, and the move is the one the demo showed, the key step of the next era (erNext in erain.js). Else
+   it is the first move of the flow (cbFirstMove) while it is not on the steps yet, and the key step of the next era
+   when the flow has no move for this player. { src, name, why, words, key, canAdd, open ({ a, v }) }, or null. */
+function cbFirstPick(c, d, src) {
+  const M = src === "era" ? null : cbFirstMove(c);
+  if (M && !M.added)
+    return {
+      src: "cb",
+      name: M.name,
+      why: M.why,
+      words: M.words + (M.time ? ". " + M.time : ""),
+      key: M.key,
+      canAdd: M.canAdd,
+      open: M.open,
+    };
+  const E = typeof erNext === "function" ? erNext(c, d || derive(c)) : null;
+  return E
+    ? {
+        src: "era",
+        name: E.t,
+        why: E.why,
+        words: "It opens your next era: " + E.opens,
+        key: null,
+        canAdd: false,
+        open: E.kind === "step" ? { a: "node", v: E.id } : { a: "tab", v: "map" },
+      }
+    : null;
+}
+/* THE RESULT of the flow (cbEndView in couldbe.js): the name of the era and its one line (the game's own: eraName
+   and eraOne), the first move, and where the answers are kept. kept: "Saved to your account." for a signed-in
+   player; the line about no account only for a player who is signed out. */
+function cbResult(c) {
+  const d = derive(c),
+    S = cbSaveState();
+  return {
+    era: eraName(d),
+    why: eraOne(d),
+    st: cbState(c),
+    move: cbFirstPick(c, d, c.x && c.x.cb && c.x.cb.first === "era" ? "era" : "cb"),
+    signed: S.signed,
+    kept: S.kept,
+  };
+}
+/* THE FIRST MOVE ON HOME: the move of the result, from the tap on "Start my first move" (c.x.cb.first) until the
+   player starts it. Null for every other player: Home then shows Your next win. */
+function cbHomeFirst(c, d) {
+  const s = c && c.x && c.x.cb;
+  if (!s || !s.first || G.demo || !cbHas(c)) return null;
+  /* the move is on the steps already (Add to my steps on Next Steps): it is started */
+  if (s.first !== "era") {
+    const M = cbFirstMove(c);
+    if (M && M.added) return null;
+  }
+  return cbFirstPick(c, d, s.first);
+}
 /* Part of planTabStrat() in strat.js. The ids of the moves of the Strategy Engine that have their own card on Next
    Steps, so that "Moves to try" shows the next ones. */
 function cbTopIds(c) {
@@ -295,13 +354,15 @@ function cbSince(c, today) {
   num("cbcould", "What it could be", a.could, b.could, a.couldAge, b.couldAge);
   return { day: base.day, days: daysBetween(base.day, t), lines };
 }
-/* Where the plan is kept now, and what "Keep my plan" does. { guest, signed, words }. */
+/* Where the plan is kept now, and what "Keep my plan" does. { guest, signed, kept, words }. */
 function cbSaveState() {
   const guest = typeof doorGuest === "function" && doorGuest(),
     signed = !guest && typeof SUPA !== "undefined" && !!SUPA.uid;
   return {
     guest,
     signed,
+    /* run 16, A4: the short line of the result. The words about no account only when nobody is signed in. */
+    kept: signed ? "Saved to your account." : "No account. Nothing is sent. Your answers stay on this device.",
     words: guest
       ? "Right now your plan is on this device only. A free account keeps it and takes it to your other devices."
       : signed
@@ -429,8 +490,10 @@ function cbRevealView() {
         )
       )
     ) +
-    `<button class="primary wide go" data-a="cbgo" data-v="end">Next</button>` +
+    `<button class="primary wide go" data-a="cbgo" data-v="end">Next: my result</button>` +
     `<button class="ghost wide" data-a="cbgo" data-v="stack">Back to the stack</button>` +
+    /* run 16, A1: the three buttons of the old last screen live here now, quiet, under the way on */
+    `<details class="math cbkeep" data-fid="cb:end3"${W && W.msg ? " open" : ""}><summary>Keep it, share it, or tell Eli</summary><div class="inner stack cbend3" style="gap:8px"><div class="tiny muted">${esc(cbSaveState().words)}</div><button class="ghost wide" data-a="cbsave">${cbSaveState().signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button>${W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : ""}<div class="tiny muted">The card is an image: the two ages, what you counted, and the time between them. It has no dollar amount. Nothing leaves this device until you send it.</div></div></details>` +
     cbFoot()
   );
 }
@@ -471,6 +534,18 @@ function homeCbTile(c) {
     return "";
   }
 }
+/* Part of homeQuadTop() in ux.js (run 16, A3). The one next-step card of Home while the first move of the result
+   waits: its name, one line of why, and the one pulsing button of Home. "" for every other player. */
+function homeFirstCard(c, d) {
+  try {
+    const F = cbHomeFirst(c, d);
+    if (!F) return "";
+    return `<div class="card dkcard rsq rswin hqfirst pulse" data-fid="cb:homefirst"><div class="row between dkhead"><span class="dklabel">Your first move</span></div><div class="hqfirstin"><div class="hqfirstt"><b class="rswint" data-fid="cb:homefirstname">${esc(F.name)}</b><div class="small" data-fid="cb:homefirstwhy">${esc(F.why)}</div><div class="tiny muted">${esc(F.words)}.</div></div><button class="primary wide" data-a="cbfirstgo">Start this move</button></div></div>`;
+  } catch (e) {
+    report(e, "cbreveal.js: homeFirstCard");
+    return "";
+  }
+}
 /* Part of planTabCb() in couldbe.js. Next Steps: the top moves of the flow as cards. A card opens the full card of
    the move; "Add to my steps" puts its steps on the plan (stgAddSteps in strat.js). */
 function cbTopRows(c) {
@@ -506,6 +581,17 @@ Object.assign(ACT, {
   cbshare: () => {
     cbSeenKeep();
     cbYbImage("send", cbPlanCard(cbReveal(C())));
+  },
+  /* Home, the first move: its steps go on Next Steps (a move of the Strategy Engine), the card gives way to Your next
+     win, and the move opens */
+  cbfirstgo: () => {
+    const c = C(),
+      F = cbHomeFirst(c, derive(c));
+    if (c.x && c.x.cb) delete c.x.cb.first;
+    if (F && F.canAdd) stgAddSteps(c, F.key);
+    save();
+    render();
+    if (F && ACT[F.open.a]) ACT[F.open.a]({ dataset: { v: String(F.open.v == null ? "" : F.open.v) } });
   },
   /* Next Steps: put the steps of a top move on the plan */
   cbaddstep: t => {

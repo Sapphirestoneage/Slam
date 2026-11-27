@@ -19,7 +19,7 @@
                cbWayDo, cbWayState, cbLife (the lifetime spending total), cbPartShare, cbWays, cbWayNo,
                cbCountedRaw, cbLy (the two numbers, kept for the same input), cbFiling, cbTypical (the
                typical value of a question for an age, from the reference data), cbTypUsed, cbTypBookRows,
-               cbSlim. Views: cbTop (two big numbers, or one slim strip from the first way screen on), cbFoot,
+               cbSlim, cbNumsMove (the one short animation of a number that changed). Views: cbTop (two big numbers, or one slim strip from the first way screen on), cbFoot,
                cbSheet, cbWayView (a strategy step), cbEndView,
                cbStepAdd (a later file adds a step), cbChartHtml. Parts of functions in other files:
                cbStart (doorBegin in door.js, ACT.start in ui.js, clFirstGame in cloud.js),
@@ -970,34 +970,45 @@ function cbTop(c) {
     `<div class="row between cbtopsub"><span class="tiny muted">${N.same ? "The two are equal until you count something." : N.above ? "Above What it is, because you counted " + N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ") + "." : "What you counted moved it."}</span>${kitPill(N.st)}</div>`
   );
 }
+/* THE ONE SHORT ANIMATION of a number that changed (the two numbers of the flow, and the top numbers of Home: run 16,
+   B7). els: the elements with data-cbn (a key) and data-to (the number). was: the values of the last draw, by key.
+   fmt: the words of a number while it counts. A number counts from the old value to the new one in 0.6 seconds. A
+   value in words (data-txt, with no number) lights up for the same moment. No animation the first time, and none
+   when the player asked for less motion. Returns the values of this draw. */
+function cbNumsMove(els, was, fmt) {
+  const now = {},
+    calm = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  Array.prototype.forEach.call(els, el => {
+    const k = el.dataset.cbn,
+      words = !el.dataset.to && !!el.dataset.txt,
+      to = words ? el.textContent : +el.dataset.to;
+    now[k] = to;
+    if (calm || (!el.dataset.to && !words) || was[k] == null || was[k] === to) return;
+    el.classList.add("cbmove");
+    if (words || typeof was[k] !== "number" || typeof requestAnimationFrame !== "function") {
+      if (typeof setTimeout === "function") setTimeout(() => el.classList.remove("cbmove"), 900);
+      return;
+    }
+    const t0 = Date.now(),
+      from = was[k];
+    const step = () => {
+      const u = Math.min(1, (Date.now() - t0) / 600);
+      el.textContent = fmt(from + (to - from) * u);
+      if (u < 1) requestAnimationFrame(step);
+      else el.classList.remove("cbmove");
+    };
+    requestAnimationFrame(step);
+  });
+  return now;
+}
 /* Part of drawSheetOnce() in ui.js. After the sheet is drawn: the short animation of a top number that changed.
    No animation when the player asked for less motion. */
 function drawSheetCb() {
   try {
     if (!W || W.kind !== "cb" || typeof document === "undefined" || !document.querySelectorAll) return;
-    const els = document.querySelectorAll("#ov [data-cbn]"),
-      now = {},
-      was = CB.last || {};
+    const els = document.querySelectorAll("#ov [data-cbn]");
     if (!els || !els.length) return;
-    const calm = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    Array.prototype.forEach.call(els, el => {
-      const k = el.dataset.cbn,
-        to = +el.dataset.to;
-      now[k] = to;
-      if (calm || !el.dataset.to || was[k] == null || was[k] === to || typeof requestAnimationFrame !== "function")
-        return;
-      const t0 = Date.now(),
-        from = was[k];
-      el.classList.add("cbmove");
-      const step = () => {
-        const u = Math.min(1, (Date.now() - t0) / 600);
-        el.textContent = cbM(Math.round((from + (to - from) * u) / 1000) * 1000);
-        if (u < 1) requestAnimationFrame(step);
-        else el.classList.remove("cbmove");
-      };
-      requestAnimationFrame(step);
-    });
-    CB.last = now;
+    CB.last = cbNumsMove(els, CB.last || {}, v => cbM(Math.round(v / 1000) * 1000));
   } catch (e) {
     report(e, "couldbe.js: drawSheetCb");
   }
@@ -1437,34 +1448,23 @@ function cbWayView(id) {
     cbFoot()
   );
 }
-/* THE LAST SCREEN (Batch B, phase 4b; run SLAM-ONBOARD-1): the two numbers, the first move (the #1 move of Next
-   Steps: what to do, why, about how long, Add to my steps), then three buttons only. Keep my plan (an account keeps
-   it), Share my card (the image of cbreveal.js), Tell Eli what broke (the report tool of the game). Back and Home are on
-   the top row of the sheet. The rest of setup is on Home (the first tile) and on Next Steps. */
+/* THE RESULT (run 16, A1; it took the place of the last screen with three buttons): the name of the era, one plain
+   sentence on why, the one first move, one big button "Start my first move", and a small Back. Nothing else. The
+   button lands on Home, where the first move is the top card (homeFirstCard in cbreveal.js). Keep my plan, Share my
+   card and Tell Eli what broke are on the screen before this one, the reveal (cbRevealView in cbreveal.js). */
 function cbEndView() {
   const c = C(),
-    V = typeof cbReveal === "function" ? cbReveal(c) : null /* cbreveal.js: the words of the difference */,
-    N = V ? V.N : cbNumbers(c),
-    S = typeof cbSaveState === "function" ? cbSaveState() : { guest: false, words: "" },
-    M = typeof cbFirstMove === "function" ? cbFirstMove(c) : null; /* cbreveal.js: the #1 move of Next Steps */
+    R = typeof cbResult === "function" ? cbResult(c) : null; /* cbreveal.js: the era, why, the first move */
+  if (!R) return head("Your result", "Your era") + cbFoot();
   return (
-    head("Your plan", "Your first move, then keep it") +
-    cbTop(c) +
-    `<div class="tile small" data-fid="cb:endsum"><b>${esc(V ? V.diff.words : N.same ? "The two numbers are equal for now." : cbReceiptWords(lyReceipt(N.is, N.could)))}</b><div class="tiny muted">${esc(S.words)}</div></div>` +
-    (M
-      ? `<div class="tile cbfirst" data-fid="cb:first"><div class="row between" style="gap:8px"><span class="dklabel">Your first move</span>${M.added ? `<span class="pill okp">On your steps</span>` : ""}</div><b data-fid="cb:firstname">${esc(M.name)}</b><div class="small" data-fid="cb:firstwhy">${esc(M.why)}</div><div class="tiny muted">${esc(M.words)}${M.time ? `. <span data-fid="cb:firsttime">${esc(M.time)}</span>` : ""}.</div>${M.canAdd ? `<button class="ghost wide" data-a="cbaddstep" data-k="${esc(M.key)}">Add to my steps</button>` : M.added ? "" : `<button class="ghost wide" data-a="${esc(M.open.a)}" data-v="${esc(M.open.v)}">See this move</button>`}</div>`
+    head("Your result", "Your era, and your first move") +
+    `<div class="tile cbres" data-fid="cb:res"><div class="row between" style="gap:8px"><span class="dklabel">You are in</span>${kitPill(R.st)}</div><b class="cbresn glow" data-fid="cb:resera">${esc(R.era)}</b><div class="small" data-fid="cb:reswhy">${esc(R.why)}</div></div>` +
+    (R.move
+      ? `<div class="tile cbfirst" data-fid="cb:first"><span class="dklabel">Your first move</span><b data-fid="cb:firstname">${esc(R.move.name)}</b><div class="small" data-fid="cb:firstwhy">${esc(R.move.why)}</div></div>`
       : "") +
-    `<div class="stack cbend3" style="gap:10px" data-fid="cb:end3"><button class="primary wide go" data-a="cbsave">${S.signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button></div>` +
-    (W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : "") +
-    `<div class="tiny muted">The card is an image: the two ages, what you counted, and the time between them. It has no dollar amount. Nothing leaves this device until you send it.</div>` +
-    `<div class="tiny muted" data-fid="cb:endnext">Home has your two numbers, the rest of setup and your next move. Home and Back are at the top.</div>` +
-    mathBox([
-      "What it is: " + cbM(derive(c).fiSpend) + " a year x 25 = " + cbM(N.is.target) + ".",
-      "What it could be: what must be invested the day work stops, so that it pays each year's cost less the steady income you counted, to " +
-        LY_END +
-        " and beyond.",
-      "Each way has its own Show the math, with its source. The screen before this one has them all.",
-    ]) +
+    `<button class="primary wide go cbresgo" data-a="cbfirst">Start my first move</button>` +
+    `<div class="row"><button class="ghost slim" data-a="cbgo" data-v="prev">‹ Back</button></div>` +
+    `<div class="tiny muted" data-fid="cb:kept">${esc(R.kept)}</div>` +
     cbFoot()
   );
 }
@@ -1590,6 +1590,15 @@ function finishSetupCb(w, o) {
     }
     if (!w || !w.cbMade) return false;
     if (typeof doorKept === "function") doorKept(); /* door.js: the visitor now has a game on this device */
+    /* erain.js: a player who comes from the demo Find your era saw the result there. Home opens, with the one
+       next move of the demo as the first card (run 16, A3). */
+    if (w.erHome) {
+      o.x.cb.first = "era";
+      save();
+      closeSheet();
+      render();
+      return true;
+    }
     W = { kind: "cb", step: "is", o: {} };
     CB.last = null;
     sheet(cbSheet);
@@ -1599,6 +1608,8 @@ function finishSetupCb(w, o) {
     return false;
   }
 }
+/* The answer of setup's question about tax-friendly accounts (SM_Q[8] in smart.js) for each value of c.tax. */
+const CB_TAXQ = { yes: "Yes, the most I'm allowed", some: "Yes, some", no: "Not this year" };
 /* Part of openSetup() in ui.js. The rest of setup, opened from this flow, keeps the four answers: the age, the
    rows and the notes of the flow go into the new answers. */
 function openSetupCb(base, mode) {
@@ -1613,7 +1624,17 @@ function openSetupCb(base, mode) {
     base.invs = clone(c.invs || []);
     base.accts = (c.invs || []).map(r => r.k).filter((k, i, a) => a.indexOf(k) === i);
     base.invest = c.invest;
+    /* run 16, A2: the answers of the demo Find your era (the cushion, the kinds of debt, the tax-friendly accounts)
+       are answers of the profile too. Each page of the rounds shows them filled, with one tap to change them. */
+    const era = (c.x && c.x.cb && c.x.cb.era) || [];
+    if (era.includes("cush")) {
+      base.can1k = c.can1k;
+      base.cover = c.can1k === "Yes" ? c.cover || null : null; /* the demo asks how long only with a cushion */
+    }
+    if (era.includes("debts")) base.debtKinds = (c.debtKinds || []).slice();
+    if (era.includes("tax")) base.taxAcctQ = CB_TAXQ[c.tax] || null;
     base.x = clone(c.x || {});
+    if (typeof amCarryInv === "function") amCarryInv(base); /* amounts.js: the amount invested is not asked again */
     /* what the player wants (wants.js) and any goal made since: the rounds must not lose them */
     base.goals = clone(c.goals || []);
   } catch (e) {
@@ -1760,6 +1781,17 @@ Object.assign(ACT, {
       return;
     }
     cbAnswer(q, { v: Math.round(n), cf: 3 });
+  },
+  /* Start my first move (the result): Home opens, and the first move is its top card until the player starts it */
+  cbfirst: () => {
+    const c = C();
+    if (cbHas(c)) {
+      cbStore(c).first = "cb";
+      save();
+    }
+    if (typeof cbSeenKeep === "function") cbSeenKeep(); /* cbreveal.js: the numbers, for "since last time" */
+    closeSheet();
+    go("home");
   },
   /* move in the flow: next, prev, qback (the question before), or the id of a step */
   cbgo: t => {

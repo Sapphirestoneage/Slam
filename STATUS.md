@@ -387,3 +387,14 @@ Two workers, one after the other. Worker 1 did tasks 1, 2, 3, 5, 6 and 7. Worker
 | Tests | Done | `game/tests/setup-order-and-account.js` (the page order, the account screen); `what-you-want.js` (the wants screen saving to `c.goals`). | |
 
 Taps from the landing to the last screen, fastest path: 9 before, 10 now (the new screen costs one tap: Skip for now). Taps from the landing to the end of the rounds ("Here's where you stand"), simplest answers: 43 before the run, 44 now (the age page is gone, the question about how money feels moved up and takes one tap).
+
+## RUN 16: SLAM audit fixes, batch 1 (Nov 27 2026)
+
+| Part | State | What a player sees | Where |
+|------|-------|--------------------|-------|
+| A. The hand-off (items 1 to 5) | Done | The opening and the demo Find your era end on one result: the era, one line on why, the first move, "Start my first move", a small Back. The button lands on Home with that move as the top card. Answers stay as guesses and setup shows them filled. "No account. Nothing is sent." shows only when signed out. The demo page has the game's look and a Home button. | `cbEndView` in `game/features/couldbe.js`; `cbResult`, `homeFirstCard` in `game/features/cbreveal.js`; `game/features/erain.js`; `game/era/` |
+| B. Home (items 6 and 7) | Done | One row of four numbers (free to spend this month, next goal, net worth, free of costly debt), each with an "i", then ONE next-step card. Everything else is below. A number that an answer changed moves for a moment. | `homeQuadTop` in `game/screens/ux.js`; `homeStatRow` in `game/features/look.js`; `homeResults` in `game/features/results.js` |
+| C, D, the finish | Open | Worker 2. | |
+
+Taps, fastest path: 6 to the first number, 10 to the result, 11 to Home. From the demo page: 8 or 9 taps to its result, one more to Home. Questions: 657.
+

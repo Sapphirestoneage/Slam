@@ -14,7 +14,8 @@
    INPUT       The profile c and the derived numbers d. The open sheet (W.kind firstplan, from spiral.js).
    OUTPUT      Math (compositions of the engines, no formula of their own): rsFire, rsLead, rsCards, rsCard,
                rsNextWin, rsGoal, rsMonthEnd, rsRoute, rsTiles, rsBook. Views: rsRevealBody (the reveal inside
-               spPlanSheet of spiral.js), homeResults (the four cards, called by homeQuadTop in ux.js),
+               spPlanSheet of spiral.js), homeResults (the one next-step card) and homeResultsMore (the cards below
+               it), both called by homeQuadTop in ux.js,
                rsWinCard, rsMonthCard, rsRouteCard, rsTilesCard (worker 2 of the run can call each one).
                Parts of functions in other files: topbarHome (topbarHTML in planner.js), nvRowHome (nvRowBase
                in nav.js). Actions (ACT): rsfirst, gohome.
@@ -494,7 +495,7 @@ function rsWinCard(c, d) {
     g = rsGoal(c, d);
   /* the goal is a row to tap (a caret and its own words), not a second primary button */
   const goal = `<button class="rowbtn rsgoal" data-a="${esc(g.a)}" data-v="${esc(g.v)}" data-fid="rs:goal"><span class="rsgoalt"><span class="dklabel">Your goal now</span><b>${esc(g.t)}</b>${g.s ? `<span class="tiny">${esc(g.s)}</span>` : ""}</span><span class="fkgo">${esc(g.go)} ›</span></button>`;
-  return `<div class="card dkcard rsq rswin" data-fid="rs:win"><div class="row between dkhead"><span class="dklabel">Your next win</span>${w.pending ? `<span class="pill">Check the fit</span>` : ""}</div>${goal}<div class="dklabel rsfast">Get there faster</div><b class="rswint">${esc(w.t)}</b><div class="rsnums">${w.amt > 0 ? `<span><b>${money(w.amt)}</b><i class="tiny muted">a month</i></span>` : ""}${w.days ? `<span><b>${w.days.toLocaleString()} days</b><i class="tiny muted">closer to ${esc(w.daysOf)}</i></span>` : ""}</div>${w.unlock ? `<div class="tiny"><span class="muted">Unlocks</span> ${esc(w.unlock)}</div>` : ""}<button class="primary go wide" data-a="${esc(w.a)}" data-v="${esc(w.v)}">${esc(w.l)}</button><details class="math"><summary>Why this one</summary><div class="inner tiny stack" style="gap:4px">${w.s ? `<div>${esc(w.s)}</div>` : ""}${w.math.map(l => `<div>${esc(l)}</div>`).join("")}<div>The goal is the step you are on. The move is the fastest easy way toward it.</div><button class="ghost slim" data-a="stratlib">See all moves</button></div></details></div>`;
+  return `<div class="card dkcard rsq rswin" data-fid="rs:win"><div class="row between dkhead"><span class="dklabel">Your next win</span>${w.pending ? `<span class="pill">Check the fit</span>` : ""}</div>${goal}<div class="dklabel rsfast">Get there faster</div><b class="rswint">${esc(w.t)}</b><div class="rsnums">${w.amt > 0 ? `<span><b>${money(w.amt)}</b><i class="tiny muted">a month</i></span>` : ""}${w.days ? `<span><b>${w.days.toLocaleString()} days</b><i class="tiny muted">closer to ${esc(w.daysOf)}</i></span>` : ""}</div><button class="primary go wide" data-a="${esc(w.a)}" data-v="${esc(w.v)}">${esc(w.l)}</button>${w.unlock ? `<div class="tiny"><span class="muted">Unlocks</span> ${esc(w.unlock)}</div>` : ""}<details class="math"><summary>Why this one</summary><div class="inner tiny stack" style="gap:4px">${w.s ? `<div>${esc(w.s)}</div>` : ""}${w.math.map(l => `<div>${esc(l)}</div>`).join("")}<div>The goal is the step you are on. The move is the fastest easy way toward it.</div><button class="ghost slim" data-a="stratlib">See all moves</button></div></details></div>`;
 }
 function rsMonthCard(c, d) {
   const E = rsMonthEnd(c, d);
@@ -521,15 +522,27 @@ function rsTilesCard(c, d) {
   const T = rsTiles(c, d);
   return `<div class="card dkcard rsq rstiles" data-fid="rs:tiles"><div class="row between dkhead"><span class="dklabel">Your numbers</span></div><div class="rstgrid">${T.map(x => dkTile(x.label, esc(x.val), { sub: (x.sub ? x.sub + " · " : "") + x.st + (x.typ ? " · typical" : ""), guess: x.typ, act: x.act, v: x.v })).join("")}</div><button class="ghost slim wide" data-a="keynums">See all metrics</button></div>`;
 }
-/* Part of homeQuadTop() in ux.js: the four cards in the order of priority. */
+/* Part of homeQuadTop() in ux.js: the ONE next-step card of Home, Your next win (run 16, B6). null for the sample
+   game. The first move of a result can take its place (homeFirstCard in cbreveal.js). */
 function homeResults(c, d) {
   try {
     if (!c || (!c.placed && G.demo)) return null;
-    d = d || derive(c);
-    return `<div class="rsgrid">${rsWinCard(c, d)}${rsMonthCard(c, d)}${rsRouteCard(c, d)}${rsTilesCard(c, d)}</div>`;
+    return rsWinCard(c, d || derive(c));
   } catch (e) {
     report(e, "results.js: homeResults");
     return null;
+  }
+}
+/* Part of homeQuadTop() in ux.js: the cards below the next-step card: the end of this month, You are here, and
+   Your numbers (on a phone the numbers come before the chart: the order of the styles). */
+function homeResultsMore(c, d) {
+  try {
+    if (!c || (!c.placed && G.demo)) return "";
+    d = d || derive(c);
+    return `<div class="rsgrid">${rsMonthCard(c, d)}${rsRouteCard(c, d)}${rsTilesCard(c, d)}</div>`;
+  } catch (e) {
+    report(e, "results.js: homeResultsMore");
+    return "";
   }
 }
 /* Part of topbarHTML() in planner.js: the Home button, always in view. */
