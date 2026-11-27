@@ -8,7 +8,8 @@
                functions in other files: finishSetupPay, ledRowFreq, smSpotFix (openSetupQuest in
                questlog.js, cbRestSpot in couldbe.js). Actions
                (ACT): smage, set, setn, tog, togb, agedec, wback, wnext, smopen, small, smskip, smdone,
-               incfreq.
+               incfreq. Run CC-1, item 9: the question about shared money waits for a quest of Next Steps
+               (features/waitq.js: wqWaits in smQs and SETUP[3].req, wqFill in finishSetupTax).
    DEPENDS ON  core/engine.js, screens/ui.js.
    RULES       No answer is locked. Each answer is one tap away. Each question has "I'm not sure".
    COMPAT      One optional key on a profile (run 16): c.x.unsure, the names of the setup answers that were
@@ -361,6 +362,8 @@ function smQs(w, i) {
   if (i === 2 && typeof amHouseQs === "function")
     return amHouseQs(w, SM_Q[2]); /* amounts.js: how many roommates, kids */
   if (i === 7) return SM_Q[0];
+  /* waitq.js (run CC-1, item 9): who the player shares money with waits for a quest of Next Steps */
+  if (i === 3 && typeof wqWaits === "function" && wqWaits(w, "share")) return SM_Q[3].filter(q => q.k !== "share");
   if (i === 8)
     return SM_Q[8].filter(
       q =>
@@ -410,6 +413,7 @@ function smSpotFix(w) {
 /* Part of finishSetup() in ui.js. The answers of the taxes round go to the profile, then the work keys go. */
 function finishSetupTax() {
   /* the names of the answers that were "I'm not sure": a Guess of the game, not the player's own (c.x.unsure) */
+  if (typeof wqFill === "function") wqFill(W); /* waitq.js: a question that waited is a Guess, and becomes a quest */
   const sk = (W.sm && W.sm.sk) || {},
     un = Object.keys(SM_UNSURE)
       .concat(SM_CUSH)
@@ -675,6 +679,8 @@ function smCushOk(w) {
   return SM_CUSH.every(k => !!w.o[k] || !!s.sk[k]);
 }
 SETUP[6].req = w => smCushOk(w);
+/* Your people: the question about shared money can wait (waitq.js), so the page does not need its answer then. */
+SETUP[3].req = w => !!(w.o.rel && w.o.deps && (w.o.share || (typeof wqWaits === "function" && wqWaits(w, "share"))));
 SETUP.push(
   { t: "Your cushion", req: w => smCushOk(w), b: w => smBody(w, smQs(w, 7)) },
   { t: "What comes off the top", req: w => true, b: w => smBody(w, smQs(w, 8)) }

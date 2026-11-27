@@ -118,7 +118,8 @@
   note();
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");
-  X("set", "No one", "share");
+  /* run CC-1, item 9: shared money waits for a quest of Next Steps (waitq.js), so the page does not ask it */
+  chk("Your people does not ask about shared money", !/Do you share your money/.test(ov()) && W.o.share == null);
   h = ov();
   chk(
     "the last question of About you is how money feels",
@@ -252,7 +253,6 @@
   drawSheet();
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");
-  X("set", "No one", "share");
   chk("About you waits for how money feels", W.step === 3);
   X("smskip", null, "feel0");
   chk("Skip moves on, and the game stays in its normal words", W.step === 4 && !W.o.gentle, W.step);

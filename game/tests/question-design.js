@@ -45,8 +45,8 @@
   X("set", "I rent", "homeQ");
   X("tog", "Roommates", "live");
   X("smdone", null, "live");
-  chk("roommates: how many", ov().includes("How many roommates live with you?") && ov().includes('data-v="4+"'));
-  X("set", "2", "roommateQ");
+  /* run CC-1, item 9: how many roommates waits for a quest of Next Steps (waitq.js) */
+  chk("roommates: how many is not asked in setup", !ov().includes("How many roommates live with you?") && W.step === 3);
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");
   X("set", "No one", "share");
@@ -306,6 +306,24 @@
   }
   const c = C();
   chk("setup finished", W && W.kind !== "setup" && c && c.led, W && W.kind);
+  /* run CC-1, item 9: the number of roommates is empty until the quest of Next Steps is answered (waitq.js) */
+  chk(
+    "after setup the number of roommates is empty, and a quest waits",
+    c.roommateCount === null &&
+      (c.x.later || []).includes("mates") &&
+      c.x.plan.some(p => p.a === "plater" && p.v === "mates"),
+    c.x.later
+  );
+  chk("empty is not zero: the household counts one roommate until then", hhSize(c) === 2);
+  {
+    const keepW = W,
+      keepSH = SH;
+    ACT.plater({ dataset: { v: "mates" } });
+    chk("the quest opens one question", W.kind === "waitq" && ov().includes("How many roommates live with you?"));
+    X("wqset", "2");
+    W = keepW;
+    SH = keepSH;
+  }
   chk("roommateCount stays on the profile, kidCount is empty", c.roommateCount === 2 && c.kidCount === null);
   chk("the work keys are gone", c.am === undefined && c.roommateQ === undefined && c.iraPick === undefined);
   chk("the household size counts the roommates", hhSize(c) === 3 && hhSize(c, true) === 1);

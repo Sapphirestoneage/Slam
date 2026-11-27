@@ -47,10 +47,10 @@ const PROFILES = [
       q('set', 'Between jobs'), q('tog', 'A main job'), q('tog', 'Help from family'),
       '[data-q="i:amainjob:f"][data-v="Weekly"]', 'KNOW:i:amainjob:amt:869',
       '[data-q="i:helpfromfamily:f"][data-v="Monthly"]', '[data-q="i:helpfromfamily:amt"][data-i="0"]',
-      q('set', 'I rent'), q('tog', 'Roommates'), '[data-a="set"][data-k="roommateQ"][data-v="2"]',
-      q('set', 'Single by choice'), '[data-a="set"][data-k="deps"][data-v="None"]', '[data-a="set"][data-k="share"][data-v="No one"]',
+      q('set', 'I rent'), q('tog', 'Roommates'), /* run CC-1, item 9: the number of roommates and shared money are quests of Next Steps now */
+      q('set', 'Single by choice'), '[data-a="set"][data-k="deps"][data-v="None"]',
     ],
-    expect: c => c.roommateCount === 2 && c.debts.filter(x => /card/i.test(x.k) && x.amt > 0).length === 2 && c.invs.some(x => /Roth/.test(x.nick || x.k)) && c.incs.some(x => x.amt === 3766),
+    expect: c => c.roommateCount === null && ((c.x && c.x.later) || []).includes('mates') && c.share === 'No one' && c.debts.filter(x => /card/i.test(x.k) && x.amt > 0).length === 2 && c.invs.some(x => /Roth/.test(x.nick || x.k)) && c.incs.some(x => x.amt === 3766),
   },
   {
     id: 'P2 first job with family',
@@ -63,7 +63,7 @@ const PROFILES = [
       '[data-a="set"][data-v="Yes"][data-k="can1k"]',
       q('set', 'First job'), q('tog', 'A main job'),
       q('set', 'No cost'), q('tog', 'Parents or family'),
-      q('set', 'Single by choice'), '[data-a="set"][data-k="deps"][data-v="None"]', '[data-a="set"][data-k="share"][data-v="No one"]',
+      q('set', 'Single by choice'), '[data-a="set"][data-k="deps"][data-v="None"]',
     ],
     expect: c => c.home === 'With family' && c.debt === 0 && c.work === 'First job',
   },
