@@ -925,25 +925,30 @@ function menuRecent(items) {
 function menuRow(m, due) {
   return `<button class="rowbtn menurow ${m[2] === "tab" && tab === m[1] ? "sel" : ""}" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}"><span><b>${m[0]}</b>${m[1] === "play" && due && !G.demo ? ` <span class="pill new">Due</span>` : ""}<div class="tiny muted">${m[3]}</div></span>${m[2] === "act" && typeof ACT[m[1]] !== "function" ? `<span class="pill">Coming soon</span>` : `<span class="caret">›</span>`}</button>`;
 }
+/* One group of the menu. nest: the group is inside another group (firstweek.js), so it opens by itself. */
+function menuGroupHtml(g, due, nest) {
+  const pages = { coach: ["Open the coach page", "coach"], admin: ["Open the admin page", "admin"] };
+  return `<details class="mng${nest ? " mng2" : ""}" name="${nest ? "mng2" : "mng"}" data-g="${g.id}"><summary><span class="mngh"><span class="mnico" aria-hidden="true">${g.ico}</span><b>${g.n}</b><span class="pill mncount">${g.items.length + (pages[g.id] ? 1 : 0)}</span></span></summary><div class="stack mnrows">${g.items.map(m => menuRow(m, due)).join("")}${pages[g.id] ? `<button class="rowbtn menurow" data-a="hat" data-v="${pages[g.id][1]}"><span><b>${pages[g.id][0]}</b><div class="tiny muted">The ${g.id} page, in a new screen</div></span><span class="caret">›</span></button>` : ""}${g.id === "people" && !G.demo ? `<button class="rowbtn menurow" data-a="menugo" data-k="act" data-v="addperson"><span><b>Add another person</b><div class="tiny muted">A partner, a kid or someone you help</div></span><span class="caret">›</span></button>` : ""}</div></details>`;
+}
 function menuSheetBase() {
   const c = C(),
     t = todayISO(),
     due = c.lastDaily !== t || (c.payKnown && t >= c.payNext),
     items = menuItems(),
     rec = menuRecent(items),
-    pages = { coach: ["Open the coach page", "coach"], admin: ["Open the admin page", "admin"] };
+    groups = menuGroups(items),
+    draw = (g, nest) => menuGroupHtml(g, due, nest);
   return (
     head("Menu", "Everything else") +
+    (typeof fwMenuInfo === "function" ? fwMenuInfo() : "") /* firstweek.js: the "i", where everything went */ +
     `<div class="stack"><div class="field"><label class="small" for="mnfind">Find a tool</label><input type="search" id="mnfind" class="mnfind" placeholder="Find a tool..." autocomplete="off"></div><div id="mnres" class="stack" hidden></div><div id="mnall" class="stack">${
       rec.length
         ? `<div class="small muted">Recently used</div><div class="mnrecent">${rec.map(m => `<button class="mnrec" data-a="menugo" data-k="${m[2]}" data-v="${m[1]}">${m[0]}</button>`).join("")}</div>`
         : ""
-    }${menuGroups(items)
-      .map(
-        g =>
-          `<details class="mng" name="mng" data-g="${g.id}"><summary><span class="mngh"><span class="mnico" aria-hidden="true">${g.ico}</span><b>${g.n}</b><span class="pill mncount">${g.items.length + (pages[g.id] ? 1 : 0)}</span></span></summary><div class="stack mnrows">${g.items.map(m => menuRow(m, due)).join("")}${pages[g.id] ? `<button class="rowbtn menurow" data-a="hat" data-v="${pages[g.id][1]}"><span><b>${pages[g.id][0]}</b><div class="tiny muted">The ${g.id} page, in a new screen</div></span><span class="caret">›</span></button>` : ""}${g.id === "people" && !G.demo ? `<button class="rowbtn menurow" data-a="menugo" data-k="act" data-v="addperson"><span><b>Add another person</b><div class="tiny muted">A partner, a kid or someone you help</div></span><span class="caret">›</span></button>` : ""}</div></details>`
-      )
-      .join("")}</div></div>`
+    }${
+      /* firstweek.js: the Tool library, and in the first week the groups inside "Everything else" */
+      typeof fwMenu === "function" ? fwMenu(groups, draw) : groups.map(g => draw(g)).join("")
+    }</div></div>`
   );
 }
 /* Typing in "Find a tool...": the matches show in place of the groups. The box itself is never drawn again. */
@@ -953,12 +958,14 @@ function menuFindPaint(el) {
     all = document.getElementById("mnall");
   if (!res || !all) return;
   const q = el.value || "",
-    hits = menuFind(q, menuItems());
+    /* firstweek.js: the rows that left the bar in the first week, and the pages of the Tool library */
+    hits = menuFind(q, menuItems().concat(typeof fwMenuExtra === "function" ? fwMenuExtra() : [])),
+    lib = typeof fwLibFind === "function" ? fwLibFind(q) : "";
   res.hidden = !q.trim();
   all.hidden = !!q.trim();
   res.innerHTML = q.trim()
-    ? hits.length
-      ? hits.map(m => menuRow(m, false)).join("")
+    ? hits.length || lib
+      ? hits.map(m => menuRow(m, false)).join("") + lib
       : `<div class="small muted">Nothing matches "${esc(q)}". Try one word, like debt or rent.</div>`
     : "";
 }
@@ -986,8 +993,9 @@ function whoBtn() {
 }
 function topbarHTML() {
   const nb = NAV.back.length,
-    nf = NAV.fwd.length;
-  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button>${typeof topbarHome === "function" ? topbarHome() : "" /* results.js: Home, always in view */}</span>${whoBtn()}<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>${typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
+    nf = NAV.fwd.length,
+    calm = typeof fwCalm === "function" && fwCalm(); /* firstweek.js: Safe to spend and Where am I wait in the menu */
+  return `<span class="grp"><button class="iconbtn" data-a="menu" aria-label="Menu">${ICO.menu}</button><button class="iconbtn sm" data-a="navback" aria-label="Back" ${nb ? "" : "disabled"}>‹</button><button class="iconbtn sm" data-a="navfwd" aria-label="Forward" ${nf ? "" : "disabled"}>›</button>${typeof topbarHome === "function" ? topbarHome() : "" /* results.js: Home, always in view */}</span>${whoBtn()}${calm ? "" : `<button class="ghost slim safebtn" data-a="safe">Safe to spend?</button>`}${!calm && typeof topbarQuest === "function" ? topbarQuest() : ""}${typeof topbarReport === "function" ? topbarReport() : ""}`; /* questlog.js: the button "Where am I". fbreport.js: the button "Report" */
 }
 function tabsHTML() {
   const c = C(),

@@ -886,6 +886,22 @@ const WB = [
   ],
   [
     "feel",
+    "A calmer first week: four places in the bar, the rest in the menu, the Tool library",
+    "b",
+    () =>
+      WB_FN("fwRule") &&
+      WB_FN("fwBar") &&
+      WB_FN("fwMenu") &&
+      WB_FN("homeFwNote") &&
+      WB_HAS("fwlog") &&
+      WB_HAS("fwok") &&
+      typeof TOOL_LIB !== "undefined" &&
+      TOOL_LIB.length > 0,
+    "Batch B, phase 5. In the first 7 days the bar at the bottom shows Home, Next Steps, My Money and My number (What it is / What it could be). My Goals, Me, Log money and every other tool stay in the menu, in groups inside groups, and an i on the menu says where everything went. The standalone tool pages of the web app are one menu group, Tool library. The other tabs return after 7 days or after the reveal, whichever is later, with one line on Home: New for you. A game older than 7 days, and an account with the coach or admin role, see no change.",
+    "menu",
+  ],
+  [
+    "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",
     () =>

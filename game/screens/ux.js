@@ -53,12 +53,16 @@ let BIG = false,
   UX_UNDO = null,
   UX_SCR = {};
 function uxTabs(dot) {
-  const cur = uxTabOf(tab);
+  const cur = uxTabOf(tab),
+    fw = typeof fwBar === "function" ? fwBar() : null; /* firstweek.js: four places in the first week */
   return (
-    UX_TABS.map(
-      x =>
-        `<button class="${cur === x[0] ? "on" : ""}" data-a="tab" data-v="${x[0]}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${x[3]}</svg><span>${typeof VT === "function" && x[0] === "map" ? x[1] : x[1]}</span>${x[0] === "home" && dot ? `<span class="dot"></span>` : ""}${x[0] === "plan" && uxOpen() ? `<span class="dot plbadge">${uxOpen()}</span>` : ""}</button>`
-    ).join("") + `<button class="logfab" data-a="flow" data-v="" aria-label="Log money">+ Log</button>`
+    (fw ? UX_TABS.filter(x => fw.tabs.includes(x[0])) : UX_TABS)
+      .map(
+        x =>
+          `<button class="${cur === x[0] ? "on" : ""}" data-a="tab" data-v="${x[0]}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${x[3]}</svg><span>${typeof VT === "function" && x[0] === "map" ? x[1] : x[1]}</span>${x[0] === "home" && dot ? `<span class="dot"></span>` : ""}${x[0] === "plan" && uxOpen() ? `<span class="dot plbadge">${uxOpen()}</span>` : ""}</button>`
+      )
+      .join("") +
+    (fw ? fw.more : `<button class="logfab" data-a="flow" data-v="" aria-label="Log money">+ Log</button>`)
   );
 }
 function uxOpen() {
@@ -129,17 +133,21 @@ function homeQuadTop(h) {
   const rs = typeof homeResults === "function" ? homeResults(C(), D) : null;
   /* cbreveal.js: the two numbers and the small layer chart, the first tile of a player of What it could be */
   const cb = rs !== null && typeof homeCbTile === "function" ? homeCbTile(C(), D) : "";
+  /* firstweek.js: one line, "New for you", when the other tabs are back */
+  const fw = typeof homeFwNote === "function" ? homeFwNote() : "";
   const top =
     tabHead() +
     (rs !== null
       ? '<div class="rstop' +
         (cb ? " cbq" : "") +
         '">' +
+        fw +
         cb +
         rs +
         "</div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
       : /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
         '<div class="hqtop">' +
+        fw +
         (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +
         homeQuad(C(), D) +
         "</div>");
@@ -665,6 +673,7 @@ function renderUxEnd(wel) {
       t = todayISO(),
       tb = $("#tabs");
     if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
+    if (typeof fwKeep === "function") fwKeep(); /* firstweek.js: note once that this game had the calmer week */
   } catch (e) {
     report(e, "ux.js: renderUxEnd");
   }

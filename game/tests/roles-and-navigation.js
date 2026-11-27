@@ -70,7 +70,8 @@
   );
   chk(
     "the groups start closed and open one at a time",
-    (mh.match(/<details class="mng" name="mng"/g) || []).length === gs.length &&
+    /* the groups of the registry, and the Tool library (firstweek.js) */
+    (mh.match(/<details class="mng" name="mng"/g) || []).length === gs.length + 1 &&
       !/class="mng" name="mng"[^>]* open/.test(mh)
   );
   chk(

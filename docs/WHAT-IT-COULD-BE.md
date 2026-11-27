@@ -362,3 +362,52 @@ File: `game/features/cbreveal.js`. Test: `game/tests/what-it-could-be-reveal.js`
 - The browser walks `tools/e2e/door_walk.cjs` and `launch_walk.cjs` now tap stack, reveal, end, Home. Run them after a
   change of the flow's order (serve the repository first; `SLAM_URL`).
 
+
+## Batch B, phase 5: a calmer first week (Nov 27 2026)
+
+File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/tests/first-week.js`. Walk:
+`tools/e2e/firstweek_walk.cjs`.
+
+- **The rule** is one function: `fwRule(first, rev, today, inFlow)` returns `{ known, calm, day, back }`. Calm until
+  `back`: the later of the first day plus 7 and the day the reveal was first seen. With no reveal a player of the flow
+  stays calm (`back` is null). A player who did not come through the flow (no `c.x.cb`) has no reveal to wait for: 7
+  days. With no first day: never calm.
+- **The first day** is not a new field. `fwFirst(G)` is the earliest first snapshot of the profiles of the game
+  (`hist[0].d`, written when setup ends). One profile with no such day makes it null: an existing game.
+- **Who is never calmed.** The sample game, an account with the role coach or admin (`roCan("coach", ROLES)`), a game
+  older than 7 days with the reveal seen or no flow, a game with no first day.
+- **The bar** (`fwBar`, a part of `uxTabs`): Home, Next Steps, My Money, and a button "My number" (`cbback`: the flow
+  where the player left off). My Goals, Me and + Log are not drawn. The top bar and the header of a sheet leave out
+  Safe to spend and Where am I (`fwCalm` in `topbarHTML` and in `nvRowBase`). A hidden tab is still a tab: `go("goals")`,
+  the address `#/goals` and a menu row open it; the bar stays the bar of the first week.
+- **The menu** (`fwMenu`, a part of `menuSheetBase`; one group is drawn by `menuGroupHtml`). First week: "Back in the
+  bar after your first week" (My Goals, Me, Log money), "Everything else" (My money, People and home, Plans and
+  what-ifs, Tools and calculators, Learn, Games and quizzes, each a group inside it with the name `mng2` so it does not
+  close its parent), "Tool library", Settings and account. After: the groups as before, with the Tool library before
+  Settings. Find a tool also finds the three rows that left the bar and the pages of the library.
+- **The "i"** (`fwMenuInfo`, the term `fwwhere`): one line on the menu with an "i" that says where everything went.
+  It shows in the first week, and afterwards for a game that had the calmer week.
+- **The Tool library.** `tools/game_toollib_build.mjs` reads the front door of the web app (`js/solo/hub.js`: its
+  folds and link names) and `SOLO` of `js/solo.js`, and writes `TOOL_LIB_GROUPS`, `TOOL_LIB` and `TOOL_LIB_SKIP`. It
+  stops when a page at the top of the repository has no place and no reason. Each page is a link `../page.html` in a
+  new tab. Nothing is carried between the game and a page.
+- **New for you** (`homeFwNote`, a part of `homeQuadTop`, inside `.rstop` before the tile of the two numbers): one
+  line and "Got it" (`fwok`). No pulse. It shows only to a game that had the calmer week: `fwKeep` (a part of
+  `renderUxEnd`) writes `G.fw = { on }` the first time the calm bar is drawn, and "Got it" writes `G.fw.ok`.
+- **Not built.** Home itself is not thinned. A last day for a player who never sees the reveal (QUESTIONS 652).
+
+### The pattern for the next phase (6 and 7)
+
+- A test player made with the four taps is in the first week: its bar has four places. A test about another feature
+  that needs every tab sets an older first day: `G.chars.forEach(c => (c.hist[0].d = addDays(todayISO(), -40)))`.
+  Tests that call `X("tab", "goals")` or `go("me")` need nothing: a hidden tab still opens.
+- A browser walk of a new player must not tap My Goals, Me, + Log, Safe to spend or Where am I in the bars: open the
+  menu, the group `later` or `more`, then the row. `tools/e2e/firstweek_walk.cjs` shows how to move a player to day 8
+  in the page (`page.evaluate`).
+- A new menu row: `MENU.push` as before. It is in "Everything else" in the first week by itself; `first-week.js`
+  walks the registry and fails when a row is in one menu only.
+- Phase 6 (the in-debt version) lives inside the flow, so the button "My number" already opens it. Phase 7 ("Test
+  with a friend", task 3: get back Home and find your next move) runs for a first-week player: Home and Next Steps are
+  in the bar.
+- A new page at the top of the repository: add it to the web app's front door, then run
+  `node tools/game_toollib_build.mjs` and the game steps.

@@ -563,6 +563,10 @@ button.dkgoal{display:flex;flex-direction:column;gap:6px;text-align:left;width:1
 .rscard{display:flex;flex-direction:column;gap:6px;min-width:0}.rsval{font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .rsmeta{display:flex;flex-direction:column;gap:2px}.rsmeta .muted{display:inline-block;min-width:96px}
 .pill.rstyp{border-style:dashed;color:var(--muted)}
+/* a calmer first week (features/firstweek.js): the menu groups inside a group, the Tool library, the note */
+details.mng2{border:1px solid var(--line);border-radius:10px;background:transparent}details.mng2>summary{min-height:44px}
+a.rowbtn.fwlib{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;text-decoration:none;color:inherit;min-height:48px;box-sizing:border-box;border:2px solid var(--line);background:var(--panel2);border-radius:10px;padding:8px 10px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.fwwhere{align-items:center;gap:8px;margin-bottom:8px}.fwnew button{min-height:44px}.fwnew{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .rstop{display:flex;flex-direction:column;gap:10px;column-span:all;margin-bottom:10px}
 .rsgrid{display:grid;gap:10px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:stretch}
 .rsgrid>.rsq{margin:0;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -683,9 +687,9 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=d0f900aa"></script>
 <script src="screens/smart.js?v=96e07bbd"></script>
-<script src="screens/planner.js?v=a63595d9"></script>
+<script src="screens/planner.js?v=1eabece5"></script>
 <script src="account/cloud.js?v=575526c7"></script>
-<script src="screens/ux.js?v=e2b0f578"></script>
+<script src="screens/ux.js?v=aa67b4bb"></script>
 <script src="core/metrics.js?v=ab902b52"></script>
 <script src="features/debts.js?v=03c85bb0"></script>
 <script src="features/import.js?v=1e499e73"></script>
@@ -715,7 +719,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/together.js?v=24e8dfb2"></script>
 <script src="features/people.js?v=f590e4e5"></script>
 <script src="features/fold.js?v=8028f031"></script>
-<script src="screens/nav.js?v=613440a6"></script>
+<script src="screens/nav.js?v=d78885d8"></script>
 <script src="features/home.js?v=6abaee87"></script>
 <script src="screens/tidy.js?v=a7a7677f"></script>
 <script src="account/addon.js?v=3c9c00fb"></script>
@@ -797,6 +801,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/quest.js?v=051c6c4e"></script>
 <script src="features/peers.js?v=2c804668"></script>
 <script src="data/patchnotes.js?v=7b8eca74"></script>
+<script src="data/toollib.js?v=f56a39d6"></script>
 <script src="features/founding.js?v=c2cce197"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
@@ -832,12 +837,13 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/cbyesbut.js?v=5166503e"></script>
 <script src="features/cbstack.js?v=ce0a7727"></script>
 <script src="features/cbreveal.js?v=26d55a0c"></script>
+<script src="features/firstweek.js?v=0c50eb9c"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
 <script src="features/lifemap.js?v=762a5948"></script>
 <script src="features/book.js?v=cf713f1a"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=c7707e8b"></script>
+<script src="features/built.js?v=76c6dfd0"></script>
 </body>
 </html>
