@@ -5,14 +5,14 @@
                95 (what each year costs, which layer pays for it, and what is not covered yet).
    INPUT       Plain numbers from the caller (features/couldbe.js makes them from the profile). It
                reads no profile and no screen.
-   OUTPUT      20 functions and constants: LY_END, LY_MEDICARE, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, 
+   OUTPUT      22 functions and constants: LY_END, LY_MEDICARE, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, 
                lySteadyAt, lyHealthAt, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, 
-               lyLifetime, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt
+               lyLifetime, lyTarget, lyShares, lyPile, lyCounted, lyNumbers, lyReceipt, lyTaxPlan
    DEPENDS ON  core/withdraw.js (wayPay: one year on one pile).
    RULES       GENERATED FILE. Do not edit it. It is a copy of js/math/paylayers.js of the main app.
                tools/game_paylayers_build.mjs makes it. Change the source, then run the tool.
                Prettier does not format this file (.prettierignore).
-   SOURCE-HASH  02e1bde5cf9a9d9c
+   SOURCE-HASH  6810e071e56dce2a
    ========================================================================= */
 // What it is / What it could be (run A, Nov 27 2026): the two numbers of the front door and the layer chart behind
 // them. "What it is" is the standard FI number (a year of spending divided by the withdrawal rate: 25 times at 4%) and
@@ -20,6 +20,8 @@
 // person chose to count (Social Security, other steady income, a spending shape, and the two costs the 25 times rule
 // leaves out: health insurance before 65 and tax on traditional withdrawals). With nothing counted the two are equal.
 // lyLifetime is the lifetime spending total: what the years from today to 95 cost (Batch B, phase 1).
+// lyTaxPlan is the plan for the tax on the way out (Batch B, phase 2a): fill the low tax space with traditional money
+// each year, move the rest of that space to Roth, and take what is left from the taxable and Roth accounts.
 // The layer chart is one year-by-year run from today to 95: what the year costs (needs, wants, health insurance before
 // 65, tax on traditional withdrawals) and what pays for it (work, the four kinds of account, Social Security, other
 // steady income), with what is left over as "not covered yet". In every year the layers plus the gap equal the line.
@@ -84,14 +86,15 @@ function lyHealthAt(p, age) {
   if (!h || !(h.year > 0)) return 0;
   return (p.stop == null || age >= p.stop) && age < (h.until ?? LY_MEDICARE) ? h.year : 0;
 }
-// Take `need` from the accounts. cap: what each can pay this year. first: an account to use before the others.
-function lyDraw(cap, need, first) {
+// Take `need` from the accounts, in their order (taxable, traditional, Roth, HSA). cap: what each can pay this year.
+// fill (a number, or null): with a tax plan, traditional money pays first, up to this much in the year; what is still
+// needed then comes from the accounts in their order (traditional again last of the three, past the line).
+function lyDraw(cap, need, fill = null) {
   const out = { tax: 0, pre: 0, roth: 0, hsa: 0 };
   let left = need;
-  for (const k of first ? [first, ...LY_KEYS.filter(x => x !== first)] : LY_KEYS) {
-    const v = Math.min(left, Math.max(0, cap[k] - out[k]));
-    out[k] += v; left -= v;
-  }
+  const take = (k, limit = Infinity) => { const v = Math.min(left, Math.max(0, Math.min(cap[k], limit) - out[k])); out[k] += v; left -= v; };
+  if (fill != null) { take('pre', fill); for (const k of ['tax', 'roth', 'hsa', 'pre']) take(k); }
+  else for (const k of LY_KEYS) take(k);
   return { out, left };
 }
 
@@ -101,9 +104,13 @@ function lyDraw(cap, need, first) {
 // stopped; left out, it is `grow`: the owner's choice of 2026-11-27 is one growth rate for the whole chart), take (the
 // withdrawal rate that sizes the two numbers: 0.04 is 25 times; it is what is taken out, not a growth rate),
 // ss { year, age }, other [{ year, from, to }], health { year, until }, tax (a function: ordinary income of a year to
-// its tax; null: none), off { work, tax, pre, roth, hsa, ss, other } (layers switched off) }.
+// its tax; null: none), off { work, tax, pre, roth, hsa, ss, other } (layers switched off),
+// plan (the tax plan for the years after work, or null: { fill }: each year traditional money pays first, up to `fill`
+// dollars of ordinary income; when the year needs less traditional money than that, the rest of the space is moved from
+// traditional to Roth (a conversion: it is taxed as income that year and it is not spending)) }.
 // Returns one row for each age: the parts of the line (needs, wants, health, wtax, line), the layers that pay
-// (work, tax, pre, roth, hsa, inv, ss, other), the gap, and what steady income there is (steady, needsMet).
+// (work, tax, pre, roth, hsa, inv, ss, other), the gap, what steady income there is (steady, needsMet), conv (what moved
+// from traditional to Roth) and ord (the ordinary income of the year from traditional money: pre + conv).
 function lyYears(p) {
   const off = p.off || {}, end = p.end ?? LY_END, share = Math.min(1, Math.max(0, p.needsShare ?? 0));
   const bal = Object.fromEntries(LY_KEYS.map(k => [k, Math.max(0, lyNum((p.bal || {})[k]))]));
@@ -113,7 +120,7 @@ function lyYears(p) {
     const needs = lyNum(p.spend) * share * f, wants = lyNum(p.spend) * (1 - share) * f, health = lyHealthAt(p, age);
     const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw ?? p.grow);
     const cap = Object.fromEntries(LY_KEYS.map(k => [k, off[k] ? 0 : bal[k] * (1 + r)]));
-    const base = needs + wants + health;
+    const base = needs + wants + health, fill = !planWork && p.plan && Number.isFinite(p.plan.fill) ? Math.max(0, p.plan.fill) : null;
     // steady income first (it meets the needs first), then work, then the accounts
     const pay = wtax => {
       let left = base + wtax;
@@ -121,24 +128,26 @@ function lyYears(p) {
       const other = Math.min(S.other, left); left -= other;
       const work = Math.min(working ? lyNum(p.workPay) : 0, left); left -= work;
       // the HSA pays the health insurance first; the other accounts in their order
-      const forHealth = Math.min(left, health, cap.hsa), rest = lyDraw({ ...cap, hsa: cap.hsa - forHealth }, left - forHealth);
+      const forHealth = Math.min(left, health, cap.hsa), rest = lyDraw({ ...cap, hsa: cap.hsa - forHealth }, left - forHealth, fill);
       rest.out.hsa += forHealth;
-      return { ss, other, work, out: rest.out, gap: rest.left };
+      // the rest of the space under the fill line moves from traditional to Roth
+      return { ss, other, work, out: rest.out, gap: rest.left, conv: fill == null ? 0 : Math.max(0, Math.min(fill, cap.pre) - rest.out.pre) };
     };
     // the tax on the traditional money is part of the year's cost, so it is found by going round until it settles
     let wtax = 0, P = pay(0);
     if (typeof p.tax === 'function') for (let i = 0; i < 60; i++) {
-      const t = Math.max(0, lyNum(p.tax(P.out.pre)));
+      const t = Math.max(0, lyNum(p.tax(P.out.pre + P.conv)));
       if (Math.abs(t - wtax) < 1e-7) break;
       wtax = t; P = pay(wtax);
     }
     for (const k of LY_KEYS) {
       const add = working ? lyNum(p.save) * lyNum(to[k]) : 0;
-      bal[k] = off[k] ? bal[k] * (1 + r) + add : wayPay(bal[k], P.out[k], r, 'end').p + add;
+      bal[k] = off[k] ? bal[k] * (1 + r) + add : wayPay(bal[k], P.out[k] + (k === 'pre' ? P.conv : 0), r, 'end').p + add;
     }
+    bal.roth += P.conv;
     const inv = P.out.tax + P.out.pre + P.out.roth + P.out.hsa, steady = S.ss + S.other;
     rows.push({ age, working, planWork, needs, wants, health, wtax, line: base + wtax, work: P.work, tax: P.out.tax, pre: P.out.pre, roth: P.out.roth, hsa: P.out.hsa, inv,
-      ss: P.ss, other: P.other, gap: P.gap < 0.005 ? 0 : P.gap, steady, toNeeds: Math.min(P.ss + P.other, needs + health), needsMet: steady > 0 && steady >= needs + health - 0.005,
+      ss: P.ss, other: P.other, gap: P.gap < 0.005 ? 0 : P.gap, conv: P.conv, ord: P.out.pre + P.conv, steady, toNeeds: Math.min(P.ss + P.other, needs + health), needsMet: steady > 0 && steady >= needs + health - 0.005,
       left: bal.tax + bal.pre + bal.roth + bal.hsa });
   }
   return rows;
@@ -146,7 +155,7 @@ function lyYears(p) {
 // The same rows as bars of `size` years: each number is the average of its years, so the layers plus the gap still
 // equal the line. Each bar: { from, to, n, label, ...the averages }.
 function lyBars(rows, size = 5) {
-  const out = [], sums = ['needs', 'wants', 'health', 'wtax', 'line', 'work', 'tax', 'pre', 'roth', 'hsa', 'inv', 'ss', 'other', 'gap', 'steady', 'toNeeds'];
+  const out = [], sums = ['needs', 'wants', 'health', 'wtax', 'line', 'work', 'tax', 'pre', 'roth', 'hsa', 'inv', 'ss', 'other', 'gap', 'conv', 'ord', 'steady', 'toNeeds'];
   for (let i = 0; i < rows.length; i += size) {
     const g = rows.slice(i, i + size), b = { from: g[0].age, to: g[g.length - 1].age, n: g.length };
     for (const k of sums) b[k] = g.reduce((s, r) => s + r[k], 0) / g.length;
@@ -189,20 +198,35 @@ function lyLifetime(p) {
 // rule). Each year is counted back at the withdrawal rate `take` (the careful rate of the 25 times rule, not the growth
 // of the chart; an older caller that gives no `take` gets `draw`). With flat spending and nothing else, this is
 // spend / take. The pile on the chart grows faster than that, so it is expected to end higher: that is the cushion.
-// preShare: the share of the money taken out that is traditional (for the tax); the tax of a year is found on it.
+// The tax (Batch B, phase 2a): when p.tax is a function, the tax of each year comes from the same year-by-year run as
+// the chart (lyYears): the target is split over the four accounts in the shares they have on the day work stops, the
+// money comes out in the order of the chart (or by p.plan), and each year's tax is on the traditional money of that
+// year. The target and the taxes depend on each other, so they are found by going round until the target settles.
 function lyTarget(p, at) {
   const end = p.end ?? LY_END, r = lyNum(p.take ?? p.draw), q = { ...p, stop: at, off: {} };
-  const net = age => {
-    const f = lyShapeAt(p.shape, age), S = lySteadyAt(q, age), base = Math.max(0, lyNum(p.spend) * f + lyHealthAt(q, age) - S.ss - S.other);
-    if (typeof p.tax !== 'function' || !(p.preShare > 0) || base <= 0) return base;
-    let t = 0;
-    for (let i = 0; i < 60; i++) { const n = Math.max(0, lyNum(p.tax((base + t) * p.preShare))); if (Math.abs(n - t) < 1e-7) break; t = n; }
-    return base + t;
-  };
+  const base = age => { const S = lySteadyAt(q, age); return Math.max(0, lyNum(p.spend) * lyShapeAt(p.shape, age) + lyHealthAt(q, age) - S.ss - S.other); };
   if (!(r > 0)) return null;
-  let pv = 0, v = 1;
-  for (let age = at; age <= end; age++) { v /= 1 + r; pv += net(age) * v; }
-  return pv + (net(end) / r) * v;
+  const worth = taxAt => { let pv = 0, v = 1; for (let age = at; age <= end; age++) { v /= 1 + r; pv += (base(age) + taxAt(age)) * v; } return pv + ((base(end) + taxAt(end)) / r) * v; };
+  let T = worth(() => 0);
+  if (typeof p.tax !== 'function') return T;
+  // an age past the end of the chart: the run is the last year alone
+  const share = lyShares(p, at), from = Math.min(at, end);
+  for (let i = 0; i < 40; i++) {
+    const rows = lyYears({ ...q, age: from, stop: from, end, workPay: 0, save: 0, grow: r, draw: r, bal: Object.fromEntries(LY_KEYS.map(k => [k, T * share[k]])) });
+    const next = worth(age => rows[age - from].wtax);
+    if (Math.abs(next - T) < 0.5) { T = next; break; }
+    T = next;
+  }
+  return T;
+}
+// The share of each account in the investments on the day work stops at `at`: each account grows and gets its part of
+// the saving until then. With nothing invested and nothing saved: the shares of `saveTo` (all traditional when none).
+function lyShares(p, at) {
+  const to = p.saveTo || { pre: 1 }, n = Math.max(0, at - p.age);
+  const pile = Object.fromEntries(LY_KEYS.map(k => [k, lyPile(Math.max(0, lyNum((p.bal || {})[k])), lyNum(p.save) * lyNum(to[k]), lyNum(p.grow), n)]));
+  let sum = LY_KEYS.reduce((s, k) => s + pile[k], 0);
+  if (!(sum > 0)) { for (const k of LY_KEYS) pile[k] = Math.max(0, lyNum(to[k])); sum = LY_KEYS.reduce((s, k) => s + pile[k], 0); }
+  return Object.fromEntries(LY_KEYS.map(k => [k, sum > 0 ? pile[k] / sum : k === 'pre' ? 1 : 0]));
 }
 // The investments after n working years: each year the pile grows and the year's saving goes in (the game's grow()).
 function lyPile(inv, save, grow, n) {
@@ -210,7 +234,8 @@ function lyPile(inv, save, grow, n) {
   return inv;
 }
 // The params of "What it could be": p with only what was counted. counted: { ss: { share }, other, shape: { bands },
-// health, wtax }. A layer that is switched off (p.off) is not counted.
+// health, wtax, taxplan: { fill } }. A layer that is switched off (p.off) is not counted. The tax plan is read only
+// when the tax itself is counted (wtax): a plan for a cost that is not in the number moves nothing.
 function lyCounted(p, counted) {
   const c = counted || {}, off = p.off || {};
   return { ...p, off: {},
@@ -218,7 +243,8 @@ function lyCounted(p, counted) {
     other: c.other && !off.other ? p.other : [],
     shape: c.shape ? c.shape.bands || null : null,
     health: c.health ? p.health : null,
-    tax: c.wtax ? p.tax : null };
+    tax: c.wtax ? p.tax : null,
+    plan: c.wtax && c.taxplan && Number.isFinite(c.taxplan.fill) ? { fill: c.taxplan.fill } : null };
 }
 // THE TWO NUMBERS. Returns { is: { target, age, years }, could: { target, age, years }, counted (true when anything
 // is), raisedBy (the costs that are counted) }. age: null when the saving pace does not get there in 80 years.
@@ -238,7 +264,35 @@ function lyReceipt(before, after) {
   return { off: before.target == null || after.target == null ? null : before.target - after.target,
     months: before.age == null || after.age == null ? null : (before.age - after.age) * 12 };
 }
+
+// THE TAX PLAN (Batch B, phase 2a): bracket filling with Roth conversions, for the years after work. lines: the fill
+// lines to try, from the caller's tax tables: [{ id, fill (dollars of ordinary income a year: the standard deduction,
+// or the deduction plus the top of a bracket) }]. The tax is counted both ways (counted.wtax is switched on here).
+// plain: the two numbers with the money taken out in the order of the chart (taxable, traditional, Roth). Each line is
+// tried on the day work stops the plain way (`at`); the line with the lowest target is the plan. A line that does not
+// beat the plain way by a dollar is no plan: best is null and `with` is `plain`.
+// Returns { ok (false: no tax function), plain, with, best ({ id, fill, target }), tried, at, plainAt (the plain
+// target at `at`), receipt ({ off, months }: the plan against the plain way), cost ({ off, months }: the plain way
+// against the number with no tax counted: a minus sign means the tax raises the number) }.
+function lyTaxPlan(p, counted, lines) {
+  const c = { ...(counted || {}), wtax: {} }, none = { ...c };
+  delete c.taxplan; delete none.taxplan; delete none.wtax;
+  if (typeof p.tax !== 'function') return { ok: false, plain: null, with: null, best: null, tried: [], at: null, plainAt: null, receipt: null, cost: null };
+  const free = lyNumbers(p, none), plain = lyNumbers(p, c), at = plain.could.age ?? plain.is.age ?? p.age, q = lyCounted(p, c);
+  const plainAt = lyTarget(q, at);
+  const tried = (lines || []).filter(l => l && Number.isFinite(l.fill) && l.fill >= 0).map(l => ({ ...l, target: lyTarget({ ...q, plan: { fill: l.fill } }, at) }));
+  let best = null;
+  for (const t of tried) if (t.target != null && (!best || t.target < best.target - 0.5)) best = t;
+  if (!best || !(best.target < plainAt - 1)) best = null;
+  let withN = best ? lyNumbers(p, { ...c, taxplan: { fill: best.fill } }) : plain;
+  // the plan must hold for the two numbers too: a sooner age, or the same age and a lower target
+  const sooner = (a, b) => (a.age != null && (b.age == null || a.age < b.age)) || (a.age === b.age && a.target < b.target - 1);
+  if (best && !sooner(withN.could, plain.could)) { best = null; withN = plain; }
+  return { ok: true, plain, with: withN, best, tried, at, plainAt, receipt: lyReceipt(plain.could, withN.could), cost: lyReceipt(free.could, plain.could) };
+}
 // The go-go, slow-go and no-go shares and their source (data/reference-2026.json, retirementPhases), read with lyShapeBands.
 const LY_SHAPE_REF = {"goGo":1,"slowGo":0.85,"noGo":0.75,"slowGoAge":75,"noGoAge":85,"source":"Go-go, slow-go and no-go years (the names are from Michael Stein, The Prosperous Retirement): spending stays at 100% to age 75, then 85% from 75 and 75% from 85. The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026 and again through a web search on Nov 27 2026). The survey has no row for 85 and over, so the 75% from 85 is a stated convention (the default of the older suite, money-rooms-v3 data/assumptions.json)"};
 // The share of Social Security that the trust fund report says can still be paid (socialSecurity.trustFund).
 const LY_SS_REF = {"year":2034,"payable":0.83,"source":"The 2026 OASDI Trustees Report (released June 9 2026): the combined OASI and DI trust fund reserves are projected to be depleted in 2034, when continuing income pays about 83% of scheduled benefits (ssa.gov/oact/tr/2026/II_E_conclu.html; SSA press release June 9 2026). The retirement fund alone (OASI) runs out in late 2032, at 78%"};
+// The federal tax lines of the back-end tax step and where each comes from (data/reference-2026.json, tax; js/registry/assumptions.js).
+const LY_TAX_REF = {"year":2026,"standardDeduction":{"single":16100,"joint":32200,"head":24150},"brackets":{"single":[[0,0.1],[12400,0.12],[50400,0.22],[105700,0.24],[201775,0.32],[256225,0.35],[640600,0.37]],"joint":[[0,0.1],[24800,0.12],[100800,0.22],[211400,0.24],[403550,0.32],[512450,0.35],[768700,0.37]],"head":[[0,0.1],[17700,0.12],[67450,0.22],[105700,0.24],[201750,0.32],[256200,0.35],[640600,0.37]]},"zeroGainsTo":{"single":49450,"joint":98900,"head":66200},"sources":{"standardDeduction":{"source":"IRS 2026 inflation adjustments, via Journal of Accountancy","date":"2026-10-28"},"standardDeductionHead":{"source":"IRS Rev. Proc. 2025-32 sec. 4.01 Table 2 (heads of households) and sec. 4.14(1) ($24,150), quoted by fedratecalc.com (2026 tax brackets) and Current Federal Tax Developments (Oct 9 2025); the deduction also by KPMG TaxNewsFlash and Journal of Accountancy (Oct 2025). Read Nov 6 2026","date":"2026-11-06"},"brackets":{"source":"IRS 2026 inflation adjustments, via Journal of Accountancy","date":"2026-10-28"},"bracketsHead":{"source":"IRS Rev. Proc. 2025-32 sec. 4.01 Table 2 (heads of households) and sec. 4.14(1) ($24,150), quoted by fedratecalc.com (2026 tax brackets) and Current Federal Tax Developments (Oct 9 2025); the deduction also by KPMG TaxNewsFlash and Journal of Accountancy (Oct 2025). Read Nov 6 2026","date":"2026-11-06"},"zeroGainsTo":{"source":"IRS Rev. Proc. 2025-32 sec. 4.03 (tax year 2026): the most taxable income at which long-term capital gains are taxed at 0%, and at 15%. Read through a web search on Nov 27 2026 (irs.gov itself does not open from the build machine): Kiplinger (IRS Updates Capital Gains Tax Thresholds for 2026), Experian (Long-Term Capital Gains Rates for 2026) and Current Federal Tax Developments (Oct 9 2025) give the same amounts","date":"2026-11-27"}}};

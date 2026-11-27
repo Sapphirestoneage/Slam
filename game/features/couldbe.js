@@ -16,7 +16,9 @@
                answers of the entry before the profile exists, and the typed number).
    OUTPUT      Math: cbRng, cbRows, cbHas, cbState, cbHealth, cbParams, cbCounted, cbNumbers, cbChart,
                cbLayerInfo, cbCount, cbToggle, cbReceipt, cbTaps, cbBook, cbWaySets, cbWayPick, cbPreview,
-               cbWayDo, cbWayState, cbLife (the lifetime spending total), cbPartShare, cbWays, cbWayNo. Views: cbTop, cbFoot, cbSheet, cbWayView (a strategy step), cbEndView,
+               cbWayDo, cbWayState, cbLife (the lifetime spending total), cbPartShare, cbWays, cbWayNo,
+               cbCountedRaw, cbLy (the two numbers, kept for the same input), cbFiling. Views: cbTop, cbFoot,
+               cbSheet, cbWayView (a strategy step), cbEndView,
                cbStepAdd (a later file adds a step), cbChartHtml. Parts of functions in other files:
                cbStart (doorBegin in door.js, ACT.start in ui.js, clFirstGame in cloud.js),
                finishSetupCb (finishSetupBase in ui.js), openSetupCb (openSetup in ui.js),
@@ -30,7 +32,9 @@
                core/benefitsplan.js (BP_REF, bpRules, bpBenchmark), core/metrics.js (knSt),
                account/trust.js (TRUST_LINE), screens/ui.js, screens/dash.js (dkBars, dkCard),
                features/kit.js (kitPill, kitInfo, kitTerms, kitMenu, kitScreen, kitValue),
-               features/retire.js (retireTax, retireReady), features/look.js (lkK).
+               features/retire.js (retireTax, retireReady), features/look.js (lkK), features/taxview.js
+               (taxvInputs: the one home of the filing status and the state).
+               USES LATER, behind a typeof test: features/cbtax.js (cbTaxFill: the fill line of the tax plan).
    RULES       A view shows what the math functions return. The four answers go to the rows that setup
                writes (c.incs, c.spends, c.invs) as a Guess; a typed amount is Exact. No verdict on a
                guess. The line of account/trust.js is on each screen of the flow, from cbFoot() only.
@@ -47,7 +51,7 @@
    STATE       CB (the numbers that the header showed last, for the short animation; the flag of the
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
-const CB = { last: null, rest: false, taps: 0 };
+const CB = { last: null, rest: false, taps: 0, memo: new Map() };
 /* The steps after the entry, in order. A later file adds a step before "end" with cbStepAdd(). A step with
    way: true is a way to shrink the number: it is numbered ("Way 2 of 5") and it is a row on the last screen. */
 const CB_STEPS = [
@@ -245,7 +249,7 @@ function cbParams(c, d) {
     g = k => rows.filter(r => r.k === k).reduce((t, r) => t + (r.amt || 0), 0),
     all = rows.reduce((t, r) => t + (r.amt || 0), 0),
     H = cbHealth(c),
-    filing = c.rel === "Married" ? "joint" : "single",
+    F = cbFiling(c),
     off = s.off || {};
   return {
     age: c.age,
@@ -257,7 +261,6 @@ function cbParams(c, d) {
     save: d.save,
     bal,
     saveTo: tot > 0 ? { tax: bal.tax / tot, pre: bal.pre / tot, roth: bal.roth / tot, hsa: bal.hsa / tot } : { pre: 1 },
-    preShare: tot > 0 ? bal.pre / tot : 1,
     /* one growth rate for the whole chart (the owner's choice, 2026-11-27): the game's R. The 4% (SWR) is what is
        taken out: it sizes the two numbers. It is not a growth rate. */
     grow: R,
@@ -268,7 +271,9 @@ function cbParams(c, d) {
       P.pen ? [{ year: P.pen.amt * 12, from: P.pen.age }] : []
     ),
     health: H.year > 0 ? { year: H.year, until: H.until } : null,
-    tax: typeof retireReady === "function" && retireReady() ? w => cbTaxOn(w, filing, c.age) : null,
+    tax: typeof retireReady === "function" && retireReady() ? w => cbTaxOn(w, F.filing, c.age, F.state) : null,
+    /* what the tax function stands on, in words: cbLy() tells two inputs apart by it */
+    taxKey: F.filing + "|" + F.state + "|" + c.age,
     off: {
       work: !!off.work,
       tax: !!off.tax,
@@ -280,20 +285,53 @@ function cbParams(c, d) {
     },
   };
 }
+/* The filing status and the state: their one home is the tax view (c.x.taxv, read by taxvInputs). Until the player
+   taps, the filing status is the game's guess from the profile and no state is counted. */
+function cbFiling(c) {
+  const I = typeof taxvInputs === "function" ? taxvInputs(c) : null;
+  return {
+    filing: I ? I.filing.v : c.rel === "Married" ? "joint" : "single",
+    state: I ? I.state.v || "" : "",
+    given: !!(I && I.filing.given),
+    stateGiven: !!(I && I.state.given),
+    st: I && typeof kitState === "function" ? kitState([I.filing, I.state]) : "Guess",
+  };
+}
 /* The income tax of a year on money taken out of traditional accounts: the game's tax engine (retireTax), federal
-   and state, with nothing else in the year's income. */
-function cbTaxOn(w, filing, age) {
+   and the state when one is picked, with nothing else in the year's income. */
+function cbTaxOn(w, filing, age, state) {
   if (!(w > 0)) return 0;
-  const T = retireTax(w, 0, filing, "", age);
+  const T = retireTax(w, 0, filing, state || "", age);
   return (T.federal || 0) + (T.state || 0);
 }
-/* What the player counted in "What it could be". */
-function cbCounted(c) {
+/* What the player counted, as the profile holds it. */
+function cbCountedRaw(c) {
   return (c.x && c.x.cb && c.x.cb.count) || {};
+}
+/* What the player counted in "What it could be", as the math reads it. The tax plan (Batch B, phase 2a) holds no
+   dollars on the profile: its fill line is the best line for the player now (cbtax.js, cbTaxFill). */
+function cbCounted(c) {
+  const raw = cbCountedRaw(c);
+  if (!raw.taxplan) return raw;
+  const fill = raw.wtax && typeof cbTaxFill === "function" ? cbTaxFill(c) : null,
+    out = Object.assign({}, raw);
+  if (fill == null) delete out.taxplan;
+  else out.taxplan = { fill };
+  return out;
+}
+/* The two numbers of core/paylayers.js for one input, kept: the same input is asked for many times in one screen,
+   and a target with a tax counted is a year-by-year run. p: cbParams(). cnt: what is counted. */
+function cbLy(p, cnt) {
+  const key = JSON.stringify([p, cnt]);
+  if (!CB.memo.has(key)) {
+    if (CB.memo.size > 60) CB.memo.clear();
+    CB.memo.set(key, lyNumbers(p, cnt));
+  }
+  return clone(CB.memo.get(key));
 }
 /* THE TWO NUMBERS: { is, could, counted, raisedBy, st, same, above }. Targets also as round thousands (shown). */
 function cbNumbers(c, d) {
-  const N = lyNumbers(cbParams(c, d), cbCounted(c)),
+  const N = cbLy(cbParams(c, d), cbCounted(c)),
     k = v => (v == null ? null : Math.round(v / 1000) * 1000);
   N.is.shown = k(N.is.target);
   N.could.shown = k(N.could.target);
@@ -304,7 +342,8 @@ function cbNumbers(c, d) {
 }
 /* THE CHART: the two numbers, the year-by-year rows, the bars, the single years of an open bar, what each layer
    and each part of the line does, the first age the needs are met by steady income, and the gaps. */
-function cbChart(c, zoom) {
+function cbChart(c, zoom, o) {
+  o = o || {};
   const d = derive(c),
     p = cbParams(c, d),
     cnt = cbCounted(c),
@@ -313,9 +352,14 @@ function cbChart(c, zoom) {
   p.stop = N.could.age != null ? N.could.age : N.is.age;
   if (cnt.shape && cnt.shape.bands) p.shape = cnt.shape.bands;
   if (cnt.ss && cnt.ss.share != null && p.ss) p.ss = Object.assign({}, p.ss, { year: p.ss.full * cnt.ss.share });
+  /* the tax plan (Batch B, phase 2a): the order the money comes out, and what moves to Roth. o.plan: a fill line
+     to show before it is counted (null: the plain order). */
+  const fill = o.plan !== undefined ? o.plan : cnt.taxplan ? cnt.taxplan.fill : null,
+    split = o.split != null ? !!o.split : !!s.split;
+  if (fill != null) p.plan = { fill };
   const rows = lyYears(p),
     bars = lyBars(rows, 5),
-    ids = ["work", "tax", "pre", "roth", "hsa", "inv", "ss", "other", "needs", "wants", "health", "wtax"],
+    ids = ["work", "tax", "pre", "roth", "hsa", "inv", "ss", "other", "needs", "wants", "health", "wtax", "conv"],
     sums = {};
   ids.forEach(id => {
     const S = lyLayerSum(rows, id);
@@ -335,7 +379,7 @@ function cbChart(c, zoom) {
   gaps.forEach(g2 => {
     g2.avg = g2.total / (g2.to - g2.from + 1);
   });
-  const layers = (s.split ? ["work", "tax", "pre", "roth", "hsa", "ss", "other"] : ["work", "inv", "ss", "other"]).map(
+  const layers = (split ? ["work", "tax", "pre", "roth", "hsa", "ss", "other"] : ["work", "inv", "ss", "other"]).map(
     id => {
       const def = LY_LAYERS.find(l => l.id === id) || LY_ACCOUNTS.find(l => l.id === id),
         isOff = id === "inv" ? p.off.tax && p.off.pre && p.off.roth && p.off.hsa : !!p.off[id];
@@ -350,7 +394,8 @@ function cbChart(c, zoom) {
     layers,
     sums,
     gaps,
-    split: !!s.split,
+    split,
+    fill,
     cnt,
     /* what is still invested at the last age of the chart: the cushion (0 when a year is not covered) */
     leftEnd: rows.length ? rows[rows.length - 1].left : 0,
@@ -421,7 +466,9 @@ function cbLayerInfo(c, id) {
         Math.round(p.grow * 100) +
         "% a year.",
       cbCushionWords(p),
-      "The order money comes out: taxable, then traditional, then Roth. The HSA pays health insurance first.",
+      K.fill != null
+        ? "The order money comes out follows your tax plan: traditional first up to the fill line, then taxable, then Roth. The HSA pays health insurance first."
+        : "The order money comes out: taxable, then traditional, then Roth. The HSA pays health insurance first.",
       "Until you list your accounts, the game counts all of it as a traditional plan at work.",
     ];
   } else if (id === "health") {
@@ -442,9 +489,14 @@ function cbLayerInfo(c, id) {
     covers = "Income tax on the money you take out of a traditional 401(k) or IRA.";
     math = [
       "Each year: the federal tax on the traditional money taken out that year, with the " +
-        (c.rel === "Married" ? "joint" : "single") +
+        cbFiling(c).filing +
         " standard deduction (the game's tax engine, 2026 tables).",
-      "No state tax, no tax on Social Security and no early-withdrawal charge are counted here.",
+      cbFiling(c).state
+        ? "State tax (" +
+          cbFiling(c).state +
+          ") is counted too, from the state's regular income tax table. Many states tax retirement income more lightly: that is not counted."
+        : "No state is picked, so no state tax is counted.",
+      "No tax on Social Security and no early-withdrawal charge are counted here.",
       "The 25 times rule does not have this cost. Counting it can raise the number.",
     ];
   } else if (id === "needs") {
@@ -475,6 +527,8 @@ function cbCount(id, opts) {
     before = cbNumbers(c);
   if (opts === false) delete s.count[id];
   else s.count[id] = opts && typeof opts === "object" ? opts : {};
+  /* the tax plan is a plan for the tax: with the tax taken out of the number, the plan goes too */
+  if (id === "wtax" && opts === false) delete s.count.taxplan;
   save();
   const after = cbNumbers(c);
   return { before, after, receipt: cbReceipt(before, after) };
@@ -577,8 +631,8 @@ function cbPreview(c, id, pick) {
     if (p.ss) p.ss = Object.assign({}, p.ss, { year: p.ss.full * set.share });
     p.off = Object.assign({}, p.off, { ss: false });
   }
-  const before = lyNumbers(p, cnt),
-    after = has && (id === "shape" || set.share > 0) ? lyNumbers(p, Object.assign({}, cnt, { [id]: opts })) : before;
+  const before = cbLy(p, cnt),
+    after = has && (id === "shape" || set.share > 0) ? cbLy(p, Object.assign({}, cnt, { [id]: opts })) : before;
   return {
     set,
     has,
@@ -639,7 +693,7 @@ function cbTaps() {
 /* The spreadsheet of the plan (book.js): the standard number. */
 function cbBook(c) {
   const d = derive(c),
-    N = lyNumbers(cbParams(c, d), {}),
+    N = cbLy(cbParams(c, d), {}),
     L = lyLifetime({ age: c.age, spend: d.fiSpend, end: LY_END });
   return {
     title: "What it is: the FI number the standard way",
@@ -674,7 +728,7 @@ function cbBook(c) {
         label: "Social Security: the share the trust fund report says can still be paid",
         v: LY_SS_REF.payable,
       },
-    ],
+    ].concat(typeof cbTaxBookRows === "function" ? cbTaxBookRows(c) : []) /* cbtax.js: the tax plan */,
   };
 }
 
@@ -1187,7 +1241,7 @@ function cbSheet() {
   const st = CB_STEPS.find(s => s.id === w.step) || CB_STEPS[0];
   return st.view();
 }
-/* A later file adds a step of the flow: cbStepAdd("taxes", view, { title: "Pay less tax on the way out" }) puts it
+/* A later file adds a step of the flow: cbStepAdd("taxplan", view, { title: "Pay less tax on the way out" }) puts it
    before the last screen. view() returns the HTML of the sheet; it starts with head(cbWayNo(id), title) and
    cbTop(C()) and ends with cbFoot(). A step with a title is a way to shrink the number: it is numbered with the
    others (cbWayNo) and is a row of "What you counted" on the last screen, which reads cbWayState(c, id): what

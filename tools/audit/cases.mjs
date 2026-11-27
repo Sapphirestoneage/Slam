@@ -25,7 +25,7 @@ import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { ST_KEYS, stList, stMarkers, stWeave, stCard, stBelow } from '../../js/math/statuses.js';
-import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage, lyShapeBands, lyLifetime } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
+import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage, lyShapeBands, lyLifetime, lyTaxPlan } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -661,12 +661,14 @@ for (let i = 0; i < N; i++) {
     ss: rnd() < 0.15 ? null : { year: money(6000, 60000), age: pick([62, 67, 70]) },
     other: rnd() < 0.35 ? [{ year: money(1200, 40000), from: whole(age, 75), to: rnd() < 0.3 ? whole(76, 90) : null }] : [],
     health: rnd() < 0.2 ? null : { year: money(2400, 30000), until: 65 }, shape: rnd() < 0.3 ? [{ from: 75, f: 0.85 }, { from: 85, f: 0.7 }] : null,
-    stop: rnd() < 0.1 ? null : whole(age, 75), off, taxSteps: rnd() < 0.2 ? null : steps };
+    stop: rnd() < 0.1 ? null : whole(age, 75), off, taxSteps: rnd() < 0.2 ? null : steps,
+    // the tax plan of the years after work (Batch B, phase 2a): traditional money first up to a fill line, the rest moved to Roth
+    plan: rnd() < 0.35 ? { fill: pick([steps[1][0], steps[2][0], whole(5000, 90000)]) } : null };
   if (x.draw == null) delete x.draw; // one growth rate for the whole chart (the owner's choice, 2026-11-27): `grow` is used
   if (rnd() < 0.15) { delete x.take; x.draw = x.draw ?? 0.04; } // an older caller: the withdrawal rate is `draw`
   const p = { ...x, tax: x.taxSteps ? taxOf : null };
   const rows = lyYears(p), cov = lyCoverage(rows);
-  add('lyYears', x, { rows: rows.map(r => [r.age, r.line, r.work, r.tax, r.pre, r.roth, r.hsa, r.ss, r.other, r.gap, r.wtax, r.health, r.left]), needsAge: lyNeedsAge(rows), share: cov.share, bars: lyBars(rows, 5).map(b => [b.from, b.to, b.line, b.gap, b.inv]) });
+  add('lyYears', x, { rows: rows.map(r => [r.age, r.line, r.work, r.tax, r.pre, r.roth, r.hsa, r.ss, r.other, r.gap, r.wtax, r.health, r.left, r.conv]), needsAge: lyNeedsAge(rows), share: cov.share, bars: lyBars(rows, 5).map(b => [b.from, b.to, b.line, b.gap, b.inv]) });
   const counted = {}; if (rnd() < 0.6) counted.ss = { share: pick([1, 0.75, 0.5]) }; if (rnd() < 0.4) counted.other = {}; if (rnd() < 0.3) counted.health = {}; if (rnd() < 0.3) counted.wtax = {};
   // the spending shape of a strategy step: the bands made from the shares of the reference data, in full or at half
   const rp = { goGo: 1, slowGo: pick([0.85, 0.8, 0.9]), noGo: pick([0.75, 0.7]), slowGoAge: pick([70, 75]), noGoAge: pick([80, 85]) }, scale = pick([1, 0.5, 0.25]);
@@ -675,8 +677,16 @@ for (let i = 0; i < N; i++) {
   // the lifetime spending total (Batch B, phase 1): the years from today to 95, with the spending shape or without
   const lifeShape = rnd() < 0.5 ? null : lyShapeBands(rp, scale), Lf = lyLifetime({ age, spend, shape: lifeShape });
   add('lyLifetime', { age, spend, shape: lifeShape }, { total: Lf.total, years: Lf.years, from: Lf.from, to: Lf.to, year: Lf.year });
+  if (counted.wtax && rnd() < 0.4) counted.taxplan = { fill: pick([steps[1][0], steps[2][0], whole(5000, 90000)]) };
   const Nn = lyNumbers(p, counted);
   add('lyNumbers', { ...x, counted }, { is: [Nn.is.target, Nn.is.age], could: [Nn.could.target, Nn.could.age], counted: Nn.counted, raisedBy: Nn.raisedBy });
+  // the tax plan (Batch B, phase 2a): the fill lines are the steps of the made-up tax table and one more
+  if (i % 4 === 0) {
+    const lines = [{ id: 'a', fill: steps[1][0] }, { id: 'b', fill: steps[2][0] }, { id: 'c', fill: whole(5000, 120000) }], cnt = { ...counted };
+    delete cnt.taxplan;
+    const Tp = lyTaxPlan(p, cnt, lines);
+    add('lyTaxPlan', { ...x, counted: cnt, lines }, Tp.ok ? { ok: true, plain: [Tp.plain.could.target, Tp.plain.could.age], with: [Tp.with.could.target, Tp.with.could.age], at: Tp.at, tried: Tp.tried.map(t => t.target), receipt: [Tp.receipt.off, Tp.receipt.months], cost: [Tp.cost.off, Tp.cost.months], best: Tp.best ? Tp.best.id : null } : { ok: false });
+  }
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

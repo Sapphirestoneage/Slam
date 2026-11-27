@@ -787,6 +787,21 @@ const WB = [
     "cb",
   ],
   [
+    "see",
+    "What it could be, way 3: pay less tax on the way out",
+    "p",
+    () =>
+      WB_FN("lyTaxPlan") &&
+      WB_FN("cbTaxPlan") &&
+      WB_FN("cbTaxYears") &&
+      WB_FN("cbTaxView") &&
+      WB_FN("cbTaxFill") &&
+      WB_HAS("cbtaxdo") &&
+      typeof LY_TAX_REF === "object",
+    "Batch B, phase 2a. A way of What it is / What it could be: the tax on traditional money, with a plan for the years after work (bracket filling, Roth conversions, the 0% capital gains zone), year by year, with the account each year draws from. Two taps: how you file and your state. Partly: a player whose money is all in one kind of account sees why there is no drop yet; tax on gains and on Social Security is not counted.",
+    "cb",
+  ],
+  [
     "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",

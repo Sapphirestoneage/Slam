@@ -35,7 +35,8 @@ open them ("Finish setup: five short rounds"), with the age, the amounts and the
 | 6 | The layer chart |
 | 7 | Way 1 of 2, "Spending eases as you age": Count this, Already doing it, Not for me |
 | 8 | Way 2 of 2, "Social Security pays part of it": Not counting on it, Count part of it, Count all of it |
-| 9 | The last screen: both numbers, the chart, every way of the flow with where it stands, Finish setup, Next Steps, Home |
+| 9 | Way 3 of 3, "Pay less tax on the way out" (Batch B, phase 2a): two taps (how you file, your state), then Count this, Already doing it, Not for me when a plan applies |
+| 10 | The last screen: both numbers, the chart, every way of the flow with where it stands, Finish setup, Next Steps, Home |
 
 Taps from the landing to the first number: 35 before (to the reveal's FI card), 5 now.
 
@@ -124,6 +125,8 @@ tap 1) to the first number on the screen.
   costs can differ.
 - Health insurance of your own from the year work stops until 65: the player's tap, else the typical benchmark plan
   (KFF, plan year 2027, a 40-year-old, before any help with the price), marked a Guess.
+- (Changed in Batch B, phase 2a: the state's income tax is counted when a state is picked, and the target takes each
+  year's tax from the same run as the chart. See the last section.)
 - Tax on traditional withdrawals: the federal tax on that year's traditional money alone (`retireTax`). No state tax,
   no tax on Social Security, no early-withdrawal charge.
 - Until the accounts are listed, the invested amount counts as one traditional plan at work.
@@ -147,3 +150,60 @@ tap 1) to the first number on the screen.
 - One opening: `game/tests/what-it-could-be-top-ups.js` walks Start and the four taps and checks that every screen on
   the way is the flow's own, and that the landing, Start and a first game from the cloud all call `cbStart`.
 
+## Batch B, phase 2a: back-end taxes (Nov 27 2026)
+
+The way "Pay less tax on the way out", Way 3 of 3. File: `game/features/cbtax.js`. Math: `js/math/paylayers.js`.
+
+- The idea. The 25 times rule counts no tax. Money in a traditional account is taxed when it comes out. The usual
+  order (taxable, then traditional, then Roth: the order of the chart) leaves years with no taxed income and years
+  with a lot of it. The plan levels that: each year after work, traditional money first up to a fill line (bracket
+  filling); what the year does not need of that line moves from traditional to Roth (a Roth conversion); the rest
+  comes from the taxable account (the plan keeps taxable income low, which is where long-term gains are taxed at 0%)
+  and then from Roth.
+- The math. `lyYears` takes `p.plan = { fill }` and gives `conv` (moved to Roth) and `ord` (the year's ordinary income
+  from traditional money) on each row. `lyTarget` with a tax now runs the same year-by-year run from the day work
+  stops: the target is split over the accounts in the shares of `lyShares`, and the target and the taxes are found by
+  going round until the target settles. Before this phase it taxed a fixed share of each year. For a player whose
+  money is all traditional the number is the same as before; for a mix it follows the chart's order now.
+  `lyTaxPlan(p, counted, lines)` tries each fill line on the day work stops and keeps the one with the lowest target;
+  a line that does not beat the usual order by a dollar is no plan. It returns the two numbers the usual way and
+  with the plan, the receipt of the plan, and what the tax itself adds.
+- The fill lines come from the game's tax engine (`retireTax`): the standard deduction, and the deduction plus the
+  top of the 10%, 12% and 22% brackets, for the filing status. `cbTaxLines(c)`.
+- Counting. The plan is a plan for a cost, so "Count this" counts the tax itself (`count.wtax`) and the plan
+  (`count.taxplan`). "What it could be" is then above the number with no tax, and the top of the screen says why. The
+  receipt is the plan against the usual order, both with the tax counted. "Not for me" takes the plan out, and the tax
+  too when this way brought it in. Taking the tax out on the chart takes the plan out. The profile holds no dollars
+  of the plan: `cbCounted(c)` finds the fill line again (`cbTaxFill`).
+- Two taps. The filing status and the state are asked with the kit's `kitAsk` and go to the tax view's own answers
+  (`c.x.taxv`), their one home. `cbFiling(c)` reads them for the whole flow. Until a tap, the filing status is the
+  game's guess and no state is counted.
+- When no plan applies (`cbTaxPlan(c).applies` is false, `why` is one of none, nopre, onekind, nogain): the screen
+  shows "No drop yet", the reason in plain words, what the tax adds the usual way, and no button that counts nothing.
+  The four taps of the entry make one traditional plan at work, so every new player sees this until the accounts are
+  listed (QUESTIONS 648).
+- The chart: `cbChart(c, zoom, { split, plan })`. The screen shows it split by account, with the plan. Below it a
+  collapsed table, 5 years a row: traditional, moved to Roth, taxable, Roth, the tax, the highest federal bracket.
+- Tax figures, one dated file: `data/reference-2026.json`, `tax` (the standard deduction, the brackets, and from this
+  phase `capitalGains`: the 0% and 15% lines), each with its source and date in `js/registry/assumptions.js`. The
+  build tool puts them into the game's copy as `LY_TAX_REF`. The game's tax engine has its own tables;
+  `game/tests/what-it-could-be-taxes.js` fails when they differ from the file.
+- Not counted: tax on Social Security, tax on gains in a taxable account (the game has no gains yet), required
+  withdrawals from 73, the early-withdrawal charge, a state's own rules for retirement income, the extra deduction
+  at 65 for a player who is younger today, and changes of the law.
+
+### The pattern for the next phase (2b to 2f)
+
+- One file for a way: `game/features/cb<name>.js`, a script tag after `features/cbtax.js`, the file header, and at
+  the end `cbStepAdd("id", () => view(), { title })`. The order of the script tags is the order of the ways.
+- The view: `head(cbWayNo(id), title) + cbTop(C()) + why + the "i" row (term with "What has to go right" and "Backup
+  if it doesn't") + the drop tile (`data-fid="cb:drop"`) + three buttons + the receipt (`data-fid="cb:receipt"`) +
+  `cbChartCard(K, title, cap)` + `mathBox([...])` + Next + Back + `cbFoot()`.
+- A count the math must read: add the key to `lyCounted` and `lyNumbers` in `js/math/paylayers.js`, then
+  `node tools/game_paylayers_build.mjs`, the second engine (`tools/audit/cases.mjs`, `engine2.py`), `node --test`.
+  If the count needs a number that changes with the player, keep no dollars on the profile: resolve it in
+  `cbCounted(c)` as `taxplan` does.
+- Use `cbLy(p, counted)` for the two numbers (it keeps the answer for the same input). Put a new field of
+  `cbParams` that a function stands on into `taxKey` or a plain value, so two inputs are told apart.
+- The tests of the flow count ways from `cbWays()`, not from a fixed number, so a new way breaks none of them.
+- For 2e (hide what cannot apply, say why): each way gives `applies` and `why`; `cbTaxPlan(c)` is the example.

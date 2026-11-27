@@ -157,6 +157,13 @@
     },
     "mortgageDebtLimit": 750000,
     "saltCap": 40400,
+    "capitalGains": {
+      "taxYear": 2026,
+      "zeroTo": { "single": 49450, "joint": 98900, "head": 66200 },
+      "fifteenTo": { "single": 545500, "joint": 613700, "head": 579600 },
+      "source": "IRS Rev. Proc. 2025-32 sec. 4.03 (tax year 2026): the most taxable income at which long-term capital gains are taxed at 0%, and at 15%. Read through a web search on Nov 27 2026 (irs.gov itself does not open from the build machine): Kiplinger (IRS Updates Capital Gains Tax Thresholds for 2026), Experian (Long-Term Capital Gains Rates for 2026) and Current Federal Tax Developments (Oct 9 2025) give the same amounts",
+      "read": "2026-11-27"
+    },
     "standardDeduction": {
       "single": 16100,
       "joint": 32200,

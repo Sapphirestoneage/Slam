@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt, lyLifetime } from '../js/math/paylayers.js';
+import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt, lyLifetime, lyShares, lyTaxPlan } from '../js/math/paylayers.js';
 
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 // a made-up tax: nothing on the first 16,100, then 12%, then 22% over 66,500
@@ -174,4 +174,67 @@ test('the lifetime spending total: today\'s spending for each year from today to
   // at the last age there is one year; no spending gives 0
   assert.equal(lyLifetime({ age: 95, spend: 1000 }).years, 1);
   assert.equal(lyLifetime({ age: 40, spend: null }).total, 0);
+});
+
+// Batch B, phase 2a: the tax on the way out. A made-up tax table for the tests: nothing on the first 16,000 of ordinary
+// income, 10% on the next 12,000, 12% on the next 38,000, 22% above.
+const stepTax = w => Math.max(0, Math.min(w, 28000) - 16000) * 0.1 + Math.max(0, Math.min(w, 66000) - 28000) * 0.12 + Math.max(0, w - 66000) * 0.22;
+const mixed = (o = {}) => base({ age: 60, stop: 60, spend: 60000, save: 0, workPay: 0, bal: { tax: 400000, pre: 800000, roth: 300000, hsa: 0 }, saveTo: { tax: 4 / 15, pre: 8 / 15, roth: 3 / 15, hsa: 0 }, tax: stepTax, health: null, ss: null, ...o });
+test('the tax plan in the year-by-year run: traditional first to the fill line, the rest of the line moves to Roth', () => {
+  const plain = lyYears(mixed()), plan = lyYears(mixed({ plan: { fill: 16000 } }));
+  // the plain order: taxable pays the first year, and nothing moves
+  assert.ok(plain[0].tax > 0 && plain[0].pre === 0 && plain[0].conv === 0);
+  // the plan: 16,000 of traditional money first (no tax on it), the rest from taxable; nothing is left of the line to move
+  near(plan[0].pre, 16000); near(plan[0].wtax, 0); near(plan[0].tax, 60000 - 16000); near(plan[0].conv, 0); near(plan[0].ord, 16000);
+  for (const r of plan) near(r.work + r.tax + r.pre + r.roth + r.hsa + r.ss + r.other + r.gap, r.line);
+  // a year that needs less than the line: the rest of the line is moved, and it is not spending
+  const small = lyYears(mixed({ spend: 10000, plan: { fill: 16000 } }));
+  near(small[0].pre, 10000); near(small[0].conv, 6000); near(small[0].line, 10000); near(small[0].wtax, 0);
+  // moving money loses none of it: the same total is left as in a run with no plan and no tax
+  const flat = lyYears(mixed({ spend: 10000, tax: null }));
+  near(small[0].left, flat[0].left);
+  // a fill line above the 0% space: the moved money is taxed that year, and the tax is part of the year's cost
+  const high = lyYears(mixed({ spend: 10000, plan: { fill: 28000 } }));
+  assert.ok(high[0].ord <= 28000 + 0.01 && high[0].conv > 0 && high[0].wtax > 0);
+  near(high[0].wtax, stepTax(high[0].ord));
+  // the plan is for the years after work: a working year is the same with it and without it
+  const w = lyYears(mixed({ age: 50, stop: 60, workPay: 90000, plan: { fill: 16000 } }))[0], w0 = lyYears(mixed({ age: 50, stop: 60, workPay: 90000 }))[0];
+  assert.deepEqual(w, w0);
+});
+test('the target with a tax counted comes from the same run as the chart, and the tax plan lowers it', () => {
+  // all traditional: every year the tax t solves t = tax(spending + t), and the target is the 25 times number of that
+  const all = mixed({ bal: { tax: 0, pre: 1500000, roth: 0, hsa: 0 }, saveTo: { pre: 1 } });
+  let t = 0; for (let i = 0; i < 80; i++) t = stepTax(60000 + t);
+  near(lyTarget(all, 60), (60000 + t) / 0.04, 1);
+  near(lyTarget({ ...all, tax: null }, 60), 1500000);
+  // all traditional: there is nothing to move the tax with, so no line is a plan
+  const lines = [{ id: 'std', fill: 16000 }, { id: 'b10', fill: 28000 }, { id: 'b12', fill: 66000 }];
+  const P0 = lyTaxPlan(all, {}, lines);
+  assert.equal(P0.ok, true); assert.equal(P0.best, null); assert.equal(P0.receipt.off, 0); assert.ok(P0.cost.off < 0, 'the tax raises the number');
+  // a mix of accounts: the plan beats the plain order, and what it shows is what lyNumbers gives with it counted
+  const M = mixed({ age: 40, stop: null, save: 30000, workPay: 90000, bal: { tax: 100000, pre: 250000, roth: 80000, hsa: 0 }, saveTo: { tax: 0.2, pre: 0.6, roth: 0.2, hsa: 0 }, ss: { year: 24000, age: 67 } });
+  const P = lyTaxPlan(M, { ss: {} }, lines);
+  assert.ok(P.best && lines.some(l => l.id === P.best.id));
+  assert.ok(P.receipt.off > 0 || P.receipt.months > 0, 'the plan is a drop');
+  assert.ok(P.with.could.target <= P.plain.could.target || P.with.could.age < P.plain.could.age);
+  assert.deepEqual(lyNumbers(M, { ss: {}, wtax: {}, taxplan: { fill: P.best.fill } }).could, P.with.could);
+  assert.deepEqual(lyNumbers(M, { ss: {}, wtax: {} }).could, P.plain.could);
+  assert.equal(P.tried.length, 3);
+  for (const x of P.tried) assert.ok(x.target >= P.best.target - 0.5);
+  // the plan with no tax counted moves nothing; no tax table: no plan
+  assert.deepEqual(lyNumbers(M, { ss: {}, taxplan: { fill: 16000 } }).could, lyNumbers(M, { ss: {} }).could);
+  assert.equal(lyTaxPlan({ ...M, tax: null }, {}, lines).ok, false);
+  // the shares on the day work stops add up to 1
+  const S = lyShares(M, 55); near(S.tax + S.pre + S.roth + S.hsa, 1);
+  assert.deepEqual(lyShares({ age: 30, bal: {}, save: 0, grow: 0.07 }, 50), { tax: 0, pre: 1, roth: 0, hsa: 0 });
+});
+test('the capital gains lines of the dated reference data are the lines of the lifetime plan, and the game copy carries the tax lines with their sources', async () => {
+  const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url), 'utf8')), G = ref.tax.capitalGains;
+  const { GAIN_BANDS } = await import('../js/math/lifetime.js');
+  for (const k of ['single', 'joint', 'head']) assert.deepEqual(GAIN_BANDS[k], [G.zeroTo[k], G.fifteenTo[k]]);
+  assert.equal(G.taxYear, 2026); assert.match(G.source, /Rev\. Proc\. 2025-32/); assert.equal(G.read, '2026-11-27');
+  const copy = readFileSync(new URL('../game/core/paylayers.js', import.meta.url), 'utf8'), m = copy.match(/const LY_TAX_REF = (.*);\n/);
+  const T = JSON.parse(m[1]);
+  assert.deepEqual(T.standardDeduction, ref.tax.standardDeduction); assert.deepEqual(T.brackets, ref.tax.brackets); assert.deepEqual(T.zeroGainsTo, G.zeroTo);
+  for (const k of Object.keys(T.sources)) assert.ok(T.sources[k].source && /^2026-\d\d-\d\d$/.test(T.sources[k].date), k);
 });

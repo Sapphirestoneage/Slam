@@ -205,7 +205,7 @@
   );
   chk(
     "it lists every way of the flow, one tap away, with where each stands",
-    cbWays().length === 2 &&
+    cbWays().length >= 2 &&
       cbWays().every(w => new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h) && text(h).includes(w.title)) &&
       /Counted\. Tap to change/.test(text(h)) &&
       /Not counted yet\. Tap to change/.test(text(h))
@@ -215,7 +215,11 @@
     /data-a="cbrest"/.test(h) && /data-a="cbsteps"/.test(h) && /data-a="gohome"/.test(h)
   );
   /* a way that a later phase adds */
-  const n0 = CB_STEPS.length;
+  /* the ways and the steps that are built now: a later phase adds its own, so the checks count from these */
+  const n0 = CB_STEPS.length,
+    ways0 = cbWays().map(w => w.id),
+    steps0 = CB_STEPS.map(s => s.id).join(),
+    nth = "Way " + (ways0.length + 1) + " of " + (ways0.length + 1);
   cbStepAdd("tpway", () => head(cbWayNo("tpway"), "A made-up way") + cbTop(C()) + cbFoot(), { title: "A made-up way" });
   cbStepAdd("tpcard", () => head("Between", "A made-up card") + cbTop(C()) + cbFoot());
   chk(
@@ -224,9 +228,9 @@
       CB_STEPS[CB_STEPS.length - 1].id === "end" &&
       cbWays()
         .map(w => w.id)
-        .join() === "shape,ss,tpway" &&
-      cbWayNo("tpway") === "Way 3 of 3" &&
-      cbWayNo("shape") === "Way 1 of 3" &&
+        .join() === ways0.concat("tpway").join() &&
+      cbWayNo("tpway") === nth &&
+      cbWayNo("shape") === "Way 1 of " + (ways0.length + 1) &&
       cbWayNo("tpcard") === ""
   );
   sheet(cbSheet);
@@ -245,11 +249,11 @@
       (text(ov()).match(/Counted\. Tap to change/g) || []).length === 2
   );
   cbCount("tpway", false);
-  go("ss");
+  go(ways0[ways0.length - 1]);
   go("next");
   chk(
     "Next from the last built way goes to the added way, then on to the last screen",
-    W.step === "tpway" && /Way 3 of 3/.test(text(ov()))
+    W.step === "tpway" && text(ov()).includes(nth)
   );
   go("next");
   go("next");
@@ -258,7 +262,7 @@
     CB_STEPS.findIndex(s => s.id === "tpway"),
     2
   );
-  chk("the made-up steps are taken out again", CB_STEPS.map(s => s.id).join() === "is,chart,shape,ss,end");
+  chk("the made-up steps are taken out again", CB_STEPS.map(s => s.id).join() === steps0);
 
   G = clone(G0);
   W = null;

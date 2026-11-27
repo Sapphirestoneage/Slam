@@ -240,6 +240,13 @@ left invested), its 5-year bars, the first age steady income meets the needs and
 switched off; and the two numbers (What it is and its age, What it could be and its age with some things counted,
 and which costs raise it). The second engine settles each year's tax by cutting the range in half, where SLAM goes
 round until it settles. The tax is a made-up table of steps here; in the game it is the tax engine (retireTax).
+
+Added Nov 27 2026 (Batch B, phase 2a, the tax on the way out): the same cases now carry a tax plan in about a third
+of the runs (traditional money first up to a fill line, the rest of the line moved to Roth: the second engine works
+out what each account pays and what moves, each year). The target with a tax counted is worked out from that
+year-by-year run, account by account, in both engines. New cases `lyTaxPlan` (125 at the full size): each fill line
+is tried on the day work stops, the lowest target is the plan when it beats the usual order by a dollar, and the
+receipt (dollars off, months) and what the tax itself adds are compared.
 Added Nov 27 2026 (run A, step 4): the bands of the spending shape (lyShapeBands: the go-go, slow-go and no-go shares
 of the reference data, in full, at half or at a quarter), worked out again; the two numbers are then checked with
 those bands counted.

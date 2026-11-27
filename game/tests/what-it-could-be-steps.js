@@ -45,8 +45,10 @@
   X("cbset", "", "", { q: "save", i: 3 });
   chk("the four answers lead to What it is", W.kind === "cb" && W.step === "is" && !G.demo);
   chk(
-    "the order of the flow: What it is, the chart, the spending shape, Social Security, the last screen",
-    CB_STEPS.map(s => s.id).join() === "is,chart,shape,ss,end"
+    "the order of the flow: What it is, the chart, the spending shape, Social Security, the later ways, the last screen",
+    CB_STEPS.map(s => s.id)
+      .join()
+      .indexOf("is,chart,shape,ss,") === 0 && CB_STEPS[CB_STEPS.length - 1].id === "end"
   );
   let c = C(),
     N = cbNumbers(c);
