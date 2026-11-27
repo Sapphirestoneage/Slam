@@ -1,0 +1,66 @@
+name: Report a bug
+description: Something in SLAM does not work the way you expected.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for telling us.
+
+        **This page is public. Do not post money details.** No balances, no income, no account numbers, no names of other people, no email address, and no screenshot that shows any of those. Use made-up numbers, or the example numbers of the app.
+
+        If you play the game, the faster way is inside it: tap **Report** at the top of any screen (or Menu, then Report a bug or idea). That report is private and it adds the screen name and the version by itself.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - SLAM the Game
+        - The SLAM web app (the planner and the short tools)
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of thing is it?
+      options:
+        - A button or a screen does nothing
+        - A number looks wrong
+        - The words are confusing
+        - The layout looks off on my screen
+        - Sign-in or saving
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: screen
+    attributes:
+      label: Which screen?
+      description: The title at the top of the screen, or the address of the page.
+      placeholder: "Example: Menu, then What if"
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you do, what did you expect, and what did you see?
+      description: Three short lines are enough. Made-up numbers only.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "Example: iPhone, Safari"
+  - type: input
+    id: version
+    attributes:
+      label: Build version (if you know it)
+      description: In the game it is on the report sheet, a code like game-1a2b3c4d.
+  - type: checkboxes
+    id: clean
+    attributes:
+      label: Before you send
+      options:
+        - label: This report and its pictures show no real money numbers, no account numbers and no personal details.
+          required: true
