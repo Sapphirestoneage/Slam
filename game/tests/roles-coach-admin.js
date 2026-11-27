@@ -70,8 +70,10 @@
   /* SIGN-UP AND COACH MODE */
   const supa = read("account/supa.js");
   chk(
-    "sign-up has the plain line about the app owner",
-    supa.includes("The owner of this app can view accounts for safety and support.")
+    "sign-up has the one plain line about who sees the game (run SLAM-ONBOARD-1)",
+    SU_NEW_LINE === "Your game saves to your account. Eli can see it to support you." &&
+      suGateTop("new", false).includes(SU_NEW_LINE) &&
+      !supa.includes("The owner of this app can view accounts for safety and support.")
   );
   chk(
     "sharing starts off for an account from a public link, and the sign-up screen says so",

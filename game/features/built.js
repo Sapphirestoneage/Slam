@@ -884,6 +884,21 @@ const WB = [
   ],
   [
     "see",
+    "About you first, why each round asks, and a calmer Create account",
+    "b",
+    () =>
+      WB_FN("smSpotFix") &&
+      WB_FN("smSsDone") &&
+      WB_FN("spWhy") &&
+      WB_FN("suGateTop") &&
+      WB_FN("suPwBox") &&
+      WB_FN("homeConfirmRow") &&
+      WB_HAS("suagain"),
+    "Run SLAM-ONBOARD-1. Finish setup starts with About you, four pages of taps (age, work, home, people); the age of the four questions is filled, with Change. Then Debts (the kinds, then the cards, then each debt), Assets, Income, Taxes, Expenses. How money feels is the last question of About you, and I'd rather not look turns the gentle words on at once. Social Security is asked only when the flow did not answer it. The screen between two rounds says when the next round asks because of a want. Create account has one line about who sees the game and a Show / Hide button on the password box; when the email waits for its link the visitor stays in the game, and Home has Send again.",
+    "cb",
+  ],
+  [
+    "see",
     "What it could be: the reveal, the card to share, Home and the day after",
     "b",
     () =>

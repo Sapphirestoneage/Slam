@@ -371,7 +371,7 @@ Item 7 ran early, in its own lane, for the event of Nov 30. The other items of C
 
 ## RUN 13: SLAM-ONBOARD-1, the front door and the new order (Nov 27 2026)
 
-Two workers, one after the other. Worker 1 did tasks 1, 2, 3, 5, 6 and 7. Tasks 4, 8 and 9, the page-order test and the promotion are worker 2's.
+Two workers, one after the other. Worker 1 did tasks 1, 2, 3, 5, 6 and 7. Worker 2 did tasks 4, 8 and 9, the page-order test and the promotion. All nine tasks are done.
 
 | Task | Status | What | Where |
 |---|---|---|---|
@@ -381,6 +381,9 @@ Two workers, one after the other. Worker 1 did tasks 1, 2, 3, 5, 6 and 7. Tasks 
 | 5 | Done | The chip "No idea, use typical" on spend, invested and saved: a published value for the age, a Guess. The reveal names each one with "Make it mine". | `game/features/couldbe.js` (`cbTypical`), `data/reference-2026.json` (`typicalInvested`), `tools/game_paylayers_build.mjs` (`LY_TYP_REF`) |
 | 6 | Done | From the first way screen on, the two numbers are one slim strip that stays at the top; the number counts to its new value. | `cbTop`, `cbSlim` in `game/features/couldbe.js` |
 | 7 | Done | The last screen shows the first move (the #1 move of Next Steps): what, why, about how long, Add to my steps. The first button is "Keep my plan: make a free account". | `cbEndView`, `cbFirstMove` in `game/features/cbreveal.js` |
-| 4, 8, 9 | Not started | Worker 2. | |
+| 4 | Done | Finish setup starts with About you: four pages of taps (age, work, home, people). The age of the four questions is filled, with Change, and is not asked again. Then D (the kinds of debt, then the credit cards, then each debt), A, I, T, E. "How money feels" is the last question of About you; "I'd rather not look" turns the gentle words on at once (the first era is "Getting Started", the debt number waits behind "when you're ready", the smallest debt leads). Social Security is asked only when the flow did not answer it. "page X of N" counts the pages this player can still get, so N does not grow. A round that was left under the older order comes back on the first page that still needs an answer. | `SM_ORDER`, `smSpotFix`, `smSsDone` in `game/screens/smart.js`; `SP_ROUNDS` in `game/features/spiral.js` |
+| 8 | Done | Create account has one line ("Your game saves to your account. Eli can see it to support you."), the coach sharing line small under it, and the privacy link at the foot. The password box has a Show / Hide button. When the email waits for its link, a visitor with a game stays in the game, and Home has one slim row "Confirm your email to keep your plan" with Send again. No new server code. | `suGateTop`, `suPwBox`, `homeConfirmRow`, `suAgain` in `game/account/supa.js` |
+| 9 | Done | The screen between two rounds says why the next round asks when a want is about it ("Next: your expenses. Asking because you picked Travel more."). Debts has no screen before it, so its first page says it. With no matching want the normal line stays. | `spWhy` in `game/features/spiral.js` |
+| Tests | Done | `game/tests/setup-order-and-account.js` (the page order, the account screen); `what-you-want.js` (the wants screen saving to `c.goals`). | |
 
-Taps from the landing to the last screen, fastest path: 9 before, 10 now (the new screen costs one tap: Skip for now).
+Taps from the landing to the last screen, fastest path: 9 before, 10 now (the new screen costs one tap: Skip for now). Taps from the landing to the end of the rounds ("Here's where you stand"), simplest answers: 43 before the run, 44 now (the age page is gone, the question about how money feels moved up and takes one tap).

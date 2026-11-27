@@ -261,6 +261,7 @@ function openSetupQuest(mode) {
     const S = JSON.parse(localStorage.getItem(QUEST_SPOT_KEY) || "null");
     if (!S || !S.w || S.w.kind !== "setup" || !S.d || daysBetween(S.d, todayISO()) > 7) return false;
     W = S.w;
+    if (typeof smSpotFix === "function") smSpotFix(W); /* smart.js: a copy from an older order of the pages */
     sheet(setupSheet);
     return true;
   } catch (e) {

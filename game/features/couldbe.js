@@ -1583,6 +1583,9 @@ function finishSetupCb(w, o) {
   try {
     if (w && w.cbRest && o && o.x && o.x.cb) {
       o.x.cb.setup = true;
+      /* the age was changed in the rounds ("Change" on the first page): the answer of the four questions follows */
+      const a = o.x.cb.a;
+      if (a && a.age && Math.round(a.age.v) !== o.age) a.age = { v: o.age, cf: 3 };
       save();
     }
     if (!w || !w.cbMade) return false;
@@ -1629,6 +1632,8 @@ function cbRestSpot() {
     const w = typeof questSnap === "function" ? questSnap(S.w) : null;
     if (!w) return false;
     Object.assign(W, w);
+    W.ord = w.ord; /* a copy from an older order of the pages has none */
+    if (typeof smSpotFix === "function") smSpotFix(W); /* smart.js: a copy from an older order of the pages */
     return true;
   } catch (e) {
     report(e, "couldbe.js: cbRestSpot");
@@ -1834,6 +1839,8 @@ Object.assign(ACT, {
     openSetup("new");
     if (W && W.kind === "setup") {
       W.cbRest = true;
+      /* smart.js: the age of the four questions is not asked again, so the rounds start on the next page */
+      if (typeof smSkip === "function" && smSkip(W, W.step)) W.step = smNextPage(W.step, W);
       if (typeof doorGuest === "function" && doorGuest()) W.door = true;
       cbRestSpot(); /* the page the player left, with the answers so far */
       drawSheet();

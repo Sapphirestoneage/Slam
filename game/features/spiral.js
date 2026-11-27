@@ -6,7 +6,10 @@
                the rounds before it (a small chain), and moves a slim route strip of the eras with a "you are
                here" marker ("Recalculating route" when something moved). The round ends on a level change:
                what was entered, a short coaching summary, "Next" or "Stop here, I'll come back". After the
-               last round: "Your first plan", written as a route.
+               last round: "Your first plan", written as a route. Run SLAM-ONBOARD-1 (Nov 27 2026): About you
+               holds the four pages of taps (age, work, home, people) before the first letter; the screen
+               between two rounds says why the next round asks when a want of the player is about it
+               (spWhy, wants.js); a player who answered "I'd rather not look" gets the gentle words.
    INPUT       The setup sheet (W.kind setup): W.step, W.o, W.sp (the screen between two rounds), W.spLast
                (the route of the round before), W.spBeat (the pick that shows for a beat). The profile, for
                the first plan. The taps of the player (the actions in OUTPUT).
@@ -26,12 +29,12 @@
                (edit mode) keeps the pages in this order, with no screens between the rounds.
    ========================================================================= */
 const SP_ROUNDS = [
-  { L: "", n: "About you", one: "Before the five questions", icon: "👋", pages: [0] },
-  { L: "D", icon: "💳", pages: [9, 4, 10] },
+  { L: "", n: "About you", one: "Before the five questions. All taps, no numbers.", icon: "👋", pages: [0, 1, 2, 3] },
+  { L: "D", icon: "💳", pages: [4, 9, 10] },
   { L: "A", icon: "🏦", pages: [5, 11, 7] },
-  { L: "I", icon: "💵", pages: [1, 12] },
+  { L: "I", icon: "💵", pages: [12] },
   { L: "T", icon: "🧾", pages: [8] },
-  { L: "E", icon: "🛒", pages: [2, 3, 13, 6] },
+  { L: "E", icon: "🛒", pages: [13, 6] },
 ];
 SP_ROUNDS.forEach(r => {
   const a = typeof KW_AREAS !== "undefined" ? KW_AREAS.find(x => x[0] === r.L) : null;
@@ -56,6 +59,21 @@ function spUpSoon() {
   if (typeof setTimeout === "function") setTimeout(spUp, 0);
 }
 const spOn = w => !!(w && w.kind === "setup" && w.mode !== "edit");
+/* GENTLE MODE IN SETUP (run SLAM-ONBOARD-1). "I'd rather not look" at the end of About you sets o.gentle at once
+   (smart.js). The rounds then use the gentle words that the game already has: the name of the first era
+   (GENTLE_ERA in ui.js), "when you're ready" in front of the debt number, and the smallest debt first. */
+const spEraName = (c, i) => (c && c.gentle && i === 0 && typeof GENTLE_ERA !== "undefined" ? GENTLE_ERA.n : ERAS[i].n);
+/* WHY THIS ROUND (run SLAM-ONBOARD-1). The line that ties round R to a want of the player (wants.js), or null when
+   no want is about the round. w.o holds the wants as goals during setup. */
+function spWhy(w, R) {
+  try {
+    const m = R && R.L && typeof wnMatch === "function" ? wnMatch(w.o, [R.L]) : null;
+    return m ? "Asking because you picked " + m.l + "." : null;
+  } catch (e) {
+    report(e, "spiral.js: spWhy");
+    return null;
+  }
+}
 /* The last page of round R that this player sees (a page with nothing to ask is passed over, smart.js smSkip). */
 function spLastPage(w, R) {
   const live = R.pages.filter(p => !(typeof smSkip === "function" && smSkip(w, p)));
@@ -391,7 +409,16 @@ function spChecklistHtml(w, r, all) {
 /* Part of setupSheetBase() in ui.js: the top of a page of setup. Null in edit mode. */
 function spHead(w) {
   if (!spOn(w)) return null;
-  return spTop(w, w.step) + spChecklistHtml(w, spRoundOf(w.step));
+  /* the first round with a letter has no screen before it: its first page says why it asks */
+  const r = spRoundOf(w.step),
+    R = SP_ROUNDS[r],
+    first = R.pages.find(p => !(typeof smSkip === "function" && smSkip(w, p))),
+    why = r === 1 && first === w.step ? spWhy(w, R) : null;
+  return (
+    spTop(w, w.step) +
+    (why ? `<div class="tiny muted spwhy" data-fid="sp:why">${esc(why)}</div>` : "") +
+    spChecklistHtml(w, r)
+  );
 }
 /* Part of setupSheetBase() in ui.js: the label of Next. */
 function spNextLabel(w) {
@@ -500,7 +527,7 @@ function spRouteStrip(c, d, rt, was) {
     .map((e, i) => `<i class="${i < era ? "done" : i === era ? "here" : ""}"></i>`)
     .join(
       ""
-    )}</div><div class="small">You are here: <b>${esc(ERAS[era].n)}</b>${dest ? `. Next stop: <b>${esc(dest.n)}</b>, ${esc(spWhen(dest.m))}` : ""}.</div>${movedEra ? `<div class="tiny">You moved from ${esc(ERAS[was.era].n)} to ${esc(ERAS[era].n)}.</div>` : ""}${words ? `<div class="tiny">${esc(words.line)}</div>` : ""}</div>`;
+    )}</div><div class="small">You are here: <b>${esc(spEraName(c, era))}</b>${dest ? `. Next stop: <b>${esc(dest.n)}</b>, ${esc(spWhen(dest.m))}` : ""}.</div>${movedEra ? `<div class="tiny">You moved from ${esc(spEraName(c, was.era))} to ${esc(spEraName(c, era))}.</div>` : ""}${words ? `<div class="tiny">${esc(words.line)}</div>` : ""}</div>`;
 }
 function spRevealSheet(w) {
   const r = w.sp.r,
@@ -515,15 +542,19 @@ function spRevealSheet(w) {
       : R.L === "T"
         ? "A common share: about " + N.pct + "% of pay goes to taxes and other things taken out before it lands."
         : "",
-    later = "After setup, tap any number to put in yours.";
+    later = "After setup, tap any number to put in yours.",
+    num = `<div class="spnum pop"><div class="eyebrow">${esc(N.what)}</div><div class="spbig ${N.st === "Guess" ? "guess" : ""}" data-fid="sp:big">${esc(N.big)}</div>${kitPill(N.st)}</div>`,
+    soft = c.gentle && R.L === "D" && !N.none;
   return (
-    spTop(w, R.pages[R.pages.length - 1], true) +
-    `<div class="spnum pop"><div class="eyebrow">${esc(N.what)}</div><div class="spbig ${N.st === "Guess" ? "guess" : ""}" data-fid="sp:big">${esc(N.big)}</div>${kitPill(N.st)}</div>` +
+    spTop(w, spLastPage(w, R), true) +
+    (soft
+      ? `<div class="small" data-fid="sp:soft">${esc(GENTLE_ERA.one)}</div><details class="spsoft"><summary>What you owe, when you're ready</summary><div class="inner">${num}${spChain(r, c, d)}</div></details>`
+      : num) +
     `<div class="small">${esc(spConnect(R.L, c, d, rt))}</div>` +
     (N.st === "Guess" && why
       ? `<details class="wfrom"><summary class="tiny">Where's this from?</summary><div class="tiny muted" style="margin-top:4px">${esc(why)} ${later}</div></details>`
       : "") +
-    spChain(r, c, d) +
+    (soft ? "" : spChain(r, c, d)) +
     spRouteStrip(c, d, rt, w.sp.was) +
     `<button class="primary wide go" data-a="spnext">Next</button>`
   );
@@ -535,6 +566,10 @@ function spCoach(L, c, d) {
     if (!debts.length)
       return '<div class="small">Nothing owed. Every dollar left over can go to your cushion and your future.</div>';
     const hi = debts.filter(x => x.high).map(x => x.k.toLowerCase());
+    if (c.gentle) {
+      const small = debts.slice().sort((a, b) => a.amt - b.amt)[0];
+      return `<div class="small">${debts.length} ${debts.length === 1 ? "debt" : "debts"}. Smallest first: ${esc(small.k.toLowerCase())}. Quickest first win.</div>`;
+    }
     return `<div class="small">${debts.length} ${debts.length === 1 ? "debt" : "debts"}, about ${money(spSum(debts, x => x.amt))} in all. ${hi.length ? "The kinds that often charge 8% or more usually go first: " + esc(hi.join(", ")) + "." : "None of these is usually the costly kind (8% or more)."}</div>`;
   }
   if (L === "A")
@@ -571,10 +606,11 @@ function spLevelSheet(w) {
   const r = w.sp.r,
     R = SP_ROUNDS[r],
     nx = SP_ROUNDS[r + 1],
-    P = spPreview(w);
+    P = spPreview(w),
+    why = nx ? spWhy(w, nx) : null;
   return (
-    spTop(w, R.pages[R.pages.length - 1], true) +
-    `<div class="levelup spdone"><div class="spburst" aria-hidden="true">✓</div><h2>${esc(R.n)} ✓, ${nx ? "now " + esc(nx.n) : "your first plan is next"}</h2><div class="small">${nx ? esc(nx.icon + " " + nx.one) : "A route from here to your next stops."}</div></div>` +
+    spTop(w, spLastPage(w, R), true) +
+    `<div class="levelup spdone"><div class="spburst" aria-hidden="true">✓</div><h2>${esc(R.n)} ✓, ${nx ? "now " + esc(nx.n) : "your first plan is next"}</h2><div class="small" data-fid="sp:next">${nx ? esc(why ? "Next: your " + nx.n.toLowerCase() + ". " + why : nx.icon + " " + nx.one) : "A route from here to your next stops."}</div></div>` +
     `<div class="tiny muted">What you put in. Tap a line to change it.</div>` +
     spChecklistHtml(w, r, true) +
     spCoach(R.L, P.c, P.d) +

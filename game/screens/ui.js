@@ -702,6 +702,7 @@ function home() {
     h = homeQuestRow(h); /* questlog.js: Continue and "Where am I", under the top numbers */
   if (typeof homeRcRow === "function") h = homeRcRow(h); /* recalc.js: the row "Recalculating", when a date moved */
   if (typeof homeDoorRow === "function") h = homeDoorRow(h); /* okay.js: a game with no account, and how to keep it */
+  if (typeof homeConfirmRow === "function") h = homeConfirmRow(h); /* supa.js: the email waits for its link */
   if (typeof homeFoundingCard === "function")
     h = homeFoundingCard(h); /* founding.js: the one-time card of a Founding Tester */
   return h;
@@ -1696,6 +1697,7 @@ function openSetup(mode) {
   if (typeof openSetupCb === "function")
     openSetupCb(base, mode); /* couldbe.js: the rest of setup keeps the four answers */
   W = { kind: "setup", mode, add: mode === "add", step: 0, o: base };
+  if (typeof SM_ORDER_V !== "undefined") W.ord = SM_ORDER_V; /* smart.js: the order of the pages this sheet has */
   sheet(setupSheet);
 }
 /* THE SETUP SHEET.
@@ -5357,24 +5359,21 @@ Object.assign(GLOSS, {
 });
 DASH.splice(3, 0, ["goals", "Someday list"], ["rate", "What you keep"]);
 
-/* gentle mode softens the first era */
+/* gentle mode softens the first era. GENTLE_ERA has its words: spiral.js reads them too, for the rest of setup. */
+const GENTLE_ERA = { n: "Getting Started", one: "This is the start. One small step at a time, at your pace." };
 function eraOne(d) {
   return C().gentle && d.era === 0
-    ? "This is the start. One small step at a time, at your pace."
+    ? GENTLE_ERA.one
     : d.era === 0 && d.realm === "Surface"
       ? "You own more than you owe, but there's no cushion yet."
       : ERAS[d.era].one;
 }
 function eraName(d) {
-  return C().gentle && d.era === 0
-    ? "Getting Started"
-    : d.era === 0 && d.realm === "Surface"
-      ? "Ground Floor"
-      : eraN(d.era);
+  return C().gentle && d.era === 0 ? GENTLE_ERA.n : d.era === 0 && d.realm === "Surface" ? "Ground Floor" : eraN(d.era);
 }
 function eraHead(d) {
   return C().gentle && d.era === 0
-    ? "Getting Started"
+    ? GENTLE_ERA.n
     : d.era === 0 && d.realm === "Surface"
       ? "Ground Floor"
       : VO().eras

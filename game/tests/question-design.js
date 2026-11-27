@@ -31,19 +31,44 @@
   openSetup("new");
   X("agedec", "20s", "ageDec");
   X("setn", "26", "age");
+  /* run SLAM-ONBOARD-1: About you (work, home, people, how money feels) comes before the first letter */
+  X("set", "Between jobs", "work");
   let h = ov();
-  chk("D starts by counting the cards", W.step === 9 && h.includes("How many credit cards do you have?"), W.step);
+  chk(
+    "About you asks: What money comes in? with plain names",
+    h.includes("What money comes in?") && h.includes(">Allowance or family help<") && h.includes(">Job<")
+  );
+  X("tog", "A main job", "incKinds");
+  X("tog", "Help from family", "incKinds");
+  X("smdone", null, "incKinds");
+  X("set", "Changes month to month", "steady");
+  X("set", "I rent", "homeQ");
+  X("tog", "Roommates", "live");
+  X("smdone", null, "live");
+  chk("roommates: how many", ov().includes("How many roommates?") && ov().includes('data-v="4+"'));
+  X("set", "2", "roommateQ");
+  X("set", "Single by choice", "rel");
+  X("set", "None", "deps");
+  X("set", "No one", "share");
+  X("smskip", null, "feel0");
+  h = ov();
+  chk(
+    "D starts with the kinds of debt, the credit card balance too",
+    W.step === 4 && h.includes('data-v="Credit card balance"'),
+    W.step
+  );
+  X("tog", "Credit card balance", "debtKinds");
+  X("tog", "Student loans", "debtKinds");
+  N();
+  h = ov();
+  chk("then it counts the cards", W.step === 9 && h.includes("How many credit cards do you have?"), W.step);
   A("cards.n", 3, "3");
   h = ov();
   chk("then how many carry a balance", h.includes("How many carry a balance month to month?") && h.includes("All 3"));
   A("cards.carry", 2, "2");
-  chk("the card count page moves on by itself", W.step === 4, W.step);
-  chk("the credit card row is not asked again on the kinds page", !ov().includes('data-v="Credit card balance"'));
-  X("tog", "Student loans", "debtKinds");
-  N();
   h = ov();
   chk(
-    "each card on its own screen: Card 1 of 2, the bank first",
+    "the card count page moves on by itself to each card on its own screen: Card 1 of 2, the bank first",
     W.step === 10 && h.includes("Card 1 of 2") && h.includes("Which bank is it from?") && h.includes('data-v="Chase"'),
     W.step
   );
@@ -180,17 +205,7 @@
   );
   chk("what you have is a range", /about/.test(spNumber("A", P2.c, P2.d).big), spNumber("A", P2.c, P2.d).big);
   nxt();
-  /* I: income */
-  X("set", "Between jobs", "work");
-  h = ov();
-  chk(
-    "I asks: What money comes in? with plain names",
-    h.includes("What money comes in?") && h.includes(">Allowance or family help<") && h.includes(">Job<")
-  );
-  X("tog", "A main job", "incKinds");
-  X("tog", "Help from family", "incKinds");
-  X("smdone", null, "incKinds");
-  X("set", "Changes month to month", "steady");
+  /* I: income (the work and the kinds of money were asked in About you) */
   h = ov();
   chk(
     "then each source: how often first",
@@ -225,15 +240,7 @@
   X("set", "About 15%", "taxQ");
   X("set", "Yes, some", "taxAcctQ");
   nxt();
-  /* E: household and spending */
-  X("set", "I rent", "homeQ");
-  X("tog", "Roommates", "live");
-  X("smdone", null, "live");
-  chk("roommates: how many", ov().includes("How many roommates?") && ov().includes('data-v="4+"'));
-  X("set", "2", "roommateQ");
-  X("set", "Single by choice", "rel");
-  X("set", "None", "deps");
-  X("set", "No one", "share");
+  /* E: spending (the household was asked in About you) */
   h = ov();
   chk(
     "spending, one group per screen, with its icon and live total",

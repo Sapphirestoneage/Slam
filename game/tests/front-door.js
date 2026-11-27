@@ -213,11 +213,29 @@
       if (W && W.sp && W.sp.at === "reveal") T("spnext");
       if (W && W.sp && W.sp.at === "level") T("spgo");
     };
-  P(0);
-  P(9); /* amounts.js: the cards, Next leaves them a guess */
+  /* run SLAM-ONBOARD-1: About you first (work, home, people; the age is not asked again), then D, A, I, T, E */
+  chk(
+    "the age of the four answers is filled, with one tap to change it",
+    W.step === 1 && /data-fid="sm:age"/.test(ov()) && /data-a="smage"/.test(ov()) && !/How old are you/.test(ov()),
+    W.step
+  );
+  T("set", "Established", "work");
+  T("tog", "A main job", "incKinds");
+  P(1);
+  T("set", "Steady", "steady");
+  P(1);
+  T("set", Object.keys(HOMEMAP)[0], "homeQ");
+  T("tog", "On my own", "live");
+  P(2);
+  T("set", "Single by choice", "rel");
+  T("set", "None", "deps");
+  T("set", "No one", "share");
+  P(3); /* how money feels is optional: Next passes it */
   chk("page 5 from the door has no fast finish", W.step === 4 && !/speedfin/.test(ov()), W.step);
   T("tog", "Credit card balance", "debtKinds");
   P(4);
+  P(9); /* amounts.js: the cards, Next leaves them a guess */
+  P(10);
   R();
   P(5);
   P(11);
@@ -226,24 +244,12 @@
   T("set", "Less than a month", "cover");
   T("set", "No", "invest");
   R();
-  T("set", "Established", "work");
-  T("tog", "A main job", "incKinds");
-  P(1);
-  T("set", "Steady", "steady");
-  P(1);
   P(12);
   R();
   T("set", "I don't know", "taxQ");
   T("set", "I don't know", "matchQ");
   P(8);
   R();
-  T("set", Object.keys(HOMEMAP)[0], "homeQ");
-  T("tog", "On my own", "live");
-  P(2);
-  T("set", "Single by choice", "rel");
-  T("set", "None", "deps");
-  T("set", "No one", "share");
-  P(3);
   P(13);
   P(6);
   R();

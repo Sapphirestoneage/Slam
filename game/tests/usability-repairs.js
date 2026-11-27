@@ -125,8 +125,8 @@
   X("setn", "34", "age");
   o = ov();
   chk(
-    "age moves on to round 1 (Debts), and the counter drops by one",
-    W.o.age === 34 && W.step === 9 && o.includes("Question 1 of 5") && smLeft(W) === left0 - 1
+    "age moves on to your work (About you, run SLAM-ONBOARD-1), and the counter drops by one",
+    W.o.age === 34 && W.step === 1 && o.includes("<h2>About you</h2>") && smLeft(W) === left0 - 1
   );
   W.step = 7;
   drawSheet();

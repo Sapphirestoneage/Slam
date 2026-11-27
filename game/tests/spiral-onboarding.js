@@ -34,15 +34,45 @@
   X("agedec", "30s", "ageDec");
   X("setn", "31", "age");
   h = ov();
+  /* Run SLAM-ONBOARD-1 (Nov 27 2026): About you holds the four pages of taps, before the first letter */
   chk(
-    "after age, round 1 is D: Debts, and it starts with the cards (amounts.js)",
-    W.step === 9 && h.includes("Question 1 of 5") && h.includes("<b>Debts</b>: What you owe"),
+    "after age, About you goes on with your work: no letter yet",
+    W.step === 1 && /<h2>About you<\/h2>/.test(h) && !h.includes("Question 1 of 5"),
     W.step
   );
-  N();
-  chk("then the other kinds of debt", W.step === 4, W.step);
+  X("set", "Between jobs", "work");
+  X("tog", "Unemployment or benefits", "incKinds");
+  X("tog", "Help from family", "incKinds");
+  X("smdone", null, "incKinds");
+  X("set", "Changes month to month", "steady");
+  chk("then your home", W.step === 2 && /<h2>About you<\/h2>/.test(ov()), W.step);
+  X("set", "I rent", "homeQ");
+  X("tog", "Roommates", "live");
+  X("smdone", null, "live");
+  chk("roommates: how many (amounts.js)", ov().includes("How many roommates?"));
+  X("set", "2", "roommateQ");
+  chk("then your people", W.step === 3, W.step);
+  X("set", "Single by choice", "rel");
+  X("set", "None", "deps");
+  X("set", "No one", "share");
+  h = ov();
+  chk(
+    "About you ends on how money feels: the page waits for it",
+    W.step === 3 && h.includes("When you think about your money") && h.includes('data-a="smskip"'),
+    W.step
+  );
+  X("set", "Mostly fine", "feel0");
+  h = ov();
+  chk(
+    "round 1 is D: Debts, and it starts with the kinds of debt",
+    W.step === 4 && h.includes("Question 1 of 5") && h.includes("<b>Debts</b>: What you owe"),
+    W.step
+  );
+  chk("the kinds of debt have the credit card balance", h.includes('data-v="Credit card balance"'));
   X("tog", "Credit card balance", "debtKinds");
   X("tog", "Student loans", "debtKinds");
+  N();
+  chk("then the credit cards, after the kinds (amounts.js)", W.step === 9, W.step);
   N();
   chk("the last page of a round names its number", W.step === 10 && ov().includes("See my debts number"), W.step);
   N();
@@ -95,13 +125,7 @@
   );
   X("spnext");
   X("spgo");
-  chk("round 3 is I: your work", W.step === 1 && ov().includes("Question 3 of 5"));
-  X("set", "Between jobs", "work");
-  X("tog", "Unemployment or benefits", "incKinds");
-  X("tog", "Help from family", "incKinds");
-  X("smdone", null, "incKinds");
-  X("set", "Changes month to month", "steady");
-  chk("I asks each source of money next (amounts.js)", W.step === 12, W.step);
+  chk("round 3 is I: each source of money (amounts.js)", W.step === 12 && ov().includes("Question 3 of 5"), W.step);
   N();
   h = ov();
   chk("I ends on money coming in", W.sp && W.sp.r === 3 && /\$1,500 a month/.test(h), W.sp);
@@ -123,18 +147,15 @@
   );
   X("spnext");
   X("spgo");
-  chk("round 5 is E: your home", W.step === 2 && ov().includes("Question 5 of 5"));
-  X("set", "I rent", "homeQ");
-  X("tog", "Roommates", "live");
-  X("smdone", null, "live");
-  chk("roommates: how many (amounts.js)", ov().includes("How many roommates?"));
-  X("set", "2", "roommateQ");
-  X("set", "Single by choice", "rel");
-  X("set", "None", "deps");
-  X("set", "No one", "share");
-  chk("E asks spending group by group (amounts.js)", W.step === 13, W.step);
+  chk("round 5 is E: spending group by group (amounts.js)", W.step === 13 && ov().includes("Question 5 of 5"), W.step);
   N();
-  chk("E has a last page with two optional taps", W.step === 6, W.step);
+  h = ov();
+  chk(
+    "E has a last page with one optional tap: Social Security",
+    W.step === 6 && h.includes("Social Security") && !h.includes("When you think about your money"),
+    W.step
+  );
+  X("set", "Yes, in full", "ssq");
   N();
   h = ov();
   chk(
@@ -155,14 +176,13 @@
   );
   chk("the last level change goes to the first plan", h.includes("Next: your first plan"));
   /* change an earlier answer from the checklist: the same question comes back with the answer lit */
-  X("spline", "2", "homeQ");
+  X("spline", "6", "ssq");
   chk(
     "a checklist line opens the same question with its answer lit",
-    W.step === 2 && /class="chip on[^"]*"[^>]*data-v="I rent"/.test(ov())
+    W.step === 6 && /class="chip on[^"]*"[^>]*data-v="Yes, in full"/.test(ov())
   );
-  X("set", "No cost", "homeQ");
-  chk("the change is kept", W.o.homeQ === "No cost");
-  X("smdone", null, "live");
+  X("set", "No, leave it out", "ssq");
+  chk("the change is kept", W.o.ssq === "No, leave it out");
   for (let i = 0; i < 6 && W.kind === "setup" && !W.sp; i++) N();
   chk("the round shows its number again, recalculated", W.sp && W.sp.r === 5, W.sp);
   X("spnext");

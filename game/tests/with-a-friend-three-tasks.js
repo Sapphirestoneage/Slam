@@ -225,7 +225,8 @@
   X("cbset", "", "", { q: "inv", i: 3 });
   X("cbset", "", "", { q: "save", i: 3 });
   X("cbrest");
-  chk("Finish setup opens the rest of setup at its first page", W.kind === "setup" && W.cbRest && W.step === 0);
+  /* run SLAM-ONBOARD-1: the age of the four questions is not asked again, so the first page is your work (1) */
+  chk("Finish setup opens the rest of setup at its first page", W.kind === "setup" && W.cbRest && W.step === 1, W.step);
   chk("with no page left before, nothing is put back", cbRestSpot() === false);
   const c2 = C();
   c2.x.spot = { kind: "setup", v: "", w: Object.assign(clone(W), { step: 4, mark: "kept" }), d: todayISO() };
@@ -239,11 +240,26 @@
   X("close");
   c2.x.spot = { kind: "setup", v: "", w: Object.assign(clone(c2.x.spot.w), { step: 4 }), d: addDays(todayISO(), -8) };
   X("cbrest");
-  chk("a copy older than 7 days is not used", W.kind === "setup" && W.step === 0);
+  chk("a copy older than 7 days is not used", W.kind === "setup" && W.step === 1);
   X("close");
   c2.x.spot = { kind: "setup", v: "", w: { kind: "setup", mode: "edit", step: 4, o: {} }, d: todayISO() };
   X("cbrest");
-  chk("a copy of another kind of setup is not used", W.kind === "setup" && W.step === 0 && W.mode === "new");
+  chk("a copy of another kind of setup is not used", W.kind === "setup" && W.step === 1 && W.mode === "new");
+  X("close");
+  /* a copy from before the new order of the pages (it has no number of the order): the player left on page 5, in
+     the old second round, and never saw your work, your home or your people */
+  const oldW = Object.assign(clone(c2.x.spot.w), { kind: "setup", mode: "new", cbRest: true, step: 5, o: null });
+  X("cbrest");
+  oldW.o = clone(W.o);
+  delete oldW.ord;
+  X("close");
+  c2.x.spot = { kind: "setup", v: "", w: oldW, d: todayISO() };
+  X("cbrest");
+  chk(
+    "a copy from the older order of the pages comes back on the first page of About you that needs an answer",
+    W.kind === "setup" && W.step === 1 && W.ord === SM_ORDER_V,
+    W.step
+  );
   X("close");
   G = clone(G0);
   W = null;

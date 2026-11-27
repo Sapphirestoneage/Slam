@@ -306,7 +306,9 @@
     /starts on/.test(suShareLine(true)) &&
       /your coach's invite/.test(suShareLine(true)) &&
       /starts off/.test(suShareLine(false)) &&
-      supa.includes("suShareLine(SUPA.invited)")
+      supa.includes("suGateTop(mode, SUPA.invited)") &&
+      suGateTop("new", true).includes(suShareLine(true)) &&
+      suGateTop("new", false).includes(suShareLine(false))
   );
   chk(
     "the game sends the value with each save, and a new account takes it from the arrival",

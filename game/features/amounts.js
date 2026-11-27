@@ -724,6 +724,7 @@ SETUP[10] = {
   t: "Each debt, one at a time",
   req: w => true,
   skip: w => !amPageOn(w, 10) || !amSteps(w, 10).length,
+  maybe: w => amPageOn(w, 10) /* smart.js smLive: it counts in "page X of N" while it is still ahead */,
   b: w => amBody(w, 10),
 };
 SETUP[11] = {
@@ -736,6 +737,7 @@ SETUP[12] = {
   t: "Each source of money",
   req: w => true,
   skip: w => !amPageOn(w, 12) || !(w.o.incKinds || []).length,
+  maybe: w => amPageOn(w, 12),
   b: w => amBody(w, 12),
 };
 SETUP[13] = {

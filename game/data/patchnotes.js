@@ -632,6 +632,17 @@ const PATCH_NOTES = [
       "In your first week the bar has four places: Home, Next Steps, My Money and My number. Everything else is in the menu, with a new Tool library, and the other tabs come back after.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "A new start: what you want comes first",
+    l: [
+      "A new game starts with What you want: tap all that fit. Your picks show as tags, and later screens say when they ask because of one.",
+      "Not sure about a number? Tap No idea, use typical. It fills a typical value for your age as a Guess, and Make it mine changes it.",
+      "From the first way on, both numbers sit in one slim strip at the top, and the last screen shows your first move with Add to my steps.",
+      "Finish setup starts with About you, all taps: work, home, your people. Your age is already filled. Then debts, what you have, income, taxes, spending.",
+      "Create account is shorter, the password box has Show and Hide, and if your email needs confirming you keep playing: Home has Send again.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

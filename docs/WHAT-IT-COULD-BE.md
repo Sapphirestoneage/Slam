@@ -445,3 +445,16 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
 - **The strip.** `cbSlim(step)` is false for `is`, `chart` and `layer`, true for every other step. A new step of the flow gets the strip by itself.
 - **Taps.** 6 to the first number, 9 to the reveal, 10 to the last screen (one more than before: the new screen).
 - **A test player.** `X("start"); X("wnskip");` then the four taps. A tap on a range chip does nothing while What you want is open.
+
+## Run SLAM-ONBOARD-1, worker 2 (Nov 27 2026)
+
+- **The order of the rounds.** `SM_ORDER` in `screens/smart.js` and `SP_ROUNDS` in `features/spiral.js`: About you (pages 0, 1, 2, 3), D (4, 9, 10), A (5, 11, 7), I (12), T (8), E (13, 6). `tests/setup-order-and-account.js` fails when the two lists differ from this.
+- **The age.** In the rest of setup the age page is passed over. The first page shows the age with "Change" (`smAgeRow`, `ACT.smage`). A changed age is written to `c.x.cb.a.age` when setup ends.
+- **How money feels.** The last question of page 3. "I'd rather not look" sets `W.o.gentle` at once. The rounds then read `c.gentle`: `spEraName`, the fold of the D number, the D summary. The gentle words are in `GENTLE_ERA` (`ui.js`).
+- **Social Security.** `smSsDone(w)` is true when the way `ss` of the flow has an answer. Page 6 then has no question, only the name.
+- **Why a round asks.** `spWhy(w, R)`. To change which want is about which round, change the tags in `WN_LIST`.
+- **The resume point.** `W.ord` is the number of the page order (`SM_ORDER_V`). When you change `SM_ORDER` again, raise `SM_ORDER_V` and extend `smSpotFix`.
+- **A new page that a later answer can bring in:** give it `maybe: w => ...` next to `skip`, so that "page X of N" counts it while it is ahead.
+- **Create account.** `suGateTop`, `suPwBox` and `homeConfirmRow` in `account/supa.js`. The row shows while `su_wait` holds an address and nobody is signed in.
+- **Taps.** 10 to the last screen of the flow, 44 to "Here's where you stand" with the simplest answers.
+- **Not built.** The cards page is still asked when the player did not tap "Credit card balance" (it also counts cards paid in full). The confirm row has no "I confirmed" button: the player signs in from "Keep this game" on Home.

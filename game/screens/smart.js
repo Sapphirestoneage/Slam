@@ -3,7 +3,9 @@
    PURPOSE     The setup questions change with each answer. The probable answers come first, the
                improbable answers fade, and answers that cannot be true together go behind "Show more".
    INPUT       The profile: c.x.cal, c.x.incFreq. The taps of the player (the actions in OUTPUT).
-   OUTPUT      15 functions. Parts of functions in other files: finishSetupPay, ledRowFreq. Actions
+   OUTPUT      Functions. The order of the pages: SM_ORDER, SM_ORDER_V, smSkip, smLive, smNextPage. Parts of
+               functions in other files: finishSetupPay, ledRowFreq, smSpotFix (openSetupQuest in
+               questlog.js, cbRestSpot in couldbe.js). Actions
                (ACT): smage, set, setn, tog, togb, agedec, wback, wnext, smopen, small, smskip, smdone,
                incfreq.
    DEPENDS ON  core/engine.js, screens/ui.js.
@@ -221,6 +223,14 @@ const SM_Q = {
       o: ["No one", "A partner", "More than one partner", "Family"],
       h: "Splitting rent or bills with a roommate doesn't count. This is about shared accounts or shared goals.",
     },
+    /* the last question of About you (run SLAM-ONBOARD-1): "I'd rather not look" turns gentle mode on at once */
+    {
+      k: "feel0",
+      l: "When you think about your money, what's closest?",
+      s: "How money feels",
+      o: ["Mostly fine", "A bit stressed", "I'd rather not look"],
+      opt: 1,
+    },
   ],
   0: [
     {
@@ -243,13 +253,6 @@ const SM_Q = {
       l: "Should the game count Social Security in your plan?",
       s: "Social Security",
       o: ["Yes, at three quarters, to be careful", "Yes, in full", "No, leave it out"],
-      opt: 1,
-    },
-    {
-      k: "feel0",
-      l: "When you think about your money, what's closest?",
-      s: "How money feels",
-      o: ["Mostly fine", "A bit stressed", "I'd rather not look"],
       opt: 1,
     },
   ],
@@ -278,15 +281,22 @@ const PF_R = {
   "Retirement income": { first: ["Monthly"], dim: ["Daily", "Weekly"], why: "retirement income is usually monthly" },
 };
 const pfSort = ks => ks.slice().sort((a, b) => (INC_W[b] || 0) - (INC_W[a] || 0));
-/* THE ORDER OF THE PAGES: the five rounds D, A, I, T, E (features/spiral.js). About you comes first.
-   D: your credit cards (9), what you owe (4), each debt (10). A: where your money lives (5), each account (11),
-   your cushion (7). I: your work (1), each source of money (12). T: what comes off the top (8). E: your home (2),
-   your people (3), spending group by group (13), the last two (6). Pages 9 to 13 are in features/amounts.js.
-   A page with skip(w) true is passed over (for example the amounts in "Change my answers"). */
-const SM_ORDER = [0, 9, 4, 10, 5, 11, 7, 1, 12, 8, 2, 3, 13, 6];
+/* THE ORDER OF THE PAGES (run SLAM-ONBOARD-1, Nov 27 2026): About you, then the five rounds D, A, I, T, E
+   (features/spiral.js). About you: your age (0), your work (1), your home (2), your people (3), all taps and no
+   numbers. D: what you owe, the kinds (4), your credit cards (9), each debt (10). A: where your money lives (5),
+   each account (11), your cushion (7). I: each source of money (12). T: what comes off the top (8). E: spending
+   group by group (13), the last one (6). Pages 9 to 13 are in features/amounts.js. A page with skip(w) true is
+   passed over (for example the amounts in "Change my answers"). SM_ORDER_V is the number of this order: a copy
+   of a round that was left under an older order has no such number (smSpotFix). */
+const SM_ORDER = [0, 1, 2, 3, 4, 9, 10, 5, 11, 7, 12, 8, 13, 6];
+const SM_ORDER_V = 2;
 const smSkip = (w, p) => !!(w && SETUP[p] && SETUP[p].skip && SETUP[p].skip(w));
 /* The pages this player sees, in order (for "page 2 of 11"). The page open now always counts. */
-const smLive = w => SM_ORDER.filter(p => p === (w && w.step) || !smSkip(w, p));
+/* A page that is still ahead and that a later answer can bring in (each debt, each source of money: maybe(w) in
+   amounts.js) counts too, so that N of "page X of N" does not grow while the player goes on. */
+const smMaybe = (w, p) =>
+  !!(w && SETUP[p] && SETUP[p].maybe && SETUP[p].maybe(w) && SM_ORDER.indexOf(p) > SM_ORDER.indexOf(w.step));
+const smLive = w => SM_ORDER.filter(p => p === (w && w.step) || !smSkip(w, p) || smMaybe(w, p));
 /* T: the taxes round. A question about the match only for a player with a job. */
 SM_Q[8] = [
   {
@@ -311,8 +321,17 @@ SM_Q[8] = [
   },
 ];
 const SM_TAXACCT = ["Retirement plan at work", "IRA or Roth IRA", "HSA"];
+/* Did the player already answer Social Security in What it is / What it could be (the way ss of couldbe.js)?
+   Count this, Already doing it and Not for me are all answers. */
+function smSsDone(w) {
+  const o = w && w.o;
+  if (!o || !o.x || !o.x.cb || typeof cbWayState !== "function") return false;
+  const st = cbWayState(o, "ss");
+  return !!(st.counted || st.how);
+}
 function smQs(w, i) {
   if (i === 0) return [];
+  if (i === 6) return SM_Q[6].filter(q => q.k !== "ssq" || !smSsDone(w));
   if (i === 2 && typeof amHouseQs === "function")
     return amHouseQs(w, SM_Q[2]); /* amounts.js: how many roommates, kids */
   if (i === 7) return SM_Q[0];
@@ -345,6 +364,22 @@ function smStepOn(w) {
 function smStepBack(w) {
   const n = smPrevPage(w.step, w);
   if (n != null) w.step = n;
+}
+/* Part of openSetupQuest() in questlog.js and of cbRestSpot() in couldbe.js. A copy of a round that was left under
+   an older order of the pages comes back on the first page of About you that still needs an answer, so that no
+   page is passed over. The answers so far stay. A copy of this order is not changed. */
+function smSpotFix(w) {
+  if (!w || w.kind !== "setup" || w.ord === SM_ORDER_V) return w;
+  w.ord = SM_ORDER_V;
+  if (w.mode === "edit") return w;
+  const miss = [0, 1, 2, 3].find(p => !smSkip(w, p) && !SETUP[p].req(w));
+  if (miss != null && SM_ORDER.indexOf(miss) < SM_ORDER.indexOf(w.step)) {
+    w.step = miss;
+    w.sp = null;
+    w.spBeat = null;
+    if (w.sm) w.sm.open = null;
+  }
+  return w;
 }
 /* Part of finishSetup() in ui.js. The answers of the taxes round go to the profile, then the work keys go. */
 function finishSetupTax() {
@@ -517,9 +552,18 @@ function smList(w, k, opts, help, rowOf) {
 const smName = w =>
   `<div class="field"><label class="small" for="name">${w.add ? "Who is this? A name for this person" : "A name for your character (optional)"}</label><input type="text" id="name" data-k="name" maxlength="20" value="${esc(w.o.name === "You" ? "" : w.o.name)}" placeholder="${w.add ? "Their name" : "You"}"></div>`;
 /* age follows the same one-question-at-a-time shape as the rest of setup: the decade, then the exact age, then it folds to a row you can change */
+/* The age that the player already gave (the four questions of couldbe.js), filled, with one tap to change it. */
+function smAgeRow(w) {
+  return `<div class="tile row between smage" data-fid="sm:age" style="gap:8px"><span class="small">Your age: <b>${esc(String(w.o.age))}</b><div class="tiny muted">From your four answers.</div></span><button class="ghost" data-a="smage">Change</button></div>`;
+}
+/* The age page is passed over in the rest of setup when the four questions already have the age. "Change" on the
+   next page (smage) opens it again. */
+SETUP[0].skip = w =>
+  !!(w && w.cbRest && !w.ageAsk && w.o.age != null && typeof spOn === "function" && spOn(w) && !w.add);
 SETUP[0].b = w => {
   const o = w.o,
     nm = w.add ? smName(w) : "";
+  if (o.age != null && typeof spOn === "function" && spOn(w) && w.cbRest) return nm + smAgeRow(w);
   if (o.age != null) return nm + smBody(w, [], { now: false });
   const dots = typeof spOn === "function" && spOn(w) ? "" : smDots(w, [], null, { now: true });
   if (!o.ageDec) return nm + dots + q("How old are you?", chipsRow("ageDec", Object.keys(DECADES), "", "agedec"));
@@ -541,15 +585,17 @@ Object.assign(ACT, {
       W.o.age = null;
       W.o.ageDec = null;
       W.err = false;
+      W.ageAsk = true;
+      W.step = 0;
       drawSheet();
     }
   },
 });
 [1, 2, 3].forEach(i => {
-  SETUP[i].b = w => smBody(w, smQs(w, i));
+  SETUP[i].b = w => (i === 1 && smSkip(w, 0) ? smAgeRow(w) : "") + smBody(w, smQs(w, i));
 });
 SETUP[6].b = w => smBody(w, smQs(w, 6)) + (w.add || smQs(w, 6).some(q => !smAns(w, q)) ? "" : smName(w));
-SETUP[6].t = "A last two";
+SETUP[6].t = "A last one";
 SETUP.push(
   { t: "Your cushion", req: w => !!(w.o.can1k && w.o.cover && w.o.invest), b: w => smBody(w, smQs(w, 7)) },
   { t: "What comes off the top", req: w => true, b: w => smBody(w, smQs(w, 8)) }
@@ -558,11 +604,9 @@ SETUP[4].b = w =>
   smList(
     w,
     "debtKinds",
-    DEBT_KINDS.map(d => d[0])
-      .filter(k => !(typeof spOn === "function" && spOn(w) && k === "Credit card balance")) /* asked on page 9 */
-      .concat("Mortgage"),
-    typeof spOn === "function" && spOn(w)
-      ? "Besides credit cards, tap every other kind you have. How much comes next, one at a time. If none, just tap Next."
+    DEBT_KINDS.map(d => d[0]).concat("Mortgage"),
+    typeof spOn === "function" && spOn(w) && !w.add
+      ? "Tap every kind you have. Your cards and how much come next, one at a time. If none, just tap Next."
       : "Tap every kind you have. No amounts. If you have none, just tap Next.",
     (v, lk, dm) => {
       const m = v === "Mortgage",
@@ -620,7 +664,9 @@ function smCascade(w, k, seen) {
     }
   });
 }
-const smFull = w => SETUP[w.step].req(w) && (smQs(w, w.step) || []).every(q => smAns(w, q) || q.opt);
+/* A page is full when each question has an answer. An optional question counts when it is answered or skipped, so
+   that the page waits for it (the last question of About you). */
+const smFull = w => SETUP[w.step].req(w) && (smQs(w, w.step) || []).every(q => smAns(w, q));
 function smAfter(w, k, was) {
   const s = smState(w);
   s.open = null;
@@ -630,7 +676,7 @@ function smAfter(w, k, was) {
   smCascade(w, "payFreq");
   const ok = SETUP[w.step].req(w),
     qs = smQs(w, w.step),
-    all = !qs || qs.every(q => smAns(w, q) || q.opt);
+    all = !qs || qs.every(q => smAns(w, q));
   if (!was && ok && all && !smIsLast(w) && !(w.add && w.step === 0)) {
     smStepOn(w);
     w.err = false;
@@ -658,6 +704,7 @@ function smAfter(w, k, was) {
     s.adv = 0;
     s.note = null;
     w.o[k] = t.dataset.v;
+    if (k === "feel0") w.o.gentle = w.o[k] === "I'd rather not look"; /* gentle mode for the rest of setup */
     w.err = false;
     delete s.auto[k];
     delete s.sk[k];
@@ -747,10 +794,10 @@ Object.assign(ACT, {
     const w = W,
       s = smState(w),
       k = t.dataset.k;
+    const was = smFull(w);
     s.sk[k] = true;
     w.o[k] = null;
-    s.open = null;
-    drawSheet();
+    smAfter(w, k, was);
   },
   smdone: t => {
     const w = W,

@@ -10,7 +10,7 @@
                The setup state (W.door).
    OUTPUT      Functions: okCalc, okSheet, doorAcctSheet, welcomeDoor. Parts of functions in other
                files: setupSheetDoor (setupSheet in ui.js), finishSetupOkay (finishSetup in ui.js),
-               homeDoorRow (home in ui.js). Actions (ACT): okay, doorsave, doorin. Menu: "Am I okay?".
+               homeDoorRow (home in ui.js). Actions (ACT): okay, doorsave, suagain, doorin. Menu: "Am I okay?".
    DEPENDS ON  core/report.js, core/engine.js (derive), screens/ui.js (C, D, head, sheet, nextStep,
                eraName, money, esc), features/kit.js (kitPill, kitMenu, kitScreen), account/door.js.
    RULES       No new number and no new formula: each number on the sheet is a number that derive() or
@@ -117,7 +117,8 @@ function okSheet() {
 function setupSheetDoor(h, w) {
   if (!w || !w.door || w.mode === "edit") return h;
   h = h.replace("Getting started · page", "Am I okay? · page");
-  if (w.step === 0)
+  /* the first page this player sees: the age page is passed over when the four questions have the age (smart.js) */
+  if (w.step === (typeof smLive === "function" ? smLive(w)[0] : 0))
     h = h.replace(
       "<h2>About you</h2>",
       `<h2>Am I okay?</h2><div class="small">A few pages of taps about you, then your first answer. No numbers, no typing.</div>`
@@ -171,6 +172,10 @@ Object.assign(ACT, {
   /* the sign-in screen, on "Create your account" */
   doorsave: () => {
     if (typeof doorSignIn === "function") doorSignIn("new");
+  },
+  /* supa.js: the row "Confirm your email to keep your plan" on Home, Send again */
+  suagain: () => {
+    if (typeof suAgain === "function") suAgain();
   },
   /* the sign-in screen, on "Sign in" */
   doorin: () => {

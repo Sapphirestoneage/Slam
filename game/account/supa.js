@@ -6,7 +6,9 @@
                and for the admin.
    INPUT       The game: G.active, G.chars, G.coachEdit, G.coachSeen, G.demo, G.suSeen. The open sheet
                (W.kind): suacct, sucoach, supw. The taps of the player (the actions in OUTPUT).
-   OUTPUT      15 functions. Parts of functions in other files: saveCoachMark, homeCoachNote. Actions
+   OUTPUT      Functions. The sign-up screen: suGate, with its parts suGateTop, suPwBox, suPwToggle. The email
+               that waits for its link: suWaitGet, suWaitPut, suWaitKeep, suAgain. Parts of functions in
+               other files: saveCoachMark, homeCoachNote, homeConfirmRow (home in ui.js). Actions
                (ACT): sugot, suacct, sushare, suout, supwgo, sucoach, suall, subring. Menu: "My
                account", "Shared with me".
    DEPENDS ON  core/report.js, account/trust.js.
@@ -18,7 +20,8 @@
                the database tables keep each saved game private. If the page already has window.claude
                (the retired copy inside Claude), this file does nothing.
    STATE       SUPA (on, sb, uid, email, ready, ids, share, shareKnown, invited, as, coach, t0). The switch
-               EMAIL_READY. The browser storage: su_coach (the invite mark), su_uid, su_as.
+               EMAIL_READY. The browser storage: su_coach (the invite mark), su_uid, su_as, su_wait (the
+               address of an account that waits for its email link; removed at sign-in).
    ========================================================================= */
 const SUPA_URL = "https://twuxggigsfsdczsyvupk.supabase.co";
 const SUPA_KEY = "sb_publishable_tSWobVdlrb-I5pTiGORWHA_z9JD5K-Z";
@@ -341,11 +344,85 @@ function suSet(s) {
   SUPA.uid = s.user.id;
   suLocal(SUPA.uid);
   SUPA.email = s.user.email || "";
+  suWaitPut(""); /* signed in: no email waits for its link on this device */
   const g = document.getElementById("su-gate");
   if (g) g.remove();
   if (typeof doorSigned === "function") doorSigned(); /* door.js: the landing screen goes away */
 }
 
+/* THE TOP OF THE SIGN-UP SCREEN (run SLAM-ONBOARD-1, Nov 27 2026). One line says who can see the game. One small
+   line under it says how sharing with a coach starts (suShareLine). The link to the privacy page is at the foot
+   of the screen (tuGateFoot in trust.js). */
+const SU_NEW_LINE = "Your game saves to your account. Eli can see it to support you.";
+function suGateTop(mode, invited) {
+  if (mode !== "new")
+    return `<h1>Sign in</h1><p>SLAM the Game. Welcome back. Your game is waiting where you left it.</p>`;
+  return `<h1>Create your account</h1><p class="su-one" style="margin:0 0 6px">${SU_NEW_LINE}</p><p class="su-share" style="margin:0 0 14px;font-size:13px">${suShareLine(invited)}</p>`;
+}
+/* The password box with its Show / Hide button. The button changes the box in place, so the typed letters stay. */
+function suPwBox(mode) {
+  return `<label for="su-p">Password ${mode === "new" ? "(at least 6 letters or numbers)" : ""}</label><div class="su-pw"><input id="su-p" type="password" autocomplete="${mode === "new" ? "new-password" : "current-password"}" required><button type="button" class="su-show" data-show aria-pressed="false" aria-controls="su-p" aria-label="Show the password">Show</button></div>`;
+}
+function suPwToggle(box, btn) {
+  const show = box.type === "password";
+  box.type = show ? "text" : "password";
+  btn.textContent = show ? "Hide" : "Show";
+  btn.setAttribute("aria-pressed", show ? "true" : "false");
+  btn.setAttribute("aria-label", show ? "Hide the password" : "Show the password");
+  return show;
+}
+/* THE EMAIL THAT WAITS FOR ITS LINK (run SLAM-ONBOARD-1). A visitor with a game on this device made an account,
+   and the account waits for the link in the email. The visitor stays in the game. This device keeps the address
+   (su_wait) until a person signs in, so that Home can offer "Send again". */
+function suWaitGet() {
+  try {
+    return (typeof localStorage !== "undefined" && localStorage.getItem("su_wait")) || "";
+  } catch (e) {
+    report(e, "supa.js: suWaitGet");
+    return "";
+  }
+}
+function suWaitPut(email) {
+  try {
+    if (typeof localStorage === "undefined") return;
+    if (email) localStorage.setItem("su_wait", email);
+    else if (localStorage.removeItem) localStorage.removeItem("su_wait");
+  } catch (e) {
+    report(e, "supa.js: suWaitPut");
+  }
+}
+/* True when the sign-up screen must close and leave the visitor in the game: the account waits for its email
+   link, and the visitor plays a game with no account. */
+function suWaitKeep(r) {
+  return !!(r && r.state === "confirm" && typeof doorGuest === "function" && doorGuest());
+}
+/* Part of home() in ui.js. One slim row while the email waits for its link. No pulse. */
+function homeConfirmRow(h) {
+  try {
+    const em = suWaitGet();
+    if (!em || G.demo || SUPA.uid || typeof doorGuest !== "function" || !doorGuest()) return h;
+    if (typeof homeRowAdd !== "function") return h;
+    return homeRowAdd(
+      h,
+      `<div class="homerow rskeep suwait" data-fid="su:wait" style="justify-content:space-between;align-items:center;gap:8px"><span class="small"><b>Confirm your email to keep your plan</b><div class="tiny muted" role="status">${esc2(SUPA.waitMsg || "We sent a link to " + em + ". Tap it, then sign in.")}</div></span><button class="ghost" data-a="suagain" style="min-height:44px;white-space:nowrap">Send again</button></div>`
+    );
+  } catch (e) {
+    report(e, "supa.js: homeConfirmRow");
+    return h;
+  }
+}
+/* "Send again" of that row: the confirmation email one more time, by the call of the sign-up screen (tuResend in
+   trust.js). The row then says what happened. */
+async function suAgain() {
+  const em = suWaitGet();
+  if (!em || !SUPA.sb || typeof tuResend !== "function") return false;
+  SUPA.waitMsg = "One moment.";
+  if (typeof doorRedraw === "function") doorRedraw();
+  const r = await tuResend(SUPA.sb, em, location.origin + location.pathname);
+  SUPA.waitMsg = r.ok ? "Sent again to " + em + ". It can take a few minutes." : r.msg;
+  if (typeof doorRedraw === "function") doorRedraw();
+  return !!r.ok;
+}
 /* the sign-in screen: two boxes and one button. Create account and Sign in are the same screen. */
 /* mode0: "in" opens it on Sign in (door.js). With door.js, the screen has a button Back. */
 function suGate(done, mode0) {
@@ -357,6 +434,9 @@ function suGate(done, mode0) {
  #su-gate input:focus{outline:none;border-color:var(--a1,#5b8cff)}
  #su-gate .su-go{width:100%;margin-top:16px;padding:14px;border:0;border-radius:12px;background:var(--a1,#5b8cff);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
  #su-gate .su-other{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:15px;font-weight:600;cursor:pointer}
+ #su-gate .su-pw{display:flex;gap:8px;align-items:stretch}#su-gate .su-pw input{flex:1;min-width:0}
+ #su-gate .su-show{min-width:64px;min-height:44px;padding:0 12px;border-radius:10px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:14px;font-weight:600;cursor:pointer}
+ #su-gate .su-show:focus-visible{outline:2px solid var(--a1,#5b8cff);outline-offset:2px}
  #su-gate .su-rep{display:flex;justify-content:flex-end;margin-top:6px}
  #su-gate .su-msg{margin-top:12px;font-size:14px;min-height:18px}#su-gate .su-link{background:none;border:0;color:var(--a3,#8fb0ff);text-decoration:underline;font-size:13px;margin-top:10px;cursor:pointer;padding:0}`;
   const el = document.createElement("div");
@@ -366,13 +446,15 @@ function suGate(done, mode0) {
   const here = () => location.origin + location.pathname;
   const draw = (msg = "", again = false) => {
     el.innerHTML = `<style>${css}</style><form class="su-card" novalidate>
-  <h1>${mode === "new" ? "Create your account" : "Sign in"}</h1><p>SLAM the Game. ${mode === "new" ? "Your game saves to your own account, so it follows you to any phone or laptop. You and the person who runs SLAM can see it. A coach sees it only while Share with my coach is on." : "Welcome back. Your game is waiting where you left it."}</p>
+  ${suGateTop(mode, SUPA.invited)}
   <label for="su-e">Email</label><input id="su-e" type="email" autocomplete="email" inputmode="email" value="${esc2(em)}" required>
-  <label for="su-p">Password ${mode === "new" ? "(at least 6 letters or numbers)" : ""}</label><input id="su-p" type="password" autocomplete="${mode === "new" ? "new-password" : "current-password"}" required>
+  ${suPwBox(mode)}
   <button class="su-go" type="submit">${mode === "new" ? "Create my account" : "Sign in"}</button>
   <button type="button" class="su-other" data-m="${mode === "new" ? "in" : "new"}">${mode === "new" ? "I already have an account. Sign in" : "I'm new. Create an account"}</button>
   ${mode === "in" ? suForgotHTML(EMAIL_READY) : ""}
-  ${mode === "new" ? `<p style="margin:12px 0 0;font-size:13px">${suShareLine(SUPA.invited)}</p><p style="margin:8px 0 0;font-size:13px">The owner of this app can view accounts for safety and support.</p>` : ""}<div class="su-msg" role="status">${msg}</div>${again ? `<button type="button" class="su-other" data-again>Send the email again</button>` : ""}${typeof tuGateFoot === "function" ? tuGateFoot() : ""}<div class="su-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+  <div class="su-msg" role="status">${msg}</div>${again ? `<button type="button" class="su-other" data-again>Send the email again</button>` : ""}${typeof tuGateFoot === "function" ? tuGateFoot() : ""}<div class="su-rep"><button type="button" class="rp-btn rp-open" data-a="flag">Report</button></div>${typeof doorGateBack === "function" ? doorGateBack() : ""}</form>`;
+    const sh = el.querySelector("[data-show]");
+    if (sh) sh.onclick = () => suPwToggle(el.querySelector("#su-p"), sh);
     const ag = el.querySelector("[data-again]");
     if (ag)
       ag.onclick = async () => {
@@ -426,6 +508,15 @@ function suGate(done, mode0) {
       if (r.state === "in") {
         suSet(r.session);
         done();
+        return;
+      }
+      /* a visitor with a game on this device stays in the game: Home has the row "Confirm your email" */
+      if (suWaitKeep(r)) {
+        suWaitPut(e);
+        SUPA.waitMsg = "";
+        el.remove();
+        if (typeof doorBack === "function") doorBack();
+        if (typeof doorRedraw === "function") doorRedraw();
         return;
       }
       if (r.state === "confirm" || r.kind === "unconfirmed" || (r.kind === "exists" && r.again)) mode = "in";
