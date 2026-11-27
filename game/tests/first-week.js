@@ -32,7 +32,10 @@
         .join(","),
     bare = h => (text(h).match(/undefined|NaN|\bnull\b|\u2014/g) || []).join(","),
     barTabs = h => (h.match(/data-a="tab" data-v="([a-z]+)"/g) || []).map(x => x.split('data-v="')[1].slice(0, -1)),
+    /* the whole menu: this file examines the first week with "Show everything" on (run CC-1, item 13). The short
+       menu has its own file, tests/progressive-menu.js */
     menu = () => {
+      G.menuAll = true;
       X("menu");
       const h = ov();
       X("close");

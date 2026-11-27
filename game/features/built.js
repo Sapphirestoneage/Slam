@@ -2047,6 +2047,35 @@ const WB = [
     "Audit fixes, batch 1, sections C and D. Every question of the opening, the demo and setup is in plainer words, has the choice I'm not sure (a Guess: a typical value where the game has one, else nothing is kept) and the line Tap one to keep going. The sheet Who are you looking at? has Back and Close only and only switches people. Our household, Sharing costs fairly, Kids mode, Your guild and People settings are on Me, under Your people. Arrows are one drawn icon.",
     null,
   ],
+  [
+    "see",
+    "The results card: your era, your FI number and your top 3 moves, to share or to get as an image",
+    "b",
+    () => WB_FN("cbPlanCard") && WB_FN("cbCardPeek") && WB_FN("cbYbPaint") && WB_HAS("cbshare") && WB_HAS("cbcardimg"),
+    "Run CC-1, item 12. On the reveal, under Keep it, share it, or tell Eli: the card shows small, then Share my card and Get this card as an image. On the card: the era, the FI number with its age, and the names of the top moves. No other figure. The same painter draws the Yes, but card.",
+    "cbback",
+  ],
+  [
+    "in",
+    "Four doors on the front page: FIRE, In debt, Couple or household, Self-employed",
+    "b",
+    () =>
+      WB_FN("doorSitRow") &&
+      WB_FN("doorSitGo") &&
+      typeof DOOR_SITS !== "undefined" &&
+      DOOR_SITS.length === 4 &&
+      DOOR_SITS.every(D => !!sitGet(D.sit)),
+    "Run CC-1, item 15. Under Start, four outlined buttons. Each one is Start and then a starting point with typical numbers as guesses: Near FI, Card debt, Getting married, Self-employed. Start stays the one filled button.",
+    null,
+  ],
+  [
+    "feel",
+    "The progressive menu: a short menu to start, rows show as they are used or unlocked, Show everything",
+    "b",
+    () => WB_FN("fwRowRule") && WB_FN("fwMenuState") && WB_FN("fwMenuPick") && WB_FN("fwUsed") && WB_HAS("fwall"),
+    "Run CC-1, item 13. A new player sees the core rows and Settings and account. A tool shows in the menu once it is opened, from any screen. The reveal and the end of the first week unlock more. Show everything gives the whole menu, and Find a tool reaches every tool. Expert on Me has the whole menu. One function decides each row.",
+    "menu",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

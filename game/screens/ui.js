@@ -6693,6 +6693,8 @@ if (typeof document !== "undefined") {
     if (typeof uxTapDrop === "function" && uxTapDrop()) return;
     const tp = typeof uxTapStart === "function" ? uxTapStart(t.dataset.a) : null;
     if (typeof rcpTapStart === "function") rcpTapStart(); /* receipt.js: the numbers before a move, for its receipt */
+    if (typeof fwUsed === "function")
+      fwUsed(t.dataset.a, t); /* firstweek.js: a menu row that was used stays in the short menu */
     /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
     soonTap(t.dataset.a, t);
     if (tp) uxTapEnd(tp); /* ux.js: Undo after a change of the money */
