@@ -288,7 +288,7 @@
   const h0 = amHTML();
   chk(
     "before the database file has run, each section says so",
-    (h0.match(/waits for the database file/g) || []).length === 3 && h0.includes("Download everything")
+    (h0.match(/waits for the database file/g) || []).length === 4 && h0.includes("Download everything")
   );
   AM.audit = [
     { at: "2026-11-03T10:00:00Z", actor_email: "c@x.org", role: "coach", action: "open_game", target_email: "p@x.org" },
@@ -306,8 +306,8 @@
   };
   const h1 = amHTML();
   chk(
-    "the four sections are collapsed, and a failed save shows in amber",
-    (h1.match(/<details class="card"/g) || []).length === 4 &&
+    "the five sections are collapsed, and a failed save shows in amber",
+    (h1.match(/<details class="card"/g) || []).length === 5 &&
       !/<details[^>]* open/.test(h1) &&
       h1.includes("#ffb648") &&
       h1.includes("permission denied") &&

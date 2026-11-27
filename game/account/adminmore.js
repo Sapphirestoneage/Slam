@@ -8,7 +8,7 @@
                admin_health and admin_backup (supabase/migrations/20261124170000_roles_audit_coach.sql).
                The table reports (supabase/migrations/20261125190000_reports.sql).
    OUTPUT      Functions: amAction, amAuditRows, amHealthRows, amLoad, amHTML, amClick, amReportsHTML,
-               amReportWho, amReportClick.
+               amReportWho, amReportClick, amFirstHTML (the time to the first number, core/firstnum.js).
    DEPENDS ON  core/report.js, core/reportcore.js (the rows of the inbox). admin.html gives sb, esc, day
                and S (the accounts), and calls amLoad, amHTML and amClick.
                Only admin.html loads this file.
@@ -21,6 +21,7 @@ const AM = {
   ready: false,
   msg: "",
   reports: null,
+  first: null,
   rpType: "all",
   rpAll: false,
   rpOpen: false,
@@ -83,6 +84,9 @@ async function amLoad(sb) {
     AM.health = h.error ? null : h.data;
     const r = await sb.from("reports").select(AM_RP_COLS).order("made_at", { ascending: false }).limit(300);
     AM.reports = r.error ? null : r.data || [];
+    /* core/firstnum.js: the table of the time to the first number. null while its database file waits. */
+    const f = await sb.from("first_numbers").select("id,secs,taps,version,signed").limit(5000);
+    AM.first = f.error ? null : f.data || [];
   } catch (e) {
     report(e, "adminmore.js: amLoad");
     AM.ready = false;
@@ -94,6 +98,7 @@ function amHTML() {
     H = AM.health;
   return (
     amReportsHTML() +
+    amFirstHTML() +
     `<details class="card" style="padding:0 14px"><summary>Health${H && H.fails7 ? ` <span class="pill" style="border-color:#ffb648;color:#ffb648">${H.fails7} failed ${H.fails7 === 1 ? "save" : "saves"}</span>` : ""}</summary><div class="tools">${
       H
         ? `<div class="nums">${amHealthRows(H)
@@ -116,6 +121,21 @@ function amHTML() {
     }</div></details>` +
     `<details class="card" style="padding:0 14px"><summary>Backup</summary><div class="tools"><button class="wide" data-a="ambackup">Download everything</button><p class="muted">One file with each account, each saved game, the coach notes, the card library and the audit log. Keep it somewhere private: it holds real money numbers.</p>${AM.msg ? `<p class="ok">${esc(AM.msg)}</p>` : ""}</div></details>`
   );
+}
+/* TIME TO THE FIRST NUMBER (run CC-1, item 8): the median and the longest one, next to the target. The math is
+   fnStats() in core/firstnum.js. games: the saved games of the admin page (S.games). Amber when the median is over
+   the target: it needs attention. */
+function amFirstHTML(games) {
+  if (typeof fnStats !== "function") return "";
+  const G1 = games || (typeof S !== "undefined" && S && S.games) || {},
+    T = fnStats(fnRows(AM.first, G1)),
+    amber = ' style="border-color:#ffb648;color:#ffb648"',
+    row = (l, s, t) => `<span>${esc(l)} <b>${esc(fnWords(s))}</b>, ${esc(String(Math.round(t * 10) / 10))} taps</span>`;
+  return `<details class="card" style="padding:0 14px"><summary>Time to first number${T.n ? ` <span class="pill"${T.late ? amber : ""}>${esc(fnWords(T.medS))}</span>` : ""}</summary><div class="tools"><p class="muted">From the first screen to the first real number (What it is), for each new player. Seconds count only while the page was in view. No personal details: seconds, taps, build version, signed in or not.</p>${
+    T.n
+      ? `<div class="nums">${row("Median", T.medS, T.medT)}${row("Longest", T.maxS, T.maxT)}<span>Players counted <b>${T.n}</b></span><span>Took over 2 minutes <b>${T.over}</b></span></div><p${T.late ? ' style="color:#ffb648"' : ""}>Target: under 2 minutes.${T.late ? " The median is over it now." : ""}</p>`
+      : `<p class="muted">No new player has reached the first number yet. Target: under 2 minutes.</p>`
+  }${AM.first ? "" : `<p class="muted">Visitors with no account are not counted yet: that part waits for the database file ${esc(typeof FN_FILE === "string" ? FN_FILE : "")} (supabase/migrations). Players with an account are counted from their saved game.</p>`}</div></details>`;
 }
 /* Who made a report: the email of the account, from the list of the admin page. */
 function amReportWho(r, users) {
