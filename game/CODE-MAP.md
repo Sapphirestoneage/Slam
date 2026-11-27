@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 219. Lines: 127,536. Top-level functions: 3156. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 220. Lines: 127,662. Top-level functions: 3163. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -13,224 +13,225 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | # | File | Lines | Functions | Lines > 300 chars | Hidden errors | Purpose |
 |---|------|------:|----------:|------------------:|--------------:|---------|
 | 1 | `core/report.js` | 25 | 1 | 0 | 0 | One function, report(e, where), records each error that a catch block stops |
-| 2 | `core/soon.js` | 130 | 10 | 1 | 0 | A part of the game that is not ready must never show as a broken or blank screen |
-| 3 | `features/firelink.js` | 35 | 1 | 0 | 0 | The button "Start from a blank FIRE sheet": one small function for each place that shows it (the Export entry of the game, the Export entry of the web... |
-| 4 | `account/trust.js` | 375 | 15 | 2 | 0 | Trust. Three things: (1) the one line "Education and tools, not financial advice." and the link to the privacy page; (2) calm words for each answer of... |
-| 5 | `account/liveflag.js` | 113 | 10 | 0 | 0 | The ONE switch of Live Session Mode (a coaching call that fills the client's profile while the two talk) |
-| 6 | `account/door.js` | 259 | 20 | 0 | 0 | The front door. A person who arrives from the QR code or a link, with no account on this device, sees one landing screen: one promise (your FI number,... |
-| 7 | `account/lock.js` | 254 | 16 | 2 | 0 | App lock and passkeys (run Not built, groups 1 to 5, Part 10b) |
-| 8 | `account/supa.js` | 828 | 30 | 7 | 0 | Accounts on the website. Each player signs in with an email address and a password, and gets a private saved game in the Supabase database |
-| 9 | `data/skills.js` | 5,163 | 0 | 0 | 0 | Data only. The skills of the skill tree: name, group, effort, reward, and the text of each skill |
-| 10 | `data/skillthemes.js` | 2,718 | 0 | 0 | 0 | Data only. Other names and words for the skills, one set for each theme |
-| 11 | `data/qr.js` | 15 | 0 | 1 | 0 | Data only. One QR code as an SVG picture (window.QR_SVG), and the address that the code contains (window.QR_URL) |
-| 12 | `data/market.js` | 179 | 0 | 0 | 0 | Data only. US market history by calendar year, for the retirement odds (features/odds.js) |
-| 13 | `core/withdraw.js` | 357 | 16 | 7 | 0 | The ways to take money out: the list of families and variants, the rule of each one for a year of spending, how the money is held, when the money come... |
-| 14 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
-| 15 | `core/engine.js` | 3,944 | 127 | 0 | 0 | The engine: the data model of one profile and all the math |
-| 16 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
-| 17 | `core/homebuy.js` | 206 | 9 | 0 | 0 | Home buying and renting: the bank's payment (principal and interest), the true cost of owning line by line, the true cost of renting, the year owning ... |
-| 18 | `core/career.js` | 278 | 19 | 1 | 0 | Career and education: what a course or degree costs and pays back (the payback years, the lifetime value, the move for the FI date), the presets, two ... |
-| 19 | `core/invest.js` | 210 | 7 | 4 | 0 | Investing (run Finish everything partly built, Part 13): the household mix across every account (the stock share next to a target, the three-fund chec... |
-| 20 | `core/family.js` | 162 | 6 | 1 | 0 | Family money: the sandwich years (money to parents and kids at once), living at home (rent saved next to the time to a moving-out goal), and kids and ... |
-| 21 | `core/peers.js` | 160 | 8 | 1 | 0 | Comparing with peers (run Finish everything partly built, Part 9): net worth next to the middle household of your age, your savings rate next to the c... |
-| 22 | `core/giving.js` | 168 | 10 | 1 | 0 | Giving (run Finish everything partly built, Part 16): the giving rate on the base the player picks, the target a share comes to (maaser is commonly 10... |
-| 23 | `core/quest.js` | 363 | 20 | 1 | 0 | The math of the quest screens (run Not built, groups 1 to 5, Part 10a): the quest mode character sheet, capacity, how this plan fails, hidden costs, w... |
-| 24 | `core/trip.js` | 322 | 17 | 2 | 0 | Travel: a trip line by line (flights, lodging, food a day, the card's fee on other currencies, visa fees, travel insurance), points (cash or redeem), ... |
-| 25 | `core/quick.js` | 187 | 15 | 1 | 0 | The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost per use, Return on Hassle, worth it, personal inflation, start... |
-| 26 | `core/play.js` | 235 | 6 | 0 | 0 | The math of the play parts (run Not built, groups 1 to 5, Part 10b): the daily life-sim challenge, the credit score game (myFICO's five factor shares)... |
-| 27 | `core/gigcore.js` | 279 | 15 | 1 | 0 | Gig and self-employed math with no tax engine: the price floor from a profit before tax and the billable hours, the set-aside so far, retirement room ... |
-| 28 | `core/hardcore.js` | 134 | 6 | 1 | 0 | The math and the words of Hard moments (run Not built, groups 1 to 5, Part 7): the split of the rent, a roommate leaving, untangling after a breakup, ... |
-| 29 | `core/safetynet.js` | 183 | 8 | 1 | 0 | Safety nets: medical leave, a move, a breakup and a new baby as money flows over months, the run of the cash month by month, the tripwires, Plan B, th... |
-| 30 | `core/estate.js` | 182 | 4 | 1 | 0 | The math and the rules of Estate and marriage (run Finish everything partly built, Part 11): who gets what you leave, the step-up in basis, the 10 yea... |
-| 31 | `core/feel.js` | 197 | 4 | 0 | 0 | Game feel (run Finish everything partly built, Part 20): start at the finish line (work back from what you need to what today has to look like), the r... |
-| 32 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
-| 33 | `core/statuses.js` | 134 | 7 | 1 | 0 | The FIRE statuses: Coast, Lean, Barista, FI, Chubby and Fat as markers on the one path |
-| 34 | `core/paylayers.js` | 323 | 20 | 4 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
-| 35 | `core/jobs.js` | 354 | 18 | 0 | 0 | The math of the Job of Existing (run JOE-1): which of the six unpaid jobs a player holds, from answers already given; the hours a month of running the... |
-| 36 | `core/hhold.js` | 320 | 8 | 0 | 0 | The math of Households (run Finish everything partly built, Part 12): the same question for everyone and its talk points, the answer code for two phon... |
-| 37 | `core/enough.js` | 554 | 11 | 0 | 0 | The math of Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): spending growth next to income growth per category, year over year, the... |
-| 38 | `core/askrank.js` | 83 | 5 | 1 | 0 | Asking fewer questions (run Finish everything partly built, Part 17): the cost of not knowing in dollars (your money a year from now at both ends of a... |
-| 39 | `core/benefitsplan.js` | 214 | 14 | 1 | 0 | The math of Benefits and health (run Finish everything partly built, Part 10): the benefits optimizer (HSA, dependent care FSA, ESPP, commuter), the h... |
-| 40 | `core/exercises.js` | 286 | 4 | 0 | 0 | The list of the Exercises screen (run Finish everything partly built, Part 7, Money psychology): ten money exercises and three prompts for life after ... |
-| 41 | `core/ratios.js` | 725 | 27 | 0 | 0 | The math of Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): one function for each ratio, the groups, the formula and the plain sentence ... |
-| 42 | `data/roles.js` | 412 | 0 | 0 | 0 | Data only. The six unpaid jobs of the Job of Existing (run JOE-1): the name, the line of the "i", the regions and trees of each job, and the recurring... |
-| 43 | `core/reportcore.js` | 592 | 28 | 2 | 0 | Report a bug or idea: one report with the screen name, the last 3 taps, the device, the width and the app version; the list on the device; the sending... |
-| 44 | `core/quizcore.js` | 560 | 21 | 0 | 0 | The one quiz engine: the questions a set of answers leads to, the scoring (with scores from outside as an input), ties, the top two, the confidence le... |
-| 45 | `core/sins.js` | 1,075 | 51 | 0 | 0 | The money sins read: the evidence of four sources (the quiz, the ledger, the one-tap check-ins, the reactions to the app) as weighted pieces that fade... |
-| 46 | `core/frameworks.js` | 383 | 24 | 3 | 0 | The math of Eli's frameworks and the canon: the SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator, the Baby Steps, t... |
-| 47 | `core/canonmath.js` | 160 | 10 | 1 | 0 | The canon rows finished in Part 21: the F-You money meter, the Money Guy's nine, the hand-off check of the hourly value of your time, the noodle budge... |
-| 48 | `data/quizskins.js` | 9,032 | 0 | 0 | 0 | Data only. The quiz skins of the one quiz engine (letters, address, houses, avatars, sheet, pyramid, mountain, stars, sins, scripts, enneagram, fire, ... |
-| 49 | `account/gate.js` | 83 | 8 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
-| 50 | `screens/ui.js` | 6,707 | 217 | 138 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
-| 51 | `screens/dash.js` | 516 | 29 | 6 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
-| 52 | `features/games.js` | 678 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
-| 53 | `features/games2.js` | 1,456 | 40 | 18 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
-| 54 | `features/goalrank.js` | 232 | 9 | 5 | 0 | Goals you keep, then rank (UX pass, item 29) |
-| 55 | `features/year.js` | 783 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
-| 56 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
-| 57 | `screens/profiles.js` | 169 | 7 | 6 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
-| 58 | `screens/smart.js` | 953 | 27 | 5 | 0 | The setup questions change with each answer |
-| 59 | `screens/planner.js` | 1,457 | 62 | 19 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
-| 60 | `account/cloud.js` | 570 | 23 | 0 | 0 | The game saves itself to the account of the player |
-| 61 | `screens/ux.js` | 936 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
-| 62 | `core/metrics.js` | 1,860 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
-| 63 | `features/debts.js` | 449 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
-| 64 | `features/import.js` | 357 | 9 | 9 | 0 | Fill in the spending from a bank or card statement file |
-| 65 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
-| 66 | `features/quick.js` | 531 | 14 | 1 | 0 | Quick math. Small what-if questions: does this car fit, how much home fits, what one dollar becomes, and (run Not built, Part 2) a HYSA switch, all at... |
-| 67 | `features/reveal.js` | 269 | 8 | 1 | 0 | Meet your character. Six cards, one tap each, change the numbers into a person: chapter, era, who the player is with money, the strongest number, and ... |
-| 68 | `features/moneylog.js` | 249 | 11 | 4 | 0 | Two tools. (1) The money log: all logged entries by month, read-only, with a copy as plain text |
-| 69 | `features/drills.js` | 525 | 15 | 9 | 0 | Four tools for hard days. (1) Money fire drills: a money fear, calculated on the numbers of the player, then one small action |
-| 70 | `features/gig.js` | 834 | 38 | 15 | 0 | Work for yourself. For income with no tax taken out |
-| 71 | `features/know.js` | 204 | 10 | 4 | 0 | What you already know. Five letters, D.A.I.T.E |
-| 72 | `features/fair.js` | 296 | 13 | 5 | 0 | Share costs fairly. For two or more persons: five ways to divide the shared costs, side by side |
-| 73 | `features/values.js` | 391 | 15 | 5 | 0 | Is my money going where I want? Three steps, all taps (UX pass, item 28): rank what matters (tap in order, or drag), a "Not important to me" pile and ... |
-| 74 | `features/missions.js` | 361 | 12 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
-| 75 | `features/connect.js` | 396 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
-| 76 | `features/house.js` | 495 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
-| 77 | `features/back.js` | 283 | 14 | 2 | 0 | The welcome-back card. On the first look of a new day, one slim row on Home shows what the player did last time, what moved, and where to continue |
-| 78 | `features/lever.js` | 565 | 15 | 6 | 0 | Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each with a price in dollars a year on the numbers of the player |
-| 79 | `features/mult.js` | 426 | 13 | 8 | 0 | The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses, buying ahead, a tax-favored account, a health savings account) ha... |
-| 80 | `data/askwords.js` | 97 | 0 | 0 | 0 | The words of "one small question at a time": for each money area, the question, what it means, why the game asks, and where to look (ASK); and the pla... |
-| 81 | `features/ask.js` | 397 | 9 | 3 | 0 | One small question at a time, for "Make your numbers real" |
-| 82 | `features/alloc.js` | 236 | 9 | 2 | 0 | Keep the first guess for each money area, and show how much of the guess is placed in real lines and how much is not placed yet |
-| 83 | `features/session.js` | 167 | 3 | 3 | 0 | Make a first coaching session fast |
-| 84 | `features/ask2.js` | 389 | 9 | 4 | 0 | The same pattern as ask.js for three more places: the details of one debt, the questions of Key numbers, and the questions about the job match and the... |
-| 85 | `features/sign.js` | 250 | 5 | 2 | 0 | Before you sign. The true cost of a new loan, asked one small question at a time, then shown in the terms of the player |
-| 86 | `features/owed.js` | 128 | 4 | 2 | 0 | What each debt costs you: the interest in dollars, and the same amount as months of living costs |
-| 87 | `features/study.js` | 721 | 19 | 4 | 0 | Student loan plans, side by side |
-| 88 | `features/together.js` | 215 | 7 | 3 | 0 | The Money Chart for more than two persons: the player, their person, up to four more persons who answer the same 10 statements on this phone, and othe... |
-| 89 | `features/people.js` | 319 | 7 | 3 | 0 | Your people, one layer at a time |
-| 90 | `features/fold.js` | 65 | 4 | 1 | 0 | One list on Next Steps. The mission board and the older card "Ready to plan" showed the same steps |
-| 91 | `screens/nav.js` | 494 | 13 | 1 | 0 | The same four things on each sheet: Back (one screen back), Forward, Close, and an "i" with two sentences about the screen |
-| 92 | `features/home.js` | 140 | 4 | 0 | 0 | Put the game on the home screen of the phone or the laptop (website only) |
-| 93 | `screens/tidy.js` | 188 | 10 | 2 | 0 | Repairs from the usability audit, for all screens at one time |
-| 94 | `account/addon.js` | 634 | 31 | 5 | 0 | Add-ons, part 2 of 2. At sign-in the game asks the account which add-ons are on |
-| 95 | `features/fork.js` | 603 | 20 | 12 | 0 | Fork Theory. A fork is a thing that troubles the player now |
-| 96 | `features/csp.js` | 731 | 25 | 12 | 0 | Two views of one month of money |
-| 97 | `features/ideas.js` | 1,120 | 21 | 5 | 0 | Famous money ideas, the frame and ideas 1 to 8 |
-| 98 | `features/ideas2.js` | 778 | 2 | 2 | 0 | Famous money ideas 9 to 16. The same frame and rules as ideas.js |
-| 99 | `features/ideas3.js` | 1,107 | 1 | 1 | 0 | Famous money ideas 17 to 33: retirement, investing, earning |
-| 100 | `features/ideas4.js` | 1,011 | 2 | 3 | 0 | Famous money ideas 34 to 45: spending, deals, real estate |
-| 101 | `features/ideas5.js` | 1,305 | 2 | 0 | 0 | Famous money ideas 46 to 63: mindset, time, family and giving |
-| 102 | `features/roof.js` | 273 | 7 | 1 | 0 | One list of the famous money ideas that are built in this game |
-| 103 | `features/ideasz.js` | 338 | 7 | 3 | 0 | The last file of the famous money ideas: the glossary of each idea, which ideas fit the player now, and the block on Next Steps |
-| 104 | `features/dep.js` | 254 | 11 | 2 | 0 | What depends on what. Some short chains show how one number feeds the next number |
-| 105 | `features/eras.js` | 1,071 | 25 | 6 | 0 | Steps for the later eras, and the account recommendation |
-| 106 | `features/testkit.js` | 398 | 13 | 8 | 0 | Test with a friend. A think-aloud usability test: one person tries three tasks, and the coach records how each task went with one tap |
-| 107 | `features/thinkaloud.js` | 410 | 21 | 3 | 0 | Think-aloud test mode, the tester drives |
-| 108 | `features/kit.js` | 284 | 24 | 7 | 0 | The shared parts of the plan screens (the two paths, the odds, the simulators and the other screens of the Plan batch) |
-| 109 | `features/retire.js` | 574 | 24 | 0 | 0 | The one adapter to the retirement engine of Zack Williams (vendor/retire-engine.js, MIT license) |
-| 110 | `features/taxview.js` | 328 | 6 | 2 | 0 | The tax view. From pay before taxes, the filing status, the state and the pre-tax contributions: the top federal bracket, the average rate (federal pl... |
-| 111 | `features/odds.js` | 460 | 13 | 4 | 0 | Retirement odds. Two answers in plain words: "X out of 100 random markets work" (the Monte Carlo of the retirement engine of Zack Williams, through fe... |
-| 112 | `features/cover.js` | 448 | 7 | 1 | 0 | Insurance needs. In place of the yes / no checks, each kind of cover gets a needs calculation, the gap in dollars, and one next step: disability (abou... |
-| 113 | `features/mix.js` | 657 | 10 | 0 | 0 | Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee |
-| 114 | `features/slept.js` | 117 | 5 | 1 | 0 | While you slept. What the invested money of the player earned per hour, per day, per month and per year, at the return of the plan, next to the real h... |
-| 115 | `features/coast.js` | 397 | 12 | 5 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
-| 116 | `features/sim.js` | 447 | 20 | 0 | 0 | The simulator engine. One decision with 2 to 4 options |
-| 117 | `features/sims/rentbuy.js` | 398 | 5 | 0 | 0 | Simulator 1: rent or buy. The bank's payment first (principal and interest) |
-| 118 | `features/sims/mortgage.js` | 143 | 2 | 0 | 0 | Simulator 2: pay off the mortgage early, or invest the same money |
-| 119 | `features/sims/debt.js` | 107 | 1 | 0 | 0 | Simulator 3: pay extra on a debt, or invest the extra, by the rate of the debt |
-| 120 | `features/sims/car.js` | 166 | 1 | 0 | 0 | Simulator 4: the car. Keep the car you have, buy a used car, buy a new car, or lease |
-| 121 | `features/sims/roth.js` | 120 | 1 | 0 | 0 | Simulator 5: pre-tax or Roth for this year's money |
-| 122 | `features/sims/job.js` | 128 | 1 | 0 | 0 | Simulator 6: a new job or a raise, or staying |
-| 123 | `features/sims/break.js` | 120 | 1 | 0 | 0 | Simulator 7: take a break (a sabbatical or a mini-retirement) |
-| 124 | `features/sims/side.js` | 125 | 2 | 0 | 0 | Simulator 8: side income. Hours a week, the rate, and the tax to set aside (the same set-aside idea as "Work for yourself", gig.js) |
-| 125 | `features/sims/kid.js` | 117 | 1 | 0 | 0 | Simulator 9: have a kid or add a dependent |
-| 126 | `features/sims/city.js` | 128 | 2 | 0 | 0 | Simulator 10: move to a cheaper or a pricier city |
-| 127 | `features/sims/spend.js` | 102 | 2 | 0 | 0 | Simulator 11: a big one-time spend (a wedding, a trip, a gift) |
-| 128 | `features/sims/stop.js` | 171 | 2 | 0 | 0 | Simulator 12: stop working earlier or later, by year, and when to claim Social Security (62, 67 or 70) |
-| 129 | `features/paths.js` | 668 | 14 | 3 | 0 | Two paths. Two full plans from the same profile, side by side, and a third that blends them |
-| 130 | `features/plan.js` | 341 | 6 | 4 | 0 | The plan summary. One screen with the 7 steps of the CFP Board's financial planning process as rows (your situation, your goals, where you are headed,... |
-| 131 | `features/ask3.js` | 357 | 12 | 3 | 0 | The Ask front door. One row on Home under the top numbers with four big buttons |
-| 132 | `features/okay.js` | 196 | 9 | 4 | 0 | The question "Am I okay?" and its first answer |
-| 133 | `features/quota.js` | 234 | 11 | 4 | 0 | Extras for people who love spreadsheets |
-| 134 | `data/takeout2026.js` | 122 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
-| 135 | `features/takeout.js` | 1,006 | 21 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has, and a fifth tab, "Compare the ways" (features/ways.js) |
-| 136 | `features/ways.js` | 536 | 21 | 2 | 0 | Compare the ways. The same plan (the money, the spending, the stop age, Social Security) through each way to take money out: the 4% rule and its setti... |
-| 137 | `features/ages.js` | 187 | 7 | 0 | 0 | Two ages, for each person. (1) Work optional: the age when the invested money is enough to live on (the freedom date of the plan) |
-| 138 | `features/stress.js` | 282 | 6 | 1 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
-| 139 | `features/blocks.js` | 319 | 7 | 1 | 0 | Life event blocks that the player stacks: a home, a car, a child, a job change, a sabbatical, a move |
-| 140 | `features/windfall.js` | 431 | 7 | 2 | 0 | The windfall. What to do with a bonus, a gift, a tax refund or other extra money |
-| 141 | `data/health2026.js` | 25 | 0 | 0 | 0 | Data only. What health cover costs in 2026 with no job, for the quit fund countdown (features/countdown.js) |
-| 142 | `features/countdown.js` | 433 | 13 | 1 | 0 | Countdowns. One countdown type for each goal on My Goals: a target amount, what is saved for it, and a monthly amount or a date |
-| 143 | `features/offers.js` | 265 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
-| 144 | `features/career.js` | 542 | 11 | 1 | 0 | Career and education. Five tabs on one screen: (1) Pays back: what a course or a degree costs with the time it takes, the raise after tax, the payback... |
-| 145 | `features/trip.js` | 510 | 10 | 2 | 0 | Trips and the journey. Four tabs on one screen: (1) The trip: flights, lodging a night, the days away, food a day, the card's fee on other currencies,... |
-| 146 | `features/family.js` | 516 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
-| 147 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
-| 148 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
-| 149 | `data/cardtemplate.js` | 307 | 8 | 0 | 0 | The template of one card of the card library |
-| 150 | `data/cards2026.js` | 6,547 | 0 | 24 | 0 | Data only. The card library of the card vault (features/vault.js): 93 cards at 12 US banks |
-| 151 | `features/vault.js` | 1,479 | 43 | 11 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
-| 152 | `features/element.js` | 346 | 9 | 5 | 0 | The character reveal after setup, in place of the card "Your character is ready" |
-| 153 | `features/xray.js` | 281 | 4 | 2 | 0 | The product X-ray. One money product that the player pays into each month (insurance that also saves, or an investment with fees), next to the common ... |
-| 154 | `features/invest.js` | 265 | 8 | 2 | 0 | Investing, two sheets (run Finish everything partly built, Part 13) |
-| 155 | `features/transit.js` | 397 | 8 | 6 | 0 | Life Transitions: "Break in case of emergency", on My Goals |
-| 156 | `features/nets.js` | 252 | 9 | 3 | 0 | Safety nets (run Finish everything partly built, Part 15) |
-| 157 | `data/kidlessons.js` | 345 | 0 | 0 | 0 | Data only. The lessons of Kids mode (features/kids.js): 20 short lessons for a student in a high school personal finance class, and 12 daily lessons f... |
-| 158 | `features/kids.js` | 264 | 11 | 6 | 0 | Kids mode: "Help your kid stress less about money" |
-| 159 | `data/metros.js` | 327 | 0 | 0 | 0 | Data only. Rough housing numbers for 29 US areas and one typical US metro, for the moves that need an area (features/strat.js) |
-| 160 | `data/strategies.js` | 1,137 | 5 | 4 | 0 | The strategies of "Moves to try" (features/strat.js) |
-| 161 | `features/strat.js` | 920 | 40 | 11 | 0 | The Strategy Engine: "Moves to try" |
-| 162 | `account/roles.js` | 128 | 9 | 0 | 0 | Roles and hats. One login has up to three hats: Player (the game), Coach (coach.html) and Admin (admin.html) |
-| 163 | `features/stars.js` | 758 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
-| 164 | `features/exletter.js` | 162 | 5 | 0 | 0 | One exercise: Letter from your calm self |
-| 165 | `features/recalc.js` | 398 | 13 | 9 | 0 | Recalculating. When the real numbers move a date of the plan, one calm card shows the old date, the new date and the one next turn |
-| 166 | `features/audit.js` | 257 | 5 | 3 | 0 | The Mistake audit. It is optional |
-| 167 | `features/quizzes.js` | 438 | 20 | 6 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
-| 168 | `features/sins.js` | 601 | 30 | 9 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
-| 169 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
-| 170 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
-| 171 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 172 | `data/patchnotes.js` | 672 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
-| 173 | `data/toollib.js` | 94 | 0 | 1 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
-| 174 | `features/founding.js` | 381 | 20 | 1 | 0 | Three small things for the soft launch |
-| 175 | `features/mycards.js` | 788 | 30 | 5 | 0 | Credit cards as a list of cards, not one balance |
-| 176 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
-| 177 | `features/look.js` | 635 | 28 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
-| 178 | `features/spiral.js` | 745 | 34 | 8 | 0 | Setup as a spiral of five rounds, in the order of the letters D, A, I, T, E (features/know.js: Debts, Assets, Income, Taxes, Expenses) |
-| 179 | `features/amounts.js` | 1,233 | 29 | 5 | 0 | The amounts inside the setup rounds (UX pass, phase 4) |
-| 180 | `features/jobs.js` | 557 | 25 | 9 | 0 | The Job of Existing (run JOE-1) |
-| 181 | `features/goalwire.js` | 588 | 16 | 3 | 0 | The Job of Existing, feature 4: a goal, its account and its automatic deposit, in one move of three taps |
-| 182 | `features/careq.js` | 384 | 14 | 2 | 0 | The Job of Existing, feature 5: the quests of the Health Care Admin and the Insurance Coordinator |
-| 183 | `features/rolemap.js` | 385 | 13 | 3 | 0 | The Job of Existing (run JOE-1), feature 6: the household role map, "Who carries what" |
-| 184 | `features/canon.js` | 968 | 13 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
-| 185 | `features/enough.js` | 351 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
-| 186 | `features/meters.js` | 692 | 23 | 3 | 0 | The canon rows that were partly built (run Finish everything partly built, Part 21), each on the player's own numbers: the F-You money meter (JL Colli... |
-| 187 | `features/exercises.js` | 216 | 6 | 0 | 0 | Money exercises (run Finish everything partly built, Part 7, Money psychology) |
-| 188 | `features/joy.js` | 489 | 8 | 2 | 0 | Joy and enough (run Finish everything partly built, Part 8) |
-| 189 | `features/giving.js` | 560 | 9 | 3 | 0 | Giving (run Finish everything partly built, Part 16) |
-| 190 | `features/benefits.js` | 613 | 11 | 3 | 0 | Benefits and health (run Finish everything partly built, Part 10) |
-| 191 | `features/ratios.js` | 296 | 7 | 2 | 0 | Ratios on Key numbers (run Not built, groups 1 to 5, Part 9) |
-| 192 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
-| 193 | `features/estate.js` | 495 | 8 | 5 | 0 | Estate and marriage (run Finish everything partly built, Part 11) |
-| 194 | `features/life.js` | 549 | 25 | 6 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
-| 195 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
-| 196 | `features/feel.js` | 530 | 15 | 4 | 0 | Game feel (run Finish everything partly built, Part 20) |
-| 197 | `features/erain.js` | 305 | 16 | 0 | 0 | The 60-second demo "Find your era" (era/index.html, run CC-1, item 7, Nov 27 2026), and the way its answers come into the game |
-| 198 | `features/guild.js` | 264 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
-| 199 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
-| 200 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
-| 201 | `features/results.js` | 582 | 23 | 6 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 202 | `features/cbguide.js` | 414 | 15 | 0 | 0 | What it is / What it could be, run 14 (Nov 27 2026): the parts that make each screen of the flow easy to follow |
-| 203 | `features/couldbe.js` | 2,144 | 76 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
-| 204 | `features/wants.js` | 157 | 8 | 1 | 0 | What you want (run SLAM-ONBOARD-1, Nov 27 2026): the first screen of a new player, before the four questions of What it is / What it could be |
-| 205 | `features/cbtax.js` | 462 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
-| 206 | `features/cbflex.js` | 326 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
-| 207 | `features/cblater.js` | 249 | 7 | 4 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
-| 208 | `features/cbmoves.js` | 251 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
-| 209 | `features/cbyesbut.js` | 566 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
-| 210 | `features/cbstack.js` | 202 | 4 | 7 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
-| 211 | `features/cbreveal.js` | 660 | 19 | 15 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
-| 212 | `features/firstweek.js` | 208 | 12 | 1 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
-| 213 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
-| 214 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
-| 215 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
-| 216 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 217 | `features/questlog.js` | 549 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 218 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 219 | `features/built.js` | 2,111 | 4 | 41 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 2 | `core/testbuild.js` | 40 | 2 | 0 | 0 | The strip "TEST BUILD" at the top of each page of the test build |
+| 3 | `core/soon.js` | 130 | 10 | 1 | 0 | A part of the game that is not ready must never show as a broken or blank screen |
+| 4 | `features/firelink.js` | 35 | 1 | 0 | 0 | The button "Start from a blank FIRE sheet": one small function for each place that shows it (the Export entry of the game, the Export entry of the web... |
+| 5 | `account/trust.js` | 375 | 15 | 2 | 0 | Trust. Three things: (1) the one line "Education and tools, not financial advice." and the link to the privacy page; (2) calm words for each answer of... |
+| 6 | `account/liveflag.js` | 113 | 10 | 0 | 0 | The ONE switch of Live Session Mode (a coaching call that fills the client's profile while the two talk) |
+| 7 | `account/door.js` | 259 | 20 | 0 | 0 | The front door. A person who arrives from the QR code or a link, with no account on this device, sees one landing screen: one promise (your FI number,... |
+| 8 | `account/lock.js` | 254 | 16 | 2 | 0 | App lock and passkeys (run Not built, groups 1 to 5, Part 10b) |
+| 9 | `account/supa.js` | 828 | 30 | 7 | 0 | Accounts on the website. Each player signs in with an email address and a password, and gets a private saved game in the Supabase database |
+| 10 | `data/skills.js` | 5,163 | 0 | 0 | 0 | Data only. The skills of the skill tree: name, group, effort, reward, and the text of each skill |
+| 11 | `data/skillthemes.js` | 2,718 | 0 | 0 | 0 | Data only. Other names and words for the skills, one set for each theme |
+| 12 | `data/qr.js` | 15 | 0 | 1 | 0 | Data only. One QR code as an SVG picture (window.QR_SVG), and the address that the code contains (window.QR_URL) |
+| 13 | `data/market.js` | 179 | 0 | 0 | 0 | Data only. US market history by calendar year, for the retirement odds (features/odds.js) |
+| 14 | `core/withdraw.js` | 357 | 16 | 7 | 0 | The ways to take money out: the list of families and variants, the rule of each one for a year of spending, how the money is held, when the money come... |
+| 15 | `data/limits2026.js` | 19 | 0 | 0 | 0 | Data only. The 2026 limits of the tax-favored accounts, for the two paths (features/paths.js) |
+| 16 | `core/engine.js` | 3,944 | 127 | 0 | 0 | The engine: the data model of one profile and all the math |
+| 17 | `core/engine2.js` | 420 | 18 | 0 | 0 | The game mechanics that are also the data entry: the layers, the bonfires, the fog (how much of the picture is clear) |
+| 18 | `core/homebuy.js` | 206 | 9 | 0 | 0 | Home buying and renting: the bank's payment (principal and interest), the true cost of owning line by line, the true cost of renting, the year owning ... |
+| 19 | `core/career.js` | 278 | 19 | 1 | 0 | Career and education: what a course or degree costs and pays back (the payback years, the lifetime value, the move for the FI date), the presets, two ... |
+| 20 | `core/invest.js` | 210 | 7 | 4 | 0 | Investing (run Finish everything partly built, Part 13): the household mix across every account (the stock share next to a target, the three-fund chec... |
+| 21 | `core/family.js` | 162 | 6 | 1 | 0 | Family money: the sandwich years (money to parents and kids at once), living at home (rent saved next to the time to a moving-out goal), and kids and ... |
+| 22 | `core/peers.js` | 160 | 8 | 1 | 0 | Comparing with peers (run Finish everything partly built, Part 9): net worth next to the middle household of your age, your savings rate next to the c... |
+| 23 | `core/giving.js` | 168 | 10 | 1 | 0 | Giving (run Finish everything partly built, Part 16): the giving rate on the base the player picks, the target a share comes to (maaser is commonly 10... |
+| 24 | `core/quest.js` | 363 | 20 | 1 | 0 | The math of the quest screens (run Not built, groups 1 to 5, Part 10a): the quest mode character sheet, capacity, how this plan fails, hidden costs, w... |
+| 25 | `core/trip.js` | 322 | 17 | 2 | 0 | Travel: a trip line by line (flights, lodging, food a day, the card's fee on other currencies, visa fees, travel insurance), points (cash or redeem), ... |
+| 26 | `core/quick.js` | 187 | 15 | 1 | 0 | The quick calculators: a HYSA switch, lump sum or a little each month, a warranty, cost per use, Return on Hassle, worth it, personal inflation, start... |
+| 27 | `core/play.js` | 235 | 6 | 0 | 0 | The math of the play parts (run Not built, groups 1 to 5, Part 10b): the daily life-sim challenge, the credit score game (myFICO's five factor shares)... |
+| 28 | `core/gigcore.js` | 279 | 15 | 1 | 0 | Gig and self-employed math with no tax engine: the price floor from a profit before tax and the billable hours, the set-aside so far, retirement room ... |
+| 29 | `core/hardcore.js` | 134 | 6 | 1 | 0 | The math and the words of Hard moments (run Not built, groups 1 to 5, Part 7): the split of the rent, a roommate leaving, untangling after a breakup, ... |
+| 30 | `core/safetynet.js` | 183 | 8 | 1 | 0 | Safety nets: medical leave, a move, a breakup and a new baby as money flows over months, the run of the cash month by month, the tripwires, Plan B, th... |
+| 31 | `core/estate.js` | 182 | 4 | 1 | 0 | The math and the rules of Estate and marriage (run Finish everything partly built, Part 11): who gets what you leave, the step-up in basis, the 10 yea... |
+| 32 | `core/feel.js` | 197 | 4 | 0 | 0 | Game feel (run Finish everything partly built, Part 20): start at the finish line (work back from what you need to what today has to look like), the r... |
+| 33 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
+| 34 | `core/statuses.js` | 134 | 7 | 1 | 0 | The FIRE statuses: Coast, Lean, Barista, FI, Chubby and Fat as markers on the one path |
+| 35 | `core/paylayers.js` | 323 | 20 | 4 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
+| 36 | `core/jobs.js` | 354 | 18 | 0 | 0 | The math of the Job of Existing (run JOE-1): which of the six unpaid jobs a player holds, from answers already given; the hours a month of running the... |
+| 37 | `core/hhold.js` | 320 | 8 | 0 | 0 | The math of Households (run Finish everything partly built, Part 12): the same question for everyone and its talk points, the answer code for two phon... |
+| 38 | `core/enough.js` | 554 | 11 | 0 | 0 | The math of Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): spending growth next to income growth per category, year over year, the... |
+| 39 | `core/askrank.js` | 83 | 5 | 1 | 0 | Asking fewer questions (run Finish everything partly built, Part 17): the cost of not knowing in dollars (your money a year from now at both ends of a... |
+| 40 | `core/benefitsplan.js` | 214 | 14 | 1 | 0 | The math of Benefits and health (run Finish everything partly built, Part 10): the benefits optimizer (HSA, dependent care FSA, ESPP, commuter), the h... |
+| 41 | `core/exercises.js` | 286 | 4 | 0 | 0 | The list of the Exercises screen (run Finish everything partly built, Part 7, Money psychology): ten money exercises and three prompts for life after ... |
+| 42 | `core/ratios.js` | 725 | 27 | 0 | 0 | The math of Ratios on Key numbers (run Not built, groups 1 to 5, Part 9): one function for each ratio, the groups, the formula and the plain sentence ... |
+| 43 | `data/roles.js` | 412 | 0 | 0 | 0 | Data only. The six unpaid jobs of the Job of Existing (run JOE-1): the name, the line of the "i", the regions and trees of each job, and the recurring... |
+| 44 | `core/reportcore.js` | 592 | 28 | 2 | 0 | Report a bug or idea: one report with the screen name, the last 3 taps, the device, the width and the app version; the list on the device; the sending... |
+| 45 | `core/quizcore.js` | 560 | 21 | 0 | 0 | The one quiz engine: the questions a set of answers leads to, the scoring (with scores from outside as an input), ties, the top two, the confidence le... |
+| 46 | `core/sins.js` | 1,075 | 51 | 0 | 0 | The money sins read: the evidence of four sources (the quiz, the ledger, the one-tap check-ins, the reactions to the app) as weighted pieces that fade... |
+| 47 | `core/frameworks.js` | 383 | 24 | 3 | 0 | The math of Eli's frameworks and the canon: the SWAN number, the Second Mouse checklist, the Trust Framework, the Advice translator, the Baby Steps, t... |
+| 48 | `core/canonmath.js` | 160 | 10 | 1 | 0 | The canon rows finished in Part 21: the F-You money meter, the Money Guy's nine, the hand-off check of the hourly value of your time, the noodle budge... |
+| 49 | `data/quizskins.js` | 9,032 | 0 | 0 | 0 | Data only. The quiz skins of the one quiz engine (letters, address, houses, avatars, sheet, pyramid, mountain, stars, sins, scripts, enneagram, fire, ... |
+| 50 | `account/gate.js` | 83 | 8 | 0 | 0 | Add-ons, part 1 of 2. Some parts of the game are not in these files |
+| 51 | `screens/ui.js` | 6,708 | 217 | 138 | 0 | The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ... |
+| 52 | `screens/dash.js` | 516 | 29 | 6 | 0 | The one kit of view pieces for the dashboard look (DESIGN.md, "Reference: Tally"): a card, stat tiles, a sparkline, grouped bars, an area chart, a don... |
+| 53 | `features/games.js` | 678 | 25 | 13 | 0 | The screens of the games that are the data entry (layer 1) |
+| 54 | `features/games2.js` | 1,456 | 40 | 18 | 0 | The games of layer 2 (sort), layer 3 (make exact) and layer 4 (come back) |
+| 55 | `features/goalrank.js` | 232 | 9 | 5 | 0 | Goals you keep, then rank (UX pass, item 29) |
+| 56 | `features/year.js` | 783 | 24 | 13 | 0 | The year: calendars, funds for true expenses, the months ahead, the Yearly Review, rest windows, and the chance test |
+| 57 | `features/chart.js` | 1,307 | 13 | 6 | 0 | The Money Chart: ten statements, five elements, and the result for one person or two persons |
+| 58 | `screens/profiles.js` | 169 | 7 | 6 | 0 | More than one person in one game: a household (the money is combined) or the persons that a coach helps (the money is apart) |
+| 59 | `screens/smart.js` | 953 | 27 | 5 | 0 | The setup questions change with each answer |
+| 60 | `screens/planner.js` | 1,457 | 62 | 19 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
+| 61 | `account/cloud.js` | 570 | 23 | 0 | 0 | The game saves itself to the account of the player |
+| 62 | `screens/ux.js` | 936 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
+| 63 | `core/metrics.js` | 1,860 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
+| 64 | `features/debts.js` | 449 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
+| 65 | `features/import.js` | 357 | 9 | 9 | 0 | Fill in the spending from a bank or card statement file |
+| 66 | `features/compare.js` | 200 | 11 | 4 | 0 | Side by side. Screen 1: the plan as it is, next to one or two moves, with the same month-by-month simulation (goalSim) as the other screens |
+| 67 | `features/quick.js` | 531 | 14 | 1 | 0 | Quick math. Small what-if questions: does this car fit, how much home fits, what one dollar becomes, and (run Not built, Part 2) a HYSA switch, all at... |
+| 68 | `features/reveal.js` | 269 | 8 | 1 | 0 | Meet your character. Six cards, one tap each, change the numbers into a person: chapter, era, who the player is with money, the strongest number, and ... |
+| 69 | `features/moneylog.js` | 249 | 11 | 4 | 0 | Two tools. (1) The money log: all logged entries by month, read-only, with a copy as plain text |
+| 70 | `features/drills.js` | 525 | 15 | 9 | 0 | Four tools for hard days. (1) Money fire drills: a money fear, calculated on the numbers of the player, then one small action |
+| 71 | `features/gig.js` | 834 | 38 | 15 | 0 | Work for yourself. For income with no tax taken out |
+| 72 | `features/know.js` | 204 | 10 | 4 | 0 | What you already know. Five letters, D.A.I.T.E |
+| 73 | `features/fair.js` | 296 | 13 | 5 | 0 | Share costs fairly. For two or more persons: five ways to divide the shared costs, side by side |
+| 74 | `features/values.js` | 391 | 15 | 5 | 0 | Is my money going where I want? Three steps, all taps (UX pass, item 28): rank what matters (tap in order, or drag), a "Not important to me" pile and ... |
+| 75 | `features/missions.js` | 361 | 12 | 3 | 0 | The mission board. The same next steps, shown as missions: why now, how long, the reward, and what it opens |
+| 76 | `features/connect.js` | 396 | 19 | 9 | 0 | How it all connects. (1) Links between the 25 skill tracks: what a track works best after, and what it opens, each with the reason |
+| 77 | `features/house.js` | 495 | 15 | 8 | 0 | Our household. For a household that is not one person or one married couple |
+| 78 | `features/back.js` | 283 | 14 | 2 | 0 | The welcome-back card. On the first look of a new day, one slim row on Home shows what the player did last time, what moved, and where to continue |
+| 79 | `features/lever.js` | 565 | 15 | 6 | 0 | Which lever matters most. Six levers (Earn, Spend, Protect, Grow, Stretch, Keep), each with a price in dollars a year on the numbers of the player |
+| 80 | `features/mult.js` | 426 | 13 | 8 | 0 | The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses, buying ahead, a tax-favored account, a health savings account) ha... |
+| 81 | `data/askwords.js` | 97 | 0 | 0 | 0 | The words of "one small question at a time": for each money area, the question, what it means, why the game asks, and where to look (ASK); and the pla... |
+| 82 | `features/ask.js` | 397 | 9 | 3 | 0 | One small question at a time, for "Make your numbers real" |
+| 83 | `features/alloc.js` | 236 | 9 | 2 | 0 | Keep the first guess for each money area, and show how much of the guess is placed in real lines and how much is not placed yet |
+| 84 | `features/session.js` | 167 | 3 | 3 | 0 | Make a first coaching session fast |
+| 85 | `features/ask2.js` | 389 | 9 | 4 | 0 | The same pattern as ask.js for three more places: the details of one debt, the questions of Key numbers, and the questions about the job match and the... |
+| 86 | `features/sign.js` | 250 | 5 | 2 | 0 | Before you sign. The true cost of a new loan, asked one small question at a time, then shown in the terms of the player |
+| 87 | `features/owed.js` | 128 | 4 | 2 | 0 | What each debt costs you: the interest in dollars, and the same amount as months of living costs |
+| 88 | `features/study.js` | 721 | 19 | 4 | 0 | Student loan plans, side by side |
+| 89 | `features/together.js` | 215 | 7 | 3 | 0 | The Money Chart for more than two persons: the player, their person, up to four more persons who answer the same 10 statements on this phone, and othe... |
+| 90 | `features/people.js` | 319 | 7 | 3 | 0 | Your people, one layer at a time |
+| 91 | `features/fold.js` | 65 | 4 | 1 | 0 | One list on Next Steps. The mission board and the older card "Ready to plan" showed the same steps |
+| 92 | `screens/nav.js` | 494 | 13 | 1 | 0 | The same four things on each sheet: Back (one screen back), Forward, Close, and an "i" with two sentences about the screen |
+| 93 | `features/home.js` | 140 | 4 | 0 | 0 | Put the game on the home screen of the phone or the laptop (website only) |
+| 94 | `screens/tidy.js` | 188 | 10 | 2 | 0 | Repairs from the usability audit, for all screens at one time |
+| 95 | `account/addon.js` | 634 | 31 | 5 | 0 | Add-ons, part 2 of 2. At sign-in the game asks the account which add-ons are on |
+| 96 | `features/fork.js` | 603 | 20 | 12 | 0 | Fork Theory. A fork is a thing that troubles the player now |
+| 97 | `features/csp.js` | 731 | 25 | 12 | 0 | Two views of one month of money |
+| 98 | `features/ideas.js` | 1,120 | 21 | 5 | 0 | Famous money ideas, the frame and ideas 1 to 8 |
+| 99 | `features/ideas2.js` | 778 | 2 | 2 | 0 | Famous money ideas 9 to 16. The same frame and rules as ideas.js |
+| 100 | `features/ideas3.js` | 1,107 | 1 | 1 | 0 | Famous money ideas 17 to 33: retirement, investing, earning |
+| 101 | `features/ideas4.js` | 1,011 | 2 | 3 | 0 | Famous money ideas 34 to 45: spending, deals, real estate |
+| 102 | `features/ideas5.js` | 1,305 | 2 | 0 | 0 | Famous money ideas 46 to 63: mindset, time, family and giving |
+| 103 | `features/roof.js` | 273 | 7 | 1 | 0 | One list of the famous money ideas that are built in this game |
+| 104 | `features/ideasz.js` | 338 | 7 | 3 | 0 | The last file of the famous money ideas: the glossary of each idea, which ideas fit the player now, and the block on Next Steps |
+| 105 | `features/dep.js` | 254 | 11 | 2 | 0 | What depends on what. Some short chains show how one number feeds the next number |
+| 106 | `features/eras.js` | 1,071 | 25 | 6 | 0 | Steps for the later eras, and the account recommendation |
+| 107 | `features/testkit.js` | 398 | 13 | 8 | 0 | Test with a friend. A think-aloud usability test: one person tries three tasks, and the coach records how each task went with one tap |
+| 108 | `features/thinkaloud.js` | 410 | 21 | 3 | 0 | Think-aloud test mode, the tester drives |
+| 109 | `features/kit.js` | 284 | 24 | 7 | 0 | The shared parts of the plan screens (the two paths, the odds, the simulators and the other screens of the Plan batch) |
+| 110 | `features/retire.js` | 574 | 24 | 0 | 0 | The one adapter to the retirement engine of Zack Williams (vendor/retire-engine.js, MIT license) |
+| 111 | `features/taxview.js` | 328 | 6 | 2 | 0 | The tax view. From pay before taxes, the filing status, the state and the pre-tax contributions: the top federal bracket, the average rate (federal pl... |
+| 112 | `features/odds.js` | 460 | 13 | 4 | 0 | Retirement odds. Two answers in plain words: "X out of 100 random markets work" (the Monte Carlo of the retirement engine of Zack Williams, through fe... |
+| 113 | `features/cover.js` | 448 | 7 | 1 | 0 | Insurance needs. In place of the yes / no checks, each kind of cover gets a needs calculation, the gap in dollars, and one next step: disability (abou... |
+| 114 | `features/mix.js` | 657 | 10 | 0 | 0 | Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee |
+| 115 | `features/slept.js` | 117 | 5 | 1 | 0 | While you slept. What the invested money of the player earned per hour, per day, per month and per year, at the return of the plan, next to the real h... |
+| 116 | `features/coast.js` | 397 | 12 | 5 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
+| 117 | `features/sim.js` | 447 | 20 | 0 | 0 | The simulator engine. One decision with 2 to 4 options |
+| 118 | `features/sims/rentbuy.js` | 398 | 5 | 0 | 0 | Simulator 1: rent or buy. The bank's payment first (principal and interest) |
+| 119 | `features/sims/mortgage.js` | 143 | 2 | 0 | 0 | Simulator 2: pay off the mortgage early, or invest the same money |
+| 120 | `features/sims/debt.js` | 107 | 1 | 0 | 0 | Simulator 3: pay extra on a debt, or invest the extra, by the rate of the debt |
+| 121 | `features/sims/car.js` | 166 | 1 | 0 | 0 | Simulator 4: the car. Keep the car you have, buy a used car, buy a new car, or lease |
+| 122 | `features/sims/roth.js` | 120 | 1 | 0 | 0 | Simulator 5: pre-tax or Roth for this year's money |
+| 123 | `features/sims/job.js` | 128 | 1 | 0 | 0 | Simulator 6: a new job or a raise, or staying |
+| 124 | `features/sims/break.js` | 120 | 1 | 0 | 0 | Simulator 7: take a break (a sabbatical or a mini-retirement) |
+| 125 | `features/sims/side.js` | 125 | 2 | 0 | 0 | Simulator 8: side income. Hours a week, the rate, and the tax to set aside (the same set-aside idea as "Work for yourself", gig.js) |
+| 126 | `features/sims/kid.js` | 117 | 1 | 0 | 0 | Simulator 9: have a kid or add a dependent |
+| 127 | `features/sims/city.js` | 128 | 2 | 0 | 0 | Simulator 10: move to a cheaper or a pricier city |
+| 128 | `features/sims/spend.js` | 102 | 2 | 0 | 0 | Simulator 11: a big one-time spend (a wedding, a trip, a gift) |
+| 129 | `features/sims/stop.js` | 171 | 2 | 0 | 0 | Simulator 12: stop working earlier or later, by year, and when to claim Social Security (62, 67 or 70) |
+| 130 | `features/paths.js` | 668 | 14 | 3 | 0 | Two paths. Two full plans from the same profile, side by side, and a third that blends them |
+| 131 | `features/plan.js` | 341 | 6 | 4 | 0 | The plan summary. One screen with the 7 steps of the CFP Board's financial planning process as rows (your situation, your goals, where you are headed,... |
+| 132 | `features/ask3.js` | 357 | 12 | 3 | 0 | The Ask front door. One row on Home under the top numbers with four big buttons |
+| 133 | `features/okay.js` | 196 | 9 | 4 | 0 | The question "Am I okay?" and its first answer |
+| 134 | `features/quota.js` | 234 | 11 | 4 | 0 | Extras for people who love spreadsheets |
+| 135 | `data/takeout2026.js` | 122 | 0 | 0 | 0 | Data only. The reference numbers for "Taking money out" (features/takeout.js): the rules for reaching retirement money before age 59 and a half, and t... |
+| 136 | `features/takeout.js` | 1,006 | 21 | 0 | 0 | Taking money out. Four answers on one sheet, each from the numbers the game already has, and a fifth tab, "Compare the ways" (features/ways.js) |
+| 137 | `features/ways.js` | 536 | 21 | 2 | 0 | Compare the ways. The same plan (the money, the spending, the stop age, Social Security) through each way to take money out: the 4% rule and its setti... |
+| 138 | `features/ages.js` | 187 | 7 | 0 | 0 | Two ages, for each person. (1) Work optional: the age when the invested money is enough to live on (the freedom date of the plan) |
+| 139 | `features/stress.js` | 282 | 6 | 1 | 0 | The stress test. One result from two tests of the same plan: the replay of each real start year of US market history, and the 1,000 random markets of ... |
+| 140 | `features/blocks.js` | 319 | 7 | 1 | 0 | Life event blocks that the player stacks: a home, a car, a child, a job change, a sabbatical, a move |
+| 141 | `features/windfall.js` | 431 | 7 | 2 | 0 | The windfall. What to do with a bonus, a gift, a tax refund or other extra money |
+| 142 | `data/health2026.js` | 25 | 0 | 0 | 0 | Data only. What health cover costs in 2026 with no job, for the quit fund countdown (features/countdown.js) |
+| 143 | `features/countdown.js` | 433 | 13 | 1 | 0 | Countdowns. One countdown type for each goal on My Goals: a target amount, what is saved for it, and a monthly amount or a date |
+| 144 | `features/offers.js` | 265 | 5 | 1 | 0 | Two job offers side by side. For each offer: the take-home pay from the tax tables, the match, the stock, less the health premiums and the commute |
+| 145 | `features/career.js` | 542 | 11 | 1 | 0 | Career and education. Five tabs on one screen: (1) Pays back: what a course or a degree costs with the time it takes, the raise after tax, the payback... |
+| 146 | `features/trip.js` | 510 | 10 | 2 | 0 | Trips and the journey. Four tabs on one screen: (1) The trip: flights, lodging a night, the days away, food a day, the card's fee on other currencies,... |
+| 147 | `features/family.js` | 516 | 11 | 0 | 0 | Family money (run Not built, groups 1 to 5, Part 8) |
+| 148 | `features/nextacct.js` | 280 | 4 | 1 | 0 | Which account next, up to each limit |
+| 149 | `features/ledger.js` | 377 | 8 | 1 | 0 | The giant ledger and the three statements |
+| 150 | `data/cardtemplate.js` | 307 | 8 | 0 | 0 | The template of one card of the card library |
+| 151 | `data/cards2026.js` | 6,547 | 0 | 24 | 0 | Data only. The card library of the card vault (features/vault.js): 93 cards at 12 US banks |
+| 152 | `features/vault.js` | 1,479 | 43 | 11 | 0 | The card vault ("Is this card right for me?" of the Slam web app, in the game) |
+| 153 | `features/element.js` | 346 | 9 | 5 | 0 | The character reveal after setup, in place of the card "Your character is ready" |
+| 154 | `features/xray.js` | 281 | 4 | 2 | 0 | The product X-ray. One money product that the player pays into each month (insurance that also saves, or an investment with fees), next to the common ... |
+| 155 | `features/invest.js` | 265 | 8 | 2 | 0 | Investing, two sheets (run Finish everything partly built, Part 13) |
+| 156 | `features/transit.js` | 397 | 8 | 6 | 0 | Life Transitions: "Break in case of emergency", on My Goals |
+| 157 | `features/nets.js` | 252 | 9 | 3 | 0 | Safety nets (run Finish everything partly built, Part 15) |
+| 158 | `data/kidlessons.js` | 345 | 0 | 0 | 0 | Data only. The lessons of Kids mode (features/kids.js): 20 short lessons for a student in a high school personal finance class, and 12 daily lessons f... |
+| 159 | `features/kids.js` | 264 | 11 | 6 | 0 | Kids mode: "Help your kid stress less about money" |
+| 160 | `data/metros.js` | 327 | 0 | 0 | 0 | Data only. Rough housing numbers for 29 US areas and one typical US metro, for the moves that need an area (features/strat.js) |
+| 161 | `data/strategies.js` | 1,137 | 5 | 4 | 0 | The strategies of "Moves to try" (features/strat.js) |
+| 162 | `features/strat.js` | 920 | 40 | 11 | 0 | The Strategy Engine: "Moves to try" |
+| 163 | `account/roles.js` | 128 | 9 | 0 | 0 | Roles and hats. One login has up to three hats: Player (the game), Coach (coach.html) and Admin (admin.html) |
+| 164 | `features/stars.js` | 758 | 35 | 3 | 0 | The Galaxy. A second view of the 25 skill tracks: 25 spiral arms (constellations) from "You" in the middle out to the FI ring, 625 stars, one star for... |
+| 165 | `features/exletter.js` | 162 | 5 | 0 | 0 | One exercise: Letter from your calm self |
+| 166 | `features/recalc.js` | 398 | 13 | 9 | 0 | Recalculating. When the real numbers move a date of the plan, one calm card shows the old date, the new date and the one next turn |
+| 167 | `features/audit.js` | 257 | 5 | 3 | 0 | The Mistake audit. It is optional |
+| 168 | `features/quizzes.js` | 438 | 20 | 6 | 0 | Quizzes. One sheet draws each quiz skin from its definition: the first screen, one question for each tap, and one result card (a title, two or three l... |
+| 169 | `features/sins.js` | 601 | 30 | 9 | 0 | The money sins read. The quiz (the sins skin of Quizzes) is the first of four sources |
+| 170 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
+| 171 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
+| 172 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
+| 173 | `data/patchnotes.js` | 672 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 174 | `data/toollib.js` | 94 | 0 | 1 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
+| 175 | `features/founding.js` | 450 | 25 | 3 | 0 | Three small things for the soft launch |
+| 176 | `features/mycards.js` | 788 | 30 | 5 | 0 | Credit cards as a list of cards, not one balance |
+| 177 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
+| 178 | `features/look.js` | 635 | 28 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
+| 179 | `features/spiral.js` | 745 | 34 | 8 | 0 | Setup as a spiral of five rounds, in the order of the letters D, A, I, T, E (features/know.js: Debts, Assets, Income, Taxes, Expenses) |
+| 180 | `features/amounts.js` | 1,233 | 29 | 5 | 0 | The amounts inside the setup rounds (UX pass, phase 4) |
+| 181 | `features/jobs.js` | 557 | 25 | 9 | 0 | The Job of Existing (run JOE-1) |
+| 182 | `features/goalwire.js` | 588 | 16 | 3 | 0 | The Job of Existing, feature 4: a goal, its account and its automatic deposit, in one move of three taps |
+| 183 | `features/careq.js` | 384 | 14 | 2 | 0 | The Job of Existing, feature 5: the quests of the Health Care Admin and the Insurance Coordinator |
+| 184 | `features/rolemap.js` | 385 | 13 | 3 | 0 | The Job of Existing (run JOE-1), feature 6: the household role map, "Who carries what" |
+| 185 | `features/canon.js` | 968 | 13 | 4 | 0 | Eli's frameworks and the canon (run "Not built, groups 1 to 5", Part 4) |
+| 186 | `features/enough.js` | 351 | 10 | 1 | 0 | Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3) |
+| 187 | `features/meters.js` | 692 | 23 | 3 | 0 | The canon rows that were partly built (run Finish everything partly built, Part 21), each on the player's own numbers: the F-You money meter (JL Colli... |
+| 188 | `features/exercises.js` | 216 | 6 | 0 | 0 | Money exercises (run Finish everything partly built, Part 7, Money psychology) |
+| 189 | `features/joy.js` | 489 | 8 | 2 | 0 | Joy and enough (run Finish everything partly built, Part 8) |
+| 190 | `features/giving.js` | 560 | 9 | 3 | 0 | Giving (run Finish everything partly built, Part 16) |
+| 191 | `features/benefits.js` | 613 | 11 | 3 | 0 | Benefits and health (run Finish everything partly built, Part 10) |
+| 192 | `features/ratios.js` | 296 | 7 | 2 | 0 | Ratios on Key numbers (run Not built, groups 1 to 5, Part 9) |
+| 193 | `features/hard.js` | 541 | 15 | 5 | 0 | Hard moments (run Not built, groups 1 to 5, Part 7) |
+| 194 | `features/estate.js` | 495 | 8 | 5 | 0 | Estate and marriage (run Finish everything partly built, Part 11) |
+| 195 | `features/life.js` | 549 | 25 | 6 | 0 | Five play parts (run Not built, groups 1 to 5, Part 10b) |
+| 196 | `features/hunt.js` | 331 | 8 | 4 | 0 | Two games on real rules (run Not built, groups 1 to 5, Part 10b) |
+| 197 | `features/feel.js` | 530 | 15 | 4 | 0 | Game feel (run Finish everything partly built, Part 20) |
+| 198 | `features/erain.js` | 305 | 16 | 0 | 0 | The 60-second demo "Find your era" (era/index.html, run CC-1, item 7, Nov 27 2026), and the way its answers come into the game |
+| 199 | `features/guild.js` | 264 | 12 | 4 | 0 | People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b) |
+| 200 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
+| 201 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
+| 202 | `features/results.js` | 582 | 23 | 6 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
+| 203 | `features/cbguide.js` | 414 | 15 | 0 | 0 | What it is / What it could be, run 14 (Nov 27 2026): the parts that make each screen of the flow easy to follow |
+| 204 | `features/couldbe.js` | 2,144 | 76 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 205 | `features/wants.js` | 157 | 8 | 1 | 0 | What you want (run SLAM-ONBOARD-1, Nov 27 2026): the first screen of a new player, before the four questions of What it is / What it could be |
+| 206 | `features/cbtax.js` | 462 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
+| 207 | `features/cbflex.js` | 326 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
+| 208 | `features/cblater.js` | 249 | 7 | 4 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
+| 209 | `features/cbmoves.js` | 251 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
+| 210 | `features/cbyesbut.js` | 566 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
+| 211 | `features/cbstack.js` | 202 | 4 | 7 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
+| 212 | `features/cbreveal.js` | 660 | 19 | 15 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
+| 213 | `features/firstweek.js` | 208 | 12 | 1 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
+| 214 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
+| 215 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
+| 216 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
+| 217 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 218 | `features/questlog.js` | 549 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 219 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 220 | `features/built.js` | 2,127 | 4 | 41 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -248,7 +249,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1085 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1088 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|

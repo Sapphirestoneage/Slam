@@ -7,11 +7,13 @@
                2. Share SLAM: one personal link for each account (?ref=code). No rewards.
                3. What's new: the patch notes (data/patchnotes.js), the newest first.
    INPUT       The game: G.demo, G.chars, G.fd (row: the answer of the database, card: how the card
-               was closed). SUPA (account/supa.js): the signed-in account. The code a person arrived
+               was closed, pnSeen: the newest entry seen, pnOff: no note on Home). SUPA (account/supa.js): the signed-in account. The code a person arrived
                with (suRef in supa.js). PATCH_NOTES. The open sheet (W.kind): fdshare, whatsnew.
-   OUTPUT      17 functions. Parts of functions in other files: finishSetupFounding, homeFoundingCard,
+   OUTPUT      25 functions. Parts of functions in other files: finishSetupFounding, homeFoundingCard,
                meTabFounding, profSheetFounding, rvSheetFounding. Actions (ACT): fdshare, fdcopy,
-               fdnative, fdmail, fdnot, whatsnew, pnall. Menu: "What's new", "Share SLAM".
+               fdnative, fdmail, fdnot, whatsnew, pnall, pngot, pnoff, pnnote. Part of home() in
+               ui.js: homeWhatsNew (one note on Home when SLAM changed, with "Don't show again").
+               Menu: "What's new", "Share SLAM".
    DEPENDS ON  core/report.js, account/supa.js, screens/ui.js, screens/planner.js, features/reveal.js,
                data/patchnotes.js.
    RULES       Only the database knows who the first 50 are
@@ -278,7 +280,7 @@ function pnDay(d) {
 }
 function pnSheet() {
   /* an entry about an add-on (ao: true) is not shown in the game: add-ons are off for standard players */
-  const L = pnSorted(typeof PATCH_NOTES !== "undefined" ? PATCH_NOTES : []).filter(e => !e.ao),
+  const L = pnList(),
     all = !!(W && W.all),
     show = all ? L : L.slice(0, 3);
   return (
@@ -294,8 +296,52 @@ function pnSheet() {
         (L.length > 3
           ? `<button class="ghost wide slim" data-a="pnall">${all ? "Show only the newest" : "Show older updates (" + (L.length - 3) + ")"}</button>`
           : "")
-      : `<div class="small muted">Nothing here yet.</div>`)
+      : `<div class="small muted">Nothing here yet.</div>`) +
+    `<div class="tile small row between"><span><b>Tell me on Home</b><div class="tiny muted">${fdX().pnOff ? "Off. Home stays quiet about updates." : "On. Home shows one note when something is new."}</div></span><button class="ghost slim" style="min-height:44px" data-a="pnnote">${fdX().pnOff ? "Turn on" : "Turn off"}</button></div>`
   );
+}
+/* The entries the player can see, the newest first. */
+function pnList() {
+  return pnSorted(typeof PATCH_NOTES !== "undefined" ? PATCH_NOTES : []).filter(e => !e.ao);
+}
+/* The name of one entry, to remember the newest one the player saw. */
+function pnId(e) {
+  return e ? e.d + "|" + e.t : "";
+}
+/* The entries that are newer than the one the player saw last. With no record, the newest one only. */
+function pnFresh(list, seen) {
+  if (!list.length) return [];
+  if (!seen) return list.slice(0, 1);
+  const i = list.findIndex(e => pnId(e) === seen);
+  return i < 0 ? list.slice(0, 1) : list.slice(0, i);
+}
+/* Remembers that the player saw the newest entry. */
+function pnMark() {
+  fdX().pnSeen = pnId(pnList()[0]);
+}
+/* Part of home() in ui.js. One quiet note when SLAM changed since the last time, with "Don't show again".
+   A new player starts with all entries as read. No pulse: Home keeps its one pulse. */
+function homeWhatsNew(h) {
+  try {
+    const x = fdX(),
+      c = C();
+    if (G.demo || x.pnOff || (typeof SUPA !== "undefined" && SUPA.as)) return h;
+    if (!c.led || (typeof TOUR !== "undefined" && !G.tourSeen)) {
+      if (!x.pnSeen) pnMark();
+      return h;
+    }
+    const fresh = pnFresh(pnList(), x.pnSeen);
+    if (!fresh.length || typeof homeRowAdd !== "function") return h;
+    const e = fresh[0],
+      more = fresh.length - 1;
+    return homeRowAdd(
+      h,
+      `<div class="tile small stack homerow rskeep pn-new" style="gap:8px;flex-direction:column;align-items:stretch"><span><b>What's new: ${esc(e.t)}</b><br><span class="tiny muted">${esc(pnDay(e.d))}${more ? ", and " + more + " more " + (more === 1 ? "update" : "updates") : ""}</span></span><div class="row" style="gap:8px;flex-wrap:wrap"><button class="ghost slim" style="min-height:44px" data-a="whatsnew">See what changed</button><button class="ghost slim" style="min-height:44px" data-a="pngot">Got it</button><button class="ghost slim" style="min-height:44px" data-a="pnoff">Don't show again</button></div></div>`
+    );
+  } catch (e) {
+    report(e, "founding.js: homeWhatsNew");
+    return h;
+  }
 }
 Object.assign(ACT, {
   fdshare: () => {
@@ -359,11 +405,34 @@ Object.assign(ACT, {
     render();
   },
   whatsnew: () => {
+    if (!G.demo && fdX().pnSeen !== pnId(pnList()[0])) {
+      pnMark();
+      save();
+    }
     W = { kind: "whatsnew", all: false };
     sheet(pnSheet);
   },
   pnall: () => {
     W.all = !W.all;
+    drawSheet();
+  },
+  /* "Got it" on the note of Home: the note goes until the next update. */
+  pngot: () => {
+    pnMark();
+    save();
+    render();
+  },
+  /* "Don't show again": Home stays quiet about updates. The sheet What's new turns it back on. */
+  pnoff: () => {
+    fdX().pnOff = true;
+    pnMark();
+    save();
+    render();
+  },
+  pnnote: () => {
+    fdX().pnOff = !fdX().pnOff;
+    pnMark();
+    save();
     drawSheet();
   },
 });

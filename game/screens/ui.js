@@ -693,6 +693,7 @@ function home() {
     h = homeNextDollar(h); /* canon.js: the one line of the next dollar, at the top */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeReportFixed === "function") h = homeReportFixed(h); /* fbreport.js: "You reported this. It's fixed." */
+  if (typeof homeWhatsNew === "function") h = homeWhatsNew(h); /* founding.js: one note when SLAM changed */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
   if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */

@@ -90,6 +90,22 @@ const WB = [
     "Menu, then What's new. What changed, the newest first, in plain words. Each run adds one entry.",
     "whatsnew",
   ],
+  [
+    "feel",
+    "What's new on Home: one note when SLAM changed, with Don't show again",
+    "b",
+    () => WB_FN("homeWhatsNew") && WB_FN("pnFresh") && WB_HAS("pngot") && WB_HAS("pnoff") && WB_HAS("pnnote"),
+    "Home shows one quiet note when there is an update since your last look. Got it puts it away. Don't show again keeps Home quiet. What's new, in the Menu, turns it back on.",
+    "whatsnew",
+  ],
+  [
+    "feel",
+    "The test build: the strip TEST BUILD at /game-next/",
+    "b",
+    () => WB_FN("tbIsNext") && WB_FN("tbStrip") && !tbIsNext("/game/") && tbIsNext("/game-next/"),
+    "The next version is tried at the address /game-next/ before it goes to /game/. Each page there has an amber strip at the top.",
+    null,
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   [
     "in",

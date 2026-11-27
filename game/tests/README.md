@@ -138,6 +138,7 @@ Each file has the name of its feature.
 | `question-design.js` | The questions inside the rounds: count first, each card its own row, a card paid in full is not a debt, the rate chips, the ranges of each kind, "I know it" in the same spot, income each time to a month, roommates and kids, the lines of a spending group, IRA and Roth IRA as two rows | `features/amounts.js`, `screens/smart.js`, `core/engine.js` |
 | `dashboard-values-goals.js` | My Money, values and goals: each part of the donut can be seen and tapped, the money machine (net, hours of work, invested to not need to work), the big three as a share of spending, safe to spend waits for goals and bills, the four tiles and the closed sections, values ranked and linked with More / Keep it / Less, goals kept with no cap, ranked, the top 3 now and the next one moving up | `screens/dash.js`, `features/tally.js`, `features/look.js`, `features/values.js`, `features/goalrank.js` |
 | `usability-repairs.js` | The repairs from the usability audit | `screens/tidy.js` |
+| `whats-new-note-and-test-build.js` | The note "What's new" on Home (new since the last look, Got it, Don't show again, and the way back in the sheet), and the strip "TEST BUILD" that shows only at `/game-next/` | `features/founding.js`, `core/testbuild.js` |
 | `welcome-back-card.js` | The welcome-back card | `features/back.js` |
 | `what-depends-on-what.js` | What depends on what | `features/dep.js` |
 | `what-each-debt-costs.js` | What each debt costs you | `features/owed.js` |
