@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- ELI: DRAFT, NOT LEGAL ADVICE. This page says in plain words what the code and the database do today
+     (checked on November 27, 2026). No lawyer has read it. Have one read it before a paid launch. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -28,7 +30,20 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <main>
 <div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>
 <h1>Privacy, in plain words</h1>
-<p class="muted">Last checked against the code and the database on November 25, 2026. <span id="edu"></span></p>
+<p class="muted">Last checked against the code and the database on November 27, 2026. <span id="edu"></span></p>
+
+<div class="card" id="short">
+<h2>The short version</h2>
+<ul>
+<li><b>What is stored:</b> your email address and your saved game (what you tap or type).</li>
+<li><b>Where:</b> in a database at Supabase, the company that hosts the accounts of the game, and in a copy in this browser.</li>
+<li><b>Who sees it:</b> you, your coach only while "Share with my coach" is on, and Eli, the admin.</li>
+<li><b>Delete:</b> you can delete your account on this page, at <a href="#delete">Delete my account</a>.</li>
+<li><b>Your information is not sold</b>, rented or traded. Not to anyone.</li>
+<li><b>No affiliates.</b> SLAM gets no money when you pick a card, a bank or any product that the game names.</li>
+</ul>
+<p class="muted">The rest of this page says the same with all the details.</p>
+</div>
 
 <div class="card" id="who">
 <h2>Who can see your game</h2>
@@ -58,6 +73,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <li>The admin log: who opened or changed which account, and when.</li>
 </ul>
 <p>The admin can download one backup file with all accounts and games.</p>
+<p id="backup"><b>The weekly backup.</b> When Eli switches it on, a copy of the database is made one time each week. The copy is locked with a passphrase that only Eli has. It is kept for 90 days at GitHub, the company that hosts the code of SLAM, and then GitHub removes it. A copy made before you deleted your account can hold your information until that copy is 90 days old.</p>
 <p><b>On your device:</b> a copy of your game in the storage of this browser, so the game opens fast and works with a weak connection. It also keeps you signed in.</p>
 <p><b>Email:</b> the email to confirm your address or to set a new password goes through an email service, which gets your email address for that.</p>
 </div>
@@ -90,6 +106,8 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <div class="card">
 <h2>What SLAM does not do</h2>
 <ul>
+<li>No selling. Your information is not sold, rented or traded.</li>
+<li>No affiliates. The links in the game carry no code that pays SLAM, and SLAM gets no money when you pick a card, a bank or a product.</li>
 <li>No ads, and no tracking or analytics scripts.</li>
 <li>No connection to your bank. SLAM never asks for a bank password.</li>
 <li>Nothing in the code sends your information to any company other than the ones named on this page. In a live session that includes Google (the speech recognition of Chrome) and, only after the call when your coach runs the AI pass, Anthropic.</li>
@@ -116,6 +134,7 @@ details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{c
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
 <script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/supa.js?v=cfa58c3f"></script>
 <script>
