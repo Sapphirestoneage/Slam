@@ -1,0 +1,6556 @@
+{
+ "meta": {
+  "generated": "2026-11-27",
+  "audited_commit": "bfe3db3e125ff2e5670b9db15eb000a5da86702a",
+  "audited_branch": "main",
+  "read_only": true,
+  "note": "A list for people and for a later config-driven setup. No game file reads these files today. Nothing here changes what the game does.",
+  "count": 249,
+  "types": [
+   "number",
+   "choice",
+   "date",
+   "list",
+   "boolean",
+   "text",
+   "record"
+  ],
+  "types_note": "\"text\" (a typed name) and \"record\" (an object with several values) were added to the five types of the request, because the game stores both.",
+  "storage_note": "c.* is one profile (G.chars[n]). c.x.* is the container of the answers of each feature. G.* is the whole game on the device and in the account. \"database:\" is kept by the account, not in the saved game.",
+  "certainty_note": "supports: true (Guess / Close / Exact are kept with the value), \"derived\" (worked out from its rows), \"partial\" (a guess or a real answer only), false (a choice with no such state), \"cant_tell\".",
+  "evidence_note": "evidence is a text scan of game/ (not the four big data files): reads and direct writes of the key. Many answers are written by one shared action (set, tog, kitset) that the scan does not count as a write, so a low write count is not proof of an orphan.",
+  "confidence_note": "confidence \"low\" marks an entry whose name or meaning was not checked by reading the code that uses it."
+ },
+ "facts": [
+  {
+   "id": "name",
+   "plain_name": "Name of the character",
+   "type": "text",
+   "storage": "c.name",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "setup.name"
+   ],
+   "used_by": [
+    "calc.metrics",
+    "screen.quest",
+    "screen.ages",
+    "screen.since",
+    "screen.csp",
+    "screen.elem",
+    "screen.fair",
+    "screen.fork",
+    "screen.guild",
+    "screen.house",
+    "screen.rolemap",
+    "screen.sins",
+    "screen.stratlib",
+    "screen.testkit"
+   ],
+   "source": "game/core/engine.js:1408",
+   "evidence": {
+    "static_reads": 65,
+    "read_files": 29,
+    "direct_writes": 1,
+    "write_files": [
+     "features/moneylog.js"
+    ]
+   }
+  },
+  {
+   "id": "is_sample",
+   "plain_name": "This profile is a sample character",
+   "type": "boolean",
+   "storage": "c.demo",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.whatsnew"
+   ],
+   "source": "game/core/engine.js:1409",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 6,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "age",
+   "plain_name": "Age",
+   "type": "number",
+   "storage": "c.age",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "open.age",
+    "setup.age_decade",
+    "setup.age_exact"
+   ],
+   "used_by": [
+    "open.top_is",
+    "open.top_could",
+    "calc.derive",
+    "calc.metrics",
+    "screen.ages",
+    "screen.benefits",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.career",
+    "screen.cb",
+    "screen.cover",
+    "screen.csp",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.house",
+    "screen.ivheat",
+    "screen.jobs",
+    "screen.joy",
+    "screen.lever",
+    "screen.lsopen",
+    "screen.mix",
+    "screen.mult",
+    "screen.odds",
+    "screen.offers",
+    "screen.paths",
+    "screen.peers",
+    "screen.summary",
+    "screen.qmode",
+    "screen.quick",
+    "screen.months",
+    "screen.sims",
+    "screen.stratlib",
+    "screen.takeout",
+    "screen.taxv",
+    "screen.windfall"
+   ],
+   "source": "game/core/engine.js:1410",
+   "evidence": {
+    "static_reads": 190,
+    "read_files": 55,
+    "direct_writes": 1,
+    "write_files": [
+     "features/couldbe.js"
+    ]
+   }
+  },
+  {
+   "id": "work_optional_age",
+   "plain_name": "Age when work becomes optional (the stop age)",
+   "type": "number",
+   "storage": "c.ret",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.when_would_you_like_work_to_be_optional"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.ages",
+    "screen.book",
+    "screen.career",
+    "screen.acwhy",
+    "screen.ivheat",
+    "screen.mix",
+    "screen.odds",
+    "screen.paths",
+    "screen.summary",
+    "screen.quick",
+    "screen.sims",
+    "screen.takeout",
+    "screen.taxv",
+    "screen.windfall"
+   ],
+   "source": "game/core/engine.js:1411",
+   "evidence": {
+    "static_reads": 83,
+    "read_files": 32,
+    "direct_writes": 1,
+    "write_files": [
+     "features/erain.js"
+    ]
+   }
+  },
+  {
+   "id": "plan_to_age",
+   "plain_name": "Age the money must last to",
+   "type": "number",
+   "storage": "c.death",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.plan_your_money_to_last_until"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.ymoyl",
+    "screen.joy",
+    "screen.odds"
+   ],
+   "source": "game/core/engine.js:1412",
+   "evidence": {
+    "static_reads": 31,
+    "read_files": 10,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "pay_rhythm",
+   "plain_name": "How often money comes in (main rhythm)",
+   "type": "choice",
+   "storage": "c.payFreq",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.income_freq",
+    "dead.setup_v1.payFreq"
+   ],
+   "used_by": [
+    "plan.pay_period",
+    "calc.derive",
+    "screen.quest",
+    "screen.okay"
+   ],
+   "source": "game/core/engine.js:1413",
+   "evidence": {
+    "static_reads": 46,
+    "read_files": 12,
+    "direct_writes": 3,
+    "write_files": [
+     "features/games2.js",
+     "account/liveland.js",
+     "account/livereview.js"
+    ]
+   }
+  },
+  {
+   "id": "next_payday",
+   "plain_name": "Date of the next payday",
+   "type": "date",
+   "storage": "c.payNext",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [
+    "plan.pay_period",
+    "calc.derive",
+    "screen.quest"
+   ],
+   "source": "game/core/engine.js:1414",
+   "evidence": {
+    "static_reads": 28,
+    "read_files": 8,
+    "direct_writes": 4,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "pay_known",
+   "plain_name": "The next payday is set",
+   "type": "boolean",
+   "storage": "c.payKnown",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.quest"
+   ],
+   "source": "game/core/engine.js:1483",
+   "evidence": {
+    "static_reads": 19,
+    "read_files": 8,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js",
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "income_steady",
+   "plain_name": "Income is steady or changes month to month",
+   "type": "choice",
+   "storage": "c.steady",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.steady",
+    "dead.setup_v1.steady"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.elem",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1415",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 6,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "take_home",
+   "plain_name": "Money coming in a month (take-home)",
+   "type": "number",
+   "storage": "c.take",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "open.save",
+    "setup.income_amt",
+    "life.taxwhen",
+    "ask.take"
+   ],
+   "used_by": [
+    "home.next_win",
+    "home.stat.free_to_spend",
+    "home.quad.free_to_spend",
+    "money.card.the_big_three",
+    "money.card.your_money_machine",
+    "admin.account_summary_in_out_cash_owes_set_up_not_star",
+    "metric.save",
+    "metric.saveall",
+    "metric.freedom",
+    "metric.home",
+    "metric.food",
+    "metric.move",
+    "metric.big3",
+    "metric.bills",
+    "metric.split",
+    "metric.debtpay",
+    "metric.dti",
+    "metric.carpay",
+    "metric.give",
+    "metric.growth",
+    "metric.match",
+    "calc.derive",
+    "calc.metrics",
+    "screen.rcaudit",
+    "screen.benefits",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.career",
+    "screen.cb",
+    "screen.cdn",
+    "screen.csp",
+    "screen.dep",
+    "screen.drills",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.fair",
+    "screen.family",
+    "screen.fline",
+    "screen.giving",
+    "screen.house",
+    "screen.ledger",
+    "screen.lever",
+    "screen.lsopen",
+    "screen.mix",
+    "screen.mult",
+    "screen.nxa",
+    "screen.odds",
+    "screen.paths",
+    "screen.peers",
+    "screen.summary",
+    "screen.qmode",
+    "screen.quick",
+    "screen.rc",
+    "screen.months",
+    "screen.sign",
+    "screen.sims",
+    "screen.stratlib",
+    "screen.study",
+    "screen.takeout",
+    "screen.taxv",
+    "screen.trips"
+   ],
+   "source": "game/core/engine.js:1416",
+   "evidence": {
+    "static_reads": 214,
+    "read_files": 60,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "low_month_income",
+   "plain_name": "Money coming in during a slow month",
+   "type": "number",
+   "storage": "c.low",
+   "certainty": {
+    "supports": "partial",
+    "how": "Two states only: a stock guess until the player answers, then c.sharp[key] is true."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics"
+   ],
+   "source": "game/core/engine.js:1417",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 3,
+    "direct_writes": 6,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js",
+     "features/ask.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "spending",
+   "plain_name": "Money going out a month",
+   "type": "number",
+   "storage": "c.spend",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "open.spend",
+    "setup.spend_groups",
+    "ask.spend"
+   ],
+   "used_by": [
+    "open.top_is",
+    "open.top_could",
+    "home.next_win",
+    "home.your_numbers",
+    "home.stat.free_to_spend",
+    "money.card.your_money_machine",
+    "admin.account_summary_in_out_cash_owes_set_up_not_star",
+    "metric.save",
+    "metric.saveall",
+    "metric.freedom",
+    "metric.home",
+    "metric.food",
+    "metric.move",
+    "metric.big3",
+    "metric.bills",
+    "metric.split",
+    "metric.debtpay",
+    "metric.dti",
+    "metric.carpay",
+    "metric.give",
+    "metric.cushion",
+    "metric.bige",
+    "metric.fi",
+    "metric.yearsfi",
+    "metric.coast",
+    "metric.wr",
+    "metric.years",
+    "metric.leanfi",
+    "metric.bridge",
+    "metric.firatio",
+    "calc.derive",
+    "calc.metrics",
+    "screen.rcaudit",
+    "screen.blocks",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.cb",
+    "screen.cdn",
+    "screen.cover",
+    "screen.csp",
+    "screen.dep",
+    "screen.drills",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.family",
+    "screen.fline",
+    "screen.gig",
+    "screen.hard",
+    "screen.house",
+    "screen.ledger",
+    "screen.lever",
+    "screen.lsopen",
+    "screen.mix",
+    "screen.mult",
+    "screen.nxa",
+    "screen.odds",
+    "screen.owed",
+    "screen.paths",
+    "screen.summary",
+    "screen.qmode",
+    "screen.rc",
+    "screen.months",
+    "screen.sign",
+    "screen.sims",
+    "screen.stratlib",
+    "screen.takeout",
+    "screen.trips",
+    "screen.vault",
+    "screen.xray"
+   ],
+   "source": "game/core/engine.js:1418",
+   "evidence": {
+    "static_reads": 252,
+    "read_files": 65,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "move_out_cost",
+   "plain_name": "Monthly cost if the player moved out on their own",
+   "type": "number",
+   "storage": "c.moveOut",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics"
+   ],
+   "source": "game/core/engine.js:1419",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 3,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "cushion_months",
+   "plain_name": "Months of cushion (cash divided by spending)",
+   "type": "number",
+   "storage": "c.months",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "setup.acct_each"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.okay"
+   ],
+   "source": "game/core/engine.js:1420",
+   "evidence": {
+    "static_reads": 18,
+    "read_files": 7,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "invested_total",
+   "plain_name": "Total invested",
+   "type": "number",
+   "storage": "c.inv",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "open.inv",
+    "setup.acct_each"
+   ],
+   "used_by": [
+    "open.top_is",
+    "open.top_could",
+    "home.your_numbers",
+    "money.tile.invested",
+    "metric.nw",
+    "metric.invx",
+    "metric.paw",
+    "metric.invshare",
+    "metric.trap",
+    "metric.fee",
+    "metric.dollar",
+    "metric.fi",
+    "metric.yearsfi",
+    "metric.coast",
+    "metric.wr",
+    "metric.years",
+    "metric.leanfi",
+    "metric.bridge",
+    "metric.stockshare",
+    "metric.firatio",
+    "calc.derive",
+    "calc.metrics",
+    "screen.since",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.cb",
+    "screen.cover",
+    "screen.csp",
+    "screen.drills",
+    "screen.elem",
+    "screen.enough",
+    "screen.acwhy",
+    "screen.fline",
+    "screen.house",
+    "screen.ledger",
+    "screen.lever",
+    "screen.lsopen",
+    "screen.mix",
+    "screen.mult",
+    "screen.odds",
+    "screen.paths",
+    "screen.qmode",
+    "screen.months",
+    "screen.sims",
+    "screen.stratlib",
+    "screen.takeout",
+    "screen.trips"
+   ],
+   "source": "game/core/engine.js:1421",
+   "evidence": {
+    "static_reads": 160,
+    "read_files": 45,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "debt_total",
+   "plain_name": "Total owed",
+   "type": "number",
+   "storage": "c.debt",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "setup.debt_each"
+   ],
+   "used_by": [
+    "money.tile.you_owe",
+    "calc.derive",
+    "calc.metrics",
+    "screen.since",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.cover",
+    "screen.elem",
+    "screen.house",
+    "screen.jobs",
+    "screen.ledger",
+    "screen.qmode",
+    "screen.months",
+    "screen.sims",
+    "screen.stratlib"
+   ],
+   "source": "game/core/engine.js:1422",
+   "evidence": {
+    "static_reads": 64,
+    "read_files": 23,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "has_high_interest_debt",
+   "plain_name": "Has debt at a high rate (yes / no)",
+   "type": "choice",
+   "storage": "c.high",
+   "certainty": {
+    "supports": "derived",
+    "how": "A total of rows. Its state is worked out from the rows (kitState / knSt): Guess if any row is a guess, Exact only if all are."
+   },
+   "asked_by": [
+    "setup.debt_rate"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.lever",
+    "screen.mult",
+    "screen.okay",
+    "screen.qmode",
+    "screen.stratlib",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1423",
+   "evidence": {
+    "static_reads": 30,
+    "read_files": 14,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "job_match",
+   "plain_name": "Job match: getting all of it, not all, or none offered",
+   "type": "choice",
+   "storage": "c.match",
+   "certainty": {
+    "supports": "partial",
+    "how": "Two states only: a stock guess until the player answers, then c.sharp[key] is true."
+   },
+   "asked_by": [
+    "setup.matchQ"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.acwhy",
+    "screen.lever",
+    "screen.mult",
+    "screen.nxa",
+    "screen.offers",
+    "screen.paths",
+    "screen.summary"
+   ],
+   "source": "game/core/engine.js:1424",
+   "evidence": {
+    "static_reads": 30,
+    "read_files": 16,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js",
+     "features/games.js"
+    ]
+   }
+  },
+  {
+   "id": "uses_tax_accounts",
+   "plain_name": "Puts money in tax-friendly accounts",
+   "type": "choice",
+   "storage": "c.tax",
+   "certainty": {
+    "supports": "partial",
+    "how": "Two states only: a stock guess until the player answers, then c.sharp[key] is true."
+   },
+   "asked_by": [
+    "setup.taxAcctQ"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.acwhy",
+    "screen.lever",
+    "screen.mult"
+   ],
+   "source": "game/core/engine.js:1425",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 7,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js",
+     "features/games.js"
+    ]
+   }
+  },
+  {
+   "id": "chases_bonuses",
+   "plain_name": "Chases card or bank bonuses",
+   "type": "choice",
+   "storage": "c.bonus",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.do_you_chase_card_or_bank_bonuses"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1426",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "relationship",
+   "plain_name": "Relationship",
+   "type": "choice",
+   "storage": "c.rel",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.rel",
+    "dead.setup_v1.rel"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.benefits",
+    "screen.cb",
+    "screen.cover",
+    "screen.acwhy",
+    "screen.jobs",
+    "screen.nxa",
+    "screen.taxv"
+   ],
+   "source": "game/core/engine.js:1427",
+   "evidence": {
+    "static_reads": 23,
+    "read_files": 11,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "relationship_intent",
+   "plain_name": "Relationship intent (stored default \"Partnered\")",
+   "type": "choice",
+   "storage": "c.intent",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1428",
+   "confidence": "low"
+  },
+  {
+   "id": "same_page",
+   "plain_name": "On the same page with a partner about money",
+   "type": "choice",
+   "storage": "c.samePage",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1429",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "work_kind",
+   "plain_name": "Kind of work right now",
+   "type": "choice",
+   "storage": "c.work",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.work",
+    "dead.setup_v1.work"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.ymoyl",
+    "screen.drills",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.jobs",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1430",
+   "evidence": {
+    "static_reads": 83,
+    "read_files": 18,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "home_kind",
+   "plain_name": "Renting, owning, or living with family at no cost",
+   "type": "choice",
+   "storage": "c.home",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.homeQ",
+    "dead.setup_v1.homeQ"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.ymoyl",
+    "screen.cover",
+    "screen.csp",
+    "screen.jobs",
+    "screen.stratlib"
+   ],
+   "source": "game/core/engine.js:1431",
+   "evidence": {
+    "static_reads": 33,
+    "read_files": 13,
+    "direct_writes": 1,
+    "write_files": [
+     "data/strategies.js"
+    ]
+   }
+  },
+  {
+   "id": "dependents",
+   "plain_name": "Who relies on the player for money",
+   "type": "choice",
+   "storage": "c.deps",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.deps",
+    "dead.setup_v1.deps"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.ymoyl",
+    "screen.cover",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.jobs",
+    "screen.summary",
+    "screen.taxv"
+   ],
+   "source": "game/core/engine.js:1432",
+   "evidence": {
+    "static_reads": 27,
+    "read_files": 12,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "money_element",
+   "plain_name": "Money element (Earth, Water, Fire, Air, Spirit)",
+   "type": "choice",
+   "storage": "c.element",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1433",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "drive",
+   "plain_name": "What drives the player with money (stored default \"Achieving\")",
+   "type": "choice",
+   "storage": "c.drive",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1434",
+   "confidence": "low"
+  },
+  {
+   "id": "plan_style",
+   "plain_name": "Planner, a bit of both, or free spirit",
+   "type": "choice",
+   "storage": "c.order",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.plans_or_going_with_the_flow"
+   ],
+   "used_by": [],
+   "source": "game/core/engine.js:1435",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "giving_style",
+   "plain_name": "Who the player spends on first",
+   "type": "choice",
+   "storage": "c.give",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.who_do_you_spend_on_first"
+   ],
+   "used_by": [
+    "screen.elem"
+   ],
+   "source": "game/core/engine.js:1436",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "money_type",
+   "plain_name": "Money type (saver, protector, investor, free agent)",
+   "type": "choice",
+   "storage": "c.want",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1437",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "advantage",
+   "plain_name": "An unfair advantage the player has",
+   "type": "choice",
+   "storage": "c.adv",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.got_an_unfair_advantage"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1438",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "chapter",
+   "plain_name": "Life chapter of the character",
+   "type": "choice",
+   "storage": "c.chapter",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1439",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "launch_kind",
+   "plain_name": "Kind of launch into adult life (Mega, Soft, Stabilizing)",
+   "type": "choice",
+   "storage": "c.launch",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1440",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "legacy",
+   "plain_name": "Legacy flag",
+   "type": "boolean",
+   "storage": "c.legacy",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1441",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "era_step_ranks",
+   "plain_name": "Rank reached on each era step",
+   "type": "record",
+   "storage": "c.nodes",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "plan.already"
+   ],
+   "used_by": [
+    "home.you_are_here",
+    "home.quad.do_this",
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1442",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 2,
+    "direct_writes": 7,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "skills_done",
+   "plain_name": "Skills marked done",
+   "type": "record",
+   "storage": "c.skills",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "home.welcome_back",
+    "calc.derive",
+    "screen.since",
+    "screen.guild",
+    "screen.lsopen",
+    "screen.qmode",
+    "screen.galaxy"
+   ],
+   "source": "game/core/engine.js:1443",
+   "evidence": {
+    "static_reads": 25,
+    "read_files": 9,
+    "direct_writes": 5,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "money_muscles",
+   "plain_name": "Money muscles practiced (lock a card, read a pay stub, ...)",
+   "type": "record",
+   "storage": "c.muscles",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1444",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 3,
+    "direct_writes": 4,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "plate",
+   "plain_name": "Steps on the plate now",
+   "type": "list",
+   "storage": "c.plate",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.quest"
+   ],
+   "source": "game/core/engine.js:1445",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 3,
+    "direct_writes": 6,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "focus_tracks",
+   "plain_name": "Skill tracks in focus",
+   "type": "list",
+   "storage": "c.garden",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.connect"
+   ],
+   "source": "game/core/engine.js:1446",
+   "evidence": {
+    "static_reads": 14,
+    "read_files": 3,
+    "direct_writes": 4,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "compost",
+   "plain_name": "Head start earned from paused tracks",
+   "type": "number",
+   "storage": "c.compost",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1447",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "boost",
+   "plain_name": "Head start per track",
+   "type": "record",
+   "storage": "c.boost",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1448",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "focus_slots",
+   "plain_name": "How many tracks fit in focus at once",
+   "type": "number",
+   "storage": "c.slots",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1449",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js",
+     "features/fork.js"
+    ]
+   }
+  },
+  {
+   "id": "today_score",
+   "plain_name": "How well money went today, 1 to 5",
+   "type": "number",
+   "storage": "c.spoons",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1450",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js",
+     "features/fork.js"
+    ]
+   }
+  },
+  {
+   "id": "streak",
+   "plain_name": "Days in a row with a daily check",
+   "type": "number",
+   "storage": "c.streak",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.guild",
+    "screen.qmode"
+   ],
+   "source": "game/core/engine.js:1451",
+   "evidence": {
+    "static_reads": 14,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "last_daily",
+   "plain_name": "Date of the last daily check",
+   "type": "date",
+   "storage": "c.lastDaily",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.quest",
+    "screen.summary"
+   ],
+   "source": "game/core/engine.js:1452",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 5,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "calibration",
+   "plain_name": "Record of guesses next to real numbers",
+   "type": "list",
+   "storage": "c.calib",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1453",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "diary",
+   "plain_name": "Daily check entries",
+   "type": "list",
+   "storage": "c.diary",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "ui.how_did_money_feel_today"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1454",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "paydays",
+   "plain_name": "Payday rounds played",
+   "type": "list",
+   "storage": "c.paydays",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.sins"
+   ],
+   "source": "game/core/engine.js:1455",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "history",
+   "plain_name": "One snapshot of the numbers for each day with a change",
+   "type": "list",
+   "storage": "c.hist",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "ui.did_you_look_at_your_real_balances_for_these_num"
+   ],
+   "used_by": [
+    "coach.client_card_last_active_era_four_top_numbers_fla",
+    "calc.derive",
+    "calc.metrics",
+    "screen.quest",
+    "screen.ymoyl",
+    "screen.fline",
+    "screen.lsopen",
+    "screen.qmode",
+    "screen.sins"
+   ],
+   "source": "game/core/engine.js:1456",
+   "evidence": {
+    "static_reads": 48,
+    "read_files": 16,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "badges",
+   "plain_name": "Badges earned",
+   "type": "list",
+   "storage": "c.badges",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1457",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "peak_era",
+   "plain_name": "Highest era reached",
+   "type": "number",
+   "storage": "c.peakEra",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "home.you_are_here",
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1458",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "confirmed_era",
+   "plain_name": "Era the player confirmed",
+   "type": "number",
+   "storage": "c.confEra",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.acwhy"
+   ],
+   "source": "game/core/engine.js:1459",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 3,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "dark",
+   "plain_name": "Dark flag (purpose not checked)",
+   "type": "boolean",
+   "storage": "c.dark",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1460",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 3,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "cross6",
+   "plain_name": "Answer at the crossing into era 6",
+   "type": "choice",
+   "storage": "c.cross6",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1461",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "cross7",
+   "plain_name": "Answer at the crossing into era 7",
+   "type": "choice",
+   "storage": "c.cross7",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1462",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "happy_now",
+   "plain_name": "Happy with life right now",
+   "type": "choice",
+   "storage": "c.happy",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "ui.are_you_happy_with_life_right_now"
+   ],
+   "used_by": [],
+   "source": "game/core/engine.js:1463",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "saved_steps",
+   "plain_name": "Steps saved for later",
+   "type": "list",
+   "storage": "c.saved",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.quest"
+   ],
+   "source": "game/core/engine.js:1464",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 2,
+    "direct_writes": 7,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "viewed",
+   "plain_name": "Counter of views (purpose not checked)",
+   "type": "number",
+   "storage": "c.viewed",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1465",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "setup_done",
+   "plain_name": "Setup is finished and the profile is placed in an era",
+   "type": "boolean",
+   "storage": "c.placed",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "admin.account_summary_in_out_cash_owes_set_up_not_star",
+    "calc.derive",
+    "calc.metrics",
+    "screen.quest",
+    "screen.ymoyl",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.fline",
+    "screen.jobs",
+    "screen.lsopen",
+    "screen.okay",
+    "screen.rc",
+    "screen.months",
+    "screen.stratlib",
+    "screen.transit"
+   ],
+   "source": "game/core/engine.js:1466",
+   "evidence": {
+    "static_reads": 65,
+    "read_files": 33,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "numbers_real",
+   "plain_name": "The profile runs on real rows, not the stock guess",
+   "type": "boolean",
+   "storage": "c.led",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.since",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.cb",
+    "screen.csp",
+    "screen.dep",
+    "screen.drills",
+    "screen.elem",
+    "screen.enough",
+    "screen.acwhy",
+    "screen.fair",
+    "screen.gig",
+    "screen.house",
+    "screen.ledger",
+    "screen.lever",
+    "screen.mix",
+    "screen.qmode",
+    "screen.rolemap",
+    "screen.sins",
+    "screen.stratlib",
+    "screen.takeout",
+    "screen.values",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1467",
+   "evidence": {
+    "static_reads": 128,
+    "read_files": 45,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "spending_rows",
+   "plain_name": "Spending lines (kind, amount, sure)",
+   "type": "list",
+   "storage": "c.spends",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "open.spend",
+    "open.yesbut",
+    "setup.spend_groups",
+    "money.rows.spends",
+    "ask.spend"
+   ],
+   "used_by": [
+    "money.card.the_big_three",
+    "money.card.where_it_goes",
+    "money.card.how_complete_is_your_picture",
+    "calc.derive",
+    "calc.metrics",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.cb",
+    "screen.csp",
+    "screen.drills",
+    "screen.elem",
+    "screen.enough",
+    "screen.fair",
+    "screen.fork",
+    "screen.giving",
+    "screen.house",
+    "screen.joy",
+    "screen.ledger",
+    "screen.rc",
+    "screen.months",
+    "screen.sins",
+    "screen.stratlib",
+    "screen.values",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1468",
+   "evidence": {
+    "static_reads": 117,
+    "read_files": 43,
+    "direct_writes": 5,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js",
+     "features/import.js"
+    ]
+   }
+  },
+  {
+   "id": "protection",
+   "plain_name": "Insurance and protection answers",
+   "type": "record",
+   "storage": "c.prot",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "prot.health",
+    "prot.car",
+    "prot.renters",
+    "prot.disab",
+    "prot.life"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.cover",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1469",
+   "evidence": {
+    "static_reads": 39,
+    "read_files": 5,
+    "direct_writes": 3,
+    "write_files": [
+     "core/engine2.js",
+     "features/cover.js"
+    ]
+   }
+  },
+  {
+   "id": "income_rows",
+   "plain_name": "Income sources (kind, amount, sure)",
+   "type": "list",
+   "storage": "c.incs",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "open.save",
+    "setup.income_amt",
+    "money.rows.incs",
+    "life.partner",
+    "ask.take"
+   ],
+   "used_by": [
+    "money.card.how_complete_is_your_picture",
+    "metric.growth",
+    "metric.match",
+    "plan.pay_period",
+    "calc.derive",
+    "calc.metrics",
+    "screen.book",
+    "screen.cb",
+    "screen.csp",
+    "screen.drills",
+    "screen.elem",
+    "screen.gig",
+    "screen.house",
+    "screen.ledger",
+    "screen.qmode",
+    "screen.months",
+    "screen.sins",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1470",
+   "evidence": {
+    "static_reads": 78,
+    "read_files": 28,
+    "direct_writes": 7,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js",
+     "features/import.js"
+    ]
+   }
+  },
+  {
+   "id": "income_kinds",
+   "plain_name": "Kinds of income the player has",
+   "type": "list",
+   "storage": "c.incKinds",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.incKinds",
+    "dead.setup_v1.incKinds"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1471",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 3,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "cash_rows",
+   "plain_name": "Cash accounts (kind, amount, sure)",
+   "type": "list",
+   "storage": "c.cashes",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "setup.acct_each",
+    "money.rows.cashes",
+    "life.taxheld",
+    "ask.cash"
+   ],
+   "used_by": [
+    "home.month_end",
+    "home.your_numbers",
+    "home.stat.net_worth",
+    "home.welcome_back",
+    "money.tile.net_worth",
+    "money.tile.cash",
+    "admin.account_summary_in_out_cash_owes_set_up_not_star",
+    "metric.cushion",
+    "metric.bige",
+    "calc.derive",
+    "calc.metrics",
+    "screen.book",
+    "screen.drills",
+    "screen.elem",
+    "screen.house",
+    "screen.jobs",
+    "screen.ledger",
+    "screen.months",
+    "screen.takeout"
+   ],
+   "source": "game/core/engine.js:1472",
+   "evidence": {
+    "static_reads": 76,
+    "read_files": 23,
+    "direct_writes": 7,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "investment_rows",
+   "plain_name": "Investment accounts (kind, amount, sure)",
+   "type": "list",
+   "storage": "c.invs",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "open.inv",
+    "setup.acct_each",
+    "setup.rollover",
+    "money.rows.invs",
+    "ask.inv"
+   ],
+   "used_by": [
+    "home.month_end",
+    "home.stat.net_worth",
+    "money.tile.net_worth",
+    "money.tile.invested",
+    "metric.nw",
+    "metric.invx",
+    "metric.paw",
+    "metric.invshare",
+    "metric.trap",
+    "metric.fee",
+    "metric.dollar",
+    "metric.stockshare",
+    "calc.derive",
+    "calc.metrics",
+    "screen.book",
+    "screen.cb",
+    "screen.dep",
+    "screen.drills",
+    "screen.elem",
+    "screen.acwhy",
+    "screen.ledger",
+    "screen.mix",
+    "screen.takeout"
+   ],
+   "source": "game/core/engine.js:1473",
+   "evidence": {
+    "static_reads": 90,
+    "read_files": 30,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "debt_rows",
+   "plain_name": "Debts (kind, amount, rate, sure; a card also has its own record)",
+   "type": "list",
+   "storage": "c.debts",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "setup.cards_n",
+    "setup.cards_carry",
+    "setup.debt_count",
+    "setup.debt_bank",
+    "setup.debt_each",
+    "setup.debt_rate",
+    "setup.debt_promo_end",
+    "money.rows.debts",
+    "ask.debt",
+    "askdb.apr",
+    "askdb.pay",
+    "askdb.lim",
+    "askdb.hassle"
+   ],
+   "used_by": [
+    "home.next_win",
+    "home.month_end",
+    "home.your_numbers",
+    "home.stat.net_worth",
+    "home.stat.free_of_costly_debt",
+    "home.welcome_back",
+    "money.tile.net_worth",
+    "money.tile.you_owe",
+    "admin.account_summary_in_out_cash_owes_set_up_not_star",
+    "metric.highdebt",
+    "metric.debtload",
+    "metric.debtassets",
+    "metric.util",
+    "metric.interest",
+    "calc.derive",
+    "calc.metrics",
+    "screen.book",
+    "screen.ymoyl",
+    "screen.drills",
+    "screen.elem",
+    "screen.fork",
+    "screen.house",
+    "screen.jobs",
+    "screen.ledger",
+    "screen.lever",
+    "screen.lsopen",
+    "screen.owed",
+    "screen.paths",
+    "screen.qmode",
+    "screen.months",
+    "screen.roof",
+    "screen.stratlib",
+    "screen.study",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1474",
+   "evidence": {
+    "static_reads": 135,
+    "read_files": 41,
+    "direct_writes": 9,
+    "write_files": [
+     "core/engine.js",
+     "core/engine2.js",
+     "screens/ui.js",
+     "features/mycards.js"
+    ]
+   }
+  },
+  {
+   "id": "debt_kinds",
+   "plain_name": "Kinds of debt the player has",
+   "type": "list",
+   "storage": "c.debtKinds",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.cards_n",
+    "setup.debt_kinds"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.jobs",
+    "screen.okay"
+   ],
+   "source": "game/core/engine.js:1475",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 6,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js",
+     "features/mycards.js"
+    ]
+   }
+  },
+  {
+   "id": "has_mortgage",
+   "plain_name": "Has a mortgage",
+   "type": "boolean",
+   "storage": "c.mort",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.debt_kinds"
+   ],
+   "used_by": [
+    "screen.cover"
+   ],
+   "source": "game/core/engine.js:1476",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "account_kinds",
+   "plain_name": "Kinds of account the player has",
+   "type": "list",
+   "storage": "c.accts",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.accts"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.cb",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1477",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "features/couldbe.js",
+     "account/liveland.js"
+    ]
+   }
+  },
+  {
+   "id": "lives_with",
+   "plain_name": "Who lives with the player",
+   "type": "list",
+   "storage": "c.live",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.live",
+    "dead.setup_v1.live"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1478",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 4,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "combines_money_with",
+   "plain_name": "Who the player combines money with",
+   "type": "choice",
+   "storage": "c.share",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.share",
+    "dead.setup_v1.share",
+    "profiles.who_you_combine_money_with",
+    "ui.who_you_combine_money_with"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1479",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "can_pay_1k",
+   "plain_name": "Could pay a $1,000 surprise bill without borrowing",
+   "type": "choice",
+   "storage": "c.can1k",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.can1k"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.okay"
+   ],
+   "source": "game/core/engine.js:1480",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 3,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "could_cover",
+   "plain_name": "How long the bills are covered if money stopped",
+   "type": "choice",
+   "storage": "c.cover",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.cover"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.okay"
+   ],
+   "source": "game/core/engine.js:1481",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 4,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "invests",
+   "plain_name": "Puts money into investments (no, sometimes, every month)",
+   "type": "choice",
+   "storage": "c.invest",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "open.save",
+    "setup.invest"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.cb",
+    "screen.jobs",
+    "screen.okay",
+    "screen.months"
+   ],
+   "source": "game/core/engine.js:1482",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 6,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "sharp_flags",
+   "plain_name": "Which stock guesses the player has replaced (low, match, tax, ...)",
+   "type": "record",
+   "storage": "c.sharp",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "setup.matchQ",
+    "setup.taxAcctQ",
+    "asksh.match",
+    "asksh.tax"
+   ],
+   "used_by": [
+    "home.quad.your_picture",
+    "money.card.how_complete_is_your_picture",
+    "calc.derive",
+    "calc.metrics"
+   ],
+   "source": "game/core/engine.js:1484",
+   "evidence": {
+    "static_reads": 35,
+    "read_files": 7,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "wins",
+   "plain_name": "Wins logged",
+   "type": "list",
+   "storage": "c.wins",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1485",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "caught",
+   "plain_name": "Answers to the catch questions",
+   "type": "record",
+   "storage": "c.caught",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.fline",
+    "screen.stratlib",
+    "screen.vault"
+   ],
+   "source": "game/core/engine.js:1486",
+   "evidence": {
+    "static_reads": 19,
+    "read_files": 7,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js",
+     "data/strategies.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "not_applicable",
+   "plain_name": "Steps marked \"Doesn't apply to me\"",
+   "type": "record",
+   "storage": "c.na",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "plan.task_state"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.quest",
+    "screen.galaxy"
+   ],
+   "source": "game/core/engine.js:1487",
+   "evidence": {
+    "static_reads": 18,
+    "read_files": 4,
+    "direct_writes": 3,
+    "write_files": [
+     "screens/planner.js",
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "schedules",
+   "plain_name": "Things that repeat (a bill, a debt payment, a transfer)",
+   "type": "list",
+   "storage": "c.routines",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "home.month_end",
+    "plan.pay_period",
+    "calc.derive",
+    "screen.quest",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:1488",
+   "evidence": {
+    "static_reads": 11,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "season",
+   "plain_name": "Seasonal tasks done",
+   "type": "record",
+   "storage": "c.season",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.care"
+   ],
+   "source": "game/core/engine.js:1489",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 3,
+    "write_files": [
+     "screens/ui.js",
+     "features/careq.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "skipped",
+   "plain_name": "Things skipped",
+   "type": "record",
+   "storage": "c.skip",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1490",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "money_log",
+   "plain_name": "Logged money moves (in, out, a debt payment, a transfer)",
+   "type": "list",
+   "storage": "c.moves",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "screen.since",
+    "screen.enough",
+    "screen.fork",
+    "screen.gig",
+    "screen.ledger",
+    "screen.sins"
+   ],
+   "source": "game/core/engine.js:1491",
+   "evidence": {
+    "static_reads": 36,
+    "read_files": 15,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js",
+     "features/fork.js"
+    ]
+   }
+  },
+  {
+   "id": "parked",
+   "plain_name": "Steps parked with \"Not yet\"",
+   "type": "record",
+   "storage": "c.park",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "plan.already"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1492",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "enneagram",
+   "plain_name": "Enneagram result",
+   "type": "choice",
+   "storage": "c.enn",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1493",
+   "confidence": "low"
+  },
+  {
+   "id": "feature_store",
+   "plain_name": "Container for the answers of each feature (c.x)",
+   "type": "record",
+   "storage": "c.x",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1494"
+  },
+  {
+   "id": "goals",
+   "plain_name": "Goals (name, kind, amount, era)",
+   "type": "list",
+   "storage": "c.goals",
+   "certainty": {
+    "supports": true,
+    "how": "Each row carries s (true once the player gave it) and cf (1 Guess, 2 Close, 3 Exact); a range chip also keeps its range (rg)."
+   },
+   "asked_by": [
+    "open.wants",
+    "open.wants_own",
+    "goals.first"
+   ],
+   "used_by": [
+    "home.next_win",
+    "home.stat.free_to_spend",
+    "home.stat.next_goal",
+    "calc.derive",
+    "screen.since",
+    "screen.cb",
+    "screen.cdn",
+    "screen.cover",
+    "screen.family",
+    "screen.jobs",
+    "screen.paths",
+    "screen.summary",
+    "screen.sims",
+    "screen.stratlib"
+   ],
+   "source": "game/core/engine.js:1495",
+   "evidence": {
+    "static_reads": 75,
+    "read_files": 28,
+    "direct_writes": 6,
+    "write_files": [
+     "screens/ui.js",
+     "features/goalrank.js",
+     "account/liveland.js"
+    ]
+   }
+  },
+  {
+   "id": "goal_share",
+   "plain_name": "Share of free money that goes to goals",
+   "type": "number",
+   "storage": "c.goalShare",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1496",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "work_hours",
+   "plain_name": "Hours worked and commuted in a week",
+   "type": "record",
+   "storage": "c.hrs",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:1497",
+   "evidence": {
+    "static_reads": 9,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "time_prices",
+   "plain_name": "Time prices",
+   "type": "record",
+   "storage": "c.tp",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.rolemap"
+   ],
+   "source": "game/core/engine.js:1498",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 4,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "gentle_mode",
+   "plain_name": "Gentle mode (hard numbers last)",
+   "type": "boolean",
+   "storage": "c.gentle",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.feel0",
+    "me.gentle"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.months"
+   ],
+   "source": "game/core/engine.js:1499",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 6,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "goal_win",
+   "plain_name": "A goal win waiting to be shown",
+   "type": "record",
+   "storage": "c.gwin",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/core/engine.js:1500",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low"
+  },
+  {
+   "id": "kid_count",
+   "plain_name": "How many kids live with the player (4 means 4 or more)",
+   "type": "number",
+   "storage": "c.kidCount",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.kid_count"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.takeout"
+   ],
+   "source": "game/core/engine.js:794",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 3,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "roommate_count",
+   "plain_name": "How many roommates",
+   "type": "number",
+   "storage": "c.roommateCount",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.roommate_count"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:794",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   }
+  },
+  {
+   "id": "household_people",
+   "plain_name": "The people of the household, one layer at a time",
+   "type": "list",
+   "storage": "c.party",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.jobs",
+    "screen.rolemap"
+   ],
+   "source": "game/features/people.js:12",
+   "evidence": {
+    "static_reads": 32,
+    "read_files": 8,
+    "direct_writes": 8,
+    "write_files": [
+     "features/games.js",
+     "features/people.js"
+    ]
+   }
+  },
+  {
+   "id": "baseline",
+   "plain_name": "The first numbers of the profile, kept to compare later",
+   "type": "record",
+   "storage": "c.base",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics"
+   ],
+   "source": "game/screens/ui.js:2798",
+   "evidence": {
+    "static_reads": 15,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js",
+     "account/coachplus.js"
+    ]
+   }
+  },
+  {
+   "id": "x_about",
+   "plain_name": "Saved state of: The Strategy Engine: \"Moves to try\"",
+   "type": "record",
+   "storage": "c.x.about",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "stg.score",
+    "stg.home",
+    "stg.spare",
+    "stg.payfull",
+    "stg.hdhp",
+    "stg.debt8"
+   ],
+   "used_by": [
+    "screen.stratlib"
+   ],
+   "source": "game/features/strat.js:145",
+   "evidence": {
+    "static_reads": 11,
+    "read_files": 2,
+    "direct_writes": 3,
+    "write_files": [
+     "features/strat.js",
+     "data/strategies.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/strat.js. The shape of the value was not read."
+  },
+  {
+   "id": "addon_permits",
+   "plain_name": "Add-ons the owner permits for this person",
+   "type": "record",
+   "storage": "c.x.ao",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "addon.card"
+   ],
+   "used_by": [],
+   "source": "game/account/gate.js:27",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "account/addon.js"
+    ]
+   }
+  },
+  {
+   "id": "addon_yes",
+   "plain_name": "One-time yes of the person to an add-on",
+   "type": "record",
+   "storage": "c.x.aok",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "addon.one_time_yes"
+   ],
+   "used_by": [],
+   "source": "game/account/gate.js:7",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 2,
+    "direct_writes": 4,
+    "write_files": [
+     "account/addon.js"
+    ]
+   }
+  },
+  {
+   "id": "x_ben",
+   "plain_name": "Saved state of: Benefits and health (run Finish everything partly built, Part 10)",
+   "type": "record",
+   "storage": "c.x.ben",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "benefits.ben.key"
+   ],
+   "used_by": [
+    "screen.benefits"
+   ],
+   "source": "game/features/benefits.js:24",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/benefits.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/benefits.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_benplans",
+   "plain_name": "Saved state of: Benefits and health (run Finish everything partly built, Part 10)",
+   "type": "record",
+   "storage": "c.x.benplans",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.benefits"
+   ],
+   "source": "game/features/benefits.js:24",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 1,
+    "direct_writes": 4,
+    "write_files": [
+     "features/benefits.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/benefits.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_blocks",
+   "plain_name": "Saved state of: Life event blocks that the player stacks: a home, a car, a child, a job change, a sabbatical, a move",
+   "type": "record",
+   "storage": "c.x.blocks",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "blocks.blocks.car",
+    "blocks.blocks.years"
+   ],
+   "used_by": [
+    "screen.blocks"
+   ],
+   "source": "game/features/blocks.js:9",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/blocks.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_cal",
+   "plain_name": "Saved state of: The setup questions change with each answer",
+   "type": "record",
+   "storage": "c.x.cal",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/smart.js:5",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of screens/smart.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_cardsort",
+   "plain_name": "Saved state of: Credit cards as a list of cards, not one balance",
+   "type": "record",
+   "storage": "c.x.cardSort",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/mycards.js:641",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/mycards.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/mycards.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_care",
+   "plain_name": "Saved state of: The Job of Existing, feature 5: the quests of the Health Care Admin and the Insurance Coordinator",
+   "type": "record",
+   "storage": "c.x.care",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.care"
+   ],
+   "source": "game/features/careq.js:24",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "features/careq.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/careq.js. The shape of the value was not read."
+  },
+  {
+   "id": "care_years",
+   "plain_name": "Years childcare or tuition still runs",
+   "type": "number",
+   "storage": "c.x.careYrs",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.careyrs"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3447",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_career",
+   "plain_name": "Saved state of: Benefits and health (run Finish everything partly built, Part 10)",
+   "type": "record",
+   "storage": "c.x.career",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "career.career.key"
+   ],
+   "used_by": [
+    "screen.benefits",
+    "screen.career"
+   ],
+   "source": "game/features/benefits.js:25",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/benefits.js. The shape of the value was not read."
+  },
+  {
+   "id": "could_be_store",
+   "plain_name": "What it is / What it could be: the four answers, what is counted, where the player left off",
+   "type": "record",
+   "storage": "c.x.cb",
+   "certainty": {
+    "supports": true,
+    "how": "Stored as { v, cf } by kitAsk: cf 1 Guess (not given), 2 Close (chip), 3 Exact (typed)."
+   },
+   "asked_by": [
+    "open.spend",
+    "open.inv",
+    "open.save",
+    "open.way_shape",
+    "open.way_ss",
+    "open.way_taxplan",
+    "open.way_flex",
+    "open.way_later",
+    "open.layers",
+    "open.yesbut"
+   ],
+   "used_by": [
+    "open.top_is",
+    "open.top_could",
+    "open.reveal",
+    "home.cb_tile",
+    "screen.cb"
+   ],
+   "source": "game/features/couldbe.js:306",
+   "evidence": {
+    "static_reads": 70,
+    "read_files": 9,
+    "direct_writes": 1,
+    "write_files": [
+     "features/couldbe.js"
+    ]
+   }
+  },
+  {
+   "id": "x_cmp",
+   "plain_name": "Saved state of: Compare the ways",
+   "type": "record",
+   "storage": "c.x.cmp",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "ways.cmp.left",
+    "ways.cmp.leftAge"
+   ],
+   "used_by": [],
+   "source": "game/features/ways.js:11",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/ways.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_coast",
+   "plain_name": "Saved state of: Two things about freedom",
+   "type": "record",
+   "storage": "c.x.coast",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/coast.js:6",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/coast.js. The shape of the value was not read."
+  },
+  {
+   "id": "cost_of_living",
+   "plain_name": "Cost of living where the player lives",
+   "type": "choice",
+   "storage": "c.x.col",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.col"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3565",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_conf",
+   "plain_name": "Saved state of: Ratios on Key numbers (run Not built, groups 1 to 5, Part 9)",
+   "type": "record",
+   "storage": "c.x.conf",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/ratios.js:23",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/ratios.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/ratios.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_countdown",
+   "plain_name": "Saved state of: Countdowns",
+   "type": "record",
+   "storage": "c.x.countdown",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "countdown.countdown.cant_tell_label_is_built_in_code_label"
+   ],
+   "used_by": [
+    "screen.cdn"
+   ],
+   "source": "game/features/countdown.js:9",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/countdown.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_cover",
+   "plain_name": "Saved state of: Insurance needs",
+   "type": "record",
+   "storage": "c.x.cover",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "cover.cover.key"
+   ],
+   "used_by": [
+    "screen.cover"
+   ],
+   "source": "game/features/cover.js:8",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/cover.js. The shape of the value was not read."
+  },
+  {
+   "id": "spending_plan",
+   "plain_name": "Conscious Spending Plan and the audit score history",
+   "type": "record",
+   "storage": "c.x.cp",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.csp"
+   ],
+   "source": "game/features/csp.js:5",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/csp.js"
+    ]
+   }
+  },
+  {
+   "id": "x_crg",
+   "plain_name": "Saved state of: Two games on real rules (run Not built, groups 1 to 5, Part 10b)",
+   "type": "record",
+   "storage": "c.x.crg",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.crg"
+   ],
+   "source": "game/features/hunt.js:27",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/hunt.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/hunt.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_crstack",
+   "plain_name": "Saved state of: Career and education",
+   "type": "record",
+   "storage": "c.x.crstack",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.career"
+   ],
+   "source": "game/features/career.js:519",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/career.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/career.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_dep",
+   "plain_name": "Saved state of: What depends on what",
+   "type": "record",
+   "storage": "c.x.dep",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.dep"
+   ],
+   "source": "game/features/dep.js:44",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/dep.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/dep.js. The shape of the value was not read."
+  },
+  {
+   "id": "life_questions_done",
+   "plain_name": "Which plan questions (LIFE) were answered",
+   "type": "record",
+   "storage": "c.x.done",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "life.limit",
+    "life.forgive",
+    "life.taxwhen",
+    "life.taxheld",
+    "life.dry",
+    "life.partner",
+    "life.kids",
+    "life.care",
+    "life.careyrs",
+    "life.homeval",
+    "life.homebal",
+    "life.homepmt",
+    "life.homeyrs",
+    "life.fixed",
+    "life.pension",
+    "life.col",
+    "life.ss"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:5",
+   "evidence": {
+    "static_reads": 9,
+    "read_files": 4,
+    "direct_writes": 4,
+    "write_files": [
+     "core/engine.js",
+     "features/amounts.js",
+     "features/cblater.js"
+    ]
+   }
+  },
+  {
+   "id": "debt_plan",
+   "plain_name": "Debt plan: the order and the extra each month",
+   "type": "record",
+   "storage": "c.x.dplan",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.owed",
+    "screen.rc"
+   ],
+   "source": "game/features/debts.js:5",
+   "evidence": {
+    "static_reads": 15,
+    "read_files": 7,
+    "direct_writes": 2,
+    "write_files": [
+     "features/debts.js",
+     "features/recalc.js"
+    ]
+   }
+  },
+  {
+   "id": "x_drills",
+   "plain_name": "Saved state of: Four tools for hard days",
+   "type": "record",
+   "storage": "c.x.drills",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.drills",
+    "screen.sins"
+   ],
+   "source": "game/features/drills.js:444",
+   "evidence": {
+    "static_reads": 9,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "features/drills.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/drills.js. The shape of the value was not read."
+  },
+  {
+   "id": "slow_months",
+   "plain_name": "Slow months in a year",
+   "type": "number",
+   "storage": "c.x.dry",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.dry"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3373",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_el",
+   "plain_name": "Saved state of: The character reveal after setup, in place of the card \"Your character is ready\"",
+   "type": "record",
+   "storage": "c.x.el",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.elem"
+   ],
+   "source": "game/features/element.js:52",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/element.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/element.js. The shape of the value was not read."
+  },
+  {
+   "id": "ending_costs",
+   "plain_name": "Costs that end one day (childcare, a loan)",
+   "type": "list",
+   "storage": "c.x.ends",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.care"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3427",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_enough",
+   "plain_name": "Saved state of: Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3)",
+   "type": "record",
+   "storage": "c.x.enough",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.enough",
+    "screen.joy"
+   ],
+   "source": "game/features/enough.js:22",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 2,
+    "direct_writes": 4,
+    "write_files": [
+     "features/enough.js",
+     "features/joy.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/enough.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_es",
+   "plain_name": "Saved state of: Steps for the later eras, and the account recommendation",
+   "type": "record",
+   "storage": "c.x.es",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.acwhy",
+    "screen.nxa",
+    "screen.paths"
+   ],
+   "source": "game/features/eras.js:42",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 3,
+    "direct_writes": 1,
+    "write_files": [
+     "features/eras.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/eras.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_ex",
+   "plain_name": "Saved state of: Money exercises (run Finish everything partly built, Part 7, Money psychology)",
+   "type": "record",
+   "storage": "c.x.ex",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.exercises"
+   ],
+   "source": "game/features/exercises.js:9",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 3,
+    "direct_writes": 7,
+    "write_files": [
+     "features/exercises.js",
+     "features/exletter.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/exercises.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_fam",
+   "plain_name": "Saved state of: Family money (run Not built, groups 1 to 5, Part 8)",
+   "type": "record",
+   "storage": "c.x.fam",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "family.fam.key"
+   ],
+   "used_by": [
+    "screen.family"
+   ],
+   "source": "game/features/family.js:11",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/family.js. The shape of the value was not read."
+  },
+  {
+   "id": "fixed_support",
+   "plain_name": "Money sent or given each month that is not up for debate",
+   "type": "number",
+   "storage": "c.x.fixed",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.fixed"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3535",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "fork_check",
+   "plain_name": "Fork check: what is poking the player today and how much room is left",
+   "type": "record",
+   "storage": "c.x.fk",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.fork"
+   ],
+   "source": "game/features/fork.js:9",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/fork.js"
+    ]
+   }
+  },
+  {
+   "id": "loan_forgiveness",
+   "plain_name": "Student loans are on a forgiveness track",
+   "type": "choice",
+   "storage": "c.x.forgive",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.forgive"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3325",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_fw",
+   "plain_name": "Saved state of: Eli's frameworks and the canon (run \"Not built, groups 1 to 5\", Part 4)",
+   "type": "record",
+   "storage": "c.x.fw",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.ymoyl"
+   ],
+   "source": "game/features/canon.js:27",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/canon.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/canon.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_gd",
+   "plain_name": "Saved state of: People, inside the profiles of this game (run Not built, groups 1 to 5, Part 10b)",
+   "type": "record",
+   "storage": "c.x.gd",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.guild"
+   ],
+   "source": "game/features/guild.js:32",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/guild.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/guild.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_gf",
+   "plain_name": "Saved state of: Game feel (run Finish everything partly built, Part 20)",
+   "type": "record",
+   "storage": "c.x.gf",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.fline"
+   ],
+   "source": "game/features/feel.js:31",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/feel.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/feel.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_gfend",
+   "plain_name": "Saved state of: Game feel (run Finish everything partly built, Part 20)",
+   "type": "record",
+   "storage": "c.x.gfend",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "feel.gfend.per",
+    "feel.gfend.need",
+    "feel.gfend.years"
+   ],
+   "used_by": [
+    "screen.fline"
+   ],
+   "source": "game/features/feel.js:31",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/feel.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/feel.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_gig",
+   "plain_name": "Saved state of: Work for yourself",
+   "type": "record",
+   "storage": "c.x.gig",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.gig"
+   ],
+   "source": "game/features/gig.js:508",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/gig.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/gig.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_give",
+   "plain_name": "Saved state of: Giving (run Finish everything partly built, Part 16)",
+   "type": "record",
+   "storage": "c.x.give",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.giving"
+   ],
+   "source": "game/features/giving.js:26",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/giving.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/giving.js. The shape of the value was not read."
+  },
+  {
+   "id": "goal_rank",
+   "plain_name": "Goals kept and ranked (top 3 are \"Working on now\")",
+   "type": "record",
+   "storage": "c.x.grank",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "goals.first"
+   ],
+   "used_by": [],
+   "source": "game/features/goalrank.js:7",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/goalrank.js"
+    ]
+   }
+  },
+  {
+   "id": "x_hard",
+   "plain_name": "Saved state of: Hard moments (run Not built, groups 1 to 5, Part 7)",
+   "type": "record",
+   "storage": "c.x.hard",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.hard"
+   ],
+   "source": "game/features/hard.js:10",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 1,
+    "direct_writes": 4,
+    "write_files": [
+     "features/hard.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/hard.js. The shape of the value was not read."
+  },
+  {
+   "id": "home_loan",
+   "plain_name": "Home value, mortgage balance, payment and years left",
+   "type": "record",
+   "storage": "c.x.home",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.homeval",
+    "life.homebal",
+    "life.homepmt",
+    "life.homeyrs"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3466",
+   "evidence": {
+    "static_reads": 25,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "features/cblater.js"
+    ]
+   }
+  },
+  {
+   "id": "x_hunt",
+   "plain_name": "Saved state of: Two games on real rules (run Not built, groups 1 to 5, Part 10b)",
+   "type": "record",
+   "storage": "c.x.hunt",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.crg"
+   ],
+   "source": "game/features/hunt.js:128",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/hunt.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/hunt.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_ig",
+   "plain_name": "Saved state of: Famous money ideas, the frame and ideas 1 to 8. Each idea of a well-known money teacher is one small screen, calculated on the numbers of the player",
+   "type": "record",
+   "storage": "c.x.ig",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.ymoyl"
+   ],
+   "source": "game/features/ideas.js:48",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 3,
+    "direct_writes": 1,
+    "write_files": [
+     "features/ideas.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/ideas.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_imp",
+   "plain_name": "Saved state of: Fill in the spending from a bank or card statement file",
+   "type": "record",
+   "storage": "c.x.imp",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.sins"
+   ],
+   "source": "game/features/import.js:303",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 3,
+    "direct_writes": 1,
+    "write_files": [
+     "features/import.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/import.js. The shape of the value was not read."
+  },
+  {
+   "id": "income_rhythms",
+   "plain_name": "How often each income source comes in",
+   "type": "record",
+   "storage": "c.x.incFreq",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.income_freq"
+   ],
+   "used_by": [],
+   "source": "game/screens/smart.js:393",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/smart.js"
+    ]
+   }
+  },
+  {
+   "id": "x_invoices",
+   "plain_name": "Saved state of: Work for yourself",
+   "type": "record",
+   "storage": "c.x.invoices",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.built",
+    "screen.gig"
+   ],
+   "source": "game/features/gig.js:736",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/gig.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/gig.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_ivr",
+   "plain_name": "Saved state of: Investing, two sheets (run Finish everything partly built, Part 13)",
+   "type": "record",
+   "storage": "c.x.ivr",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "invest.ivr.income",
+    "invest.ivr.live"
+   ],
+   "used_by": [
+    "screen.ivheat"
+   ],
+   "source": "game/features/invest.js:11",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/invest.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_jobmins",
+   "plain_name": "Saved state of: The Job of Existing (run JOE-1)",
+   "type": "record",
+   "storage": "c.x.jobmins",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "jobs.jobmins.id"
+   ],
+   "used_by": [
+    "screen.jobs"
+   ],
+   "source": "game/features/jobs.js:27",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/jobs.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/jobs.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_jobs",
+   "plain_name": "Saved state of: The Job of Existing (run JOE-1)",
+   "type": "record",
+   "storage": "c.x.jobs",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.care",
+    "screen.jobs"
+   ],
+   "source": "game/features/jobs.js:29",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "features/jobs.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/jobs.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_joy",
+   "plain_name": "Saved state of: Joy and enough (run Finish everything partly built, Part 8)",
+   "type": "record",
+   "storage": "c.x.joy",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.joy"
+   ],
+   "source": "game/features/joy.js:24",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 3,
+    "write_files": [
+     "features/joy.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/joy.js. The shape of the value was not read."
+  },
+  {
+   "id": "kids_planned",
+   "plain_name": "How many kids (the plan question)",
+   "type": "number",
+   "storage": "c.x.kids",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.kids"
+   ],
+   "used_by": [
+    "calc.derive",
+    "screen.jobs"
+   ],
+   "source": "game/core/engine.js:3410",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "features/amounts.js"
+    ]
+   }
+  },
+  {
+   "id": "key_number_answers",
+   "plain_name": "Answers of the Key numbers questions (tax, debt payments, card limits, pre-tax saving, match amount, pay a year ago, fees, car payment, giving)",
+   "type": "record",
+   "storage": "c.x.kin",
+   "certainty": {
+    "supports": true,
+    "how": "Key numbers answers keep a cf next to the value (c.x.kin[key + \"cf\"])."
+   },
+   "asked_by": [
+    "setup.taxQ",
+    "knask.tax",
+    "knask.debtPay",
+    "knask.limit",
+    "knask.pre",
+    "knask.matchAmt",
+    "knask.pay1",
+    "knask.fee",
+    "knask.carPay",
+    "knask.give",
+    "askkn.tax",
+    "askkn.debtPay",
+    "askkn.limit",
+    "askkn.pre",
+    "askkn.matchAmt",
+    "askkn.pay1",
+    "askkn.fee",
+    "askkn.carPay",
+    "askkn.give"
+   ],
+   "used_by": [
+    "metric.save",
+    "metric.saveall",
+    "metric.freedom",
+    "metric.home",
+    "metric.food",
+    "metric.move",
+    "metric.big3",
+    "metric.bills",
+    "metric.split",
+    "metric.debtpay",
+    "metric.dti",
+    "metric.carpay",
+    "metric.give",
+    "metric.growth",
+    "metric.match",
+    "metric.cushion",
+    "metric.bige",
+    "metric.highdebt",
+    "metric.debtload",
+    "metric.debtassets",
+    "metric.util",
+    "metric.interest",
+    "metric.nw",
+    "metric.invx",
+    "metric.paw",
+    "metric.invshare",
+    "metric.trap",
+    "metric.fee",
+    "metric.dollar",
+    "metric.fi",
+    "metric.yearsfi",
+    "metric.coast",
+    "metric.wr",
+    "metric.years",
+    "metric.leanfi",
+    "metric.bridge",
+    "metric.stockshare",
+    "metric.firatio",
+    "calc.metrics",
+    "screen.giving",
+    "screen.lever",
+    "screen.taxv"
+   ],
+   "source": "game/core/metrics.js:115",
+   "evidence": {
+    "static_reads": 22,
+    "read_files": 5,
+    "direct_writes": 3,
+    "write_files": [
+     "core/metrics.js",
+     "features/compare.js",
+     "features/giving.js"
+    ]
+   }
+  },
+  {
+   "id": "x_kn",
+   "plain_name": "Saved state of: Key numbers",
+   "type": "record",
+   "storage": "c.x.kn",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.metrics"
+   ],
+   "source": "game/core/metrics.js:117",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/metrics.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of core/metrics.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_lastopen",
+   "plain_name": "Saved state of: The Quest Log (\"Where am I\")",
+   "type": "record",
+   "storage": "c.x.lastOpen",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/questlog.js:183",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/questlog.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/questlog.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_later",
+   "plain_name": "Saved state of: The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab \"Next Steps\"), the check-in before and after payd",
+   "type": "record",
+   "storage": "c.x.later",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.quest"
+   ],
+   "source": "game/screens/planner.js:6",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of screens/planner.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_ledsort",
+   "plain_name": "Saved state of: The showcase screens of the dashboard look (DESIGN.md, \"Reference: Tally\"), built from the kit in screens/dash.js: the stat row of Home; the stat row, the order and the T",
+   "type": "record",
+   "storage": "c.x.ledSort",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/look.js:557",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/look.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/look.js. The shape of the value was not read."
+  },
+  {
+   "id": "benefit_savings_limit",
+   "plain_name": "Savings limit of a benefits program",
+   "type": "number",
+   "storage": "c.x.limit",
+   "certainty": {
+    "supports": "partial",
+    "how": "Two states only: a stock guess until the player answers, then c.sharp[key] is true."
+   },
+   "asked_by": [
+    "life.limit"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3310",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "benefit_limit_sure",
+   "plain_name": "The savings limit was given, not assumed",
+   "type": "boolean",
+   "storage": "c.x.limitSure",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "life.limit"
+   ],
+   "used_by": [],
+   "source": "game/core/engine.js:3311",
+   "evidence": {
+    "static_reads": 0,
+    "read_files": 0,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "live_session",
+   "plain_name": "What a Live Session wrote on the profile",
+   "type": "record",
+   "storage": "c.x.live",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/account/liveland.js:10",
+   "evidence": {
+    "static_reads": 14,
+    "read_files": 5,
+    "direct_writes": 3,
+    "write_files": [
+     "account/liveland.js"
+    ]
+   }
+  },
+  {
+   "id": "daily_lessons",
+   "plain_name": "Daily lessons done (Duolingo mode)",
+   "type": "record",
+   "storage": "c.x.lp",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.kids"
+   ],
+   "source": "game/features/kids.js:6",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/kids.js"
+    ]
+   }
+  },
+  {
+   "id": "x_ls",
+   "plain_name": "Saved state of: Five play parts (run Not built, groups 1 to 5, Part 10b)",
+   "type": "record",
+   "storage": "c.x.ls",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.lsopen"
+   ],
+   "source": "game/features/life.js:52",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/life.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/life.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_lvq",
+   "plain_name": "Saved state of: Which lever matters most",
+   "type": "record",
+   "storage": "c.x.lvq",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.lever"
+   ],
+   "source": "game/features/lever.js:15",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/lever.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/lever.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_mc",
+   "plain_name": "Saved state of: The Money Chart: ten statements, five elements, and the result for one person or two persons",
+   "type": "record",
+   "storage": "c.x.mc",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.elem"
+   ],
+   "source": "game/features/chart.js:1119",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/chart.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/chart.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_mix",
+   "plain_name": "Saved state of: Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee",
+   "type": "record",
+   "storage": "c.x.mix",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "mix.mix.cant_tell_label_is_built_in_code_label",
+    "mix.mix.cant_tell_label_is_built_in_code_label_2",
+    "mix.mix.target",
+    "mix.mix.adv"
+   ],
+   "used_by": [
+    "screen.mix"
+   ],
+   "source": "game/features/mix.js:10",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/mix.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_ms",
+   "plain_name": "Saved state of: The mission board",
+   "type": "record",
+   "storage": "c.x.ms",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.since"
+   ],
+   "source": "game/features/missions.js:264",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/missions.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/missions.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_mt",
+   "plain_name": "Saved state of: The canon rows that were partly built (run Finish everything partly built, Part 21), each on the player's own numbers: the F-You money meter (JL Collins), the Money Guy's",
+   "type": "record",
+   "storage": "c.x.mt",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/meters.js:25",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/meters.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/meters.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_mu",
+   "plain_name": "Saved state of: The multipliers board",
+   "type": "record",
+   "storage": "c.x.mu",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.mult"
+   ],
+   "source": "game/features/mult.js:15",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 4,
+    "write_files": [
+     "features/mult.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/mult.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_nextacct",
+   "plain_name": "Saved state of: Which account next, up to each limit",
+   "type": "record",
+   "storage": "c.x.nextacct",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "nextacct.nextacct.extra"
+   ],
+   "used_by": [
+    "screen.nxa"
+   ],
+   "source": "game/features/nextacct.js:7",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/nextacct.js. The shape of the value was not read."
+  },
+  {
+   "id": "no_goals",
+   "plain_name": "The player said \"no goals for now\"",
+   "type": "boolean",
+   "storage": "c.x.noGoals",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/goalrank.js:7",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/goalrank.js"
+    ]
+   }
+  },
+  {
+   "id": "asked_none",
+   "plain_name": "Areas the player said they have none of (\"Make your numbers real\")",
+   "type": "record",
+   "storage": "c.x.none",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "calc.metrics",
+    "screen.elem"
+   ],
+   "source": "game/features/ask.js:6",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 5,
+    "direct_writes": 3,
+    "write_files": [
+     "features/ask.js"
+    ]
+   }
+  },
+  {
+   "id": "x_ntlast",
+   "plain_name": "Saved state of: Safety nets (run Finish everything partly built, Part 15)",
+   "type": "record",
+   "storage": "c.x.ntLast",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/nets.js:236",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/nets.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/nets.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_nttrip",
+   "plain_name": "Saved state of: Safety nets (run Finish everything partly built, Part 15)",
+   "type": "record",
+   "storage": "c.x.ntTrip",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/nets.js:245",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/nets.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/nets.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_odds",
+   "plain_name": "Saved state of: Retirement odds",
+   "type": "record",
+   "storage": "c.x.odds",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "odds.odds.stock",
+    "ways.odds.stock"
+   ],
+   "used_by": [
+    "screen.odds"
+   ],
+   "source": "game/features/odds.js:10",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/odds.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_offers",
+   "plain_name": "Saved state of: Two job offers side by side",
+   "type": "record",
+   "storage": "c.x.offers",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "offers.offers.cant_tell_label_is_built_in_code_q_1"
+   ],
+   "used_by": [
+    "screen.offers"
+   ],
+   "source": "game/features/offers.js:8",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/offers.js. The shape of the value was not read."
+  },
+  {
+   "id": "partner_income_helps",
+   "plain_name": "A partner's income helps pay for the spending",
+   "type": "choice",
+   "storage": "c.x.partner",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.partner"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3395",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_paths",
+   "plain_name": "Saved state of: Two paths",
+   "type": "record",
+   "storage": "c.x.paths",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "paths.paths.ret",
+    "paths.paths.infl",
+    "paths.paths.swr",
+    "paths.paths.margin",
+    "paths.paths.smile",
+    "paths.paths.blend",
+    "paths.paths.split"
+   ],
+   "used_by": [
+    "screen.paths",
+    "screen.summary"
+   ],
+   "source": "game/features/paths.js:334",
+   "evidence": {
+    "static_reads": 33,
+    "read_files": 4,
+    "direct_writes": 2,
+    "write_files": [
+     "features/paths.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/paths.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_pe",
+   "plain_name": "Saved state of: You and people like you (run Finish everything partly built, Part 9)",
+   "type": "record",
+   "storage": "c.x.pe",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "peers.pe.gross"
+   ],
+   "used_by": [
+    "screen.peers"
+   ],
+   "source": "game/features/peers.js:22",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/peers.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/peers.js. The shape of the value was not read."
+  },
+  {
+   "id": "pension",
+   "plain_name": "Pension: monthly amount and start age",
+   "type": "record",
+   "storage": "c.x.pen",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "life.pension"
+   ],
+   "used_by": [
+    "calc.derive"
+   ],
+   "source": "game/core/engine.js:3552",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "core/engine.js"
+    ]
+   }
+  },
+  {
+   "id": "x_pf",
+   "plain_name": "Saved state of: Work for yourself",
+   "type": "record",
+   "storage": "c.x.pf",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.gig"
+   ],
+   "source": "game/features/gig.js:804",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/gig.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/gig.js. The shape of the value was not read."
+  },
+  {
+   "id": "pins",
+   "plain_name": "Pinned items",
+   "type": "record",
+   "storage": "c.x.pins",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:7",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "planner_tasks",
+   "plain_name": "Next Steps: the planned tasks with their day and state",
+   "type": "record",
+   "storage": "c.x.plan",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "plan.view",
+    "plan.task_state"
+   ],
+   "used_by": [
+    "home.quad.next_steps",
+    "screen.quest"
+   ],
+   "source": "game/screens/planner.js:50",
+   "evidence": {
+    "static_reads": 11,
+    "read_files": 3,
+    "direct_writes": 3,
+    "write_files": [
+     "screens/planner.js",
+     "account/coachpage.js"
+    ]
+   }
+  },
+  {
+   "id": "x_proof",
+   "plain_name": "Saved state of: Five play parts (run Not built, groups 1 to 5, Part 10b)",
+   "type": "record",
+   "storage": "c.x.proof",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.lsopen"
+   ],
+   "source": "game/features/life.js:506",
+   "evidence": {
+    "static_reads": 8,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/life.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/life.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_qs",
+   "plain_name": "Saved state of: Quest mode (run Not built, groups 1 to 5, Part 10a)",
+   "type": "record",
+   "storage": "c.x.qs",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.fline",
+    "screen.qmode"
+   ],
+   "source": "game/features/quest.js:34",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 2,
+    "write_files": [
+     "features/quest.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/quest.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_qsk",
+   "plain_name": "Saved state of: Quest mode (run Not built, groups 1 to 5, Part 10a)",
+   "type": "record",
+   "storage": "c.x.qsk",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "quest.qsk.earns"
+   ],
+   "used_by": [
+    "screen.qmode"
+   ],
+   "source": "game/features/quest.js:15",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/quest.js. The shape of the value was not read."
+  },
+  {
+   "id": "quest_log",
+   "plain_name": "Where am I: the place the player left off",
+   "type": "record",
+   "storage": "c.x.quest",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/questlog.js:9",
+   "evidence": {
+    "static_reads": 9,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/questlog.js"
+    ]
+   }
+  },
+  {
+   "id": "x_quota",
+   "plain_name": "Saved state of: Extras for people who love spreadsheets",
+   "type": "record",
+   "storage": "c.x.quota",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/quota.js:28",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/quota.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/quota.js. The shape of the value was not read."
+  },
+  {
+   "id": "quiz_results",
+   "plain_name": "Quiz answers and results",
+   "type": "record",
+   "storage": "c.x.qz",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.qmode",
+    "screen.qz",
+    "screen.sins"
+   ],
+   "source": "game/features/quizzes.js:7",
+   "evidence": {
+    "static_reads": 28,
+    "read_files": 5,
+    "direct_writes": 4,
+    "write_files": [
+     "features/quizzes.js"
+    ]
+   }
+  },
+  {
+   "id": "x_rc",
+   "plain_name": "Saved state of: Recalculating",
+   "type": "record",
+   "storage": "c.x.rc",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.rcaudit",
+    "screen.rc",
+    "screen.sins"
+   ],
+   "source": "game/features/recalc.js:7",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "features/recalc.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/recalc.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_rca",
+   "plain_name": "Saved state of: The Mistake audit",
+   "type": "record",
+   "storage": "c.x.rca",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "audit.rca.amt",
+    "audit.rca.ago"
+   ],
+   "used_by": [
+    "screen.rcaudit"
+   ],
+   "source": "game/features/audit.js:8",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/audit.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_rcs",
+   "plain_name": "Saved state of: Recalculating",
+   "type": "record",
+   "storage": "c.x.rcs",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "recalc.rcs.cap"
+   ],
+   "used_by": [
+    "screen.rc"
+   ],
+   "source": "game/features/recalc.js:392",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/recalc.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_rct",
+   "plain_name": "Saved state of: Recalculating",
+   "type": "record",
+   "storage": "c.x.rct",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "recalc.rct.health",
+    "recalc.rct.care"
+   ],
+   "used_by": [
+    "screen.rc"
+   ],
+   "source": "game/features/recalc.js:65",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/recalc.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_revseen",
+   "plain_name": "Saved state of: Meet your character",
+   "type": "record",
+   "storage": "c.x.revSeen",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/reveal.js:216",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/reveal.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/reveal.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_rich",
+   "plain_name": "Saved state of: Joy and enough (run Finish everything partly built, Part 8)",
+   "type": "record",
+   "storage": "c.x.rich",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.joy"
+   ],
+   "source": "game/features/joy.js:25",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/joy.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/joy.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_rng",
+   "plain_name": "Saved state of: The screens of the games that are the data entry (layer 1)",
+   "type": "record",
+   "storage": "c.x.rng",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/games.js:5",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/games.js. The shape of the value was not read."
+  },
+  {
+   "id": "role_map",
+   "plain_name": "Who carries which unpaid job in the household",
+   "type": "record",
+   "storage": "c.x.roleMap",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.jobs",
+    "screen.rolemap"
+   ],
+   "source": "game/features/rolemap.js:9",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 3,
+    "direct_writes": 10,
+    "write_files": [
+     "features/goalwire.js",
+     "features/jobs.js",
+     "features/rolemap.js"
+    ]
+   }
+  },
+  {
+   "id": "x_rolled",
+   "plain_name": "Saved state of: The amounts inside the setup rounds (UX pass, phase 4)",
+   "type": "record",
+   "storage": "c.x.rolled",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/amounts.js:34",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/amounts.js. The shape of the value was not read."
+  },
+  {
+   "id": "setup_taps",
+   "plain_name": "How many taps setup took, and the day",
+   "type": "record",
+   "storage": "c.x.setupTaps",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/fewer.js:28",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/fewer.js"
+    ]
+   }
+  },
+  {
+   "id": "life_shape",
+   "plain_name": "Shape of working life (steady, sprint, seasons, flexible)",
+   "type": "choice",
+   "storage": "c.x.shape",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:7",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "x_skip",
+   "plain_name": "Saved state of: The main screens and the core of the interface: the Home, Check-in, Money and Me tabs, the sheets, render(), save(), and the click handler that calls ACT[name]. Each main",
+   "type": "record",
+   "storage": "c.x.skip",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:6571",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of screens/ui.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_sl",
+   "plain_name": "Saved state of: Student loan plans, side by side",
+   "type": "record",
+   "storage": "c.x.sl",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.study"
+   ],
+   "source": "game/features/study.js:705",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/study.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/study.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_spot",
+   "plain_name": "Saved state of: The Quest Log (\"Where am I\")",
+   "type": "record",
+   "storage": "c.x.spot",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.cb"
+   ],
+   "source": "game/features/questlog.js:220",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/questlog.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/questlog.js. The shape of the value was not read."
+  },
+  {
+   "id": "social_security_choice",
+   "plain_name": "How much Social Security to count in the plan",
+   "type": "choice",
+   "storage": "c.x.ss",
+   "certainty": {
+    "supports": false,
+    "how": "A tapped choice. No Guess / Close / Exact state."
+   },
+   "asked_by": [
+    "setup.ssq",
+    "life.ss"
+   ],
+   "used_by": [
+    "screen.cb",
+    "screen.odds"
+   ],
+   "source": "game/core/engine.js:3579",
+   "evidence": {
+    "static_reads": 12,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "core/engine.js",
+     "features/couldbe.js"
+    ]
+   }
+  },
+  {
+   "id": "x_stg",
+   "plain_name": "Saved state of: The Strategy Engine: \"Moves to try\"",
+   "type": "record",
+   "storage": "c.x.stg",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.stratlib"
+   ],
+   "source": "game/features/strat.js:228",
+   "evidence": {
+    "static_reads": 13,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "features/strat.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/strat.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_stress",
+   "plain_name": "Saved state of: The stress test",
+   "type": "record",
+   "storage": "c.x.stress",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.stress"
+   ],
+   "source": "game/features/stress.js:12",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/stress.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_subs",
+   "plain_name": "Saved state of: Fork Theory",
+   "type": "record",
+   "storage": "c.x.subs",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.fork",
+    "screen.joy"
+   ],
+   "source": "game/features/fork.js:9",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/fork.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_summary",
+   "plain_name": "Saved state of: The plan summary",
+   "type": "record",
+   "storage": "c.x.summary",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.estate",
+    "screen.summary"
+   ],
+   "source": "game/features/plan.js:26",
+   "evidence": {
+    "static_reads": 6,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "features/plan.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/plan.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_takeout",
+   "plain_name": "Saved state of: Taking money out",
+   "type": "record",
+   "storage": "c.x.takeout",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.takeout"
+   ],
+   "source": "game/features/takeout.js:13",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/takeout.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_tax",
+   "plain_name": "Saved state of: Work for yourself",
+   "type": "record",
+   "storage": "c.x.tax",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.gig"
+   ],
+   "source": "game/features/gig.js:43",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/gig.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/gig.js. The shape of the value was not read."
+  },
+  {
+   "id": "tax_percent",
+   "plain_name": "Share of pay that goes to taxes before it lands",
+   "type": "number",
+   "storage": "c.x.taxPct",
+   "certainty": {
+    "supports": true,
+    "how": "Key numbers answers keep a cf next to the value (c.x.kin[key + \"cf\"])."
+   },
+   "asked_by": [
+    "setup.taxQ",
+    "knask.tax",
+    "life.taxwhen"
+   ],
+   "used_by": [
+    "calc.derive",
+    "calc.metrics",
+    "screen.dep",
+    "screen.acwhy",
+    "screen.lever",
+    "screen.mult",
+    "screen.study",
+    "screen.taxv",
+    "screen.windfall"
+   ],
+   "source": "game/core/engine.js:3596",
+   "evidence": {
+    "static_reads": 29,
+    "read_files": 10,
+    "direct_writes": 1,
+    "write_files": [
+     "core/metrics.js"
+    ]
+   }
+  },
+  {
+   "id": "x_taxv",
+   "plain_name": "Saved state of: What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way \"Pay less tax on the way out\"",
+   "type": "record",
+   "storage": "c.x.taxv",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "cbtax.taxv.filing",
+    "cbtax.taxv.state",
+    "taxview.taxv.filing",
+    "taxview.taxv.gross",
+    "taxview.taxv.pre",
+    "taxview.taxv.state"
+   ],
+   "used_by": [
+    "screen.cb",
+    "screen.takeout",
+    "screen.taxv"
+   ],
+   "source": "game/features/cbtax.js:11",
+   "evidence": {
+    "static_reads": 5,
+    "read_files": 5,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/cbtax.js. The shape of the value was not read."
+  },
+  {
+   "id": "themes_shown",
+   "plain_name": "Themes the person chose to show",
+   "type": "record",
+   "storage": "c.x.thShow",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:3527",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 2,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/ui.js"
+    ]
+   }
+  },
+  {
+   "id": "x_tko",
+   "plain_name": "Saved state of: Taking money out",
+   "type": "record",
+   "storage": "c.x.tko",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "takeout.tko.roth",
+    "takeout.tko.prem",
+    "takeout.tko.size",
+    "takeout.tko.conv",
+    "takeout.tko.other"
+   ],
+   "used_by": [
+    "screen.takeout"
+   ],
+   "source": "game/features/takeout.js:12",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/takeout.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_tpamong",
+   "plain_name": "Saved state of: Trips and the journey",
+   "type": "record",
+   "storage": "c.x.tpamong",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.trips"
+   ],
+   "source": "game/features/trip.js:496",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/trip.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/trip.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_tpfx",
+   "plain_name": "Saved state of: Trips and the journey",
+   "type": "record",
+   "storage": "c.x.tpfx",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.trips"
+   ],
+   "source": "game/features/trip.js:463",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/trip.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/trip.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_tpppl",
+   "plain_name": "Saved state of: Trips and the journey",
+   "type": "record",
+   "storage": "c.x.tpppl",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.trips"
+   ],
+   "source": "game/features/trip.js:471",
+   "evidence": {
+    "static_reads": 7,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/trip.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/trip.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_tr",
+   "plain_name": "Saved state of: Life Transitions: \"Break in case of emergency\", on My Goals",
+   "type": "record",
+   "storage": "c.x.tr",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "transit.tr.k"
+   ],
+   "used_by": [
+    "screen.transit"
+   ],
+   "source": "game/features/transit.js:9",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/transit.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_trail",
+   "plain_name": "Saved state of: The Quest Log (\"Where am I\")",
+   "type": "record",
+   "storage": "c.x.trail",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/questlog.js:53",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/questlog.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/questlog.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_trip",
+   "plain_name": "Saved state of: Trips and the journey",
+   "type": "record",
+   "storage": "c.x.trip",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "trip.trip.key"
+   ],
+   "used_by": [
+    "screen.trips"
+   ],
+   "source": "game/features/trip.js:10",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/trip.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_trx",
+   "plain_name": "Saved state of: Life Transitions: \"Break in case of emergency\", on My Goals",
+   "type": "record",
+   "storage": "c.x.trx",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.transit"
+   ],
+   "source": "game/features/transit.js:109",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/transit.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/transit.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_unit",
+   "plain_name": "Saved state of: Work for yourself",
+   "type": "record",
+   "storage": "c.x.unit",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.gig"
+   ],
+   "source": "game/features/gig.js:503",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 2,
+    "write_files": [
+     "features/gig.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/gig.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_unl",
+   "plain_name": "Saved state of: How it all connects",
+   "type": "record",
+   "storage": "c.x.unl",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.connect"
+   ],
+   "source": "game/features/connect.js:338",
+   "evidence": {
+    "static_reads": 3,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "features/connect.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/connect.js. The shape of the value was not read."
+  },
+  {
+   "id": "values_rank",
+   "plain_name": "What matters, ranked, and the spending linked to each",
+   "type": "record",
+   "storage": "c.x.vals",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "screen.qmode",
+    "screen.values"
+   ],
+   "source": "game/features/values.js:8",
+   "evidence": {
+    "static_reads": 4,
+    "read_files": 3,
+    "direct_writes": 1,
+    "write_files": [
+     "features/values.js"
+    ]
+   }
+  },
+  {
+   "id": "x_vault",
+   "plain_name": "Saved state of: The Job of Existing (run JOE-1)",
+   "type": "record",
+   "storage": "c.x.vault",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "vault.vault.score",
+    "vault.vault.spend",
+    "vault.vault.programs",
+    "vault.vault.cant_tell_label_is_built_in_code_r_label_each_mo",
+    "vault.vault.cant_tell_label_is_built_in_code_ask_m_k",
+    "vault.vault.cant_tell_label_is_built_in_code_m_brand"
+   ],
+   "used_by": [
+    "screen.jobs",
+    "screen.vault"
+   ],
+   "source": "game/features/jobs.js:13",
+   "evidence": {
+    "static_reads": 10,
+    "read_files": 3,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/jobs.js. The shape of the value was not read."
+  },
+  {
+   "id": "welcome_back",
+   "plain_name": "Welcome back: small pictures of the numbers at the start and end of the last day",
+   "type": "record",
+   "storage": "c.x.wb",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [
+    "home.welcome_back",
+    "screen.since",
+    "screen.fork",
+    "screen.sins"
+   ],
+   "source": "game/features/back.js:15",
+   "evidence": {
+    "static_reads": 16,
+    "read_files": 3,
+    "direct_writes": 2,
+    "write_files": [
+     "features/back.js"
+    ]
+   }
+  },
+  {
+   "id": "x_weekmins",
+   "plain_name": "Saved state of: The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab \"Next Steps\"), the check-in before and after payd",
+   "type": "record",
+   "storage": "c.x.weekMins",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "plan.week_minutes"
+   ],
+   "used_by": [
+    "screen.quest"
+   ],
+   "source": "game/screens/planner.js:53",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 1,
+    "direct_writes": 1,
+    "write_files": [
+     "screens/planner.js"
+    ]
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of screens/planner.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_wind",
+   "plain_name": "Saved state of: Ratios on Key numbers (run Not built, groups 1 to 5, Part 9)",
+   "type": "record",
+   "storage": "c.x.wind",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "windfall.wind.amt",
+    "windfall.wind.taxed",
+    "windfall.wind.fun"
+   ],
+   "used_by": [
+    "screen.windfall"
+   ],
+   "source": "game/features/ratios.js:161",
+   "evidence": {
+    "static_reads": 2,
+    "read_files": 2,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/ratios.js. The shape of the value was not read."
+  },
+  {
+   "id": "x_xray",
+   "plain_name": "Saved state of: The product X-ray",
+   "type": "record",
+   "storage": "c.x.xray",
+   "certainty": {
+    "supports": "cant_tell",
+    "how": "Not checked in this audit."
+   },
+   "asked_by": [
+    "xray.xray.k"
+   ],
+   "used_by": [
+    "screen.xray"
+   ],
+   "source": "game/features/xray.js:7",
+   "evidence": {
+    "static_reads": 1,
+    "read_files": 1,
+    "direct_writes": 0,
+    "write_files": []
+   },
+   "confidence": "low",
+   "note": "Name taken from the PURPOSE line of features/xray.js. The shape of the value was not read."
+  },
+  {
+   "id": "game_people",
+   "plain_name": "The people in this game (profiles)",
+   "type": "list",
+   "storage": "G.chars",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "admin.open_their_game"
+   ],
+   "used_by": [],
+   "source": "game/screens/ui.js:88"
+  },
+  {
+   "id": "game_demo",
+   "plain_name": "The game shows sample characters (no real player yet)",
+   "type": "boolean",
+   "storage": "G.demo",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:88"
+  },
+  {
+   "id": "plain_mode",
+   "plain_name": "Demo mode: the standard look and no add-ons",
+   "type": "boolean",
+   "storage": "G.plain",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "demo_mode"
+   ],
+   "used_by": [],
+   "source": "game/account/gate.js:7"
+  },
+  {
+   "id": "gamer_words",
+   "plain_name": "Show the game words next to the plain words",
+   "type": "boolean",
+   "storage": "G.gamer",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:318"
+  },
+  {
+   "id": "look_theme",
+   "plain_name": "Theme of the look",
+   "type": "choice",
+   "storage": "G.look",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:271"
+  },
+  {
+   "id": "voice_theme",
+   "plain_name": "Theme of the voice (the words)",
+   "type": "choice",
+   "storage": "G.voice",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:272"
+  },
+  {
+   "id": "coach_mode",
+   "plain_name": "The people in this game are \"People I coach\", not one household",
+   "type": "boolean",
+   "storage": "G.coach",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/profiles.js:5"
+  },
+  {
+   "id": "household_share",
+   "plain_name": "Household settings (who combines money)",
+   "type": "record",
+   "storage": "G.house",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/profiles.js:75"
+  },
+  {
+   "id": "kid_profiles",
+   "plain_name": "Kid profiles of Kids mode (name, lessons done). No money numbers",
+   "type": "list",
+   "storage": "G.kids",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "kids.add"
+   ],
+   "used_by": [],
+   "source": "game/features/kids.js:8"
+  },
+  {
+   "id": "rough_numbers",
+   "plain_name": "Show rough numbers (ranges) in place of exact ones",
+   "type": "boolean",
+   "storage": "G.rough",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:30"
+  },
+  {
+   "id": "home_layout",
+   "plain_name": "Order and hidden cards of Home",
+   "type": "record",
+   "storage": "G.dash",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/ui.js:6"
+  },
+  {
+   "id": "test_runs",
+   "plain_name": "Test with a friend: names and counts of test runs",
+   "type": "list",
+   "storage": "G.tests",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/features/testkit.js:9"
+  },
+  {
+   "id": "menu_recent",
+   "plain_name": "The last tools opened from the menu",
+   "type": "list",
+   "storage": "G.menuRecent",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/screens/planner.js:920"
+  },
+  {
+   "id": "coach_seen",
+   "plain_name": "For a coach: which shared games were already brought in",
+   "type": "record",
+   "storage": "G.suSeen",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [],
+   "used_by": [],
+   "source": "game/account/supa.js:677"
+  },
+  {
+   "id": "share_with_coach",
+   "plain_name": "Share with my coach is on",
+   "type": "boolean",
+   "storage": "SUPA.share (database: games.share_with_coach)",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "coach.their_email_address",
+    "account.share_with_coach"
+   ],
+   "used_by": [
+    "coach.client_card_last_active_era_four_top_numbers_fla"
+   ],
+   "source": "game/account/supa.js:57"
+  },
+  {
+   "id": "account_roles",
+   "plain_name": "Hats of the account: coach, admin",
+   "type": "record",
+   "storage": "ROLES (database: my_roles)",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "admin.coach"
+   ],
+   "used_by": [],
+   "source": "game/account/roles.js:19"
+  },
+  {
+   "id": "addon_grants",
+   "plain_name": "Which add-ons the admin turned on for an account",
+   "type": "record",
+   "storage": "database: admin_set_pack (per account)",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "admin.add_on_one_row_for_each_add_on_the_database_list"
+   ],
+   "used_by": [],
+   "source": "game/admin.html:89"
+  },
+  {
+   "id": "account_state",
+   "plain_name": "Account state: email confirmed, blocked, joined, last seen",
+   "type": "record",
+   "storage": "database: admin_overview (per account)",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "admin.email_them_a_link_to_set_a_new_password",
+    "admin.confirm_their_email_by_hand",
+    "admin.block_this_account_from_signing_in",
+    "admin.delete_this_account"
+   ],
+   "used_by": [],
+   "source": "game/admin.html:74"
+  },
+  {
+   "id": "expert_mode",
+   "plain_name": "Expert mode: hide the helper lines and hints",
+   "type": "boolean",
+   "storage": "G.expert",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "me.expert"
+   ],
+   "used_by": [],
+   "source": "game/screens/ux.js:216"
+  },
+  {
+   "id": "color_choice",
+   "plain_name": "Color of the look",
+   "type": "choice",
+   "storage": "G.color",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "me.color"
+   ],
+   "used_by": [],
+   "source": "game/screens/ux.js:193"
+  },
+  {
+   "id": "show_freedom_date",
+   "plain_name": "Show my freedom date (retirement math)",
+   "type": "boolean",
+   "storage": "G.fire",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "me.fire"
+   ],
+   "used_by": [],
+   "source": "game/screens/ui.js:304"
+  },
+  {
+   "id": "tough_love",
+   "plain_name": "Tough love: show what logged spending would have grown to",
+   "type": "boolean",
+   "storage": "G.tough",
+   "certainty": {
+    "supports": false,
+    "how": "Not a number."
+   },
+   "asked_by": [
+    "me.tough"
+   ],
+   "used_by": [],
+   "source": "game/screens/ui.js:5941"
+  }
+ ]
+}

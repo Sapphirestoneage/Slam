@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: field registry</title>
+<style>
+/* The same dark sapphire tokens as game/index.html. Mint for done, amber for needs attention. No red. */
+:root{--ink:#02061a;--panel:#071030;--panel2:#0b1a47;--line:#1d3684;--hl:#102566;--text:#f5f8ff;--soft:#dfe6ff;--sap:#3f6dff;--a1:#2046d4;--good:#63e0c0;--warn:#ffb648;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ink);color:var(--text);font:16px/1.45 "Source Sans 3","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:980px;margin:0 auto;padding:14px 16px 60px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0}
+h2{font-size:17px;margin:0}
+p{margin:0}
+a{color:var(--text);text-decoration:underline}
+.soft{color:var(--soft);font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:8px 14px;border-radius:12px;border:2px solid var(--sap);background:var(--panel2);color:var(--text);cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.45);text-decoration:none;display:inline-flex;align-items:center}
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #fff;outline-offset:2px}
+button:active{transform:translateY(1px);box-shadow:none}
+button.on{background:var(--sap);border-color:#fff;color:#fff}
+.tabs{display:flex;gap:8px}
+.tabs button{flex:1;justify-content:center}
+.filters{display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.filters .lab{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;min-width:64px}
+.filters button{min-height:44px;padding:6px 12px;font-size:14px}
+label{font-size:14px;font-weight:700;display:block;margin-bottom:4px}
+input[type=search]{width:100%;min-height:44px;padding:10px 12px;border-radius:10px;border:2px solid var(--sap);background:var(--panel2);color:var(--text);font:inherit}
+input[type=search]::placeholder{color:var(--soft);opacity:.8}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+details>summary{cursor:pointer;min-height:44px;padding:10px 12px;font-weight:700;display:flex;gap:8px;align-items:center;justify-content:space-between;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"▸";font-size:18px}
+details[open]>summary::after{content:"▾"}
+details.area{margin:0 8px 8px;background:var(--panel2)}
+details.item{margin:0 8px 6px;background:var(--ink);border-color:var(--line)}
+details.item>summary{font-weight:600;flex-wrap:wrap;justify-content:flex-start}
+details.item>summary::after{margin-left:auto}
+.lbl{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:2px 8px;background:var(--hl);color:var(--text);white-space:nowrap}
+.pill.good{background:var(--good);border-color:var(--good);color:#02061a}
+.pill.sap{background:var(--sap);border-color:var(--sap);color:#fff}
+.pill.warn{background:var(--warn);border-color:var(--warn);color:#02061a}
+.pill.line{background:transparent;border-color:var(--text)}
+.count{font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:1px 9px;margin-left:auto}
+dl{margin:0;padding:4px 12px 12px;display:grid;grid-template-columns:120px 1fr;gap:4px 10px;font-size:14px}
+dt{font-weight:700;color:var(--soft)}
+dd{margin:0;overflow-wrap:anywhere}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;overflow-wrap:anywhere}
+.req{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.req .id{font-weight:700}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px}
+[hidden]{display:none!important}
+@media (max-width:480px){dl{grid-template-columns:1fr}dt{margin-top:6px}.tabs button{padding:8px 6px}}
+</style>
+</head>
+<body>
+<main id="app"><p class="soft">Checking who you are...</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page, as admin.html does -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../core/report.js"></script>
+<script src="../account/supa.js"></script>
+<script src="../account/roles.js"></script>
+<script>
+/* The field registry, read-only. It shows three files of this folder: fields.json, facts.json and REQUESTS.md.
+   THE GATE: the same check as the admin page. The sign-in of the game is reused (the session that the game or the admin page
+   saved in this browser), the roles come from roLoad() and the guard is roGuardTo("admin") of account/roles.js. This page has no
+   sign-in of its own. The gate only hides this page: the three files stay readable by anyone who has their address. */
+var app = document.getElementById("app");
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+  });
+}
+function deny() {
+  app.innerHTML = '<p>This page is for the admin of SLAM the Game. <a href="../">Back to the game</a></p>';
+}
+var S = { tab: "fields", q: "", stage: {}, who: {}, status: {}, noi: false, fields: [], screens: [], facts: [], reqs: [], meta: {}, err: "" };
+var STAGES = ["setup", "daily", "payday", "monthly", "yearly", "any"],
+  WHOS = ["player", "coach", "admin", "add-on"],
+  STATS = ["live", "hidden", "coming_soon", "dead"],
+  RSTATS = ["built", "partial", "missing", "cant_tell"];
+/* Pills. Mint: done or live. Sapphire: in progress or neutral. Amber: needs attention. An outline: not known. */
+function pillClass(v) {
+  return v === "live" || v === "built" ? "good" : v === "partial" || v === "hidden" || v === "coming_soon" ? "sap" : v === "missing" || v === "dead" ? "warn" : v === "cant_tell" ? "line" : "";
+}
+function pill(v, cls) {
+  return '<span class="pill ' + (cls || "") + '">' + esc(v) + "</span>";
+}
+function whoKey(w) {
+  return /^addon:/.test(w) ? "add-on" : w;
+}
+function any(o) {
+  for (var k in o) if (o[k]) return true;
+  return false;
+}
+function textOf(o) {
+  return JSON.stringify(o).toLowerCase();
+}
+function fieldOk(f) {
+  if (any(S.stage) && !S.stage[(f.when || {}).stage]) return false;
+  if (any(S.status) && !S.status[f.status]) return false;
+  if (
+    any(S.who) &&
+    !(f.who || []).some(function (w) {
+      return S.who[whoKey(w)];
+    })
+  )
+    return false;
+  if (S.noi && f.why) return false;
+  if (S.q && textOf(f).indexOf(S.q) < 0) return false;
+  return true;
+}
+function list(a) {
+  return a && a.length ? a.map(esc).join(", ") : "none";
+}
+function fieldHtml(f) {
+  var w = f.when || {},
+    rows = [
+      ["id", "<code>" + esc(f.id) + "</code>"],
+      ["what", esc(f.what)],
+      ["options", f.options ? list(f.options) : "none"],
+      ["facts", list(f.facts)],
+      ["where", esc([f.where.tab, f.where.area, f.where.subtab].filter(Boolean).join(" › "))],
+      ["when", esc(w.stage) + (w.step_number ? ", step " + esc(w.step_number) : "") + ". " + esc(w.shown_if || "")],
+      ["how", esc(f.how)],
+      ["who", list(f.who)],
+      ["why (the i)", f.why ? esc(f.why) : "none"],
+      ["help line", f.help ? esc(f.help) : "none"],
+      ["depends on", list(f.depends_on)],
+      ["feeds into", list(f.feeds_into)],
+    ];
+  if (f.missing_behavior !== undefined) rows.push(["when inputs are missing", esc(f.missing_behavior)]);
+  rows.push(["status", esc(f.status)], ["source", "<code>" + esc(f.source) + "</code>"]);
+  if (f.confidence) rows.push(["confidence", esc(f.confidence)]);
+  if (f.note) rows.push(["note", esc(f.note)]);
+  return (
+    '<details class="item"><summary><span class="lbl">' +
+    esc(f.label) +
+    '</span><span class="pills">' +
+    pill(f.what) +
+    pill(w.stage || "any") +
+    (f.who || [])
+      .map(function (x) {
+        return pill(x);
+      })
+      .join("") +
+    pill(f.status, pillClass(f.status)) +
+    "</span></summary><dl>" +
+    rows
+      .map(function (r) {
+        return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>";
+      })
+      .join("") +
+    "</dl></details>"
+  );
+}
+function fieldsView() {
+  var L = S.fields.filter(fieldOk),
+    tabs = {},
+    order = [];
+  L.forEach(function (f) {
+    var t = f.where.tab || "cant_tell",
+      a = f.where.area || "(no area)";
+    if (!tabs[t]) {
+      tabs[t] = { n: 0, areas: {}, order: [] };
+      order.push(t);
+    }
+    if (!tabs[t].areas[a]) {
+      tabs[t].areas[a] = [];
+      tabs[t].order.push(a);
+    }
+    tabs[t].areas[a].push(f);
+    tabs[t].n++;
+  });
+  var h = '<p class="soft">' + L.length + " of " + S.fields.length + " fields. Every group is closed. Tap a group, then a row.</p>";
+  h += order
+    .map(function (t) {
+      var T = tabs[t];
+      return (
+        '<details><summary><span class="lbl">' +
+        esc(t) +
+        '</span><span class="count">' +
+        T.n +
+        "</span></summary>" +
+        T.order
+          .map(function (a) {
+            return (
+              '<details class="area"><summary><span class="lbl">' +
+              esc(a) +
+              '</span><span class="count">' +
+              T.areas[a].length +
+              "</span></summary>" +
+              T.areas[a].map(fieldHtml).join("") +
+              "</details>"
+            );
+          })
+          .join("") +
+        "</details>"
+      );
+    })
+    .join("");
+  var sc = S.screens.filter(function (s) {
+    return !S.q || textOf(s).indexOf(S.q) >= 0;
+  });
+  h +=
+    '<details><summary><span class="lbl">Screens, tabs and menu rows (a second list)</span><span class="count">' +
+    sc.length +
+    "</span></summary>" +
+    sc
+      .map(function (s) {
+        return (
+          '<details class="item"><summary><span class="lbl">' +
+          esc(s.label) +
+          '</span><span class="pills">' +
+          pill(s.kind) +
+          (s.who || [])
+            .map(function (x) {
+              return pill(x);
+            })
+            .join("") +
+          pill(s.status, pillClass(s.status)) +
+          "</span></summary><dl><dt>id</dt><dd><code>" +
+          esc(s.id) +
+          "</code></dd><dt>one line</dt><dd>" +
+          esc(s.one_line || "none") +
+          "</dd><dt>why (the i)</dt><dd>" +
+          esc(s.why || "none") +
+          "</dd><dt>source</dt><dd><code>" +
+          esc(s.source) +
+          "</code></dd></dl></details>"
+        );
+      })
+      .join("") +
+    "</details>";
+  return h;
+}
+function factsView() {
+  var L = S.facts.filter(function (f) {
+    return !S.q || textOf(f).indexOf(S.q) >= 0;
+  });
+  return (
+    '<p class="soft">' +
+    L.length +
+    " of " +
+    S.facts.length +
+    " facts. Tap a row.</p>" +
+    L.map(function (f) {
+      var c = f.certainty || {},
+        e = f.evidence;
+      return (
+        '<details class="item" style="margin:0"><summary><span class="lbl">' +
+        esc(f.plain_name) +
+        '</span><span class="pills">' +
+        pill(f.type) +
+        pill(c.supports === true ? "Guess / Close / Exact" : c.supports === false ? "no certainty" : String(c.supports)) +
+        (f.confidence ? pill("confidence " + f.confidence, "line") : "") +
+        "</span></summary><dl><dt>id</dt><dd><code>" +
+        esc(f.id) +
+        "</code></dd><dt>storage</dt><dd><code>" +
+        esc(f.storage) +
+        "</code></dd><dt>certainty</dt><dd>" +
+        esc(c.how || "") +
+        "</dd><dt>asked by</dt><dd>" +
+        list(f.asked_by) +
+        "</dd><dt>used by</dt><dd>" +
+        list(f.used_by) +
+        "</dd>" +
+        (e ? "<dt>scan</dt><dd>" + e.static_reads + " reads in " + e.read_files + " files, " + e.direct_writes + " direct writes</dd>" : "") +
+        "<dt>source</dt><dd><code>" +
+        esc(f.source) +
+        "</code></dd>" +
+        (f.note ? "<dt>note</dt><dd>" + esc(f.note) + "</dd>" : "") +
+        "</dl></details>"
+      );
+    }).join("")
+  );
+}
+function reqsView() {
+  var L = S.reqs.filter(function (r) {
+    return (!any(S.status) || S.status[r.status]) && (!S.q || textOf(r).indexOf(S.q) >= 0);
+  });
+  return (
+    '<p class="soft">' +
+    L.length +
+    " of " +
+    S.reqs.length +
+    ' requests. "built" means the code was found. Only Eli marks a request as checked by a person.</p>' +
+    L.map(function (r) {
+      return (
+        '<div class="req"><div class="row between"><span class="id">' +
+        esc(r.id) +
+        "</span>" +
+        pill(r.status, pillClass(r.status)) +
+        "</div><div><b>" +
+        esc(r.request) +
+        '</b></div><div class="soft"><b>Check:</b> ' +
+        esc(r.check) +
+        '</div><div class="soft"><b>Where:</b> ' +
+        esc(r.where) +
+        "</div></div>"
+      );
+    }).join("")
+  );
+}
+function fbtn(group, v) {
+  return '<button data-f="' + group + '" data-v="' + esc(v) + '" aria-pressed="' + !!S[group][v] + '" class="' + (S[group][v] ? "on" : "") + '">' + esc(v) + "</button>";
+}
+function filtersHtml() {
+  var h = '<div class="filters"><div><label for="q">Search</label><input type="search" id="q" placeholder="A word, an id or a file name" value="' + esc(S.q) + '" autocomplete="off"></div>';
+  if (S.tab === "fields")
+    h +=
+      '<div class="row"><span class="lab">Stage</span>' +
+      STAGES.map(function (v) {
+        return fbtn("stage", v);
+      }).join("") +
+      '</div><div class="row"><span class="lab">Who</span>' +
+      WHOS.map(function (v) {
+        return fbtn("who", v);
+      }).join("") +
+      "</div>";
+  if (S.tab !== "facts")
+    h +=
+      '<div class="row"><span class="lab">Status</span>' +
+      (S.tab === "fields" ? STATS : RSTATS)
+        .map(function (v) {
+          return fbtn("status", v);
+        })
+        .join("") +
+      (S.tab === "fields" ? '<button data-f="noi" aria-pressed="' + S.noi + '" class="' + (S.noi ? "on" : "") + '">no "i"</button>' : "") +
+      "</div>";
+  return h + "</div>";
+}
+function body() {
+  return S.tab === "fields" ? fieldsView() : S.tab === "facts" ? factsView() : reqsView();
+}
+function draw() {
+  var m = S.meta || {};
+  app.innerHTML =
+    '<div class="row between"><h1>Field registry</h1><a class="btn" href="../">‹ Back to the game</a></div>' +
+    '<p class="soft">Read-only lists of what the game asks, shows and stores. Audited commit of main: <code>' +
+    esc(String(m.audited_commit || "").slice(0, 7)) +
+    "</code>, " +
+    esc(m.generated || "") +
+    ". The game does not read these files.</p>" +
+    (S.err ? '<p class="note">' + esc(S.err) + "</p>" : "") +
+    '<div class="tabs" role="tablist">' +
+    [
+      ["fields", "Fields"],
+      ["facts", "Facts"],
+      ["reqs", "Requests"],
+    ]
+      .map(function (t) {
+        return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (S.tab === t[0]) + '" class="' + (S.tab === t[0] ? "on" : "") + '">' + t[1] + "</button>";
+      })
+      .join("") +
+    "</div>" +
+    filtersHtml() +
+    '<div id="list" style="display:flex;flex-direction:column;gap:8px">' +
+    body() +
+    "</div>" +
+    '<p class="soft">More in this folder: AUDIT.md (what to look at first) and GLOSSARY.md (the words).</p>';
+}
+/* REQUESTS.md is a table. On the website the file can be served as a page (REQUESTS.html), so both shapes are read. */
+function parseReqs(t) {
+  var out = [];
+  if (/<table/i.test(t)) {
+    var doc = new DOMParser().parseFromString(t, "text/html");
+    Array.prototype.forEach.call(doc.querySelectorAll("tr"), function (tr) {
+      var c = Array.prototype.map.call(tr.querySelectorAll("td"), function (td) {
+        return td.textContent.trim();
+      });
+      if (c.length >= 5 && /^R-\d+/.test(c[0])) out.push({ id: c[0], request: c[1], check: c[2], status: c[3], where: c[4] });
+    });
+    return out;
+  }
+  t.split("\n").forEach(function (ln) {
+    if (!/^\| R-\d+/.test(ln)) return;
+    var c = ln
+      .replace(/^\|/, "")
+      .replace(/\|\s*$/, "")
+      .split(" | ")
+      .map(function (x) {
+        return x.trim().replace(/`/g, "");
+      });
+    if (c.length >= 5) out.push({ id: c[0], request: c[1], check: c[2], status: c[3], where: c.slice(4).join(" | ") });
+  });
+  return out;
+}
+function getText(u) {
+  return fetch(u, { cache: "no-store" }).then(function (r) {
+    if (!r.ok) throw new Error(u + " did not load");
+    return r.text();
+  });
+}
+function start() {
+  app.innerHTML = '<p class="soft">Loading the lists...</p>';
+  Promise.all([
+    getText("fields.json").then(JSON.parse),
+    getText("facts.json").then(JSON.parse),
+    getText("REQUESTS.md")
+      .then(parseReqs)
+      .then(function (r) {
+        return r.length ? r : getText("REQUESTS.html").then(parseReqs);
+      })
+      .catch(function () {
+        return getText("REQUESTS.html")
+          .then(parseReqs)
+          .catch(function () {
+            return [];
+          });
+      }),
+  ])
+    .then(function (a) {
+      S.fields = a[0].fields || [];
+      S.screens = a[0].screens || [];
+      S.meta = a[0].meta || {};
+      S.facts = a[1].facts || [];
+      S.reqs = a[2];
+      if (!S.reqs.length) S.err = "The request log did not load here. Open REQUESTS.md in the repository.";
+      draw();
+    })
+    .catch(function (e) {
+      report(e, "registry/index.html: start");
+      app.innerHTML = '<p>The lists did not load. <a href="../">Back to the game</a></p>';
+    });
+}
+document.addEventListener("click", function (ev) {
+  var t = ev.target.closest("button");
+  if (!t) return;
+  if (t.dataset.tab) {
+    S.tab = t.dataset.tab;
+    S.status = {};
+    draw();
+  } else if (t.dataset.f === "noi") {
+    S.noi = !S.noi;
+    draw();
+  } else if (t.dataset.f) {
+    S[t.dataset.f][t.dataset.v] = !S[t.dataset.f][t.dataset.v];
+    draw();
+  }
+});
+/* Typing in the search box draws the list again, never the box itself. */
+document.addEventListener("input", function (ev) {
+  if (ev.target.id !== "q") return;
+  S.q = ev.target.value.trim().toLowerCase();
+  var el = document.getElementById("list");
+  if (el) el.innerHTML = body();
+});
+(function () {
+  try {
+    if (!window.supabase || !window.supabase.createClient || typeof roLoad !== "function" || typeof roGuardTo !== "function") return deny();
+    var sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+    sb.auth
+      .getSession()
+      .then(function (r) {
+        if (!r || !r.data || !r.data.session) return deny();
+        return roLoad(sb).then(function (roles) {
+          /* roles.js: null means the account has the role. Anything else: no page. */
+          if (roGuardTo("admin", roles) !== null) return deny();
+          start();
+        });
+      })
+      .catch(function (e) {
+        report(e, "registry/index.html: gate");
+        deny();
+      });
+  } catch (e) {
+    if (typeof report === "function") report(e, "registry/index.html: gate (2)");
+    deny();
+  }
+})();
+</script>
+</body>
+</html>
