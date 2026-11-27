@@ -155,7 +155,7 @@
       Math.abs(at(70).needs + at(70).wants - K.p.spend) < 0.01
   );
   chk("with the shape counted, in every year the layers plus the gap equal the line", every(K.rows));
-  chk("after an answer, Next is the main button", /class="primary go wide" data-a="cbgo" data-v="next"/.test(h));
+  chk("after an answer, Next is the main button", /class="primary go cbnext wide" data-a="cbgo" data-v="next"/.test(h));
   X("cbdo", "no", "shape");
   N = cbNumbers(c);
   chk(

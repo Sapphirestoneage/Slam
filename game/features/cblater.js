@@ -161,12 +161,12 @@ function cbLaterView() {
     St = cbWayState(c, "later"),
     K = cbChart(c),
     btn = (v, label) =>
-      `<button class="${!St.how && v === "count" ? "primary go" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cblaterdo" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
+      `<button class="${!St.how && v === "count" ? "primary go cbnext" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cblaterdo" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
     said =
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : St.counted
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}.</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}. ${cbI("receipt")}</div>`
           : "",
     asks = P.asks
       .map(
@@ -181,12 +181,16 @@ function cbLaterView() {
     cbWhyRow("later", "cblater") +
     `<div class="stack" style="gap:8px" data-fid="cblater:asks"><b class="small">Up to three taps</b>${asks}</div>` +
     (P.applies
-      ? `<div class="tile small" data-fid="cblater:parts"><b>What shows up, and when</b>${P.parts.map(x => `<div>${esc(x.name)}: ${x.kind === "ends" ? cbM(x.year) + " a year less to pay for, from age " + x.from : cbM(x.year) + " a year, from age " + x.from}.</div>`).join("")}</div>` +
-        `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With these counted, against not counting them." : "If you count it."}</div></div>` +
+      ? cbFold(
+          "plan",
+          "What shows up, and when",
+          `<div class="tile small" data-fid="cblater:parts"><div class="row between" style="gap:8px"><b>What shows up, and when</b>${cbI("plan")}</div>${P.parts.map(x => `<div>${esc(x.name)}: ${x.kind === "ends" ? cbM(x.year) + " a year less to pay for, from age " + x.from : cbM(x.year) + " a year, from age " + x.from}.</div>`).join("")}</div>`
+        ) /* cbguide.js: behind one tap (run 14, item 2) */ +
+        `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With these counted, against not counting them." : "If you count it."}</div></div>` +
         `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
         cbWayUnsure() +
         said
-      : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cblater:why">${esc(cbLaterWhy())}</div></div>`) +
+      : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cblater:why">${esc(cbLaterWhy())}</div></div>`) +
     cbChartCard(
       K,
       "The chart now",

@@ -484,3 +484,32 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
 - **The demo.** `ER_TYP` ("typ") is the answer of a range question for "I'm not sure". The page loads `core/peers.js`, `core/withdraw.js` and `core/paylayers.js` for the typical values, and `cbTypical` is in the generated copy.
 - **The sheet "People".** It only switches people. A new row about people goes to `meTabPeople()` in `screens/profiles.js` (a part named `mePeople...` in the feature file), not to the sheet. Its header (`nvRow` in `screens/nav.js`, the class `nvtwo`) has Back and Close only.
 - **Arrows.** Write `<i class=chev aria-hidden=true></i>` (forward) or `<i class=chevl aria-hidden=true></i>` (back). Do not type an arrow character: `tests/not-sure-and-profile-sheet.js` scans every screen file.
+
+## Run 14, the usability pass, worker 1 (Nov 27 2026): items 1 to 7
+
+### The Krug self-check, BEFORE (for worker 2: run it again and report before and after)
+
+The script is `tools/e2e/krug_flow.cjs` (serve the repository, then `SLAM_URL=http://localhost:<port> node tools/e2e/krug_flow.cjs`; `KRUG_OUT=<file>` keeps the numbers of each screen). Four made-up players, a new visitor each, at 390, 1280 and 1440 wide. Each one taps what such a person wants on What you want, then Next, the four range chips, and then the one main button of each screen. Taps are counted from the landing (Start is tap 1). The tree was `ad7a849`, before any change of this run.
+
+| Player | What you want | The four chips | To the first number | To the result | To Home |
+|--------|---------------|----------------|--------------------:|--------------:|--------:|
+| 27, renting, $60K invested | Retire early | 25 to 29; $3k to $4k; $50k to $100k; $500 to $1k | 7 | 11 | 12 |
+| 38, a couple, a 401(k) match and a mortgage | Retire on time; Have or raise kids | 35 to 39; $7k to $10k; $250k to $500k; $1k to $2k | 8 | 12 | 13 |
+| 31, self-employed, uneven income | Build a cushion; Start a business | 30 to 34; $3k to $4k; $10k to $50k; $250 to $500 | 8 | 12 | 13 |
+| 29, with $18K of card debt | Get out of debt | 25 to 29; $3k to $4k; under $10k; under $250 | 7 | 11 | 12 |
+
+- The counts were the same at the three widths. With "I'm not sure" on What you want (no pick) each count is 6, 10 and 11.
+- Before, on the same walk: the four questions had no control that pulsed (every other screen had one); the stack and the reveal opened at the top after the tap; no sideways scroll. How tall each screen was, in windows (390 x 844): What it is 1.1, the chart 2.2, the stack 2.2, the reveal 2.6. At 1280 and 1440 (900 high): 0.9, 2.0, 1.8, 2.3.
+- After items 1 to 7 (worker 1, the same walk; worker 2 runs it again at the end): the tap counts did not change; each screen has one pulse; no screen opens at the top after a tap; at 390 What it is 0.9, the chart 1.5, the stack 2.3, the reveal 1.9.
+- The script prints the same four facts after a change, so before and after can be read side by side.
+
+### What changed, and the pattern for the next change
+
+- **One pulse (item 1).** The class `cbnext` marks the next tap of a screen. A view writes it on one control. `cbSheet()` passes each screen through `cbOne()` (`features/cbguide.js`): the first mark stays, any other is taken off, and a screen with no mark gets it on its first main button. The style lines are in `game/index.html` under "run 14": `.cbnext` has the pulse of the game, each other pulse of a flow screen is still, each other button is a little paler (0.8; a pale range chip 0.7). A flow screen is a sheet that holds `.cbfoot`. Do not add `pulse` to a control of the flow: write `cbnext`.
+- **Folds (item 2).** `cbFold(key, label, html)` puts content behind one tap, closed. The open folds of a screen are in `W.fo`, so a tap inside a fold does not close it. Folded now: what the number means (What it is); the chart in words, and the switches of the layers with the costs (the chart, the reveal); how the list works (the stack); what has to go right and the backup, and the plan for your numbers (each way); the two lists of the Yes, but card; the list of what you counted (the reveal).
+- **Back and Forward (item 3).** `cbNav({ back, next })` is the one row. `back` is the attributes of the Back button (`data-a="cbgo" data-v="prev"`), or null on a first screen. A Back tap keeps the screen in `CB.fwd` (`cbFwdKeep`), `ACT.cbfwd` returns to it, and any other move calls `cbFwdDrop`. A button that cannot be used is off and one line under the row says why. The result has no row: one main button and a small Back (run 16).
+- **No jump to the top (item 4).** No file of the flow calls `spUpSoon`. A sheet keeps its place (`drawSheetBase`). After a move to another screen `cbStaySoon()` moves the sheet only when the player was down the screen and the next tap is out of view.
+- **Keep, not save (item 5).** The labels were already in place. Two buttons and three messages of the card image said "save": they say "Get this card as an image", "Done." and "Kept." now.
+- **The most likely answer (item 6).** `cbLikely(q, age)` is the range chip that holds the typical value of the age (`cbTypical`); -1 when the reference data has none (the age itself, the health price). The rules are given to `screens/smart.js` (`SM.cb_spend` and so on) and `cbChips()` orders and fades the chips with `smOrder()`, as setup does. "I know it" and "I'm not sure" stay last. `cbOptWords(q, answer)` is the one line about the tapped choice; it shows on the screen that follows the tap (`cbSaid()`), because a tap on a chip answers and moves on.
+- **The "i" (item 7).** `cbI("key")` is the button and `CB_GUIDE` has the two lines of each key (what it is, what it is for) and, where one exists, the word of the glossary with the longer text. A new card, chart, number, meter or group of buttons of the flow gets one line in `CB_GUIDE` and one `cbI()`. On a card: `dkCard(title, body, { right: cbI("key") })`.
+- **Not built.** The result has no Forward and no "i" (the newer prompt asks for one button and a small Back). The age question has no "most likely" answer: the game has no dated figure for it, so the whole group of chips is the one pulse there.

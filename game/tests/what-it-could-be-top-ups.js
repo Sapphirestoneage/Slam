@@ -94,7 +94,8 @@
   chk(
     "the total is marked Guess, Close or Exact, has an i, and Show the math has its line",
     new RegExp('data-fid="cb:life"[\\s\\S]*?<span class="pill kitst">' + L.st + "</span>").test(h) &&
-      /term:cblife/.test(h) &&
+      /data-a="cbi" data-k="life"/.test(h) &&
+      CB_GUIDE.life[3] === "cblife" &&
       !!GLOSS.cblife &&
       text(h).includes(
         " a year x " + years + " years (age " + c.age + " to " + LY_END + ") = " + money(Math.round(L.total))

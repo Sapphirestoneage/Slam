@@ -73,7 +73,8 @@
     "it has Show the math, the Guess pill, the i of the difference and the one advice line",
     /<details class="math/.test(h) &&
       /kitst">Guess/.test(h) &&
-      h.includes("term:cbdiff") &&
+      h.includes('data-a="cbi" data-k="diff"') &&
+      CB_GUIDE.diff[3] === "cbdiff" &&
       !!GLOSS.cbdiff &&
       text(h).includes(TRUST_LINE)
   );
@@ -178,7 +179,8 @@
     "the counted move is on its own line with its months, and it moves neither number",
     /data-fid="cb:revmoves"/.test(h) &&
       text(fid(h, "cb:revmoves")).includes(cbStack(c).movesSum.words.replace(/^./, m => m.toLowerCase())) &&
-      h.includes("term:cbtwo") &&
+      h.includes('data-a="cbi" data-k="dates"') &&
+      CB_GUIDE.dates[3] === "cbtwo" &&
       !!GLOSS.cbtwo &&
       (() => {
         X("cbmovedo", "no", mv.id);
@@ -219,7 +221,8 @@
   const three = fid(h, "cb:end3");
   chk(
     "the reveal has the three buttons of the old last screen, in the owner's words and order, all quiet",
-    (three.match(/<button/g) || []).length === 3 &&
+    /* three buttons, and the small "i" of the group (run 14, item 7) */
+    (three.match(/<button(?! class="i )/g) || []).length === 3 &&
       /data-a="cbsave">Keep my plan: make a free account<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="flag">Tell Eli what broke</.test(
         three
       ) &&

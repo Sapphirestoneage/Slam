@@ -110,7 +110,7 @@
       name + ": the result has exactly one primary button, Start my first move",
       W.step === "end" &&
         (h.match(/class="primary/g) || []).length === 1 &&
-        /class="primary wide go cbresgo" data-a="cbfirst">Start my first move</.test(h)
+        /class="primary wide go cbresgo cbnext" data-a="cbfirst">Start my first move</.test(h)
     );
     chk(
       name + ": the only other button of the screen is a small Back, to the reveal",

@@ -225,12 +225,12 @@ function cbFlexView() {
     K = cbChart(c),
     G = wayById(CBF_WAY),
     btn = (v, label) =>
-      `<button class="${!St.how && v === "count" ? "primary go" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cbflexdo" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
+      `<button class="${!St.how && v === "count" ? "primary go cbnext" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cbflexdo" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
     said =
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : St.counted
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}.</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}. ${cbI("receipt")}</div>`
           : "";
   return (
     head(cbWayNo("flex"), "Bend your spending when markets fall") +
@@ -238,13 +238,17 @@ function cbFlexView() {
     `<div class="small">The 25 times rule takes the same amount every year, whatever the market does. If you can spend a little less after a bad stretch, you can start from a smaller pile. ${kitInfo("cbguard")}</div>` +
     cbWhyRow("flex", "cbflex") +
     (P.applies
-      ? `<div class="tile small" data-fid="cbflex:rule"><b>The rule for your numbers</b><div>Start by taking ${P.ratePct}% of your investments in the first year, in place of ${P.isPct}%. That is ${P.times} times a year of spending, in place of ${P.isTimes}.</div><div>When the share you take drifts 20% above where it started, spend 10% less. When it drifts 20% below, spend 10% more. A cut never goes under ${P.floorPct}% of your spending.</div><div class="tiny muted">In ${F.n} real start years (${F.first} to ${F.last}), each with ${F.years} years after it: the fixed ${P.isPct}% rule held in ${F.fixedOk}, and this rule held in ${F.flexOk}. The past is not a forecast.</div></div>` +
-        `<div class="tile small" data-fid="cbflex:cut"><b>What a cut looks like</b><div>The deepest cut in the years that held: to ${P.paidPct}% of your spending, ${cbM(P.paidYear)} a year. Your needs are ${P.needsPct}% of your spending, ${cbM(P.needsYear)} a year. ${P.needsFit ? "They fit inside it: a cut takes wants only." : "They do not fit inside it yet: a deep cut would reach your needs."}</div></div>` +
-        `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With this rule, against the fixed rule." : "If you count it."}</div></div>` +
+      ? cbFold(
+          "plan",
+          "The rule for your numbers, and what a cut looks like",
+          `<div class="tile small" data-fid="cbflex:rule"><div class="row between" style="gap:8px"><b>The rule for your numbers</b>${cbI("plan")}</div><div>Start by taking ${P.ratePct}% of your investments in the first year, in place of ${P.isPct}%. That is ${P.times} times a year of spending, in place of ${P.isTimes}.</div><div>When the share you take drifts 20% above where it started, spend 10% less. When it drifts 20% below, spend 10% more. A cut never goes under ${P.floorPct}% of your spending.</div><div class="tiny muted">In ${F.n} real start years (${F.first} to ${F.last}), each with ${F.years} years after it: the fixed ${P.isPct}% rule held in ${F.fixedOk}, and this rule held in ${F.flexOk}. The past is not a forecast.</div></div>` +
+            `<div class="tile small" data-fid="cbflex:cut"><div class="row between" style="gap:8px"><b>What a cut looks like</b>${cbI("cut")}</div><div>The deepest cut in the years that held: to ${P.paidPct}% of your spending, ${cbM(P.paidYear)} a year. Your needs are ${P.needsPct}% of your spending, ${cbM(P.needsYear)} a year. ${P.needsFit ? "They fit inside it: a cut takes wants only." : "They do not fit inside it yet: a deep cut would reach your needs."}</div></div>`
+        ) /* cbguide.js: behind one tap (run 14, item 2) */ +
+        `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(P.st)}</div><b class="cbdropn">${esc(cbReceiptWords(P.receipt))}</b><div class="tiny muted">${St.counted ? "With this rule, against the fixed rule." : "If you count it."}</div></div>` +
         `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
         cbWayUnsure() +
         said
-      : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cbflex:why">${esc(cbFlexWhy(P))}</div></div>`) +
+      : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cbflex:why">${esc(cbFlexWhy(P))}</div></div>`) +
     cbChartCard(
       K,
       "The chart now",

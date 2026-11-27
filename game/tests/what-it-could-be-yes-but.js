@@ -81,7 +81,13 @@
     /<details class="math/.test(h) &&
       cbYb(c).st === "Guess" &&
       /kitst">Guess/.test(h) &&
-      ["cbyesbut", "cbybnet", "cbybpairs"].every(t => h.includes("term:" + t) && GLOSS[t])
+      h.includes("term:cbyesbut") &&
+      /* run 14: the i of the net and of the pairs has two lines (cbguide.js), and the glossary text under "More" */
+      [
+        ["net", "cbybnet"],
+        ["pairs", "cbybpairs"],
+      ].every(t => h.includes('data-a="cbi" data-k="' + t[0] + '"') && CB_GUIDE[t[0]][3] === t[1]) &&
+      ["cbyesbut", "cbybnet", "cbybpairs"].every(t => GLOSS[t])
   );
 
   /* ---- 2. the pairs of a player with no ranked values: by size, and the screen says so ---- */

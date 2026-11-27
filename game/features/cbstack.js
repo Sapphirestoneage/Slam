@@ -14,7 +14,7 @@
                Views: cbStackView, cbStackLine (the counter and the meter, also on the last screen),
                cbBackupRow (the backup of a way, on its screen). Actions (ACT): cbquick, cbbk, cbstkall.
    DEPENDS ON  core/report.js, features/couldbe.js (cbWays, cbStepInfo, cbWayState, cbStore, cbReceiptWords,
-               cbTop, cbFoot, CB_STEPS), features/cbmoves.js (cbMoves, cbMoveDo), screens/dash.js (dkCard,
+               cbTop, cbFoot, CB_STEPS), features/cbguide.js (cbI, cbFold, cbNav), features/cbmoves.js (cbMoves, cbMoveDo), screens/dash.js (dkCard,
                dkProgress), features/kit.js (kitPill), screens/ui.js (head, mathBox, esc).
    RULES       "What it could be" is never made smaller for caution: the backups are a meter beside the
                number, and they change no number. "What it is" stays as the floor. A view shows what cbStack
@@ -72,7 +72,7 @@ function cbStack(c) {
 /* The counter and the meter: "3 of 12 stacked" and "Backups in place: 2 of 3". Also on the last screen. */
 function cbStackLine(c, S) {
   S = S || cbStack(c);
-  return `<div class="tile small cbstk" data-fid="cb:stack"><div class="row between"><b data-fid="cb:stackn">${S.stacked} of ${S.of} stacked</b><span class="tiny muted">Tap a way to add it</span></div>${dkProgress(S.pct)}<div class="row between" style="gap:8px"><span data-fid="cb:backups">Backups in place: ${S.backups.n} of ${S.backups.m}</span><button class="i" data-a="info" data-k="term:cbbackups" aria-label="What is a backup?">i</button></div><div class="tiny muted">${S.backups.m ? "One for each way you counted to shrink the number. " : "Count a way to shrink the number, and its backup shows here. "}A backup changes no number.</div></div>`;
+  return `<div class="tile small cbstk" data-fid="cb:stack"><div class="row between"><b data-fid="cb:stackn">${S.stacked} of ${S.of} stacked</b><span class="row" style="gap:6px;flex:none"><span class="tiny muted">Tap a way to add it</span>${cbI("stackn")}</span></div>${dkProgress(S.pct)}<div class="row between" style="gap:8px"><span data-fid="cb:backups">Backups in place: ${S.backups.n} of ${S.backups.m}</span><button class="i" data-a="info" data-k="term:cbbackups" aria-label="What is a backup?">i</button></div><div class="tiny muted">${S.backups.m ? "One for each way you counted to shrink the number. " : "Count a way to shrink the number, and its backup shows here. "}A backup changes no number.</div></div>`;
 }
 /* The backup of one way, on the screen of that way: its words, and whether it is in place. A backup the game can
    read from the choice shows by itself; the others have one tap. */
@@ -81,7 +81,7 @@ function cbBackupRow(c, id) {
     .after.concat(cbStack(c).afterHidden)
     .find(x => x.id === id);
   if (!w || !w.backup) return "";
-  return `<div class="tile small cbbk" data-fid="cb:backup"><div class="row between" style="gap:8px"><b>Backup</b><span class="pill ${w.backupOn ? "okp" : ""}">${w.backupOn ? "In place" : "Not in place yet"}</span></div><div>${esc(w.backup.words)}</div>${w.backup.auto == null ? `<button class="chip ${w.backupOn ? "on" : ""}" data-a="cbbk" data-k="${id}" aria-pressed="${w.backupOn ? "true" : "false"}">${w.backupOn ? "I have this ✓" : "I have this"}</button>` : ""}</div>`;
+  return `<div class="tile small cbbk" data-fid="cb:backup"><div class="row between" style="gap:8px"><b>Backup ${cbI("backup")}</b><span class="pill ${w.backupOn ? "okp" : ""}">${w.backupOn ? "In place" : "Not in place yet"}</span></div><div>${esc(w.backup.words)}</div>${w.backup.auto == null ? `<button class="chip ${w.backupOn ? "on" : ""}" data-a="cbbk" data-k="${id}" aria-pressed="${w.backupOn ? "true" : "false"}">${w.backupOn ? "I have this ✓" : "I have this"}</button>` : ""}</div>`;
 }
 /* THE SCREEN of the stack. */
 function cbStackView() {
@@ -103,7 +103,11 @@ function cbStackView() {
   return (
     head("The stack", "Every way to move your number") +
     cbTop(c) +
-    `<div class="small">Count what fits you. Each way you add moves What it could be, or the date you get there. What it is stays where it is: it is the floor.</div>` +
+    cbFold(
+      "how",
+      "How this list works",
+      `<div class="small">Count what fits you. Each way you add moves What it could be, or the date you get there. What it is stays where it is: it is the floor.</div>`
+    ) /* cbguide.js: behind one tap (run 14, item 2) */ +
     cbStackLine(c, S) +
     dkCard(
       "After work: ways to shrink the number",
@@ -113,7 +117,7 @@ function cbStackView() {
           x => `data-v="${x.id}"`,
           x => x.title
         ),
-      { cap: "The biggest drop for you is first." }
+      { cap: "The biggest drop for you is first.", right: cbI("after") }
     ) +
     (typeof cbYbStackRow === "function"
       ? cbYbStackRow(c)
@@ -132,10 +136,10 @@ function cbStackView() {
           x => `data-v="move" data-k="${x.id}"`,
           x => x.name
         ),
-      { cap: "The most months sooner for you is first. Each one keeps its own full card." }
+      { cap: "The most months sooner for you is first. Each one keeps its own full card.", right: cbI("before") }
     ) +
-    `<button class="primary wide go" data-a="cbgo" data-v="${CB_STEPS.some(s => s.id === "reveal") ? "reveal" : "end"}">See where this leaves you</button>` +
-    `<button class="ghost wide" data-a="cbgo" data-v="chart">Back to the chart</button>` +
+    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${CB_STEPS.some(s => s.id === "reveal") ? "reveal" : "end"}">See where this leaves you</button>` +
+    cbNav({ back: `data-a="cbgo" data-v="chart"` }) /* cbguide.js: Back (the chart) and Forward */ +
     mathBox([
       "Stacked: the ways you counted, or already do, out of the ways that can apply to you (" + S.of + ").",
       "After work, each drop is What it could be with that one way against the same numbers without it: dollars off the target, and months sooner.",

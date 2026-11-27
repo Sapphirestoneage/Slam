@@ -256,8 +256,8 @@ function cbYbStackRow(c) {
   if (!P.has) return "";
   return dkCard(
     "Yes, but: a cut that pays for a keep",
-    `<button class="rowbtn" style="margin-top:6px;min-height:48px" data-a="cbgo" data-v="yesbut" data-fid="cb:ybrow"><span><b>${P.n ? "Your card: " + esc(P.net.words.replace(/^./, m => m.toLowerCase())) : "Make a card"}</b><div class="tiny muted">${P.n ? "Tap to change it, or to save it as an image." : "Two taps: one cut, and what you keep because of it."}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`,
-    { cap: "A what-if between the two groups. It changes no number on this screen." }
+    `<button class="rowbtn" style="margin-top:6px;min-height:48px" data-a="cbgo" data-v="yesbut" data-fid="cb:ybrow"><span><b>${P.n ? "Your card: " + esc(P.net.words.replace(/^./, m => m.toLowerCase())) : "Make a card"}</b><div class="tiny muted">${P.n ? "Tap to change it, or to get it as an image." : "Two taps: one cut, and what you keep because of it."}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`,
+    { cap: "A what-if between the two groups. It changes no number on this screen.", right: cbI("ybrow") }
   );
 }
 /* One half of the card: the size chips, the lines, the price of the half. */
@@ -291,13 +291,18 @@ function cbYbView() {
   return (
     head("Yes, but", "A cut that pays for a keep") +
     cbTop(c) +
-    `<div class="row between" style="gap:8px;align-items:flex-start"><div class="small">Yes: tap a cut you make, or would make. But: tap what you keep or upgrade because of it. A cut is a choice. It pays for what you care about more.</div>${kitInfo("cbyesbut")}</div>` +
+    /* cbguide.js: how the card works is behind one tap (run 14, item 2) */
+    cbFold(
+      "how",
+      "How this card works",
+      `<div class="row between" style="gap:8px;align-items:flex-start"><div class="small">Yes: tap a cut you make, or would make. But: tap what you keep or upgrade because of it. A cut is a choice. It pays for what you care about more.</div>${kitInfo("cbyesbut")}</div>`
+    ) +
     dkCard(
       "Pairs to try",
       `<div class="stack" style="gap:6px;margin-top:6px" data-fid="cbyb:pairs">${Y.pairs
         .map(
-          p =>
-            `<button class="rowbtn cbybrow ${p.on ? "on" : ""}" data-a="cbybpair" data-k="${p.y}" data-v="${p.b}" aria-pressed="${p.on ? "true" : "false"}"><span style="min-width:0"><b>Yes: ${esc(p.yn)}. But: ${esc(p.bn)}.</b><div class="tiny muted">Net: ${esc(p.words.replace(/^./, m => m.toLowerCase()))}.</div></span><span class="cbybin">${p.on ? "On the card ✓" : "Use this pair"}</span></button>`
+          (p, pi) =>
+            `<button class="rowbtn cbybrow ${p.on ? "on" : ""}${!Y.n && pi === 0 ? " cbnext" : ""}" data-a="cbybpair" data-k="${p.y}" data-v="${p.b}" aria-pressed="${p.on ? "true" : "false"}"><span style="min-width:0"><b>Yes: ${esc(p.yn)}. But: ${esc(p.bn)}.</b><div class="tiny muted">Net: ${esc(p.words.replace(/^./, m => m.toLowerCase()))}.</div></span><span class="cbybin">${p.on ? "On the card ✓" : "Use this pair"}</span></button>`
         )
         .join("")}</div>` +
         (Y.basis === "values"
@@ -308,20 +313,32 @@ function cbYbView() {
           Y.basis === "values"
             ? "From what you ranked: the cut is the line that serves your top values least, the keep is the one that serves them most."
             : "By size for now: the biggest line as the cut, the smallest as the keep. Any Yes can go with any But.",
-        right: kitInfo("cbybpairs"),
+        right: cbI("pairs"),
       }
     ) +
-    dkCard("Yes: a cut you make, or would make", cbYbHalf(Y, "yes"), {
-      cap: "How big a cut, then tap one line or more.",
-      cls: "cbybhalf",
-    }) +
-    `<div class="tile cbdrop cbybnet" data-fid="cbyb:net"><div class="row between" style="gap:8px"><span class="dklabel">The net ${kitInfo("cbybnet")}</span>${kitPill(Y.st)}</div><b class="cbdropn" data-fid="cbyb:netn">${Y.n ? esc(Y.net.words) : "Tap one line in each half"}</b><div class="tiny muted">${Y.n ? (Y.net.month === 0 ? "No change of spending a month. " : cbM(Math.abs(Y.net.month)) + " a month " + (Y.net.month > 0 ? "less" : "more") + " spending, with both halves. ") + "A what-if: it changes none of your lines, and the two numbers on top stay." : "Your Yes less your But, as one run of your plan."}</div></div>` +
-    dkCard("But: what you keep or upgrade because of it", cbYbHalf(Y, "but"), {
-      cap: "Keep it as it is, or give it more. Then tap one line or more.",
-      cls: "cbybhalf",
-    }) +
+    /* cbguide.js: each list, to build a pair of your own, is behind one tap (run 14, item 2). The order stays: Yes on
+       top, the net in the middle, But below */
+    cbFold(
+      "yes",
+      "Yes: pick your own cut",
+      dkCard("Yes: a cut you make, or would make", cbYbHalf(Y, "yes"), {
+        cap: "How big a cut, then tap one line or more.",
+        cls: "cbybhalf",
+        right: cbI("own"),
+      })
+    ) +
+    `<div class="tile cbdrop cbybnet" data-fid="cbyb:net"><div class="row between" style="gap:8px"><span class="dklabel">The net ${cbI("net")}</span>${kitPill(Y.st)}</div><b class="cbdropn" data-fid="cbyb:netn">${Y.n ? esc(Y.net.words) : "Tap one line in each half"}</b><div class="tiny muted">${Y.n ? (Y.net.month === 0 ? "No change of spending a month. " : cbM(Math.abs(Y.net.month)) + " a month " + (Y.net.month > 0 ? "less" : "more") + " spending, with both halves. ") + "A what-if: it changes none of your lines, and the two numbers on top stay." : "Your Yes less your But, as one run of your plan."}</div></div>` +
+    cbFold(
+      "but",
+      "But: pick your own keep",
+      dkCard("But: what you keep or upgrade because of it", cbYbHalf(Y, "but"), {
+        cap: "Keep it as it is, or give it more. Then tap one line or more.",
+        cls: "cbybhalf",
+        right: cbI("own"),
+      })
+    ) +
     (Y.n
-      ? `<button class="ghost wide" data-a="cbybsave" data-fid="cbyb:save">Save this card as an image</button>` +
+      ? `<button class="ghost wide" data-a="cbybsave" data-fid="cbyb:save">Get this card as an image</button>` +
         (can ? `<button class="ghost wide" data-a="cbybsend">Send the image with an app on this device</button>` : "") +
         (W && W.msg ? `<div class="small" data-fid="cbyb:msg">${esc(W.msg)}</div>` : "") +
         `<div class="tiny muted">The image has the names of the lines you tapped and the months. It has no dollar amount, and nothing else about you. Nothing leaves until you send it.</div>` +
@@ -480,15 +497,15 @@ function cbYbImage(how, card) {
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 4000);
-        say("Saved. Look for " + card.file + " where this device keeps its downloads.");
+        say("Done. Look for " + card.file + " where this device keeps its downloads.");
       } catch (e) {
         report(e, "cbyesbut.js: cbYbImage (2)");
-        say("The image did not save. A screenshot works too.");
+        say("The image did not come out. A screenshot works too.");
       }
     }, "image/png");
   } catch (e) {
     report(e, "cbyesbut.js: cbYbImage (3)");
-    say("The image did not save. A screenshot works too.");
+    say("The image did not come out. A screenshot works too.");
   }
 }
 Object.assign(ACT, {

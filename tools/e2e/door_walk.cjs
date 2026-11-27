@@ -107,8 +107,8 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
   chk('the reveal comes at the ninth tap, with the difference and the finished chart', taps === 9 && (await page.locator('#ov [data-fid="cb:diff"]').isVisible()) && (await page.locator('#ov svg.dkstack').count()) === 1 && !(await sideways(page)) && !(await junk(page)), taps);
   await shot(page, '3d-reveal-390');
-  // run 16, A1: the three buttons of the old last screen are on the reveal, closed by default
-  chk('the reveal holds Keep my plan: make a free account, Share my card and Tell Eli what broke, behind one closed row', (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && /Keep my plan: make a free account/.test(await page.locator('#ov [data-a=cbsave]').textContent()) && !(await page.locator('#ov [data-a=cbsave]').isVisible()));
+  // run 16, A1: the three buttons of the old last screen are on the reveal, closed by default (run 14: with the small "i" of the group)
+  chk('the reveal holds Keep my plan: make a free account, Share my card and Tell Eli what broke, behind one closed row', (await page.locator('#ov [data-fid="cb:end3"] button:not(.i)').count()) === 3 && /Keep my plan: make a free account/.test(await page.locator('#ov [data-a=cbsave]').textContent()) && !(await page.locator('#ov [data-a=cbsave]').isVisible()));
   await page.locator('#ov [data-fid="cb:end3"] summary').click(); await page.waitForTimeout(300);
   chk('opened, the three are buttons a person can tap', (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await sideways(page)));
   await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);

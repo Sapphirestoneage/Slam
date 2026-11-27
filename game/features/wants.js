@@ -83,11 +83,12 @@ function wnView() {
   return (
     head("First", "What do you want?") +
     `<div class="small muted">Tap each one you want. You can change them later.</div>` +
-    `<div class="chips wnchips" data-fid="wn:chips">${WN_LIST.map(x => `<button class="chip ${wp.includes(x.id) ? "on" : ""}" data-a="wnpick" data-v="${x.id}" aria-pressed="${wp.includes(x.id) ? "true" : "false"}">${esc(x.l)}</button>`).join("")}${own.map(o => `<button class="chip on" data-a="wnpick" data-k="own" data-v="${esc(o)}" aria-pressed="true">${esc(o)}</button>`).join("")}<button class="chip ${w.wnOwn ? "on" : ""}" data-a="wnown" aria-expanded="${w.wnOwn ? "true" : "false"}">Something else</button></div>` +
+    `<div class="chips wnchips" data-fid="wn:chips">${WN_LIST.map(x => `<button class="chip ${wp.includes(x.id) ? "on" : ""}" data-a="wnpick" data-v="${x.id}" aria-pressed="${wp.includes(x.id) ? "true" : "false"}">${esc(x.l)}</button>`).join("")}${own.map(o => `<button class="chip on" data-a="wnpick" data-k="own" data-v="${esc(o)}" aria-pressed="true">${esc(o)}</button>`).join("")}<button class="chip ${w.wnOwn ? "on" : ""}" data-a="wnown" aria-expanded="${w.wnOwn ? "true" : "false"}">Something else</button>${cbI("wants")}</div>` +
     (w.wnOwn ? grOwnField() : "") +
-    `<button class="primary wide go" data-a="wnnext">Next: four quick taps</button>` +
+    `<button class="primary wide go cbnext" data-a="wnnext">Next: four quick taps</button>` +
     `<button class="ghost wide" data-a="wnskip">${NOT_SURE}</button>` +
     `<div class="tiny muted" data-fid="wn:tapone">${TAP_ONE}</div>` +
+    cbNav({ back: null }) /* cbguide.js: Back and Forward. This is the first screen, so Back says why it is off */ +
     `<div class="tiny muted" data-fid="wn:count" role="status">${n ? (n === 1 ? "1 picked." : n + " picked.") + " They stay on your list of goals." : "Nothing picked yet. Not sure is fine: you can pick later."}</div>` +
     cbFoot()
   );
@@ -103,11 +104,10 @@ function wnTags(c) {
     return "";
   }
 }
-/* Part of cbEntryView() in couldbe.js. The way back from the first question, for a player who is not made yet. */
+/* Part of cbEntryView() in couldbe.js. The way back from the first question, for a player who is not made yet: the
+   attributes of the Back button of the row Back and Forward (cbNav in cbguide.js), or "" when there is none. */
 function wnBack(w) {
-  return w && w.o && w.o.wants !== undefined
-    ? `<div class="row"><button class="ghost" data-a="wnback">Back: what you want</button></div>`
-    : "";
+  return w && w.o && w.o.wants !== undefined ? `data-a="wnback"` : "";
 }
 /* Leave the screen for the four questions. keep: false for "I'm not sure" (no pick is kept). */
 function wnLeave(keep) {
@@ -118,6 +118,7 @@ function wnLeave(keep) {
   W.q = 0;
   W.wnOwn = false;
   CB.taps++;
+  cbFwdDrop(); /* cbguide.js: the player moved on, so Forward has nothing to return to */
   sheet(cbSheet);
   /* erain.js: a visitor who comes from the demo Find your era already answered the four questions there. With all
      four the player is made here, with the picks of this screen as goals, and the flow goes on at What it is. */
@@ -148,6 +149,7 @@ Object.assign(ACT, {
   /* from the first question back to this screen, with the picks as they were */
   wnback: () => {
     if (!W || W.kind !== "cb" || W.step !== "entry") return;
+    cbFwdKeep(); /* cbguide.js: Forward returns to the first question */
     W.step = "wants";
     sheet(cbSheet);
   },

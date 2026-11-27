@@ -400,3 +400,17 @@ Taps from the landing to the last screen, fastest path: 9 before, 10 now (the ne
 
 Taps, fastest path: 6 to the first number, 10 to the result, 11 to Home. From the demo page: 8 or 9 taps to its result, one more to Home. Questions: 657.
 
+## RUN 14: the usability pass on What it is / What it could be (Nov 27 2026)
+
+| Item | State | What a player sees | Where |
+|------|-------|--------------------|-------|
+| 1. One pulse | Done | On each screen of the flow one control pulses, the next tap. Each other control is a little paler and still works. | `features/cbguide.js` (`cbOne`), the style lines "run 14" in `game/index.html` |
+| 2. Slim by default | Done | A screen shows the headline, the numbers, the chart and the buttons. Explanations, the list of what was counted, the backups and the math are behind one tap. | `cbFold` in `features/cbguide.js`, each view of the flow |
+| 3. Forward | Done, one screen without | One row Back and Forward on each screen. Forward is off, with its reason, until Back; then it returns to the screen you left. The result has no Forward (the newer prompt: one button and a small Back). | `cbNav`, `ACT.cbfwd` |
+| 4. No jump to the top | Done | After a tap the screen keeps its place, or moves to the next tap when that is out of view. | `cbStaySoon`; no `spUpSoon` in the flow |
+| 5. Keep my plan | Done | "Keep my plan: make a free account"; "Keep my plan" when signed in. The image button of the card says "Get this card as an image". | `features/cbreveal.js`, `features/cbyesbut.js` |
+| 6. Entry questions | Done, weaker on the age | The most usual answer for your age is first and pulses, the other ranges are pale, and one line says what your tap means, on the next screen. The age question has no most likely answer (no dated figure). | `cbLikely`, `cbOptWords`, `cbChips` in `features/couldbe.js`, with `smOrder` of `screens/smart.js` |
+| 7. The "i" | Done, one screen without | Each card, chart, number, meter and group of buttons has an "i" with two lines: what it is, what it is for. The result has none (one button and a small Back). | `CB_GUIDE`, `cbI` in `features/cbguide.js` |
+| 8 to 13, the Krug self-check after | Worker 2 | | |
+
+Tests: `game/tests/flow-one-pulse-forward-keep.js` (items 1, 3, 5). The Krug walk: `tools/e2e/krug_flow.cjs`; the numbers before the run are in `docs/WHAT-IT-COULD-BE.md`. Questions: 659.

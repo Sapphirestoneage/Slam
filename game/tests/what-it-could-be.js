@@ -55,7 +55,7 @@
   X("cbset", "", "", { q: "age", i: 1 });
   chk(
     "one question at a time: the second is spending",
-    W.q === 1 && /spend in one month/.test(ov()) && /Back one question/.test(ov())
+    W.q === 1 && /spend in one month/.test(ov()) && /data-a="cbgo" data-v="qback"/.test(ov())
   );
   X("cbset", "", "", { q: "spend", i: 2 });
   /* an exact amount is optional: I know it opens the box in the same spot */

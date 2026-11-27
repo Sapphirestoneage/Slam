@@ -56,7 +56,7 @@
   chk("no typing: no box until Something else is tapped", !/<input/.test(h));
   chk(
     "the two buttons: Next: four quick taps (the one primary) and I'm not sure (ghost)",
-    /class="primary wide go" data-a="wnnext">Next: four quick taps</.test(h) &&
+    /class="primary wide go cbnext" data-a="wnnext">Next: four quick taps</.test(h) &&
       /class="ghost wide" data-a="wnskip">I'm not sure</.test(h) &&
       (h.match(/class="primary/g) || []).length === 1
   );
@@ -462,7 +462,7 @@
   );
   chk(
     "one button only: Start my first move (primary), and a small Back; the three old buttons are on the reveal",
-    /class="primary wide go cbresgo" data-a="cbfirst">Start my first move</.test(h) &&
+    /class="primary wide go cbresgo cbnext" data-a="cbfirst">Start my first move</.test(h) &&
       (h.match(/class="primary/g) || []).length === 1 &&
       /class="ghost slim" data-a="cbgo" data-v="prev"/.test(h) &&
       !/data-a="cbsave"|data-a="cbshare"|data-a="cbaddstep"/.test(h)

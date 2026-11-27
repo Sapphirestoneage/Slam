@@ -917,6 +917,22 @@ const WB = [
     "cb",
   ],
   [
+    "see",
+    "One pulse, Back and Forward, folds and an i on each part of the opening",
+    "b",
+    () =>
+      WB_FN("cbOne") &&
+      WB_FN("cbNav") &&
+      WB_FN("cbFold") &&
+      WB_FN("cbI") &&
+      WB_FN("cbLikely") &&
+      WB_HAS("cbfwd") &&
+      WB_HAS("cbi") &&
+      WB_HAS("cbfold"),
+    "Run 14, items 1 to 7. On each screen of What it is / What it could be one control pulses, the next tap, and the others are a little paler. Explanations, lists and backups open with one tap. One row has Back and Forward: Forward returns to the screen you left with Back. A screen keeps its place after a tap. On a question the most usual answer for your age is first, and one line says what your tap means. Each card, chart, number and group of buttons has an i with two lines: what it is, what it is for.",
+    "cb",
+  ],
+  [
     "feel",
     "A calmer first week: four places in the bar, the rest in the menu, the Tool library",
     "b",

@@ -67,7 +67,7 @@
    STATE       CB (the numbers that the header showed last, for the short animation; the flag of the
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
-const CB = { last: null, rest: false, taps: 0, memo: new Map() };
+const CB = { last: null, rest: false, taps: 0, memo: new Map(), fwd: [], said: null };
 /* The steps after the entry, in order. A later file adds a step before "end" with cbStepAdd(). A step with
    way: true is a way to shrink the number: it is numbered ("Way 2 of 5") and it is a row on the last screen. */
 const CB_STEPS = [
@@ -276,6 +276,53 @@ function cbTypical(q, age) {
       : null;
   }
   return null;
+}
+/* THE MOST LIKELY CHIP of a question (run 14, item 6): the range that holds the typical value for the age. -1 when
+   the reference data has no typical value (the age itself, the health price, an age with no row). */
+function cbLikely(q, age) {
+  const T = ["spend", "inv", "save"].includes(q) && age > 0 ? cbTypical(q, age) : null;
+  if (!T) return -1;
+  return CB_RNG[q].findIndex((x, i) => {
+    const r = cbRng(q, i);
+    return !r.zero && T.v >= r.lo && (r.open || T.v < r.hi);
+  });
+}
+/* The rule of each question for smart.js (smOrder): the most likely chip first, the other ranges pale. o: { age }. */
+function cbLikelyRule(q, o) {
+  const i = cbLikely(q, o && o.age);
+  return i < 0
+    ? {}
+    : { first: [cbLab(q, i)], dim: CB_RNG[q].map((x, k) => cbLab(q, k)).filter((l, k) => k !== i), why: "of your age" };
+}
+if (typeof SM !== "undefined")
+  ["age", "spend", "inv", "save", "health"].forEach(q => {
+    SM["cb_" + q] = o => cbLikelyRule(q, o);
+  });
+/* ONE LINE ABOUT THE CHOICE THE PLAYER TAPPED (run 14, item 6): what the game counts for it. q: the question. ans: the
+   answer as cbAnswer() keeps it ({ v, i, cf, typ, band }). */
+function cbOptWords(q, ans) {
+  if (!ans || ans.v == null) return "";
+  const r = ans.cf === 3 || ans.typ || ans.i == null ? null : cbRng(q, ans.i),
+    name = ans.typ
+      ? "Typical for ages " + ans.band
+      : ans.cf === 3
+        ? "Your own number"
+        : q === "age"
+          ? cbLab(q, ans.i)
+          : cbLab(q, ans.i) + (q === "inv" || (r && r.zero) ? "" : " a month"),
+    tail = ans.typ ? " It counts as a Guess." : "";
+  if (q === "age") return name + ": the game counts you as " + ans.v + ".";
+  if (q === "inv") return name + ": the game counts " + cbM(ans.v) + " invested." + tail;
+  return (
+    name +
+    ": the " +
+    (q === "health" ? "chart uses " : "game counts ") +
+    cbM(ans.v) +
+    " a month, " +
+    cbM(ans.v * 12) +
+    " a year." +
+    tail
+  );
 }
 /* The answers of the four questions that are a typical value now: [{ q, name, v, per, band, source }]. None after the
    rest of setup: the rows are then the player's own. */
@@ -967,7 +1014,7 @@ function cbTop(c) {
       ? `<div class="tiny muted cbages" data-fid="cb:ages">What it is: <span data-cba="is">${esc(age(N.is))}</span>. What it could be: <span data-cba="could">${esc(age(N.could))}</span>.</div>`
       : "") +
     (typeof wnTags === "function" ? wnTags(c) : "") /* wants.js: what the player wants, as tags */ +
-    `<div class="row between cbtopsub"><span class="tiny muted">${N.same ? "The two are equal until you count something." : N.above ? "Above What it is, because you counted " + N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ") + "." : "What you counted moved it."}</span>${kitPill(N.st)}</div>`
+    `<div class="row between cbtopsub"><span class="tiny muted">${N.same ? "The two are equal until you count something." : N.above ? "Above What it is, because you counted " + N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ") + "." : "What you counted moved it."}</span><span class="row" style="gap:6px;flex:none">${kitPill(N.st)}${cbI("top")}</span></div>`
   );
 }
 /* THE ONE SHORT ANIMATION of a number that changed (the two numbers of the flow, and the top numbers of Home: run 16,
@@ -1016,22 +1063,61 @@ function drawSheetCb() {
 /* The chips of one question, with "I know it" and its number box in the same spot. The last chip is "I'm not sure"
    (run 16, C8): the typical value as a Guess where the reference data has one (spend, inv and save, with a row for
    the age; the typical plan for health). Where it has none, nothing is kept and the question stays open. */
-function cbChips(w, q, cur) {
+function cbChips(w, q, cur, pulse) {
   const open = w.know === q,
     typ = ["spend", "inv", "save"].includes(q) && w.o.a && w.o.a.age ? cbTypical(q, w.o.a.age.v) : null,
-    un = q === "health" ? !cur : !!(cur && cur.typ) || w.unsure === q;
+    un = q === "health" ? !cur : !!(cur && cur.typ) || w.unsure === q,
+    labs = CB_RNG[q].map((r, i) => cbLab(q, i)),
+    /* smart.js: the most likely choice first, the other ranges pale (run 14, item 6) */
+    od =
+      typeof smOrder === "function"
+        ? smOrder("cb_" + q, labs, { age: w.o.a && w.o.a.age ? w.o.a.age.v : null })
+        : { list: labs, r: { first: [], dim: [] } },
+    top = od.r.first[0],
+    isOn = i => !!(cur && cur.cf !== 3 && !cur.typ && cur.i === i),
+    /* the next tap of the screen (one pulse): the open number box, else the answer so far, else the likely chip */
+    nx = !pulse
+      ? ""
+      : open
+        ? "use"
+        : cur && cur.cf === 3
+          ? "know"
+          : cur && cur.typ
+            ? "typ"
+            : cur && cur.i != null
+              ? "i" + cur.i
+              : top != null
+                ? "i" + labs.indexOf(top)
+                : "all",
+    nxc = k => (nx === k ? " cbnext" : "");
   return (
-    `<div class="chips">${CB_RNG[q].map((r, i) => `<button class="chip ${cur && cur.cf !== 3 && cur.i === i ? "on" : ""}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(cbLab(q, i))}</button>`).join("")}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}" data-a="cbknow" data-q="${q}">I know it</button><button class="chip cbtyp ${un ? "on" : ""}" data-a="cbtyp" data-q="${q}" aria-pressed="${un ? "true" : "false"}">${NOT_SURE}</button></div>` +
+    `<div class="chips${nxc("all")}" data-fid="cb:chips">${od.list
+      .map(l => {
+        const i = labs.indexOf(l);
+        return `<button class="chip ${isOn(i) ? "on" : ""}${l === top && !open ? " likely" : ""}${od.r.dim.includes(l) && !isOn(i) ? " dim" : ""}${nxc("i" + i)}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(l)}</button>`;
+      })
+      .join(
+        ""
+      )}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}${nxc("know")}" data-a="cbknow" data-q="${q}">I know it</button><button class="chip cbtyp ${un ? "on" : ""}${nxc("typ")}" data-a="cbtyp" data-q="${q}" aria-pressed="${un ? "true" : "false"}">${NOT_SURE}</button>${cbI(q === "health" ? "health" : "answers")}</div>` +
     `<div class="tiny muted" data-fid="cb:tapone">${TAP_ONE}</div>` +
+    (top != null
+      ? `<div class="tiny muted" data-fid="cb:likely">The first one is the most usual for your age.</div>`
+      : "") +
     (typ
       ? `<div class="tiny muted" data-fid="cb:typhint">Not sure? The game uses what is typical for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess, and you can make it yours later.</div>`
       : w.unsure === q
         ? `<div class="tiny muted" data-fid="cb:unsure" role="status">${q === "age" ? "Your age is the one answer this number needs. Your best guess is fine." : "The game has no typical amount for your age yet. Pick the closest one. Your best guess is fine."}</div>`
         : "") +
     (open
-      ? `<div class="amknow row" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;margin:0"><label class="small" for="cbIn">${q === "age" ? "Your age" : "The amount, in dollars"}</label><input type="text" id="cbIn" inputmode="decimal" data-k="cbIn" value="${esc(w.o.cbIn != null ? w.o.cbIn : cur && cur.cf === 3 ? String(cur.v) : "")}" autocomplete="off"></div><button class="primary" data-a="cbuse" data-q="${q}">Use this</button></div>${w.err ? `<div class="tiny cbwarn">That needs a number, 0 or more.</div>` : ""}`
+      ? `<div class="amknow row" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;margin:0"><label class="small" for="cbIn">${q === "age" ? "Your age" : "The amount, in dollars"}</label><input type="text" id="cbIn" inputmode="decimal" data-k="cbIn" value="${esc(w.o.cbIn != null ? w.o.cbIn : cur && cur.cf === 3 ? String(cur.v) : "")}" autocomplete="off"></div><button class="primary${nxc("use")}" data-a="cbuse" data-q="${q}">Use this</button></div>${w.err ? `<div class="tiny cbwarn">That needs a number, 0 or more.</div>` : ""}`
       : "")
   );
+}
+/* The one line about the choice the player tapped last (cbOptWords), on the screen that follows the tap. */
+function cbSaid() {
+  return CB.said
+    ? `<div class="small cbsaid" data-fid="cb:said" role="status"><b>Your last tap.</b> ${esc(CB.said)}</div>`
+    : "";
 }
 /* THE ENTRY: one question at a time, four in all. */
 function cbEntryView() {
@@ -1043,14 +1129,20 @@ function cbEntryView() {
     head(w.one ? "One answer" : "Question " + (i + 1) + " of " + CB_QS.length, "Your FI number") +
     `<div class="small muted">${w.one ? "Tap your own answer. Your FI number recalculates." : "Four taps, then your FI number. No typing needed."}</div>` +
     `<div class="cbdots" aria-hidden="true">${CB_QS.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
-    `<div class="stack cbq" style="gap:8px"><b class="cbql" data-fid="cb:q">${esc(Q.l)}</b>${cbChips(w, Q.id, a[Q.id])}<div class="tiny muted">${esc(Q.h)}</div></div>` +
-    (w.one
-      ? `<div class="row"><button class="ghost" data-a="cbgo" data-v="${esc(w.back || "reveal")}">Back, no change</button></div>`
-      : i > 0
-        ? `<div class="row"><button class="ghost" data-a="cbgo" data-v="qback">Back one question</button></div>`
-        : typeof wnBack === "function"
-          ? wnBack(w) /* wants.js: back to What you want */
-          : "") +
+    `<div class="stack cbq" style="gap:8px"><b class="cbql" data-fid="cb:q">${esc(Q.l)}</b>${cbChips(w, Q.id, a[Q.id], true)}<div class="tiny muted">${esc(Q.h)}</div></div>` +
+    cbSaid() +
+    /* Back: the screen it came from (one answer), the question before, What you want (wants.js), or What it is */
+    cbNav({
+      back: w.one
+        ? `data-a="cbgo" data-v="${esc(w.back || "reveal")}"`
+        : i > 0
+          ? `data-a="cbgo" data-v="qback"`
+          : typeof wnBack === "function" && wnBack(w)
+            ? wnBack(w)
+            : cbHas(C())
+              ? `data-a="cbgo" data-v="is"`
+              : null,
+    }) +
     cbFoot()
   );
 }
@@ -1064,9 +1156,15 @@ function cbIsView() {
   return (
     head("Your number", "What it is") +
     cbTop(c) +
-    `<div class="small">This is your FI number the standard way: enough invested that work is optional. It is 25 times what you spend in a year. ${kitInfo("cbfi")}</div>` +
-    `<div class="tile small"><b>${N.is.age == null ? "At today's pace the date is still open" : N.is.years === 0 ? "You are there now" : "At today's pace: age " + N.is.age}</b><div class="tiny muted">${N.is.age == null ? "The saving each month does not reach it yet. The next screens show what can move it." : "What you have invested grows, and what you save each month goes in."}</div></div>` +
-    `<div class="tile small cblife" data-fid="cb:life"><div class="row between"><b>The rest of your life costs about ${cbM(L.shown)}</b>${kitPill(L.st)}</div><div class="tiny muted">${L.years} years of today's spending, from ${L.from} to ${L.to}, in today's dollars. ${L.aboveFi ? "Your FI number is smaller: what is invested keeps growing while you spend from it. " : ""}${kitInfo("cblife")}</div></div>` +
+    cbSaid() +
+    /* run 14, item 2: what the number means, the pace and the lifetime total are behind one tap */
+    cbFold(
+      "about",
+      "What this number means",
+      `<div class="small">This is your FI number the standard way: enough invested that work is optional. It is 25 times what you spend in a year. ${kitInfo("cbfi")}</div>` +
+        `<div class="tile small"><b>${N.is.age == null ? "At today's pace the date is still open" : N.is.years === 0 ? "You are there now" : "At today's pace: age " + N.is.age}</b> ${cbI("pace")}<div class="tiny muted">${N.is.age == null ? "The saving each month does not reach it yet. The next screens show what can move it." : "What you have invested grows, and what you save each month goes in."}</div></div>` +
+        `<div class="tile small cblife" data-fid="cb:life"><div class="row between"><b>The rest of your life costs about ${cbM(L.shown)}</b>${kitPill(L.st)}</div><div class="tiny muted">${L.years} years of today's spending, from ${L.from} to ${L.to}, in today's dollars. ${L.aboveFi ? "Your FI number is smaller: what is invested keeps growing while you spend from it. " : ""}${cbI("life")}</div></div>`
+    ) +
     mathBox([
       "Spending: " + cbM(L.month) + " a month, " + cbM(L.year) + " a year.",
       "The rest of your life: " +
@@ -1097,8 +1195,10 @@ function cbIsView() {
         ? "This is a Guess: it stands on the ranges you tapped. Each real number you add recalculates it."
         : "",
     ]) +
-    `<button class="primary wide go" data-a="cbgo" data-v="next">See what it could be</button>` +
+    `<button class="primary wide go cbnext" data-a="cbgo" data-v="next">See what it could be</button>` +
     (made ? `<button class="ghost wide" data-a="cbgo" data-v="entry">Change my four answers</button>` : "") +
+    /* Back: the last of the four questions, with the answers as they are (a player of this flow only) */
+    cbNav({ back: made ? `data-a="cbgo" data-v="entry" data-q="${CB_QS.length - 1}"` : null }) +
     cbFoot()
   );
 }
@@ -1199,7 +1299,7 @@ function cbLayerToggles(K) {
           `<div class="cblay"><button class="chip cbchip ${l.off ? "" : "on"}" data-a="cbtog" data-v="${l.id}" aria-pressed="${l.off ? "false" : "true"}">${sq(l.color)}<span>${esc(l.name)}</span><span class="tiny cbonoff">${l.off ? "Off" : "On"}</span></button><button class="ghost slim cbview" data-a="cblayer" data-v="${l.id}" aria-label="${esc(l.name)}: what it is">View <i class=chev aria-hidden=true></i></button></div>`
       )
       .join("");
-  return `<div class="stack" style="gap:6px" data-fid="cb:toggles"><b class="small">The layers: tap one to switch it off or on</b><div class="cblays">${chips}</div><button class="ghost wide" data-a="cbsplit" aria-pressed="${K.split ? "true" : "false"}">${K.split ? "Show Investments as one layer" : "Split by account"}</button></div>`;
+  return `<div class="stack" style="gap:6px" data-fid="cb:toggles"><div class="row between" style="gap:8px"><b class="small">The layers: tap one to switch it off or on</b>${cbI("layers")}</div><div class="cblays">${chips}</div><button class="ghost wide" data-a="cbsplit" aria-pressed="${K.split ? "true" : "false"}">${K.split ? "Show Investments as one layer" : "Split by account"}</button></div>`;
 }
 /* THE LAYER CHART. */
 function cbChartView() {
@@ -1228,27 +1328,43 @@ function cbChartView() {
         ? `<div class="row between cbzrow"><button class="ghost" data-a="cbzoom" data-v=""><i class=chevl aria-hidden=true></i> Back to all years</button><span class="row" style="gap:6px"><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age - 5}" ${zoom[0].age - 5 < K.p.age ? "disabled" : ""} aria-label="The 5 years before"><i class=chevl aria-hidden=true></i> Earlier</button><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age + 5}" ${zoom[0].age + 5 > LY_END ? "disabled" : ""} aria-label="The 5 years after">Later <i class=chev aria-hidden=true></i></button></span></div>`
         : "") +
         cbChartHtml(K) +
+        /* the names of the colors: the switches of the layers are in a fold now (run 14), so the key names them here */
+        `<div class="cbkey tiny muted" data-fid="cb:laykey">${K.layers
+          .filter(l => !l.off)
+          .map(l => `<span><i class="cbsq" style="background:${l.color}"></i>${esc(l.name)}</span>`)
+          .join("")}</div>` +
         `<div class="cbkey tiny muted"><span><i class="cbln"></i>The line: what the year costs</span><span><i class="cbln dash"></i>Needs</span><span><i class="cbsq hatch"></i>Not covered yet</span></div>` +
         `<div class="cbkey tiny muted">The thin strip beside each bar is what the year costs, from the bottom: ${["needs", "wants", "health", "wtax"].map(id => `<span>${sq(CB_COL[id])}${esc(LY_SPENDING.find(x => x.id === id).name)}</span>`).join("")}</div>` +
         (zoom
           ? `<div class="tiny muted">Tap a color in a bar to see that layer.</div>`
           : `<button class="ghost wide" data-a="cbzoom" data-v="${K.N.could.age != null ? K.bars.find(b => b.to >= K.N.could.age).from : K.p.age}">See single years</button><div class="tiny muted">Or tap a bar to open its 5 years.</div>`),
-      { cap: "Each bar is one stretch of your life. The colors are what pays for it." }
+      { cap: "Each bar is one stretch of your life. The colors are what pays for it.", right: cbI("chart") }
     ) +
-    gapLine +
-    needsLine +
-    cbLayerToggles(K) +
-    dkCard(
-      "What a year costs",
-      `<div class="stack" style="gap:6px">${costRow("needs", K.sums.needs, cbM(K.rows[0].needs) + " a year: food, a place to live, getting around")}${costRow("wants", K.sums.wants, cbM(K.rows[0].wants) + " a year: everything else")}${costRow(
-        "health",
-        K.sums.health,
-        K.sums.health.years
-          ? cbM(K.sums.health.avg) + " a year, " + span(K.sums.health) + (K.health.typ ? ". Typical, a Guess" : "")
-          : K.p.stop != null && K.p.stop >= LY_MEDICARE
-            ? "None on this chart: work goes on to " + LY_MEDICARE + " or later"
-            : "Not on the chart yet"
-      )}${costRow("wtax", K.sums.wtax, K.sums.wtax.years ? "About " + cbM(K.sums.wtax.avg) + " a year, " + span(K.sums.wtax) : K.p.tax ? "None on this chart" : "Not worked out here")}<div class="tiny muted">The 25 times rule leaves the last two out. They are on the chart. Count one and the number can go up.</div></div>`
+    /* run 14, item 2: the chart in words, the switches of the layers and the costs are behind one tap each */
+    cbFold(
+      "words",
+      "What the chart says, in words",
+      `<div class="row between" style="gap:8px"><span class="tiny muted">The chart, in words.</span>${cbI("words")}</div>` +
+        gapLine +
+        needsLine
+    ) +
+    cbFold(
+      "parts",
+      "Switch a layer, or count a cost",
+      cbLayerToggles(K) +
+        dkCard(
+          "What a year costs",
+          `<div class="stack" style="gap:6px">${costRow("needs", K.sums.needs, cbM(K.rows[0].needs) + " a year: food, a place to live, getting around")}${costRow("wants", K.sums.wants, cbM(K.rows[0].wants) + " a year: everything else")}${costRow(
+            "health",
+            K.sums.health,
+            K.sums.health.years
+              ? cbM(K.sums.health.avg) + " a year, " + span(K.sums.health) + (K.health.typ ? ". Typical, a Guess" : "")
+              : K.p.stop != null && K.p.stop >= LY_MEDICARE
+                ? "None on this chart: work goes on to " + LY_MEDICARE + " or later"
+                : "Not on the chart yet"
+          )}${costRow("wtax", K.sums.wtax, K.sums.wtax.years ? "About " + cbM(K.sums.wtax.avg) + " a year, " + span(K.sums.wtax) : K.p.tax ? "None on this chart" : "Not worked out here")}<div class="tiny muted">The 25 times rule leaves the last two out. They are on the chart. Count one and the number can go up.</div></div>`,
+          { right: cbI("costs") }
+        )
     ) +
     mathBox([
       "Each year: steady income (Social Security, other) pays first and is matched to your needs. Then work. Then your investments.",
@@ -1258,7 +1374,8 @@ function cbChartView() {
       cbCushionWords(K.p),
       "All amounts are in today's dollars.",
     ]) +
-    `<button class="primary wide go" data-a="cbgo" data-v="${typeof cbStackView === "function" ? "stack" : "next"}">Next</button>` +
+    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${typeof cbStackView === "function" ? "stack" : "next"}">Next</button>` +
+    cbNav({ back: `data-a="cbgo" data-v="prev"` }) +
     cbFoot()
   );
 }
@@ -1277,7 +1394,7 @@ function cbLayerView() {
     head(isLayer ? "A layer" : "A part of what a year costs", esc(L.name)) +
     cbTop(c) +
     `<div class="tile small"><b>What it is</b><div>${esc(L.what)}</div></div>` +
-    `<div class="tile small"><b>${isLayer ? "The years it pays for" : "The years it is there"}</b><div data-fid="cb:years">${
+    `<div class="tile small"><div class="row between" style="gap:8px"><b>${isLayer ? "The years it pays for" : "The years it is there"}</b>${cbI("layer")}</div><div data-fid="cb:years">${
       S && S.years
         ? (S.from === S.to ? "Age " + S.from : "Ages " + S.from + " to " + S.to) +
           ": " +
@@ -1292,16 +1409,17 @@ function cbLayerView() {
     }</div></div>` +
     `<div class="tile small"><b>${isLayer ? "Which expenses it covers" : "What it is for"}</b><div>${esc(L.covers)}</div></div>` +
     (L.id === "health"
-      ? `<div class="stack" style="gap:6px"><b class="small">What would a plan of your own cost a month?</b>${cbChips(W, "health", cur)}<div class="tiny muted">${L.K.health.typ && L.K.health.typical != null ? "Until you tap, the chart uses " + cbM(L.K.health.typical / 12) + " a month: typical, a Guess." : "Your number is on the chart."}</div></div>`
+      ? `<div class="stack" style="gap:6px"><b class="small">What would a plan of your own cost a month?</b>${cbChips(W, "health", cur)}${cbSaid()}<div class="tiny muted">${L.K.health.typ && L.K.health.typical != null ? "Until you tap, the chart uses " + cbM(L.K.health.typical / 12) + " a month: typical, a Guess." : "Your number is on the chart."}</div></div>`
       : "") +
     mathBox(L.math) +
     (canCount
-      ? `<button class="${cnt[L.id] ? "ghost" : "primary go"} wide" data-a="cbcount" data-v="${L.id}">${cnt[L.id] ? "Take it out of What it could be" : "Count this in What it could be"}</button>`
+      ? `<button class="${cnt[L.id] ? "ghost" : "primary go cbnext"} wide" data-a="cbcount" data-v="${L.id}">${cnt[L.id] ? "Take it out of What it could be" : "Count this in What it could be"}</button>`
       : "") +
     (isLayer
       ? `<button class="ghost wide" data-a="cbtog" data-v="${L.id}">${off ? "Switch this layer on" : "Switch this layer off"}</button>`
       : "") +
-    `<button class="${canCount && !cnt[L.id] ? "ghost" : "primary"} wide" data-a="cbgo" data-v="chart">Back to the chart</button>` +
+    /* Back: the chart. It is the next tap when there is nothing to count here, or it is counted */
+    cbNav({ back: `data-a="cbgo" data-v="chart"`, next: !(canCount && !cnt[L.id]) }) +
     cbFoot()
   );
 }
@@ -1332,30 +1450,33 @@ function cbChartCard(K, title, cap) {
         .map(l => `<span><i class="cbsq" style="background:${l.color}"></i>${esc(l.name)}</span>`)
         .join("")}</div>` +
       `<button class="ghost wide" data-a="cbgo" data-v="chart">Open the full chart</button>`,
-    { cap }
+    { cap, right: cbI("chart") }
   );
 }
 /* Part of each way screen (cbWayView here, and cbflex.js, cbtax.js, cblater.js, cbmoves.js). The fourth choice of a
    way: "I'm not sure" (run 16, C8). Nothing is kept: the way stays open on the list of the ways, and the flow goes
    on. Under it, the helper line of every question. */
-function cbWayUnsure() {
-  return `<button class="ghost wide cbunsure" data-a="cbgo" data-v="next">${NOT_SURE}</button><div class="tiny muted" data-fid="cb:tapone">${TAP_ONE}</div>`;
+function cbWayUnsure(info) {
+  return `<button class="ghost wide cbunsure" data-a="cbgo" data-v="next">${NOT_SURE}</button><div class="row between" style="gap:8px"><span class="tiny muted" data-fid="cb:tapone">${TAP_ONE}</span>${cbI(info || "count3")}</div>`;
 }
 /* The buttons under a way: Next, Back, and the way back to the list of all the ways. done: the player answered. */
 function cbWayNav(done) {
   return (
-    `<button class="${done ? "primary go" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
-    `<button class="ghost wide" data-a="cbgo" data-v="prev">Back</button>` +
+    `<button class="${done ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
     (typeof cbStackView === "function"
       ? `<button class="ghost wide" data-a="cbgo" data-v="stack">All the ways</button>`
-      : "")
+      : "") +
+    cbNav({ back: `data-a="cbgo" data-v="prev"` }) /* cbguide.js: Back and Forward */
   );
 }
-/* The row "What has to go right" of a way (the "i"), and under it the backup of the way (cbstack.js). */
+/* The row "What has to go right" of a way (the "i"), and under it the backup of the way (cbstack.js). Both are
+   behind one tap, closed (run 14, item 2). */
 function cbWhyRow(id, term) {
-  return (
+  return cbFold(
+    "backup",
+    "What has to go right, and the backup",
     `<button class="rowbtn cbwhy" data-a="info" data-k="term:${term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
-    (typeof cbBackupRow === "function" ? cbBackupRow(C(), id) : "")
+      (typeof cbBackupRow === "function" ? cbBackupRow(C(), id) : "")
   );
 }
 /* ONE STRATEGY STEP: a headline, one line of why, the drop for this player, three buttons, the receipt, the chart. */
@@ -1374,12 +1495,12 @@ function cbWayView(id) {
       )
       .join(""),
     btn = (v, label) =>
-      `<button class="${!St.how && v === "count" ? "primary go" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cbdo" data-k="${id}" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
+      `<button class="${!St.how && v === "count" ? "primary go cbnext" : "ghost"} wide ${St.how === v ? "on" : ""}" data-a="cbdo" data-k="${id}" data-v="${v}" aria-pressed="${St.how === v ? "true" : "false"}">${label}${St.how === v ? " ✓" : ""}</button>`,
     said =
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : held
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(held.receipt))}.</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(held.receipt))}. ${cbI("receipt")}</div>`
           : "",
     sub =
       id === "shape"
@@ -1443,8 +1564,8 @@ function cbWayView(id) {
     cbTop(c) +
     `<div class="small">${esc(Wy.why)}</div>` +
     cbWhyRow(id, Wy.term) +
-    `<div class="stack" style="gap:6px"><b class="small">${esc(Wy.ask)}</b><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub)}</div></div>` +
-    `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(id === "ss" ? "Guess" : cbState(c))}</div><b class="cbdropn">${esc(V.has ? cbReceiptWords(V.receipt) : "No estimate yet")}</b><div class="tiny muted">${St.counted ? "With the choice above, against not counting it." : "If you count it, with the choice above."}</div></div>` +
+    `<div class="stack" style="gap:6px"><div class="row between" style="gap:8px"><b class="small">${esc(Wy.ask)}</b>${cbI("choices")}</div><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub)}</div></div>` +
+    `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(id === "ss" ? "Guess" : cbState(c))}</div><b class="cbdropn">${esc(V.has ? cbReceiptWords(V.receipt) : "No estimate yet")}</b><div class="tiny muted">${St.counted ? "With the choice above, against not counting it." : "If you count it, with the choice above."}</div></div>` +
     `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
     cbWayUnsure() +
     said +
@@ -1474,7 +1595,7 @@ function cbEndView() {
     (R.move
       ? `<div class="tile cbfirst" data-fid="cb:first"><span class="dklabel">Your first move</span><b data-fid="cb:firstname">${esc(R.move.name)}</b><div class="small" data-fid="cb:firstwhy">${esc(R.move.why)}</div></div>`
       : "") +
-    `<button class="primary wide go cbresgo" data-a="cbfirst">Start my first move</button>` +
+    `<button class="primary wide go cbresgo cbnext" data-a="cbfirst">Start my first move</button>` +
     `<div class="row"><button class="ghost slim" data-a="cbgo" data-v="prev"><i class=chevl aria-hidden=true></i> Back</button></div>` +
     `<div class="tiny muted" data-fid="cb:kept">${esc(R.kept)}</div>` +
     cbFoot()
@@ -1482,6 +1603,10 @@ function cbEndView() {
 }
 /* THE SHEET of the flow. */
 function cbSheet() {
+  return cbOne(cbScreen()); /* cbguide.js: exactly one control pulses, the next tap (run 14, item 1) */
+}
+/* The HTML of the screen the player is on. */
+function cbScreen() {
   const w = W;
   if (w.step === "wants" && typeof wnView === "function") return wnView(); /* wants.js: What you want */
   if (w.step === "entry" || w.step === "wants") return cbEntryView();
@@ -1537,6 +1662,8 @@ function cbOpen(step) {
   };
   if (!has) CB.taps = 0;
   CB.last = null;
+  CB.fwd = [];
+  CB.said = null;
   sheet(cbSheet);
 }
 /* Part of doorBegin() in door.js, of ACT.start in ui.js and of clFirstGame() in cloud.js. A new player (the
@@ -1703,6 +1830,8 @@ function cbAnswer(q, ans) {
   w.unsure = null;
   w.err = false;
   delete w.o.cbIn;
+  CB.said = cbOptWords(q, ans); /* one line about the choice, on the screen that follows */
+  if (q !== "health") cbFwdDrop(); /* cbguide.js: an answer moves on, so Forward has nothing to return to */
   if (q === "health") {
     const c = C();
     cbStore(c).health = ans;
@@ -1785,8 +1914,9 @@ Object.assign(ACT, {
       i = CB_QS.findIndex(x => x.id === t.dataset.q);
     if (!W || W.kind !== "cb" || i < 0 || !cbHas(c) || !(c.x && c.x.cb && c.x.cb.a)) return;
     W = { kind: "cb", step: "entry", q: i, o: { a: clone(c.x.cb.a) }, one: true, back: W.step };
+    cbFwdDrop();
     sheet(cbSheet);
-    if (typeof spUpSoon === "function") spUpSoon();
+    cbStaySoon(); /* cbguide.js: the screen keeps its place */
   },
   cbknow: t => {
     if (!W || W.kind !== "cb") return;
@@ -1819,6 +1949,7 @@ Object.assign(ACT, {
       save();
     }
     if (typeof cbSeenKeep === "function") cbSeenKeep(); /* cbreveal.js: the numbers, for "since last time" */
+    CB.fwd = [];
     closeSheet();
     go("home");
   },
@@ -1826,11 +1957,21 @@ Object.assign(ACT, {
   cbgo: t => {
     if (!W || W.kind !== "cb") return;
     const v = t.dataset.v,
-      at = CB_STEPS.findIndex(s => s.id === W.step);
+      at = CB_STEPS.findIndex(s => s.id === W.step),
+      back = !!t.dataset.b || v === "prev" || v === "qback";
+    /* cbguide.js: Back keeps the screen for Forward. Any other move uses up or empties what Forward had */
+    if (back) cbFwdKeep();
+    CB.said = null;
     if (v === "qback") W.q = Math.max(0, (W.q || 0) - 1);
     else if (v === "entry") {
       const c = C();
-      W = { kind: "cb", step: "entry", q: 0, o: { a: clone((c.x && c.x.cb && c.x.cb.a) || {}) } };
+      if (!back) cbFwdDrop();
+      W = {
+        kind: "cb",
+        step: "entry",
+        q: Math.max(0, Math.min(CB_QS.length - 1, +t.dataset.q || 0)),
+        o: { a: clone((c.x && c.x.cb && c.x.cb.a) || {}) },
+      };
     } else {
       /* the stack and a move of it are not steps of the list: Back from them is the chart or the stack */
       const side = at < 0,
@@ -1850,11 +1991,12 @@ Object.assign(ACT, {
                   : "chart"
                 : cbStepNear(C(), W.step, -1)
               : v;
+      if (!back) cbFwdDrop(id, t.dataset.k);
       W = { kind: "cb", step: id, o: {}, id: t.dataset.k || undefined };
       cbAt(id);
     }
     sheet(cbSheet);
-    if (typeof spUpSoon === "function") spUpSoon(); /* spiral.js: a new screen starts at its top */
+    cbStaySoon(); /* cbguide.js: the screen keeps its place, and never goes to the top (run 14, item 4) */
   },
   cbtog: t => {
     if (!W || W.kind !== "cb") return;
@@ -1882,9 +2024,10 @@ Object.assign(ACT, {
   },
   cblayer: t => {
     if (!W || W.kind !== "cb") return;
+    cbFwdDrop("layer", t.dataset.v);
     W = { kind: "cb", step: "layer", id: t.dataset.v, o: {} };
     sheet(cbSheet);
-    if (typeof spUpSoon === "function") spUpSoon();
+    cbStaySoon();
   },
   /* count a cost or a steady income in the number, or take it out again */
   cbcount: t => {

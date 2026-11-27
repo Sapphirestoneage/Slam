@@ -182,31 +182,37 @@ function cbMoveView() {
     return (
       head("The stack", "A move") +
       cbTop(c) +
-      `<button class="primary wide" data-a="cbgo" data-v="stack">All the ways</button>` +
+      `<button class="primary wide cbnext" data-a="cbgo" data-v="stack">All the ways</button>` +
+      cbNav({ back: `data-a="cbgo" data-v="prev"` }) +
       cbFoot()
     );
   const btn = (v, label) =>
-      `<button class="${!r.how && v === "count" ? "primary go" : "ghost"} wide ${r.how === v ? "on" : ""}" data-a="cbmovedo" data-k="${r.id}" data-v="${v}" aria-pressed="${r.how === v ? "true" : "false"}">${label}${r.how === v ? " ✓" : ""}</button>`,
+      `<button class="${!r.how && v === "count" ? "primary go cbnext" : "ghost"} wide ${r.how === v ? "on" : ""}" data-a="cbmovedo" data-k="${r.id}" data-v="${v}" aria-pressed="${r.how === v ? "true" : "false"}">${label}${r.how === v ? " ✓" : ""}</button>`,
     no = (c.x && c.x.cb && c.x.cb.how && c.x.cb.how[r.id]) === "no",
     said = no
       ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> One tap on Count this puts it in the stack.</div>`
       : r.stacked
-        ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${r.how === "did" ? "Already yours, and in the stack." : "In the stack."}</b> ${esc(r.words)}${r.how === "did" ? "" : ". " + esc(cbM(0)) + " off the target: this one moves the date"}.</div>`
+        ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${r.how === "did" ? "Already yours, and in the stack." : "In the stack."}</b> ${esc(r.words)}${r.how === "did" ? "" : ". " + esc(cbM(0)) + " off the target: this one moves the date"}. ${cbI("receipt")}</div>`
         : "";
   return (
     head("Before FI: get there sooner", esc(r.name)) +
     cbTop(c) +
     `<div class="small">${esc(r.one)}</div>` +
-    `<button class="rowbtn cbwhy" data-a="info" data-k="term:${r.term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
+    /* cbguide.js: behind one tap (run 14, item 2) */
+    cbFold(
+      "backup",
+      "What has to go right, and the backup",
+      `<button class="rowbtn cbwhy" data-a="info" data-k="term:${r.term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>`
+    ) +
     (r.applies
       ? ""
       : `<div class="banner small" data-fid="cbmove:why"><b>This cannot apply yet.</b> ${esc(r.why)}</div>`) +
     (r.notyet
       ? `<div class="banner small" data-fid="cbmove:notyet"><b>Not yet${r.notyet.block ? ": " + esc(r.notyet.block.toLowerCase()) : ""}.</b> ${esc(r.notyet.why)}</div>`
       : "") +
-    `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(r.st)}</div><b class="cbdropn">${esc(r.words)}</b><div class="tiny muted">${r.month > 0 ? "Worth about " + cbM(r.month) + " a month on your numbers. " : ""}This moves the date. The two numbers on top are about the target, so they stay.</div></div>` +
+    `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(r.st)}</div><b class="cbdropn">${esc(r.words)}</b><div class="tiny muted">${r.month > 0 ? "Worth about " + cbM(r.month) + " a month on your numbers. " : ""}This moves the date. The two numbers on top are about the target, so they stay.</div></div>` +
     (r.tiles.length
-      ? `<div class="tile small" data-fid="cbmove:tiles">${r.tiles
+      ? `<div class="tile small" data-fid="cbmove:tiles"><div class="row between" style="gap:8px"><b>The numbers of this move</b>${cbI("movenums")}</div>${r.tiles
           .slice(0, 3)
           .map(
             t =>
@@ -226,7 +232,8 @@ function cbMoveView() {
       ])
     ) +
     `<button class="ghost wide" data-a="${r.open.a}" data-v="${r.open.v}">${esc(r.open.l)}</button>` +
-    `<button class="${r.how ? "primary go" : "ghost"} wide" data-a="cbgo" data-v="stack">All the ways</button>` +
+    `<button class="${r.how ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="stack">All the ways</button>` +
+    cbNav({ back: `data-a="cbgo" data-v="prev"` }) /* cbguide.js: Back (the stack) and Forward */ +
     cbFoot()
   );
 }
