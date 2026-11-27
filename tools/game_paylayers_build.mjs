@@ -31,7 +31,9 @@ const head = `/* ===============================================================
    SOURCE-HASH  ${hash}
    ========================================================================= */
 `;
-const out = head + body;
+// The spending-shape default of the reference data (retirementPhases), for the game: it has no reference file of its own.
+const all = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url), 'utf8')), ref = all.retirementPhases, ssRef = all.socialSecurity.trustFund;
+const out = head + body + `// The go-go, slow-go and no-go shares and their source (data/reference-2026.json, retirementPhases), read with lyShapeBands.\nconst LY_SHAPE_REF = ${JSON.stringify(ref)};\n// The share of Social Security that the trust fund report says can still be paid (socialSecurity.trustFund).\nconst LY_SS_REF = ${JSON.stringify(ssRef)};\n`;
 if (process.argv.includes('--check')) {
   let now = '';
   try { now = readFileSync(to, 'utf8'); } catch { now = ''; }

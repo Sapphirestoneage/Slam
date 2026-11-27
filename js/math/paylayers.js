@@ -48,6 +48,14 @@ export function lyShapeAt(bands, age) {
   for (const b of (bands || []).slice().sort((a, b) => a.from - b.from)) if (age >= b.from) f = b.f;
   return f;
 }
+// The bands of a spending shape from the go-go, slow-go and no-go shares of the reference data (rp: retirementPhases of
+// data/reference-2026.json: { goGo, slowGo, noGo, slowGoAge, noGoAge }). scale: 1 is the full easing, 0.5 half of it
+// (a player's own, milder choice), 0 none. Returns [{ from, f }] for lyShapeAt; an empty list when there is no easing.
+export function lyShapeBands(rp, scale = 1) {
+  const k = Math.min(1, Math.max(0, lyNum(scale))), go = lyNum(rp && rp.goGo) || 1, f = v => 1 - (1 - (Number.isFinite(v) ? v : go) / go) * k;
+  if (!rp || !(k > 0)) return [];
+  return [{ from: rp.slowGoAge, f: f(rp.slowGo) }, { from: rp.noGoAge, f: f(rp.noGo) }].filter(b => Number.isFinite(b.from) && b.f < 1);
+}
 // Steady income in the year of an age: { ss, other }, before any is used.
 export function lySteadyAt(p, age) {
   const off = p.off || {};
@@ -74,7 +82,9 @@ function lyDraw(cap, need, first) {
 
 // THE YEAR-BY-YEAR RUN. p: { age, end, spend (a year), needsShare (0 to 1), shape (bands or null), workPay (take-home a
 // year), save (invested a year while working), stop (the age work stops; null: it does not), bal { tax, pre, roth, hsa },
-// saveTo (shares of `save` by account), grow (growth a year while working), draw (growth a year once work has stopped),
+// saveTo (shares of `save` by account), grow (growth a year, for the whole chart), draw (growth a year once work has
+// stopped; left out, it is `grow`: the owner's choice of 2026-11-27 is one growth rate for the whole chart), take (the
+// withdrawal rate that sizes the two numbers: 0.04 is 25 times; it is what is taken out, not a growth rate),
 // ss { year, age }, other [{ year, from, to }], health { year, until }, tax (a function: ordinary income of a year to
 // its tax; null: none), off { work, tax, pre, roth, hsa, ss, other } (layers switched off) }.
 // Returns one row for each age: the parts of the line (needs, wants, health, wtax, line), the layers that pay
@@ -86,7 +96,7 @@ export function lyYears(p) {
   for (let age = p.age; age <= end; age++) {
     const planWork = p.stop == null || age < p.stop, working = planWork && !off.work, f = lyShapeAt(p.shape, age);
     const needs = lyNum(p.spend) * share * f, wants = lyNum(p.spend) * (1 - share) * f, health = lyHealthAt(p, age);
-    const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw);
+    const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw ?? p.grow);
     const cap = Object.fromEntries(LY_KEYS.map(k => [k, off[k] ? 0 : bal[k] * (1 + r)]));
     const base = needs + wants + health;
     // steady income first (it meets the needs first), then work, then the accounts
@@ -151,10 +161,12 @@ export function lyCoverage(rows) {
 
 // THE TARGET AT AN AGE: what must be invested on the day work stops at `at`, so that it pays each year's line less the
 // steady income to the end, and then keeps paying the last year's amount for good (the same promise as the 25 times
-// rule). Each year is counted back at the rate `draw`. With flat spending and nothing else, this is spend / draw.
+// rule). Each year is counted back at the withdrawal rate `take` (the careful rate of the 25 times rule, not the growth
+// of the chart; an older caller that gives no `take` gets `draw`). With flat spending and nothing else, this is
+// spend / take. The pile on the chart grows faster than that, so it is expected to end higher: that is the cushion.
 // preShare: the share of the money taken out that is traditional (for the tax); the tax of a year is found on it.
 export function lyTarget(p, at) {
-  const end = p.end ?? LY_END, r = lyNum(p.draw), q = { ...p, stop: at, off: {} };
+  const end = p.end ?? LY_END, r = lyNum(p.take ?? p.draw), q = { ...p, stop: at, off: {} };
   const net = age => {
     const f = lyShapeAt(p.shape, age), S = lySteadyAt(q, age), base = Math.max(0, lyNum(p.spend) * f + lyHealthAt(q, age) - S.ss - S.other);
     if (typeof p.tax !== 'function' || !(p.preShare > 0) || base <= 0) return base;
@@ -186,7 +198,7 @@ export function lyCounted(p, counted) {
 // THE TWO NUMBERS. Returns { is: { target, age, years }, could: { target, age, years }, counted (true when anything
 // is), raisedBy (the costs that are counted) }. age: null when the saving pace does not get there in 80 years.
 export function lyNumbers(p, counted) {
-  const inv = LY_KEYS.reduce((s, k) => s + Math.max(0, lyNum((p.bal || {})[k])), 0), r = lyNum(p.draw);
+  const inv = LY_KEYS.reduce((s, k) => s + Math.max(0, lyNum((p.bal || {})[k])), 0), r = lyNum(p.take ?? p.draw);
   const first = target => { for (let n = 0; n <= 80; n++) if (lyPile(inv, lyNum(p.save), lyNum(p.grow), n) >= target(p.age + n)) return n; return null; };
   const isT = r > 0 ? lyNum(p.spend) / r : null, isN = isT == null ? null : first(() => isT);
   const is = { target: isT, years: isN, age: isN == null ? null : p.age + isN };

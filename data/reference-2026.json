@@ -3801,7 +3801,7 @@
     "noGo": 0.75,
     "slowGoAge": 75,
     "noGoAge": 85,
-    "source": "Go-go, slow-go and no-go: the older suite's defaults (money-rooms-v3 data/assumptions.json: 100%, 85% from 75, 75% from 85). The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026). The CE has no 85-plus row, so the 75% is the stated convention"
+    "source": "Go-go, slow-go and no-go years (the names are from Michael Stein, The Prosperous Retirement): spending stays at 100% to age 75, then 85% from 75 and 75% from 85. The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026 and again through a web search on Nov 27 2026). The survey has no row for 85 and over, so the 75% from 85 is a stated convention (the default of the older suite, money-rooms-v3 data/assumptions.json)"
   },
   "idChangeNY": { "courtNyc": 65, "courtNyState": 210, "dmvLicense": 12.5, "dmvId": 5, "birthNys": 0, "birthNysCopy": 30, "ssaCard": 0, "passportCorrection": 0, "passportBook": 130, "passportExecution": 35 },
   "adoptionCredit": { "max": 17670, "refundable": 5120, "phaseStart": 265080, "phaseEnd": 305080 },

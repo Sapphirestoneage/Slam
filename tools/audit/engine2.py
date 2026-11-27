@@ -1208,6 +1208,19 @@ def layers_check(fn, x, o, ck):
         if not h or not h['year'] > 0:
             return 0.0
         return h['year'] if (stop is None or age >= stop) and age < h.get('until', 65) else 0.0
+    if fn == 'lyShapeBands':
+        # the bands of a spending shape: each share moves toward 1 by (1 - scale); a share of 1 or more is left out
+        rp, k = x['rp'], min(1.0, max(0.0, x['scale']))
+        want = []
+        for age_key, share_key in (('slowGoAge', 'slowGo'), ('noGoAge', 'noGo')):
+            f = rp[share_key] / rp['goGo'] * k + (1 - k)
+            if k > 0 and f < 1:
+                want.append([rp[age_key], f])
+        ck('how many bands', len(o['bands']), len(want), 0)
+        for got, w in zip(o['bands'], want):
+            ck('the age of a band', got[0], w[0], 0)
+            ck('the share of a band', got[1], w[1], 1e-9)
+        return
     if fn == 'lyYears':
         off, stop = x.get('off') or {}, x.get('stop')
         bal = {k: max(0.0, x['bal'].get(k) or 0) for k in keys}
@@ -1219,7 +1232,7 @@ def layers_check(fn, x, o, ck):
             needs, wants = x['spend'] * x['needsShare'] * f, x['spend'] * (1 - x['needsShare']) * f
             health = health_at(x, age, stop)
             ss_all, oth_all = steady_at(x, age, off)
-            r = x['grow'] if plan_work else x['draw']
+            r = x['grow'] if plan_work else (x['draw'] if x.get('draw') is not None else x['grow'])
             cap = {k: 0.0 if off.get(k) else bal[k] * (1 + r) for k in keys}
             def pay(wtax):
                 left = needs + wants + health + wtax
@@ -1272,7 +1285,7 @@ def layers_check(fn, x, o, ck):
                 ck(f'the bar from {b[0]}: the gap', b[3], sum(r[9] for r in g) / len(g), 1.0)
                 ck(f'the bar from {b[0]}: investments', b[4], sum(r[3] + r[4] + r[5] + r[6] for r in g) / len(g), 1.0)
     elif fn == 'lyNumbers':
-        c, off, r = x.get('counted') or {}, x.get('off') or {}, x['draw']
+        c, off, r = x.get('counted') or {}, x.get('off') or {}, (x['take'] if x.get('take') is not None else x['draw'])
         inv = sum(max(0.0, x['bal'].get(k) or 0) for k in keys)
         def pile(n):
             v = inv
@@ -2109,7 +2122,7 @@ def run(cases, ref, il=None):
             family_check(fn, x, o, ck)
         elif fn in ('qsStats', 'qsCapacity', 'qsFails', 'qsHidden', 'qsRank', 'qsDuel'):
             quest_check(fn, x, o, ck)
-        elif fn in ('lyYears', 'lyNumbers'):
+        elif fn in ('lyYears', 'lyNumbers', 'lyShapeBands'):
             layers_check(fn, x, o, ck)
         elif fn in ('peNetWorth', 'peIncome', 'peSaving'):
             peers_check(fn, x, o, ck)

@@ -5,14 +5,14 @@
                95 (what each year costs, which layer pays for it, and what is not covered yet).
    INPUT       Plain numbers from the caller (features/couldbe.js makes them from the profile). It
                reads no profile and no screen.
-   OUTPUT      18 functions and constants: LY_END, LY_MEDICARE, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lySteadyAt, 
-               lyHealthAt, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, 
-               lyCounted, lyNumbers, lyReceipt
+   OUTPUT      19 functions and constants: LY_END, LY_MEDICARE, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, 
+               lySteadyAt, lyHealthAt, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, 
+               lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt
    DEPENDS ON  core/withdraw.js (wayPay: one year on one pile).
    RULES       GENERATED FILE. Do not edit it. It is a copy of js/math/paylayers.js of the main app.
                tools/game_paylayers_build.mjs makes it. Change the source, then run the tool.
                Prettier does not format this file (.prettierignore).
-   SOURCE-HASH  d5f4a320be790c73
+   SOURCE-HASH  0dec695bf613a4cf
    ========================================================================= */
 // What it is / What it could be (run A, Nov 27 2026): the two numbers of the front door and the layer chart behind
 // them. "What it is" is the standard FI number (a year of spending divided by the withdrawal rate: 25 times at 4%) and
@@ -62,6 +62,14 @@ function lyShapeAt(bands, age) {
   for (const b of (bands || []).slice().sort((a, b) => a.from - b.from)) if (age >= b.from) f = b.f;
   return f;
 }
+// The bands of a spending shape from the go-go, slow-go and no-go shares of the reference data (rp: retirementPhases of
+// data/reference-2026.json: { goGo, slowGo, noGo, slowGoAge, noGoAge }). scale: 1 is the full easing, 0.5 half of it
+// (a player's own, milder choice), 0 none. Returns [{ from, f }] for lyShapeAt; an empty list when there is no easing.
+function lyShapeBands(rp, scale = 1) {
+  const k = Math.min(1, Math.max(0, lyNum(scale))), go = lyNum(rp && rp.goGo) || 1, f = v => 1 - (1 - (Number.isFinite(v) ? v : go) / go) * k;
+  if (!rp || !(k > 0)) return [];
+  return [{ from: rp.slowGoAge, f: f(rp.slowGo) }, { from: rp.noGoAge, f: f(rp.noGo) }].filter(b => Number.isFinite(b.from) && b.f < 1);
+}
 // Steady income in the year of an age: { ss, other }, before any is used.
 function lySteadyAt(p, age) {
   const off = p.off || {};
@@ -88,7 +96,9 @@ function lyDraw(cap, need, first) {
 
 // THE YEAR-BY-YEAR RUN. p: { age, end, spend (a year), needsShare (0 to 1), shape (bands or null), workPay (take-home a
 // year), save (invested a year while working), stop (the age work stops; null: it does not), bal { tax, pre, roth, hsa },
-// saveTo (shares of `save` by account), grow (growth a year while working), draw (growth a year once work has stopped),
+// saveTo (shares of `save` by account), grow (growth a year, for the whole chart), draw (growth a year once work has
+// stopped; left out, it is `grow`: the owner's choice of 2026-11-27 is one growth rate for the whole chart), take (the
+// withdrawal rate that sizes the two numbers: 0.04 is 25 times; it is what is taken out, not a growth rate),
 // ss { year, age }, other [{ year, from, to }], health { year, until }, tax (a function: ordinary income of a year to
 // its tax; null: none), off { work, tax, pre, roth, hsa, ss, other } (layers switched off) }.
 // Returns one row for each age: the parts of the line (needs, wants, health, wtax, line), the layers that pay
@@ -100,7 +110,7 @@ function lyYears(p) {
   for (let age = p.age; age <= end; age++) {
     const planWork = p.stop == null || age < p.stop, working = planWork && !off.work, f = lyShapeAt(p.shape, age);
     const needs = lyNum(p.spend) * share * f, wants = lyNum(p.spend) * (1 - share) * f, health = lyHealthAt(p, age);
-    const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw);
+    const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw ?? p.grow);
     const cap = Object.fromEntries(LY_KEYS.map(k => [k, off[k] ? 0 : bal[k] * (1 + r)]));
     const base = needs + wants + health;
     // steady income first (it meets the needs first), then work, then the accounts
@@ -165,10 +175,12 @@ function lyCoverage(rows) {
 
 // THE TARGET AT AN AGE: what must be invested on the day work stops at `at`, so that it pays each year's line less the
 // steady income to the end, and then keeps paying the last year's amount for good (the same promise as the 25 times
-// rule). Each year is counted back at the rate `draw`. With flat spending and nothing else, this is spend / draw.
+// rule). Each year is counted back at the withdrawal rate `take` (the careful rate of the 25 times rule, not the growth
+// of the chart; an older caller that gives no `take` gets `draw`). With flat spending and nothing else, this is
+// spend / take. The pile on the chart grows faster than that, so it is expected to end higher: that is the cushion.
 // preShare: the share of the money taken out that is traditional (for the tax); the tax of a year is found on it.
 function lyTarget(p, at) {
-  const end = p.end ?? LY_END, r = lyNum(p.draw), q = { ...p, stop: at, off: {} };
+  const end = p.end ?? LY_END, r = lyNum(p.take ?? p.draw), q = { ...p, stop: at, off: {} };
   const net = age => {
     const f = lyShapeAt(p.shape, age), S = lySteadyAt(q, age), base = Math.max(0, lyNum(p.spend) * f + lyHealthAt(q, age) - S.ss - S.other);
     if (typeof p.tax !== 'function' || !(p.preShare > 0) || base <= 0) return base;
@@ -200,7 +212,7 @@ function lyCounted(p, counted) {
 // THE TWO NUMBERS. Returns { is: { target, age, years }, could: { target, age, years }, counted (true when anything
 // is), raisedBy (the costs that are counted) }. age: null when the saving pace does not get there in 80 years.
 function lyNumbers(p, counted) {
-  const inv = LY_KEYS.reduce((s, k) => s + Math.max(0, lyNum((p.bal || {})[k])), 0), r = lyNum(p.draw);
+  const inv = LY_KEYS.reduce((s, k) => s + Math.max(0, lyNum((p.bal || {})[k])), 0), r = lyNum(p.take ?? p.draw);
   const first = target => { for (let n = 0; n <= 80; n++) if (lyPile(inv, lyNum(p.save), lyNum(p.grow), n) >= target(p.age + n)) return n; return null; };
   const isT = r > 0 ? lyNum(p.spend) / r : null, isN = isT == null ? null : first(() => isT);
   const is = { target: isT, years: isN, age: isN == null ? null : p.age + isN };
@@ -215,3 +227,7 @@ function lyReceipt(before, after) {
   return { off: before.target == null || after.target == null ? null : before.target - after.target,
     months: before.age == null || after.age == null ? null : (before.age - after.age) * 12 };
 }
+// The go-go, slow-go and no-go shares and their source (data/reference-2026.json, retirementPhases), read with lyShapeBands.
+const LY_SHAPE_REF = {"goGo":1,"slowGo":0.85,"noGo":0.75,"slowGoAge":75,"noGoAge":85,"source":"Go-go, slow-go and no-go years (the names are from Michael Stein, The Prosperous Retirement): spending stays at 100% to age 75, then 85% from 75 and 75% from 85. The 85% matches the BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%; FRED series CXUTOTALEXPLB0409M and CXUTOTALEXPLB0408M, read Nov 6 2026 and again through a web search on Nov 27 2026). The survey has no row for 85 and over, so the 75% from 85 is a stated convention (the default of the older suite, money-rooms-v3 data/assumptions.json)"};
+// The share of Social Security that the trust fund report says can still be paid (socialSecurity.trustFund).
+const LY_SS_REF = {"year":2034,"payable":0.83,"source":"The 2026 OASDI Trustees Report (released June 9 2026): the combined OASI and DI trust fund reserves are projected to be depleted in 2034, when continuing income pays about 83% of scheduled benefits (ssa.gov/oact/tr/2026/II_E_conclu.html; SSA press release June 9 2026). The retirement fund alone (OASI) runs out in late 2032, at 78%"};

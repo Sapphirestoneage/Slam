@@ -608,6 +608,17 @@ const PATCH_NOTES = [
       "The rest of setup is one tap away when you want your real picture. Menu: What it is / What it could be.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "Two ways to shrink your FI number",
+    l: [
+      "After the chart, two short screens show what your number could be. Each has Count this, Already doing it and Not for me.",
+      "Spending eases as you age: most people spend less in their late 70s and 80s. Count it and see the dollars off your number.",
+      "Social Security: count all of it, part of it or none of it. The estimate is marked Guess.",
+      "The last screen has both numbers and the chart. If a year is not covered yet, it says why and what to tap.",
+      "On the chart your investments grow 7% a year the whole way, and you take 4%. The rest is a cushion for years the market goes down.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

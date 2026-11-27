@@ -240,6 +240,13 @@ left invested), its 5-year bars, the first age steady income meets the needs and
 switched off; and the two numbers (What it is and its age, What it could be and its age with some things counted,
 and which costs raise it). The second engine settles each year's tax by cutting the range in half, where SLAM goes
 round until it settles. The tax is a made-up table of steps here; in the game it is the tax engine (retireTax).
+Added Nov 27 2026 (run A, step 4): the bands of the spending shape (lyShapeBands: the go-go, slow-go and no-go shares
+of the reference data, in full, at half or at a quarter), worked out again; the two numbers are then checked with
+those bands counted.
+Changed Nov 27 2026 (the owner's answer on growth): the pile on the chart grows at one rate for the whole chart (the
+same rate while working and once drawing), and the two numbers are sized by a separate withdrawal rate (`take`: 4% is
+25 times). The cases give both; some keep a lower rate once drawing, and some leave `take` out, so the old form is
+still checked.
 
 Added Nov 25 2026 (the FIRE sheet, M9I): every year row of the FIRE sheet tab (the balance at year end, the
 withdrawal, spending, the savings rate, % to FI) for each way to take money out that the sheet writes as a formula:

@@ -1,8 +1,8 @@
 # What it is / What it could be (run A, Nov 27 2026)
 
 The first thing a new player of SLAM the Game sees: one number and one chart. This page is the record of what was
-there before, what the flow replaced as the opening, and how the flow is built. Steps 0 to 3 are built (worker 1).
-Step 4 (the two strategy steps), the full last screen and the Krug self-check are the next worker's.
+there before, what the flow replaced as the opening, and how the flow is built. Steps 0 to 4, the last screen and the
+Krug self-check are built.
 
 ## Step 0. What a new player saw before (walked Nov 27 2026, Chromium, 390 wide)
 
@@ -33,7 +33,9 @@ open them ("Finish setup: five short rounds"), with the age, the amounts and the
 | 2 to 5 | Four questions, one at a time, by range chips: age, spending a month, invested, saved a month ("I know it" opens a number box; an exact amount is optional) |
 | after tap 5 | "What it is": the FI number (25 times a year of spending) and the age at today's pace, with "What it could be" beside it. They start equal |
 | 6 | The layer chart |
-| 7 | The last screen: both numbers, Finish setup, Next Steps, Home |
+| 7 | Way 1 of 2, "Spending eases as you age": Count this, Already doing it, Not for me |
+| 8 | Way 2 of 2, "Social Security pays part of it": all of it, part of it, or Not counting on it |
+| 9 | The last screen: both numbers, the chart, what is counted, "More ways to shrink it are coming", Finish setup, Next Steps, Home |
 
 Taps from the landing to the first number: 35 before (to the reveal's FI card), 5 now.
 
@@ -59,23 +61,67 @@ and on Next Steps, and it skips the four questions when the profile has the answ
   (cloud.js). `finishSetupCb` (in `finishSetupBase`), `openSetupCb` (in `openSetup`), `drawSheetCb` (in
   `drawSheetOnce`) and `planTabCb` (in `planTab`) are named parts. No function of another file is replaced.
 
-## For the next step (the strategy screens)
+## Step 4. The two strategy steps
 
-- A step registers itself: `cbStepAdd("shape", view)` puts a screen before the last one. `view()` returns the HTML:
-  start with `head(small, title) + cbTop(C())`, end with `cbFoot()` (the one advice line). `data-a="cbgo"` with
-  `data-v="next"` or `"prev"` moves along the steps.
-- "Count this": `cbCount(id, opts)` returns `{ before, after, receipt: { off, months } }` (dollars off the target,
-  months sooner). `cbCount(id, false)` takes it out. Ids the math reads today (`lyCounted`): `ss` (`{ share }`),
-  `other`, `shape` (`{ bands: [{ from, f }] }`: from this age on, spending is f times today's), `health`, `wtax`.
-  The chart follows what is counted (`cbChart`), and the header animates by itself after a redraw (`drawSheetCb`).
-- The web app's lifetime plan already has go-go / slow-go / no-go factors (`slowGoAge`, `noGoAge` in
-  `js/math/lifetime.js`): look there before writing new math for the spending shape.
+Each screen has: a plain headline, one line of why, the two pinned numbers, a row "What has to go right" (the "i":
+what has to go right, and the backup if it doesn't), the tap presets, "The drop for you" (dollars off the target and
+months sooner, before anything is counted), three buttons (Count this, Already doing it, Not for me), the receipt
+after an answer, the chart, Show the math with the source, Next and Back, and the one advice line.
+
+| Step | Presets | Where the default comes from |
+|------|---------|------------------------------|
+| Spending eases as you age | The typical shape: 100% of today's spending to 75, 85% from 75, 75% from 85. Half as much easing: 92.5% from 75, 87.5% from 85 | `retirementPhases` in `data/reference-2026.json` (the web app's lifetime plan and projection use the same row). BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%), read Nov 6 2026 and again Nov 27 2026. The 75% from 85 is a stated convention: the survey has no row for 85 and over. The names are from Michael Stein, The Prosperous Retirement |
+| Social Security pays part of it | All of it; Count part of it: 83%; Count part of it: 75%; Not counting on it | The estimate is the game's own (`ssEst`, from pay today), always marked Guess: the game has no box for a player's own figure yet. 83% is `socialSecurity.trustFund.payable` (the 2026 OASDI Trustees Report, June 9 2026). 75% is the careful choice of setup |
+
+- The answers: Count this counts it. Already doing it counts it too (it is true of the player) and says "Already
+  yours, and counted". Not for me takes it out. The answer is kept in `c.x.cb.how`.
+- The share of Social Security has one home: `c.x.ss`, the key that setup and the odds already use. The step writes
+  it; "Not counting on it" writes 0.
+- The receipt compares the number with this one step against the number without it (`cbPreview`), so a change of
+  preset never shows a minus.
+- New math: `lyShapeBands(rp, scale)` in `js/math/paylayers.js` turns the shares of the reference data into the bands
+  that `lyShapeAt` already read. The build tool puts `LY_SHAPE_REF` and `LY_SS_REF` (the two reference rows) into the
+  game's copy. The second engine works the bands out again (`tools/audit`).
+- When a year is "Not covered yet" and health insurance before 65 or tax on traditional withdrawals is on the chart
+  and not in the number, the gap line says so and has a button to count each one.
+- Run B adds a step with `cbStepAdd("id", view)`: it goes before the last screen. `cbCount(id, opts)` counts,
+  `cbCount(id, false)` takes out, `cbReceiptWords(receipt)` gives the words, `cbChartCard(K, title, cap)` the chart.
+
+## The Krug self-check (Nov 27 2026, Chromium, a new visitor from the landing)
+
+Three made-up players, by the chips a person like that would tap. Taps are counted from the landing screen (Start is
+tap 1) to the first number on the screen.
+
+| Persona | The four taps | Taps to the first number at 390 | at 1280 | at 1440 |
+|---------|---------------|--------------------------------:|--------:|--------:|
+| 27, renting, $60K invested, no kids | 25 to 29; $3k to $4k; $50k to $100k; $500 to $1k | 5 | 5 | 5 |
+| 38, a couple, a 401(k) match and a mortgage | 35 to 39; $7k to $10k; $250k to $500k; $1k to $2k | 5 | 5 | 5 |
+| 31, self-employed, uneven income | 30 to 34; $3k to $4k; $10k to $50k; $250 to $500 | 5 | 5 | 5 |
+
+- One opening: Start goes to question 1 of the flow. No setup round and no payoff reveal comes first (tested in both
+  walks and in `game/tests/what-it-could-be.js`).
+- Each screen of the flow at each width: no sideways scroll, nothing past the right edge, no "undefined" or "NaN", no
+  console error. The sheet has Back, Home and Close on its top row on every screen.
+- The chart at 390 wide: up to 14 bars of 5 years, the labels readable, the hatched gap with its dollars on the widest gap.
+- What the check changed: (1) the colors. In the one-hue themes (forest, ocean) Work and Social Security were two
+  near greens. The layers now differ by how light they are: Other darkest, then Investments, Work, and Social
+  Security palest; a name is beside each color. (2) After both steps were counted, late years showed "Not covered
+  yet" with no reason given. The line now names the cause (the two costs that are on the chart and not in the number)
+  and has the button to count each. (3) The "i" of a step was a 26px target; the whole row is the button now.
+- The uneven income of the third persona has no place in the four taps: the entry asks one rough saving amount. The
+  rest of setup asks "steady or not".
 
 ## What is assumed (all in Show the math)
 
-- Investments grow 7% a year while you work (the game's `R`) and 4% a year after prices once you draw on them (the
-  game's `SWR`, the rate of the 25 times rule). Today's dollars.
-- Social Security: the game's own estimate from today's pay, from 67. Counted only when the player counts it.
+- Growth (the owner's answer, Nov 27 2026): investments grow 7% a year for the whole chart, while you work and after
+  (the game's `R`). The 4% (the game's `SWR`) is what is taken out: it sizes the two numbers (25 times a year of
+  spending). It is not a growth rate. So the pile is expected to end higher than it started. That is the cushion for
+  years the market goes down, and the last screen and Show the math say so. Today's dollars. In the math: `grow` is the
+  one growth rate, `take` the withdrawal rate; a caller can still give a lower `draw` rate, and none does.
+- Social Security: the game's own estimate from today's pay, from 67. Counted only when the player counts it, at the
+  share the player chose.
+- The spending shape, when counted: the same spending to 75, then the shares above. Total spending only: late health
+  costs can differ.
 - Health insurance of your own from the year work stops until 65: the player's tap, else the typical benchmark plan
   (KFF, plan year 2027, a 40-year-old, before any help with the price), marked a Guess.
 - Tax on traditional withdrawals: the federal tax on that year's traditional money alone (`retireTax`). No state tax,

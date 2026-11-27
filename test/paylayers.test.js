@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt } from '../js/math/paylayers.js';
+import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt } from '../js/math/paylayers.js';
 
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 // a made-up tax: nothing on the first 16,100, then 12%, then 22% over 66,500
@@ -120,4 +120,40 @@ test('the game\'s copy is made from js/math/paylayers.js and is current (node to
   assert.match(html, /<script src="core\/paylayers\.js\?v=[0-9a-f]+"><\/script>/);
   assert.ok(html.indexOf('src="core/withdraw.js') < html.indexOf('src="core/paylayers.js'), 'wayPay loads first');
   assert.ok(html.indexOf('src="core/paylayers.js') < html.indexOf('src="features/couldbe.js'));
+});
+
+test('the spending-shape default: bands from the dated reference data, in full, at half, and off', async () => {
+  const ref = JSON.parse(readFileSync(new URL('../data/reference-2026.json', import.meta.url), 'utf8'));
+  const rp = ref.retirementPhases;
+  assert.deepEqual(lyShapeBands(rp), [{ from: 75, f: 0.85 }, { from: 85, f: 0.75 }]);
+  const half = lyShapeBands(rp, 0.5);
+  near(half[0].f, 0.925); near(half[1].f, 0.875);
+  assert.deepEqual(lyShapeBands(rp, 0), []); assert.deepEqual(lyShapeBands(null), []);
+  assert.deepEqual(lyShapeBands({ goGo: 1, slowGo: 1, noGo: 0.9, slowGoAge: 75, noGoAge: 85 }), [{ from: 85, f: 0.9 }]);
+  assert.match(rp.source, /BLS Consumer Expenditure Survey 2024/); assert.match(rp.source, /read Nov 6 2026/);
+  // the game's copy carries the same reference rows
+  const copy = readFileSync(new URL('../game/core/paylayers.js', import.meta.url), 'utf8');
+  assert.ok(copy.includes('const LY_SHAPE_REF = ' + JSON.stringify(rp) + ';'), 'run node tools/game_paylayers_build.mjs');
+  assert.ok(copy.includes('const LY_SS_REF = ' + JSON.stringify(ref.socialSecurity.trustFund) + ';'), 'run node tools/game_paylayers_build.mjs');
+  // counting the default shape never raises the number
+  const p = { age: 30, spend: 42000, save: 12000, grow: 0.07, draw: 0.04, bal: { tax: 0, pre: 60000, roth: 0, hsa: 0 } };
+  const { lyNumbers } = await import('../js/math/paylayers.js');
+  const a = lyNumbers(p, {}), b = lyNumbers(p, { shape: { bands: lyShapeBands(rp) } }), c = lyNumbers(p, { shape: { bands: half } });
+  assert.ok(b.could.target < c.could.target && c.could.target < a.could.target);
+  assert.ok(b.could.age <= c.could.age && c.could.age <= a.could.age);
+});
+
+test('one growth rate for the whole chart, and a separate withdrawal rate that sizes the numbers (the owner, 2026-11-27)', async () => {
+  const { lyNumbers, lyYears, lyTarget } = await import('../js/math/paylayers.js');
+  const p = { age: 30, spend: 40000, needsShare: 0.6, workPay: 60000, save: 12000, grow: 0.07, take: 0.04, bal: { tax: 0, pre: 0, roth: 100000, hsa: 0 }, saveTo: { roth: 1 } };
+  const N = lyNumbers(p, {});
+  near(N.is.target, 1000000); near(N.could.target, 1000000); near(lyTarget({ ...p, stop: N.is.age }, N.is.age), 1000000);
+  // after work stops the pile still grows 7%: it pays the year and ends higher than it started
+  const rows = lyYears({ ...p, stop: N.is.age }), at = rows.find(r => r.age === N.is.age), before = rows.find(r => r.age === N.is.age - 1);
+  near(at.left, before.left * 1.07 - 40000, 0.01);
+  assert.ok(rows.at(-1).left > at.left && rows.every(r => r.gap === 0));
+  // a caller can still give a lower rate once drawing, and one that gives no take gets draw (the old form)
+  const low = lyYears({ ...p, draw: 0.04, stop: N.is.age }).find(r => r.age === N.is.age);
+  near(low.left, before.left * 1.04 - 40000, 0.01);
+  near(lyNumbers({ ...p, take: undefined, draw: 0.04 }, {}).is.target, 1000000);
 });

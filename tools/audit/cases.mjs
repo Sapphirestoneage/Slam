@@ -25,7 +25,7 @@ import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { ST_KEYS, stList, stMarkers, stWeave, stCard, stBelow } from '../../js/math/statuses.js';
-import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
+import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage, lyShapeBands } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -657,16 +657,21 @@ for (let i = 0; i < N; i++) {
   const tot = bal.tax + bal.pre + bal.roth + bal.hsa, sh = k => (tot > 0 ? bal[k] / tot : k === 'pre' ? 1 : 0);
   const off = {}; for (const k of ['work', 'tax', 'pre', 'roth', 'hsa', 'ss', 'other']) if (rnd() < 0.12) off[k] = true;
   const x = { age, spend, needsShare: between(0.4, 0.95), workPay: Math.round(spend * between(0.7, 2)), save: rnd() < 0.15 ? 0 : money(500, 90000), bal,
-    saveTo: { tax: sh('tax'), pre: sh('pre'), roth: sh('roth'), hsa: sh('hsa') }, preShare: sh('pre'), grow: pick([0.05, 0.07]), draw: pick([0.035, 0.04]),
+    saveTo: { tax: sh('tax'), pre: sh('pre'), roth: sh('roth'), hsa: sh('hsa') }, preShare: sh('pre'), grow: pick([0.05, 0.07]), draw: pick([null, null, 0.035, 0.04]), take: pick([0.035, 0.04]),
     ss: rnd() < 0.15 ? null : { year: money(6000, 60000), age: pick([62, 67, 70]) },
     other: rnd() < 0.35 ? [{ year: money(1200, 40000), from: whole(age, 75), to: rnd() < 0.3 ? whole(76, 90) : null }] : [],
     health: rnd() < 0.2 ? null : { year: money(2400, 30000), until: 65 }, shape: rnd() < 0.3 ? [{ from: 75, f: 0.85 }, { from: 85, f: 0.7 }] : null,
     stop: rnd() < 0.1 ? null : whole(age, 75), off, taxSteps: rnd() < 0.2 ? null : steps };
+  if (x.draw == null) delete x.draw; // one growth rate for the whole chart (the owner's choice, 2026-11-27): `grow` is used
+  if (rnd() < 0.15) { delete x.take; x.draw = x.draw ?? 0.04; } // an older caller: the withdrawal rate is `draw`
   const p = { ...x, tax: x.taxSteps ? taxOf : null };
   const rows = lyYears(p), cov = lyCoverage(rows);
   add('lyYears', x, { rows: rows.map(r => [r.age, r.line, r.work, r.tax, r.pre, r.roth, r.hsa, r.ss, r.other, r.gap, r.wtax, r.health, r.left]), needsAge: lyNeedsAge(rows), share: cov.share, bars: lyBars(rows, 5).map(b => [b.from, b.to, b.line, b.gap, b.inv]) });
   const counted = {}; if (rnd() < 0.6) counted.ss = { share: pick([1, 0.75, 0.5]) }; if (rnd() < 0.4) counted.other = {}; if (rnd() < 0.3) counted.health = {}; if (rnd() < 0.3) counted.wtax = {};
-  if (rnd() < 0.3) counted.shape = { bands: [{ from: 75, f: 0.8 }, { from: 85, f: 0.7 }] };
+  // the spending shape of a strategy step: the bands made from the shares of the reference data, in full or at half
+  const rp = { goGo: 1, slowGo: pick([0.85, 0.8, 0.9]), noGo: pick([0.75, 0.7]), slowGoAge: pick([70, 75]), noGoAge: pick([80, 85]) }, scale = pick([1, 0.5, 0.25]);
+  add('lyShapeBands', { rp, scale }, { bands: lyShapeBands(rp, scale).map(b => [b.from, b.f]) });
+  if (rnd() < 0.3) counted.shape = { bands: lyShapeBands(rp, scale) };
   const Nn = lyNumbers(p, counted);
   add('lyNumbers', { ...x, counted }, { is: [Nn.is.target, Nn.is.age], could: [Nn.could.target, Nn.could.age], counted: Nn.counted, raisedBy: Nn.raisedBy });
 }
