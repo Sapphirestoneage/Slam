@@ -423,7 +423,7 @@ Tests: `game/tests/flow-one-pulse-forward-keep.js` (items 1, 3, 5), `game/tests/
 
 ## RUN 15: CC-1 "Five strategies" (Nov 27 2026)
 
-Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Part A is done. Parts B to E are open.
+Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A and B are done. Parts C to E are open.
 
 | Item | Status | What | Where |
 |---|---|---|---|
@@ -433,10 +433,13 @@ Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Part A is done. Part
 | A4. Report a bug | Was built; the public template is new | The game had it: Menu, Report a bug or idea (and Report on each screen), three categories, a note and a picture if wanted, the screen name and version by themselves, the admin inbox. The table is in the database. New: the issue template for public bugs, which says not to post money details. | `features/fbreport.js`, `core/reportcore.js`, `.github/ISSUE_TEMPLATE/bug_report.yml` |
 | A5. Privacy page | Done (a draft, not legal advice) | A short version at the top (what, where, who, delete, not sold, no affiliates), the weekly backup, and the note for Eli in the code. The links at sign-up and in the Menu were there. | `game/privacy.html` |
 | A6. What's new | Done | The Menu sheet was there. New: one note on Home when SLAM changed since the last look, with Got it and Don't show again; the sheet turns it back on. | `homeWhatsNew` in `features/founding.js`; `game/tests/whats-new-note-and-test-build.js` |
-| B. Faster (8 to 11) | Open | | |
+| B8. Time to first number | Done; one SQL file waits | The seconds (only while the page is in view) and the taps from the first screen to What it is, with the build version and signed in or not. Nothing personal. The admin page: median, longest, "Target: under 2 minutes", amber when over. Players with an account are counted now; visitors with no account after the file is pasted. | `game/core/firstnum.js`, `amFirstHTML` in `account/adminmore.js`, `supabase/migrations/20261127150000_first_numbers.sql` (NOT APPLIED) |
+| B9. Questions that can wait | Done | Shared money and the number of roommates are not asked in setup. Each is a quest of Next Steps with one question; the answer goes to the same key. A quest opens Sharing costs fairly for a player with roommates or a partner. Setup never asked about subscription splits. | `game/features/waitq.js`; `smQs` in `screens/smart.js` |
+| B10. Starter situations | Done; some values stay empty by rule | Ten starting points, one table. One row on What you want opens the list; no added tap for a player who passes it. Typical values (a Guess, greyed) from the reference data; a value with no fitting figure is asked. One screen to confirm, then the number. | `game/features/starter.js` (`SIT_LIST`, `sitApply`) |
+| B11. Pre-call intake | Built; not tried with a real account | `/game/intake/` asks the questions of Find your era by taps, then the game opens its sign-up screen. With the invite link (`?coach=1`) the lead shows in the coach view with the flag New lead, until Mark as seen. No database change. | `game/intake/`, `ERA_PAGE` in `era/era.js`, `erLead` in `features/erain.js`, `cpLead` in `account/coachpage.js` |
 | C. Easier (12 to 17) | Open | | |
 | D. Better (18 to 20) | Open | | |
 | E. Cheaper (21 to 23) | Open | | |
 | The finish (publish, the summary, What's new entry) | Open | | |
 
-Questions and the placeholders of part A: 661.
+Questions and the placeholders of part A: 661. Of part B: 662.
