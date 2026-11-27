@@ -1221,6 +1221,19 @@ def layers_check(fn, x, o, ck):
             ck('the age of a band', got[0], w[0], 0)
             ck('the share of a band', got[1], w[1], 1e-9)
         return
+    if fn == 'lyLifetime':
+        # the lifetime spending total: the years are counted in closed form by the stretches of the shape, not year by year
+        first, last = x['age'], 95
+        edges = sorted(b['from'] for b in (x.get('shape') or []) if first < b['from'] <= last)
+        cuts, total = [first] + edges + [last + 1], 0.0
+        for lo, hi in zip(cuts, cuts[1:]):
+            total += x['spend'] * shape_at(x.get('shape'), lo) * (hi - lo)
+        ck('the lifetime total', o['total'], total, 0.01)
+        ck('the number of years', o['years'], last - first + 1, 0)
+        ck('the first age', o['from'], first, 0)
+        ck('the last age', o['to'], last, 0)
+        ck('a year of spending', o['year'], x['spend'], 1e-9)
+        return
     if fn == 'lyYears':
         off, stop = x.get('off') or {}, x.get('stop')
         bal = {k: max(0.0, x['bal'].get(k) or 0) for k in keys}
@@ -2122,7 +2135,7 @@ def run(cases, ref, il=None):
             family_check(fn, x, o, ck)
         elif fn in ('qsStats', 'qsCapacity', 'qsFails', 'qsHidden', 'qsRank', 'qsDuel'):
             quest_check(fn, x, o, ck)
-        elif fn in ('lyYears', 'lyNumbers', 'lyShapeBands'):
+        elif fn in ('lyYears', 'lyNumbers', 'lyShapeBands', 'lyLifetime'):
             layers_check(fn, x, o, ck)
         elif fn in ('peNetWorth', 'peIncome', 'peSaving'):
             peers_check(fn, x, o, ck)

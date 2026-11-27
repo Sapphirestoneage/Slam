@@ -25,7 +25,7 @@ import { spousalExcess } from '../../js/math/socialsecurity.js';
 import { crRoi, crStack, crVestLeft, crRothTrad, crHack, crHop } from '../../js/math/career.js';
 import { tpCost, tpPoints, tpSplit, tpJourney } from '../../js/math/trip.js';
 import { ST_KEYS, stList, stMarkers, stWeave, stCard, stBelow } from '../../js/math/statuses.js';
-import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage, lyShapeBands } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
+import { lyYears, lyBars, lyNeedsAge, lyNumbers, lyCoverage, lyShapeBands, lyLifetime } from '../../js/math/paylayers.js'; // What it is / What it could be (run A, Nov 27 2026)
 import { rcRoute, rcTriage, rcRefill, rcSafeLine, rcAudit, rcCoast, RC_ORDER } from '../../js/math/recalc.js';
 import { snOutside, snFixCheck, snClimb, SN_RULES } from '../../js/math/sins.js';
 import { Store, newHousehold } from '../../js/records.js';
@@ -672,6 +672,9 @@ for (let i = 0; i < N; i++) {
   const rp = { goGo: 1, slowGo: pick([0.85, 0.8, 0.9]), noGo: pick([0.75, 0.7]), slowGoAge: pick([70, 75]), noGoAge: pick([80, 85]) }, scale = pick([1, 0.5, 0.25]);
   add('lyShapeBands', { rp, scale }, { bands: lyShapeBands(rp, scale).map(b => [b.from, b.f]) });
   if (rnd() < 0.3) counted.shape = { bands: lyShapeBands(rp, scale) };
+  // the lifetime spending total (Batch B, phase 1): the years from today to 95, with the spending shape or without
+  const lifeShape = rnd() < 0.5 ? null : lyShapeBands(rp, scale), Lf = lyLifetime({ age, spend, shape: lifeShape });
+  add('lyLifetime', { age, spend, shape: lifeShape }, { total: Lf.total, years: Lf.years, from: Lf.from, to: Lf.to, year: Lf.year });
   const Nn = lyNumbers(p, counted);
   add('lyNumbers', { ...x, counted }, { is: [Nn.is.target, Nn.is.age], could: [Nn.could.target, Nn.could.age], counted: Nn.counted, raisedBy: Nn.raisedBy });
 }

@@ -174,11 +174,10 @@
     /<span class="pill kitst">Guess<\/span>/.test(h) && /statement at ssa\.gov/.test(text(h))
   );
   chk(
-    "the presets: all of it, Count part of it, Not counting on it",
-    /All of it/.test(h) &&
-      /Count part of it: 83%/.test(h) &&
-      /Count part of it: 75%/.test(h) &&
-      /Not counting on it/.test(h) &&
+    "the presets are three, in this order: Not counting on it, Count part of it, Count all of it",
+    (h.match(/data-a="cbpick"/g) || []).length === 3 &&
+      (h.match(/data-a="cbpick"[^>]*>([^<]+)</g) || []).map(x => x.replace(/^.*>([^<]+)<$/, "$1")).join("|") ===
+        "Not counting on it|Count part of it|Count all of it" &&
       LY_SS_REF.payable === 0.83
   );
   chk(
@@ -211,9 +210,12 @@
   );
   X("cbdo", "count", "ss");
   chk("Count this with Not counting on it chosen counts nothing", !cbCounted(c).ss && c.x.ss === 0);
+  /* a player who chose 75% in setup: Count part of it keeps that share (c.x.ss is its one home) */
+  c.x.ss = 0.75;
+  chk("a part share from setup is the share of Count part of it", cbWaySets("ss", c)[1].share === 0.75);
   X("cbpick", "0.75");
   X("cbdo", "count", "ss");
-  chk("75% is the careful choice of setup", c.x.ss === 0.75 && !!cbCounted(c).ss);
+  chk("75%, the careful choice of setup, stays and is counted", c.x.ss === 0.75 && !!cbCounted(c).ss);
   /* a layer that is off: Count this switches it on again */
   cbToggle("ss");
   chk("Social Security switched off on the chart is not counted", cbNumbers(c).could.target === before);
@@ -225,7 +227,7 @@
     sums = true,
     cover = true;
   const sh = cbWaySets("shape"),
-    ssS = cbWaySets("ss");
+    ssS = cbWaySets("ss", c);
   [null].concat(sh).forEach(a => {
     ssS.forEach(b => {
       if (a) cbWayDo("shape", "count", a.v);
@@ -297,7 +299,8 @@
       /data-cbn="is"/.test(h) &&
       /data-cbn="could"/.test(h) &&
       /dkstack/.test(h) &&
-      /More ways to shrink it are coming\./.test(text(h))
+      /data-fid="cb:ways"/.test(h) &&
+      !/coming/i.test(text(h))
   );
   chk(
     "no dead end: the rest of setup, Next Steps and Home are buttons",

@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt } from '../js/math/paylayers.js';
+import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt, lyLifetime } from '../js/math/paylayers.js';
 
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 // a made-up tax: nothing on the first 16,100, then 12%, then 22% over 66,500
@@ -156,4 +156,22 @@ test('one growth rate for the whole chart, and a separate withdrawal rate that s
   const low = lyYears({ ...p, draw: 0.04, stop: N.is.age }).find(r => r.age === N.is.age);
   near(low.left, before.left * 1.04 - 40000, 0.01);
   near(lyNumbers({ ...p, take: undefined, draw: 0.04 }, {}).is.target, 1000000);
+});
+
+test('the lifetime spending total: today\'s spending for each year from today to 95, with a shape or without', () => {
+  const L = lyLifetime({ age: 30, spend: 42000 });
+  assert.deepEqual([L.years, L.from, L.to, L.year], [66, 30, LY_END, 42000]);
+  near(L.total, 42000 * 66);
+  // it is the needs and wants of the chart, added up: no health insurance, no tax
+  const rows = lyYears(base({ stop: 50 }));
+  near(lyLifetime(base({ stop: 50 })).total, rows.reduce((s, r) => s + r.needs + r.wants, 0));
+  // with a shape the late years cost less: 45 years at 100%, 10 at 85%, 11 at 75%
+  const S = lyLifetime({ age: 30, spend: 42000, shape: [{ from: 75, f: 0.85 }, { from: 85, f: 0.75 }] });
+  near(S.total, 42000 * (45 + 10 * 0.85 + 11 * 0.75));
+  assert.ok(S.total < L.total);
+  const rows2 = lyYears(base({ stop: 50, shape: [{ from: 75, f: 0.85 }, { from: 85, f: 0.75 }] }));
+  near(lyLifetime(base({ shape: [{ from: 75, f: 0.85 }, { from: 85, f: 0.75 }] })).total, rows2.reduce((s, r) => s + r.needs + r.wants, 0));
+  // at the last age there is one year; no spending gives 0
+  assert.equal(lyLifetime({ age: 95, spend: 1000 }).years, 1);
+  assert.equal(lyLifetime({ age: 40, spend: null }).total, 0);
 });

@@ -16,7 +16,7 @@
                answers of the entry before the profile exists, and the typed number).
    OUTPUT      Math: cbRng, cbRows, cbHas, cbState, cbHealth, cbParams, cbCounted, cbNumbers, cbChart,
                cbLayerInfo, cbCount, cbToggle, cbReceipt, cbTaps, cbBook, cbWaySets, cbWayPick, cbPreview,
-               cbWayDo, cbWayState. Views: cbTop, cbFoot, cbSheet, cbWayView (a strategy step), cbEndView,
+               cbWayDo, cbWayState, cbLife (the lifetime spending total), cbPartShare, cbWays, cbWayNo. Views: cbTop, cbFoot, cbSheet, cbWayView (a strategy step), cbEndView,
                cbStepAdd (a later file adds a step), cbChartHtml. Parts of functions in other files:
                cbStart (doorBegin in door.js, ACT.start in ui.js, clFirstGame in cloud.js),
                finishSetupCb (finishSetupBase in ui.js), openSetupCb (openSetup in ui.js),
@@ -24,7 +24,7 @@
                cb, cbset, cbknow, cbuse, cbgo, cbtog, cbsplit, cbzoom, cblayer, cbcount, cbrest, cbsteps,
                cbpick, cbdo.
    DEPENDS ON  core/report.js, core/paylayers.js (lyNumbers, lyYears, lyBars, lyNeedsAge, lyLayerSum,
-               lyCoverage, lyReceipt, lyShapeBands, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, LY_END,
+               lyCoverage, lyReceipt, lyShapeBands, lyLifetime, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, LY_END,
                LY_MEDICARE, LY_SHAPE_REF, LY_SS_REF),
                core/engine.js (derive, newChar, passives, txSplit, syncAll, R, SWR, SPEND_K, SPLIT),
                core/benefitsplan.js (BP_REF, bpRules, bpBenchmark), core/metrics.js (knSt),
@@ -48,12 +48,13 @@
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
 const CB = { last: null, rest: false, taps: 0 };
-/* The steps after the entry, in order. A later file adds a step before "end" with cbStepAdd(). */
+/* The steps after the entry, in order. A later file adds a step before "end" with cbStepAdd(). A step with
+   way: true is a way to shrink the number: it is numbered ("Way 2 of 5") and it is a row on the last screen. */
 const CB_STEPS = [
   { id: "is", view: () => cbIsView() },
   { id: "chart", view: () => cbChartView() },
-  { id: "shape", view: () => cbWayView("shape") },
-  { id: "ss", view: () => cbWayView("ss") },
+  { id: "shape", way: true, view: () => cbWayView("shape") },
+  { id: "ss", way: true, view: () => cbWayView("ss") },
   { id: "end", view: () => cbEndView() },
 ];
 /* The range chips of the four questions: [low, high]. The amount of a chip is the middle. A last chip with no
@@ -481,41 +482,73 @@ function cbCount(id, opts) {
 /* THE STRATEGY STEPS (run A, step 4). The words of each step. */
 const CB_WAYS = {
   shape: {
-    small: "Way 1 of 2",
     title: "Spending eases as you age",
     why: "Most people spend less in their late 70s and 80s than in the first years after work. The 25 times rule counts today's spending for every year.",
     term: "cbshape",
     ask: "Which shape?",
   },
   ss: {
-    small: "Way 2 of 2",
     title: "Social Security pays part of it",
     why: "A monthly payment for life from 67 means your investments have less to pay for. The 25 times rule leaves it out.",
     term: "cbss",
     ask: "How much of it?",
   },
 };
+/* The share of "Count part of it": a part share the profile already holds (setup offers 75%; c.x.ss is its one
+   home), else the share the trust fund report says can still be paid (LY_SS_REF). */
+function cbPartShare(c) {
+  const held = c && c.x && c.x.ss;
+  return held > 0 && held < 1 ? held : LY_SS_REF.payable;
+}
 /* The tap presets of a step: [{ v (the value of the chip), l (its words), bands or share }]. The spending shape
-   comes from the reference data (LY_SHAPE_REF: the BLS survey), in full or at half. The shares of Social Security:
-   all of it, the share the trust fund report says can still be paid (LY_SS_REF), three quarters (the careful choice
-   of setup), none. */
-function cbWaySets(id) {
+   comes from the reference data (LY_SHAPE_REF: the BLS survey), in full or at half. Social Security has three
+   (Batch B, phase 1): none, a part (cbPartShare), all of it. c: the profile, for the part share. */
+function cbWaySets(id, c) {
   if (id === "shape")
     return [
       { v: "1", l: "The typical shape", scale: 1 },
       { v: "0.5", l: "Half as much easing", scale: 0.5 },
     ].map(o => Object.assign(o, { bands: lyShapeBands(LY_SHAPE_REF, o.scale) }));
-  const pay = LY_SS_REF.payable;
+  const part = cbPartShare(c);
   return [
-    { v: "1", l: "All of it", share: 1 },
-    { v: String(pay), l: "Count part of it: " + Math.round(pay * 100) + "%", share: pay, part: true },
-    { v: "0.75", l: "Count part of it: 75%", share: 0.75, part: true },
     { v: "0", l: "Not counting on it", share: 0 },
+    { v: String(part), l: "Count part of it", share: part, part: true, pct: Math.round(part * 100) },
+    { v: "1", l: "Count all of it", share: 1, pct: 100 },
   ];
 }
-/* The preset that is chosen: the tap on this screen (pick), else what the profile holds, else the first. */
+/* The steps that are ways to shrink the number, in the order of the flow: [{ id, title, n (1, 2, ...), of }]. */
+function cbWays() {
+  const ways = CB_STEPS.filter(s => s.way);
+  return ways.map((s, i) => ({
+    id: s.id,
+    title: s.title || (CB_WAYS[s.id] || {}).title || s.id,
+    n: i + 1,
+    of: ways.length,
+  }));
+}
+/* The small heading of a way: "Way 2 of 5". */
+function cbWayNo(id) {
+  const w = cbWays().find(x => x.id === id);
+  return w ? "Way " + w.n + " of " + w.of : "";
+}
+/* The lifetime spending total of "What it is": what the years from today to the end of the chart cost at today's
+   spending (core/paylayers.js lyLifetime), with the round figure the screen shows, a month of spending, and whether
+   it is more than the FI number. */
+function cbLife(c, d, N) {
+  d = d || derive(c);
+  N = N || cbNumbers(c, d);
+  const L = lyLifetime({ age: c.age, spend: d.fiSpend, end: LY_END });
+  /* true when the total is more than the FI number (it is for anyone under about 70) */
+  L.aboveFi = N.is.target != null && L.total > N.is.target;
+  L.shown = Math.round(L.total / 1000) * 1000;
+  L.month = L.year / 12;
+  L.st = cbState(c);
+  return L;
+}
+/* The preset that is chosen: the tap on this screen (pick), else what the profile holds, else the first shape, or
+   all of Social Security. */
 function cbWayPick(c, id, pick) {
-  const sets = cbWaySets(id),
+  const sets = cbWaySets(id, c),
     cnt = cbCounted(c),
     cur =
       pick != null
@@ -525,10 +558,12 @@ function cbWayPick(c, id, pick) {
           : c.x && c.x.ss != null
             ? String(c.x.ss)
             : null;
-  return sets.find(o => o.v === cur) || sets[0];
+  return sets.find(o => o.v === cur) || (id === "ss" ? sets[sets.length - 1] : sets[0]);
 }
 /* What a step does for this player, with nothing saved: the two numbers without it (before) and with it (after),
-   and the receipt. has: false when there is nothing to count (no Social Security estimate). */
+   and the receipt. has: false when there is nothing to count (no Social Security estimate). For the words under the
+   chips: shown (each band of the shape: { from, pct, year }), ssMonth (the estimate a month) and ssCount (the part
+   of it this choice counts, a month). */
 function cbPreview(c, id, pick) {
   const set = cbWayPick(c, id, pick),
     p = cbParams(c),
@@ -544,7 +579,17 @@ function cbPreview(c, id, pick) {
   }
   const before = lyNumbers(p, cnt),
     after = has && (id === "shape" || set.share > 0) ? lyNumbers(p, Object.assign({}, cnt, { [id]: opts })) : before;
-  return { set, has, before, after, receipt: lyReceipt(before.could, after.could), ss: p.ss };
+  return {
+    set,
+    has,
+    before,
+    after,
+    receipt: lyReceipt(before.could, after.could),
+    ss: p.ss,
+    shown: (set.bands || []).map(b => ({ from: b.from, pct: Math.round(b.f * 100), year: p.spend * b.f })),
+    ssMonth: p.ss ? p.ss.full / 12 : null,
+    ssCount: p.ss ? (p.ss.full * (set.share || 0)) / 12 : null,
+  };
 }
 /* The answer of a step. how: count (Count this), did (Already doing it: it is true of this player, so it is
    counted too), no (Not for me: it is taken out). Social Security writes its share to c.x.ss. Returns the preview
@@ -594,7 +639,8 @@ function cbTaps() {
 /* The spreadsheet of the plan (book.js): the standard number. */
 function cbBook(c) {
   const d = derive(c),
-    N = lyNumbers(cbParams(c, d), {});
+    N = lyNumbers(cbParams(c, d), {}),
+    L = lyLifetime({ age: c.age, spend: d.fiSpend, end: LY_END });
   return {
     title: "What it is: the FI number the standard way",
     rows: [
@@ -605,6 +651,13 @@ function cbBook(c) {
         label: "What it is: spending a year divided by the rate (25 times)",
         v: N.is.target,
         f: "={cb_spend}/{cb_rate}",
+      },
+      { id: "cb_years", label: "The years from your age today to " + LY_END, v: L.years },
+      {
+        id: "cb_life",
+        label: "The rest of your life costs: spending a year times those years (today's dollars)",
+        v: L.total,
+        f: "={cb_spend}*{cb_years}",
       },
       {
         id: "cb_slow",
@@ -715,14 +768,27 @@ function cbIsView() {
   const c = C(),
     d = derive(c),
     N = cbNumbers(c, d),
+    L = cbLife(c, d, N),
     made = !!(c.x && c.x.cb && c.x.cb.a && !c.x.cb.setup);
   return (
     head("Your number", "What it is") +
     cbTop(c) +
     `<div class="small">This is your FI number the standard way: enough invested that work is optional. It is 25 times what you spend in a year. ${kitInfo("cbfi")}</div>` +
     `<div class="tile small"><b>${N.is.age == null ? "At today's pace the date is still open" : N.is.years === 0 ? "You are there now" : "At today's pace: age " + N.is.age}</b><div class="tiny muted">${N.is.age == null ? "The saving each month does not reach it yet. The next screens show what can move it." : "What you have invested grows, and what you save each month goes in."}</div></div>` +
+    `<div class="tile small cblife" data-fid="cb:life"><div class="row between"><b>The rest of your life costs about ${cbM(L.shown)}</b>${kitPill(L.st)}</div><div class="tiny muted">${L.years} years of today's spending, from ${L.from} to ${L.to}, in today's dollars. ${L.aboveFi ? "Your FI number is smaller: what is invested keeps growing while you spend from it. " : ""}${kitInfo("cblife")}</div></div>` +
     mathBox([
-      "Spending: " + cbM(d.fiSpend / 12) + " a month, " + cbM(d.fiSpend) + " a year.",
+      "Spending: " + cbM(L.month) + " a month, " + cbM(L.year) + " a year.",
+      "The rest of your life: " +
+        cbM(L.year) +
+        " a year x " +
+        L.years +
+        " years (age " +
+        L.from +
+        " to " +
+        L.to +
+        ") = " +
+        cbM(L.total) +
+        ". Today's dollars, the same spending every year, no growth counted.",
       "What it is: " +
         cbM(d.fiSpend) +
         " x 25 = " +
@@ -979,7 +1045,7 @@ function cbWayView(id) {
     K = cbChart(c),
     spend = K.p.spend,
     held = St.counted ? cbPreview(c, id) : null,
-    chips = cbWaySets(id)
+    chips = cbWaySets(id, c)
       .map(
         o =>
           `<button class="chip ${o.v === V.set.v ? "on" : ""}" data-a="cbpick" data-v="${o.v}" aria-pressed="${o.v === V.set.v ? "true" : "false"}">${esc(o.l)}</button>`
@@ -995,26 +1061,18 @@ function cbWayView(id) {
           : "",
     sub =
       id === "shape"
-        ? V.set.bands
-            .map(
-              b =>
-                "from " +
-                b.from +
-                ": " +
-                Math.round(b.f * 100) +
-                "% of today's spending, " +
-                cbM(spend * b.f) +
-                " a year"
-            )
+        ? V.shown
+            .map(b => "from " + b.from + ": " + b.pct + "% of today's spending, " + cbM(b.year) + " a year")
             .join("; ")
         : V.ss && V.has
           ? "The estimate: " +
-            cbM(V.ss.full / 12) +
+            cbM(V.ssMonth) +
             " a month from age " +
             V.ss.age +
-            ". This choice counts " +
-            cbM((V.ss.full * V.set.share) / 12) +
-            " a month."
+            ". " +
+            (V.set.share > 0
+              ? "This choice counts " + V.set.pct + "% of it: " + cbM(V.ssCount) + " a month."
+              : "This choice counts none of it.")
           : "No estimate yet: it needs your pay from work.",
     math =
       id === "shape"
@@ -1040,7 +1098,7 @@ function cbWayView(id) {
         : [
             V.ss && V.has
               ? "The estimate: " +
-                cbM(V.ss.full / 12) +
+                cbM(V.ssMonth) +
                 " a month from age " +
                 V.ss.age +
                 ", from your pay today and the years you work (the game's own estimate, the bend points of " +
@@ -1049,14 +1107,17 @@ function cbWayView(id) {
               : "No estimate yet: it needs your pay from work.",
             "It is a Guess: it comes from your pay today. Your own figure is on your statement at ssa.gov.",
             "The share you choose is the share of that estimate the plan counts, here and in the rest of the game.",
-            Math.round(LY_SS_REF.payable * 100) + "%: " + LY_SS_REF.source + ".",
-            "75% is the careful choice the setup of the game offers.",
+            "Count part of it: " +
+              Math.round(LY_SS_REF.payable * 100) +
+              "%, unless you already chose another part in setup. " +
+              LY_SS_REF.source +
+              ".",
             "What it could be: each year's cost less the Social Security you count, from the day work stops to " +
               LY_END +
               " and beyond.",
           ];
   return (
-    head(Wy.small, Wy.title) +
+    head(cbWayNo(id), Wy.title) +
     cbTop(c) +
     `<div class="small">${esc(Wy.why)}</div>` +
     `<button class="rowbtn cbwhy" data-a="info" data-k="term:${Wy.term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
@@ -1084,9 +1145,10 @@ function cbEndView() {
     N = K.N,
     R = lyReceipt(N.is, N.could),
     done = !!(c.x && c.x.cb && c.x.cb.setup) || !(c.x && c.x.cb && c.x.cb.a),
-    way = id => {
-      const St = cbWayState(c, id);
-      return `<button class="rowbtn" data-a="cbgo" data-v="${id}"><span><b>${esc(CB_WAYS[id].title)}</b><div class="tiny muted">${St.how === "did" ? "Already yours, and counted" : St.counted ? "Counted" : St.how === "no" ? "Left out" : "Not counted yet"}. Tap to change.</div></span><span class="caret">›</span></button>`;
+    way = w => {
+      const id = w.id,
+        St = cbWayState(c, id);
+      return `<button class="rowbtn" data-a="cbgo" data-v="${id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${St.how === "did" ? "Already yours, and counted" : St.counted ? "Counted" : St.how === "no" ? "Left out" : "Not counted yet"}. Tap to change.</div></span><span class="caret">›</span></button>`;
     };
   return (
     head("Where this leaves you", "Your two numbers") +
@@ -1096,8 +1158,11 @@ function cbEndView() {
     cbGapLine(K) +
     cbNeedsLine(K) +
     `<div class="tile small" data-fid="cb:cushion"><b>${esc(cbCushionWords(K.p))}</b><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". Ending with more than you started is the point: it is there in case the market goes down." : "The number is 25 times a year of spending for that reason: you take less than the growth."}</div></div>` +
-    dkCard("What you counted", `<div class="stack" style="gap:6px">${way("shape")}${way("ss")}</div>`) +
-    `<div class="small" data-fid="cb:more"><b>More ways to shrink it are coming.</b> Until then, the two below take you on.</div>` +
+    dkCard(
+      "What you counted",
+      `<div class="stack" style="gap:6px" data-fid="cb:ways">${cbWays().map(way).join("")}</div>`,
+      { cap: "Every way in the flow, in order. Tap one to change your answer." }
+    ) +
     (done
       ? ""
       : `<button class="primary wide go" data-a="cbrest">Finish setup: five short rounds</button><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div>`) +
@@ -1122,11 +1187,16 @@ function cbSheet() {
   const st = CB_STEPS.find(s => s.id === w.step) || CB_STEPS[0];
   return st.view();
 }
-/* A later file adds a step of the flow: cbStepAdd("shape", view) puts it before the last screen. view() returns
-   the HTML of the sheet; it starts with head() and cbTop(C()) and ends with cbFoot(). */
-function cbStepAdd(id, view) {
+/* A later file adds a step of the flow: cbStepAdd("taxes", view, { title: "Pay less tax on the way out" }) puts it
+   before the last screen. view() returns the HTML of the sheet; it starts with head(cbWayNo(id), title) and
+   cbTop(C()) and ends with cbFoot(). A step with a title is a way to shrink the number: it is numbered with the
+   others (cbWayNo) and is a row of "What you counted" on the last screen, which reads cbWayState(c, id): what
+   cbCount(id, opts) counted and the answer in c.x.cb.how[id] (count, did, no). A step with no title (a card between
+   the ways) is only a screen of the flow. */
+function cbStepAdd(id, view, meta) {
   if (CB_STEPS.some(s => s.id === id)) return;
-  CB_STEPS.splice(CB_STEPS.length - 1, 0, { id, view });
+  const m = meta || {};
+  CB_STEPS.splice(CB_STEPS.length - 1, 0, Object.assign({}, m, { id, view, way: !!m.title }));
 }
 /* Open the flow: the entry for a new player, else "What it is". */
 function cbOpen(step) {
@@ -1400,6 +1470,14 @@ kitTerms({
   cbfi: [
     "FI number",
     "FI means financial independence: enough invested that work is optional. The standard way to find the number is 25 times what you spend in a year. It comes from the 4% rule: take out 4% of the money in the first year, and it has lasted 30 years in most of market history.",
+  ],
+});
+kitTerms({
+  cblife: [
+    "The rest of your life costs",
+    "What you spend in a year today, counted for every year from your age now to " +
+      LY_END +
+      ". It is in today's dollars and counts no growth. Your FI number is much smaller, because what you have invested is expected to keep growing while you spend from it. The chart on the next screen shows which layer pays for each of those years.",
   ],
 });
 kitTerms({

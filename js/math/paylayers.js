@@ -4,6 +4,7 @@
 // the age the investments reach it at today's saving pace. "What it could be" is the same number after the things a
 // person chose to count (Social Security, other steady income, a spending shape, and the two costs the 25 times rule
 // leaves out: health insurance before 65 and tax on traditional withdrawals). With nothing counted the two are equal.
+// lyLifetime is the lifetime spending total: what the years from today to 95 cost (Batch B, phase 1).
 // The layer chart is one year-by-year run from today to 95: what the year costs (needs, wants, health insurance before
 // 65, tax on traditional withdrawals) and what pays for it (work, the four kinds of account, Social Security, other
 // steady income), with what is left over as "not covered yet". In every year the layers plus the gap equal the line.
@@ -159,6 +160,16 @@ export function lyCoverage(rows) {
   return { line, gap, paid: line - gap, share: line > 0 ? (line - gap) / line : 1 };
 }
 
+// THE LIFETIME SPENDING TOTAL: what the years from today's age to the end of the chart cost, in today's dollars. Each
+// year is today's spending a year times the spending shape of that age (no shape: the same every year, the standard
+// way). No health insurance, no tax, no growth: it is what is spent, not what must be invested.
+// Returns { total, years, from, to, year (today's spending a year) }.
+export function lyLifetime(p) {
+  const end = p.end ?? LY_END, year = lyNum(p.spend);
+  let total = 0, years = 0;
+  for (let age = p.age; age <= end; age++) { total += year * lyShapeAt(p.shape, age); years++; }
+  return { total, years, from: p.age, to: end, year };
+}
 // THE TARGET AT AN AGE: what must be invested on the day work stops at `at`, so that it pays each year's line less the
 // steady income to the end, and then keeps paying the last year's amount for good (the same promise as the 25 times
 // rule). Each year is counted back at the withdrawal rate `take` (the careful rate of the 25 times rule, not the growth

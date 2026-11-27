@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 207. Lines: 121,943. Top-level functions: 2975. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 207. Lines: 122,036. Top-level functions: 2980. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -45,7 +45,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 31 | `core/feel.js` | 197 | 4 | 0 | 0 | Game feel (run Finish everything partly built, Part 20): start at the finish line (work back from what you need to what today has to look like), the r... |
 | 32 | `core/recalc.js` | 480 | 18 | 0 | 0 | The math of Recalculating: the route (old date, new date), the triage when the bills are more than the income, the emergency fund refill, the safe-to-... |
 | 33 | `core/statuses.js` | 134 | 7 | 1 | 0 | The FIRE statuses: Coast, Lean, Barista, FI, Chubby and Fat as markers on the one path |
-| 34 | `core/paylayers.js` | 234 | 15 | 2 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
+| 34 | `core/paylayers.js` | 245 | 16 | 2 | 0 | What it is / What it could be: the standard FI number and its age, the same number after the things a player counted, and the year-by-year run of the ... |
 | 35 | `core/jobs.js` | 354 | 18 | 0 | 0 | The math of the Job of Existing (run JOE-1): which of the six unpaid jobs a player holds, from answers already given; the hours a month of running the... |
 | 36 | `core/hhold.js` | 320 | 8 | 0 | 0 | The math of Households (run Finish everything partly built, Part 12): the same question for everyone and its talk points, the answer code for two phon... |
 | 37 | `core/enough.js` | 554 | 11 | 0 | 0 | The math of Lifestyle creep and enough (run Not built, groups 1 to 5, Part 3): spending growth next to income growth per category, year over year, the... |
@@ -183,7 +183,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 169 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 170 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 171 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 172 | `data/patchnotes.js` | 625 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 172 | `data/patchnotes.js` | 626 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 173 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
 | 174 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 175 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
@@ -211,14 +211,14 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 197 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 198 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 199 | `features/results.js` | 569 | 22 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 200 | `features/couldbe.js` | 1,428 | 48 | 13 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 200 | `features/couldbe.js` | 1,506 | 52 | 14 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
 | 201 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
 | 202 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
 | 203 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
 | 204 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 205 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 206 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 207 | `features/built.js` | 1,894 | 4 | 27 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 207 | `features/built.js` | 1,897 | 4 | 27 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

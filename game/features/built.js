@@ -776,11 +776,14 @@ const WB = [
       WB_FN("cbStepAdd") &&
       WB_FN("cbWayDo") &&
       WB_FN("lyShapeBands") &&
+      WB_FN("lyLifetime") &&
+      WB_FN("cbLife") &&
+      WB_FN("cbWays") &&
       WB_HAS("cbdo") &&
       WB_HAS("cb") &&
       WB_HAS("cbcount") &&
       WB_HAS("cbrest"),
-    "The first thing a new player sees: four taps (age, spending, invested, saved a month), then the FI number the standard way and its age. Two numbers stay on top: What it is and What it could be. The chart shows which layer pays for each year to 95 (work, investments, Social Security, other), what is not covered yet, and the two costs the 25 times rule leaves out. Then two ways to shrink it, each with Count this, Already doing it and Not for me: spending that eases with age (the typical shape of the BLS survey) and Social Security (all, part or none). The last screen has both numbers, the chart, and the ways on to the rest of setup and Next Steps. Menu: What it is / What it could be.",
+    "The first thing a new player sees: four taps (age, spending, invested, saved a month), then the FI number the standard way, its age, and what the rest of your life costs at today's spending. Two numbers stay on top: What it is and What it could be. The chart shows which layer pays for each year to 95 (work, investments, Social Security, other), what is not covered yet, and the two costs the 25 times rule leaves out. Then two ways to shrink it, each with Count this, Already doing it and Not for me: spending that eases with age (the typical shape of the BLS survey) and Social Security (Not counting on it, Count part of it, Count all of it). The last screen has both numbers, the chart, every way of the flow with where it stands, and the ways on to the rest of setup and Next Steps. Menu: What it is / What it could be.",
     "cb",
   ],
   [

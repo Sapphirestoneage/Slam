@@ -31,11 +31,11 @@ open them ("Finish setup: five short rounds"), with the age, the amounts and the
 |----:|--------|
 | 1 | Start on the landing |
 | 2 to 5 | Four questions, one at a time, by range chips: age, spending a month, invested, saved a month ("I know it" opens a number box; an exact amount is optional) |
-| after tap 5 | "What it is": the FI number (25 times a year of spending) and the age at today's pace, with "What it could be" beside it. They start equal |
+| after tap 5 | "What it is": the FI number (25 times a year of spending) and the age at today's pace, with "What it could be" beside it. They start equal. Under it: "The rest of your life costs about $X" (Batch B, phase 1) |
 | 6 | The layer chart |
 | 7 | Way 1 of 2, "Spending eases as you age": Count this, Already doing it, Not for me |
-| 8 | Way 2 of 2, "Social Security pays part of it": all of it, part of it, or Not counting on it |
-| 9 | The last screen: both numbers, the chart, what is counted, "More ways to shrink it are coming", Finish setup, Next Steps, Home |
+| 8 | Way 2 of 2, "Social Security pays part of it": Not counting on it, Count part of it, Count all of it |
+| 9 | The last screen: both numbers, the chart, every way of the flow with where it stands, Finish setup, Next Steps, Home |
 
 Taps from the landing to the first number: 35 before (to the reveal's FI card), 5 now.
 
@@ -71,7 +71,7 @@ after an answer, the chart, Show the math with the source, Next and Back, and th
 | Step | Presets | Where the default comes from |
 |------|---------|------------------------------|
 | Spending eases as you age | The typical shape: 100% of today's spending to 75, 85% from 75, 75% from 85. Half as much easing: 92.5% from 75, 87.5% from 85 | `retirementPhases` in `data/reference-2026.json` (the web app's lifetime plan and projection use the same row). BLS Consumer Expenditure Survey 2024: households 75 and over spent $55,834 a year against $65,354 at 65 to 74 (85.4%), read Nov 6 2026 and again Nov 27 2026. The 75% from 85 is a stated convention: the survey has no row for 85 and over. The names are from Michael Stein, The Prosperous Retirement |
-| Social Security pays part of it | All of it; Count part of it: 83%; Count part of it: 75%; Not counting on it | The estimate is the game's own (`ssEst`, from pay today), always marked Guess: the game has no box for a player's own figure yet. 83% is `socialSecurity.trustFund.payable` (the 2026 OASDI Trustees Report, June 9 2026). 75% is the careful choice of setup |
+| Social Security pays part of it | Not counting on it; Count part of it (83%, or the part share the player chose in setup); Count all of it (Batch B, phase 1: three presets) | The estimate is the game's own (`ssEst`, from pay today), always marked Guess: the game has no box for a player's own figure yet. 83% is `socialSecurity.trustFund.payable` (the 2026 OASDI Trustees Report, June 9 2026). 75% is the careful choice of setup: a player who chose it there keeps it as the part |
 
 - The answers: Count this counts it. Already doing it counts it too (it is true of the player) and says "Already
   yours, and counted". Not for me takes it out. The answer is kept in `c.x.cb.how`.
@@ -127,3 +127,23 @@ tap 1) to the first number on the screen.
 - Tax on traditional withdrawals: the federal tax on that year's traditional money alone (`retireTax`). No state tax,
   no tax on Social Security, no early-withdrawal charge.
 - Until the accounts are listed, the invested amount counts as one traditional plan at work.
+
+## Batch B, phase 1: top-ups (Nov 27 2026)
+
+- The lifetime spending total. `lyLifetime(p)` in `js/math/paylayers.js`: today's spending a year for each year from
+  today's age to 95, times the spending shape when `p.shape` is given (the screen gives none: the standard way). Today's
+  dollars, no growth, no health insurance, no tax. `cbLife(c)` in the game adds the round figure, a month of spending,
+  the Guess / Close / Exact state and whether the total is more than the FI number. The second engine adds it up in
+  closed form (`tools/audit`).
+- Social Security has three presets: Not counting on it, Count part of it, Count all of it. The part is
+  `cbPartShare(c)`: a part share the profile already holds in `c.x.ss` (setup offers 75%), else
+  `socialSecurity.trustFund.payable` (83%). Before any tap the drop is shown for all of it.
+- The last screen lists the ways from the flow's own list. `cbWays()` gives `[{ id, title, n, of }]`; `cbWayNo(id)` gives
+  "Way 2 of 5". A later phase adds a way with `cbStepAdd(id, view, { title })`: it is numbered with the others and is a
+  row of "What you counted", which reads `cbWayState(c, id)` (what `cbCount(id, opts)` counted, and the answer in
+  `c.x.cb.how[id]`). A step added with no title is a screen between the ways (a card, a reveal) and is not listed.
+- The words under the chips of a strategy step come from `cbPreview` (`shown`, `ssMonth`, `ssCount`): the screen does
+  no multiplication.
+- One opening: `game/tests/what-it-could-be-top-ups.js` walks Start and the four taps and checks that every screen on
+  the way is the flow's own, and that the landing, Start and a first game from the cloud all call `cbStart`.
+

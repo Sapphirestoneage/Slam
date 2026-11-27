@@ -243,6 +243,9 @@ round until it settles. The tax is a made-up table of steps here; in the game it
 Added Nov 27 2026 (run A, step 4): the bands of the spending shape (lyShapeBands: the go-go, slow-go and no-go shares
 of the reference data, in full, at half or at a quarter), worked out again; the two numbers are then checked with
 those bands counted.
+Added Nov 27 2026 (Batch B, phase 1): the lifetime spending total (lyLifetime: today's spending a year for each year
+from today to 95, times the spending shape when there is one). The second engine adds it up by the stretches of the
+shape, in closed form, not year by year.
 Changed Nov 27 2026 (the owner's answer on growth): the pile on the chart grows at one rate for the whole chart (the
 same rate while working and once drawing), and the two numbers are sized by a separate withdrawal rate (`take`: 4% is
 25 times). The cases give both; some keep a lower rate once drawing, and some leave `take` out, so the old form is

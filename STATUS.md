@@ -338,3 +338,20 @@ before and after, and how it is built: `docs/WHAT-IT-COULD-BE.md`.
 | 4 | Two strategy steps (spending shape, Social Security) | Done. Each screen: a headline, one line of why, the drop for this player, Count this / Already doing it / Not for me, the receipt (dollars off the target, months sooner), the chart, an "i" with what has to go right and the backup. Spending shape: the typical shape (100% to 75, 85% from 75, 75% from 85; BLS Consumer Expenditure Survey 2024, in `data/reference-2026.json`) or half as much easing. Social Security: all of it, 83% (the 2026 Trustees Report), 75%, or Not counting on it; the estimate is always marked Guess, because the game has no box for a player's own figure yet (QUESTIONS) | The seventh and eighth screens. `cbWayView`, `cbWayDo`, `cbPreview` in `game/features/couldbe.js`; `lyShapeBands` in `js/math/paylayers.js` |
 | | Eli's answers (QUESTIONS 645) | Done. Growth is 7% a year for the whole chart; 4% is what is taken out and sizes the numbers; the pile ends higher, and the screens say it is the cushion. Other items approved as built; the question on the two costs is open | `lyYears`, `lyTarget` in `js/math/paylayers.js` (`grow`, `take`) |
 | | Tests, Krug, finish | Done. The last screen has both numbers, the chart, what is counted and the ways on (the rest of setup, Next Steps, Home). The four rules of the prompt are checked over every preset (`game/tests/what-it-could-be-steps.js`); the second engine works the shape bands out again. Krug self-check in Chromium, three personas at 390, 1280 and 1440: 5 taps from the landing to the first number each time, one opening, no sideways scroll. The layer colors now differ by how light they are, so they read in every color theme | `docs/WHAT-IT-COULD-BE.md` (the self-check), `game/tests/what-it-could-be-steps.js`, `test/paylayers.test.js`, `tools/audit` |
+
+## BATCH B: the rest of What it is / What it could be (Nov 27 2026)
+
+From Eli's prompt (Nov 27 2026): the rest of the stack after Run A, in phases, on one branch, one worker after the
+other. Each phase is finished, tested, committed and pushed before the next starts (the stop rule). The record of the
+flow: `docs/WHAT-IT-COULD-BE.md`.
+
+| Phase | What | State | Where |
+|------:|------|-------|-------|
+| 0 | Before anything else: Run A checked | Done. `npm run test:game` was green (138 files, 5,092 checks) and the flow was walked in Chromium at 390 wide from the landing to the last screen: 5 taps to the first number, no console error, no sideways scroll. Nothing needed repair | |
+| 1 | Top-ups to Run A | Done. "What it is" says "The rest of your life costs about $X" (today's spending for each year to 95, `lyLifetime`), marked Guess, Close or Exact, with Show the math. Social Security has three presets: Not counting on it, Count part of it (83%, or the part chosen in setup), Count all of it. The last screen no longer says more is coming: it lists every way of the flow from the list of steps, so each later phase shows there by adding its step. One opening for a new player, confirmed and tested | `game/features/couldbe.js`, `js/math/paylayers.js`, `game/tests/what-it-could-be-top-ups.js` |
+| 2 | The rest of the stack (2a to 2f) | Queued | |
+| 3 | "Yes, but" cards | Queued | |
+| 4 | Reveal, share, Home, day 2 | Queued | |
+| 5 | A calmer first week | Queued | |
+| 6 | The in-debt version | Queued (may be skipped if the run is long) | |
+| 7 | Ready for real testers | Queued | |
