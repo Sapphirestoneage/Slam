@@ -852,7 +852,7 @@ function cbToggle(id) {
 function cbTaps() {
   return CB.taps;
 }
-/* Part of cbBook(). The rows of the typical values that stand in for an answer (the chip "No idea, use typical"). */
+/* Part of cbBook(). The rows of the typical values that stand in for an answer (the chip "I'm not sure"). */
 function cbTypBookRows(c) {
   const U = cbTypUsed(c),
     S = cbTypical("save", c.age),

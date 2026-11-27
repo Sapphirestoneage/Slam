@@ -867,7 +867,7 @@ const WB = [
   ],
   [
     "see",
-    "What you want first, No idea, use typical, the slim strip and your first move",
+    "What you want first, I'm not sure (a typical value), the slim strip and your first move",
     "b",
     () =>
       WB_FN("wnView") &&
@@ -879,7 +879,7 @@ const WB = [
       WB_HAS("wnnext") &&
       WB_HAS("cbtyp") &&
       WB_HAS("cbmine"),
-    "Run SLAM-ONBOARD-1. A new player first taps what they want; the picks become goals and show as tags at the top of the flow. Each of the three money questions has a chip No idea, use typical: a published value for your age, as a Guess, and the reveal offers Make it mine. From the first way on the two numbers are one slim strip. The last screen shows your first move with why, about how long, and Add to my steps.",
+    "Run SLAM-ONBOARD-1. A new player first taps what they want; the picks become goals and show as tags at the top of the flow. Each of the three money questions has a chip I'm not sure (it was No idea, use typical): a published value for your age, as a Guess, and the reveal offers Make it mine. From the first way on the two numbers are one slim strip. The last screen shows your first move with why, about how long, and Add to my steps.",
     "cb",
   ],
   [
@@ -1962,6 +1962,21 @@ const WB = [
       WB_HAS("cbfirst") &&
       WB_HAS("cbfirstgo"),
     "Audit fixes, batch 1. The opening ends on one result: your era, one line on why, your first move, and one button, Start my first move. It lands on Home with that move as the top card. Home starts with four numbers in one row (free to spend this month, next goal, net worth, free of costly debt), each with an i, then one next-step card. Everything else is below. A number that an answer changed moves for a moment. Answers from the opening stay as guesses, and setup shows them filled.",
+    null,
+  ],
+  [
+    "see",
+    "Plainer questions with I'm not sure, and a profile sheet that only switches people",
+    "b",
+    () =>
+      typeof NOT_SURE === "string" &&
+      WB_FN("cbWayUnsure") &&
+      WB_FN("smUnsureFill") &&
+      WB_FN("smListUnsure") &&
+      WB_FN("meTabPeople") &&
+      WB_FN("mePeopleFair") &&
+      WB_HAS("ppmore"),
+    "Audit fixes, batch 1, sections C and D. Every question of the opening, the demo and setup is in plainer words, has the choice I'm not sure (a Guess: a typical value where the game has one, else nothing is kept) and the line Tap one to keep going. The sheet Who are you looking at? has Back and Close only and only switches people. Our household, Sharing costs fairly, Kids mode, Your guild and People settings are on Me, under Your people. Arrows are one drawn icon.",
     null,
   ],
 ];

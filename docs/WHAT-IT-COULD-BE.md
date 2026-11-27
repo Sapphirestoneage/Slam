@@ -475,3 +475,12 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
 - **A test player from the demo.** `box[ER_KEY] = erPack(A); X("start");` with a stand-in for `localStorage` (see `tests/onboarding-handoff-and-home.js`).
 - **Not built.** The demo cannot show the first move of the flow (it needs the whole game), so a demo player's first move is the key step of the next era. Income is still asked in the rounds: the opening never asked it.
 
+
+## Run 16, audit fixes batch 1, worker 2 (Nov 27 2026): sections C and D
+
+- **A new question.** Give it the choice `NOT_SURE` and the line `TAP_ONE` (both in `core/engine.js`). In setup, a question of `SM_Q` gets both from `smChips()`; a step of `amSteps()` gets both from `amStepHtml()`; a way screen calls `cbWayUnsure()`; a range question gets both from `cbChips()`. The table `docs/question-rewrites.md` gets one row.
+- **What "I'm not sure" keeps.** A typical value marked Guess where the game has one (`cbTypical`, or the most likely choice: `smUnsureFill`). Else nothing. Never a number made up for the tap. The names of such setup answers are in `c.x.unsure`.
+- **New words for a choice.** Do not change the kept value. Put the new words in `lab` of the question (`smLab`). `SM_OWN` names the old choices that now read "I'm not sure".
+- **The demo.** `ER_TYP` ("typ") is the answer of a range question for "I'm not sure". The page loads `core/peers.js`, `core/withdraw.js` and `core/paylayers.js` for the typical values, and `cbTypical` is in the generated copy.
+- **The sheet "People".** It only switches people. A new row about people goes to `meTabPeople()` in `screens/profiles.js` (a part named `mePeople...` in the feature file), not to the sheet. Its header (`nvRow` in `screens/nav.js`, the class `nvtwo`) has Back and Close only.
+- **Arrows.** Write `<i class=chev aria-hidden=true></i>` (forward) or `<i class=chevl aria-hidden=true></i>` (back). Do not type an arrow character: `tests/not-sure-and-profile-sheet.js` scans every screen file.

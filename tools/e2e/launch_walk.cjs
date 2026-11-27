@@ -149,7 +149,7 @@ async function setup(page, tap, step) {
     // number, the chart, the last screen). The rest of setup ("Am I okay?") opens from its last screen.
     // Run SLAM-ONBOARD-1 (Nov 27 2026): the first screen is What you want (game/features/wants.js): chips, no typing.
     const wants = await step('what you want');
-    chk(`${tag}: the first screen is What you want, with no typing`, /What do you want\?/.test(wants) && /Next: four quick taps/.test(wants) && /Skip for now/.test(wants) && !(await page.locator('#ov input:visible').count()));
+    chk(`${tag}: the first screen is What you want, with no typing`, /What do you want\?/.test(wants) && /Next: four quick taps/.test(wants) && /I'm not sure/.test(wants) && /Tap one to keep going\./.test(wants) && !(await page.locator('#ov input:visible').count()));
     await tap('#ov [data-a=wnpick][data-v=debt]');
     await tap('#ov [data-a=wnnext]'); await page.waitForTimeout(600);
     chk(`${tag}: then the first of four questions, with no typing`, /Question 1 of 4/.test(await page.locator('#ov').innerText()) && !(await page.locator('#ov input:visible').count()));

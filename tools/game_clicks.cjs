@@ -64,11 +64,11 @@ async function walk(browser, base, want) {
   // first number; then its screens to the last one, and from there the rest of setup.
   let first = null,
     home = null;
-  // Run SLAM-ONBOARD-1 (Nov 27 2026): What you want comes first. The fastest path is one tap: Skip for now.
+  // Run SLAM-ONBOARD-1 (Nov 27 2026): What you want comes first. The fastest path is one tap: I'm not sure.
   if (await page.locator("#ov [data-a=wnskip]").count()) {
     await page.locator("#ov [data-a=wnskip]").click();
     taps++;
-    trace.push(taps + ". Skip for now (What you want)");
+    trace.push(taps + ". I'm not sure (What you want)");
     await page.waitForTimeout(650);
   }
   if (await page.locator("#ov [data-a=cbset]").count()) {

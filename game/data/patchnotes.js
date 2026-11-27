@@ -643,6 +643,17 @@ const PATCH_NOTES = [
       "Create account is shorter, the password box has Show and Hide, and if your email needs confirming you keep playing: Home has Send again.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "One result, a calmer Home, and plainer questions",
+    l: [
+      "The opening and Find your era end on one screen: your era, why, your first move, and one button, Start my first move. Your answers come with you.",
+      "Home starts with four numbers and one next step. A number that just changed moves for a moment.",
+      "Every question is in plainer words and has I'm not sure. It counts as a Guess, and you can make it yours later.",
+      "Tap your name: the sheet now only switches people. Our household, Sharing costs fairly and Kids mode are on Me, under Your people.",
+      "Arrows are drawn as icons now, and Where am I is lit only when it is your next step.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

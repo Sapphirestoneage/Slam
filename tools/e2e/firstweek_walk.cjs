@@ -47,7 +47,7 @@ const pulsing = page => page.evaluate(() => [...document.querySelectorAll('#app 
 
     // ---- 1. day 1: a new visitor, the flow to Home (a player with a costly card: the save answer is the lowest)
     await tap('#door [data-door=start]');
-    await tap('#ov [data-a=wnskip]'); // What you want (run SLAM-ONBOARD-1): Skip for now
+    await tap('#ov [data-a=wnskip]'); // What you want (run SLAM-ONBOARD-1): I'm not sure
     for (const [q, i] of [['age', 2], ['spend', 2], ['inv', 2], ['save', 3]]) await tap(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`);
     await page.evaluate(() => { const c = C(); c.debts = [{ k: 'Credit card', amt: 18000, apr: 24, high: true, s: true, cf: 3 }]; syncAll(c); save(); });
     await tap('#ov [data-a=cbgo][data-v=next]');
