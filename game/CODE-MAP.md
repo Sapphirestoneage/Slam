@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 216. Lines: 125,373. Top-level functions: 3077. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 216. Lines: 125,378. Top-level functions: 3077. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -117,7 +117,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 103 | `features/ideasz.js` | 338 | 7 | 3 | 0 | The last file of the famous money ideas: the glossary of each idea, which ideas fit the player now, and the block on Next Steps |
 | 104 | `features/dep.js` | 254 | 11 | 2 | 0 | What depends on what. Some short chains show how one number feeds the next number |
 | 105 | `features/eras.js` | 1,071 | 25 | 6 | 0 | Steps for the later eras, and the account recommendation |
-| 106 | `features/testkit.js` | 393 | 13 | 8 | 0 | Test with a friend. A think-aloud usability test: one person tries three tasks, and the coach records how each task went with one tap |
+| 106 | `features/testkit.js` | 398 | 13 | 8 | 0 | Test with a friend. A think-aloud usability test: one person tries three tasks, and the coach records how each task went with one tap |
 | 107 | `features/thinkaloud.js` | 410 | 21 | 3 | 0 | Think-aloud test mode, the tester drives |
 | 108 | `features/kit.js` | 284 | 24 | 7 | 0 | The shared parts of the plan screens (the two paths, the odds, the simulators and the other screens of the Plan batch) |
 | 109 | `features/retire.js` | 574 | 24 | 0 | 0 | The one adapter to the retirement engine of Zack Williams (vendor/retire-engine.js, MIT license) |

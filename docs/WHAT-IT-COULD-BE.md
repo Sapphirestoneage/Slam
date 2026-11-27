@@ -420,7 +420,8 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
 - **Phase 7a.** Test with a friend (admin menu, `features/testkit.js`) has three tasks: find out what your number
   could be; switch Social Security off and say what changed; get back Home and find your next move. While a task runs
   the game counts the taps and keeps the names of the screens (`tkTapAdd`, `tkAt`); "done or stuck" notes the screen
-  where the person stopped (`tkStop`). No sound, no picture, no field value. The record is in the saved game
+  where the person stopped (`tkStop`). The button "done or stuck" now shows over a sheet too, at the bottom (the flow
+  is a sheet). No sound, no picture, no field value. The record is in the saved game
   (`G.tests`, the last 20). Tester drives (`features/thinkaloud.js`) reads the same three tasks.
 - **Phase 7b.** The list "Waiting on Eli: yes or no" is at the top of QUESTIONS.md.
 - **Finish setup** comes back to the page the player left (`cbRestSpot` in `features/couldbe.js`, from the copy that

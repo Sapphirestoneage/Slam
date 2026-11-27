@@ -194,13 +194,18 @@ function tkChip() {
   if (typeof document === "undefined" || !document.body || !document.createElement) return;
   let el = document.getElementById("tkchip");
   const s = tkS(),
-    show = s && s.stage === "run" && !SH;
+    /* over a sheet too: the flow of the three tasks is a sheet, and the stop must be noted where the person is */
+    show = s && s.stage === "run" && !(SH && W && W.kind === "testkit");
   if (!el) {
     if (!show) return;
     el = document.createElement("div");
     el.id = "tkchip";
     document.body.appendChild(el);
   }
+  /* over a sheet the chip sits at the bottom, clear of the top row of the sheet (Back, Home, the menu, Close) */
+  if (el.classList) el.classList.toggle("low", !!SH);
+  /* the sheet gets room under its last row, so nothing stays behind the chip */
+  if (document.body.classList) document.body.classList.toggle("tk-low", !!show && !!SH);
   el.innerHTML = show ? `<button data-a="tkback">Task ${s.i + 1} · done or stuck</button>` : "";
 }
 function tkOpen() {
