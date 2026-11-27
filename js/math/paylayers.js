@@ -7,6 +7,9 @@
 // lyLifetime is the lifetime spending total: what the years from today to 95 cost (Batch B, phase 1).
 // lyTaxPlan is the plan for the tax on the way out (Batch B, phase 2a): fill the low tax space with traditional money
 // each year, move the rest of that space to Roth, and take what is left from the taxable and Roth accounts.
+// Batch B, phases 2b and 2c: a counted flexible way to take money out (flex: a higher starting rate than the 4% of the
+// standard way, found by the caller from market history) sizes "What it could be" at that rate; a payment that ends
+// (ends: a mortgage that is paid off) lowers the spending of each year from the age it ends.
 // The layer chart is one year-by-year run from today to 95: what the year costs (needs, wants, health insurance before
 // 65, tax on traditional withdrawals) and what pays for it (work, the four kinds of account, Social Security, other
 // steady income), with what is left over as "not covered yet". In every year the layers plus the gap equal the line.
@@ -72,6 +75,11 @@ export function lyHealthAt(p, age) {
   if (!h || !(h.year > 0)) return 0;
   return (p.stop == null || age >= p.stop) && age < (h.until ?? LY_MEDICARE) ? h.year : 0;
 }
+// Payments that end (Batch B, phase 2c): what a year's spending is lower by at an age. p.ends = [{ year (dollars a
+// year, already in today's spending), from (the first age without the payment) }]: a mortgage that is paid off.
+export function lyEndsAt(p, age) {
+  return (p.ends || []).reduce((s, e) => s + (age >= (e.from ?? Infinity) ? Math.max(0, lyNum(e.year)) : 0), 0);
+}
 // Take `need` from the accounts, in their order (taxable, traditional, Roth, HSA). cap: what each can pay this year.
 // fill (a number, or null): with a tax plan, traditional money pays first, up to this much in the year; what is still
 // needed then comes from the accounts in their order (traditional again last of the three, past the line).
@@ -91,6 +99,7 @@ function lyDraw(cap, need, fill = null) {
 // withdrawal rate that sizes the two numbers: 0.04 is 25 times; it is what is taken out, not a growth rate),
 // ss { year, age }, other [{ year, from, to }], health { year, until }, tax (a function: ordinary income of a year to
 // its tax; null: none), off { work, tax, pre, roth, hsa, ss, other } (layers switched off),
+// ends (payments that end: [{ year, from }]; from that age the year's spending is lower by `year`, the needs first),
 // plan (the tax plan for the years after work, or null: { fill }: each year traditional money pays first, up to `fill`
 // dollars of ordinary income; when the year needs less traditional money than that, the rest of the space is moved from
 // traditional to Roth (a conversion: it is taxed as income that year and it is not spending)) }.
@@ -103,7 +112,9 @@ export function lyYears(p) {
   const to = p.saveTo || { pre: 1 }, rows = [];
   for (let age = p.age; age <= end; age++) {
     const planWork = p.stop == null || age < p.stop, working = planWork && !off.work, f = lyShapeAt(p.shape, age);
-    const needs = lyNum(p.spend) * share * f, wants = lyNum(p.spend) * (1 - share) * f, health = lyHealthAt(p, age);
+    // a payment that has ended comes off the needs first (a home is a need), then off the wants
+    const less = lyEndsAt(p, age), needs0 = lyNum(p.spend) * share * f, wants0 = lyNum(p.spend) * (1 - share) * f;
+    const needs = Math.max(0, needs0 - less), wants = Math.max(0, wants0 - Math.max(0, less - needs0)), health = lyHealthAt(p, age);
     const S = lySteadyAt(p, age), r = planWork ? lyNum(p.grow) : lyNum(p.draw ?? p.grow);
     const cap = Object.fromEntries(LY_KEYS.map(k => [k, off[k] ? 0 : bal[k] * (1 + r)]));
     const base = needs + wants + health, fill = !planWork && p.plan && Number.isFinite(p.plan.fill) ? Math.max(0, p.plan.fill) : null;
@@ -190,7 +201,7 @@ export function lyLifetime(p) {
 // year. The target and the taxes depend on each other, so they are found by going round until the target settles.
 export function lyTarget(p, at) {
   const end = p.end ?? LY_END, r = lyNum(p.take ?? p.draw), q = { ...p, stop: at, off: {} };
-  const base = age => { const S = lySteadyAt(q, age); return Math.max(0, lyNum(p.spend) * lyShapeAt(p.shape, age) + lyHealthAt(q, age) - S.ss - S.other); };
+  const base = age => { const S = lySteadyAt(q, age); return Math.max(0, Math.max(0, lyNum(p.spend) * lyShapeAt(p.shape, age) - lyEndsAt(p, age)) + lyHealthAt(q, age) - S.ss - S.other); };
   if (!(r > 0)) return null;
   const worth = taxAt => { let pv = 0, v = 1; for (let age = at; age <= end; age++) { v /= 1 + r; pv += (base(age) + taxAt(age)) * v; } return pv + ((base(end) + taxAt(end)) / r) * v; };
   let T = worth(() => 0);
@@ -220,17 +231,26 @@ export function lyPile(inv, save, grow, n) {
   return inv;
 }
 // The params of "What it could be": p with only what was counted. counted: { ss: { share }, other, shape: { bands },
-// health, wtax, taxplan: { fill } }. A layer that is switched off (p.off) is not counted. The tax plan is read only
-// when the tax itself is counted (wtax): a plan for a cost that is not in the number moves nothing.
+// health, wtax, taxplan: { fill }, flex: { take }, ends }. A layer that is switched off (p.off) is not counted. The tax
+// plan is read only when the tax itself is counted (wtax): a plan for a cost that is not in the number moves nothing.
+// flex (Batch B, phase 2b): a flexible way to take money out starts at the rate `take`; it is read only when it is
+// higher than the rate of the standard way, so it can never raise the number. ends (phase 2c): payments that end.
 export function lyCounted(p, counted) {
   const c = counted || {}, off = p.off || {};
   return { ...p, off: {},
     ss: c.ss && p.ss && !off.ss ? { ...p.ss, year: lyNum(p.ss.year) * (c.ss.share ?? 1) } : null,
     other: c.other && !off.other ? p.other : [],
     shape: c.shape ? c.shape.bands || null : null,
+    take: lyFlex(p, c) ?? p.take,
+    ends: c.ends ? p.ends || [] : [],
     health: c.health ? p.health : null,
     tax: c.wtax ? p.tax : null,
     plan: c.wtax && c.taxplan && Number.isFinite(c.taxplan.fill) ? { fill: c.taxplan.fill } : null };
+}
+// The starting rate of a counted flexible way, or null when none is counted or it is not above the standard rate.
+export function lyFlex(p, counted) {
+  const t = counted && counted.flex ? counted.flex.take : null, r = lyNum(p.take ?? p.draw);
+  return Number.isFinite(t) && t > r + 1e-9 ? t : null;
 }
 // THE TWO NUMBERS. Returns { is: { target, age, years }, could: { target, age, years }, counted (true when anything
 // is), raisedBy (the costs that are counted) }. age: null when the saving pace does not get there in 80 years.
@@ -239,7 +259,7 @@ export function lyNumbers(p, counted) {
   const first = target => { for (let n = 0; n <= 80; n++) if (lyPile(inv, lyNum(p.save), lyNum(p.grow), n) >= target(p.age + n)) return n; return null; };
   const isT = r > 0 ? lyNum(p.spend) / r : null, isN = isT == null ? null : first(() => isT);
   const is = { target: isT, years: isN, age: isN == null ? null : p.age + isN };
-  const c = counted || {}, any = !!((c.ss && p.ss && !(p.off || {}).ss) || (c.other && (p.other || []).length && !(p.off || {}).other) || c.shape || (c.health && p.health) || (c.wtax && p.tax));
+  const c = counted || {}, any = !!((c.ss && p.ss && !(p.off || {}).ss) || (c.other && (p.other || []).length && !(p.off || {}).other) || c.shape || (c.health && p.health) || (c.wtax && p.tax) || lyFlex(p, c) != null || (c.ends && lyEndsAt(p, Infinity) > 0));
   if (!any || isT == null) return { is, could: { ...is }, counted: false, raisedBy: [] };
   const q = lyCounted(p, c), n = first(a => lyTarget(q, a));
   const could = { target: lyTarget(q, n == null ? (is.age ?? p.age) : p.age + n), years: n, age: n == null ? null : p.age + n };

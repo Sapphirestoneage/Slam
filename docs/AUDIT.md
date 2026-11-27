@@ -247,6 +247,10 @@ out what each account pays and what moves, each year). The target with a tax cou
 year-by-year run, account by account, in both engines. New cases `lyTaxPlan` (125 at the full size): each fill line
 is tried on the day work stops, the lowest target is the plan when it beats the usual order by a dollar, and the
 receipt (dollars off, months) and what the tax itself adds are compared.
+Added Nov 27 2026 (Batch B, phases 2b and 2c): about a third of the `lyYears` cases carry a payment that ends (a
+home loan that is paid off at an age, sometimes larger than the needs), and the `lyNumbers` and `lyTaxPlan` cases can
+count it (`ends`) and a flexible starting rate (`flex`, sometimes not above the standard rate, which must then move
+nothing). The second engine takes the payment off the needs first and sizes the target at the flexible rate.
 Added Nov 27 2026 (run A, step 4): the bands of the spending shape (lyShapeBands: the go-go, slow-go and no-go shares
 of the reference data, in full, at half or at a quarter), worked out again; the two numbers are then checked with
 those bands counted.

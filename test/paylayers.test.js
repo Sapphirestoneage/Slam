@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt, lyLifetime, lyShares, lyTaxPlan } from '../js/math/paylayers.js';
+import { LY_END, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, lyShapeAt, lyShapeBands, lyYears, lyBars, lyNeedsAge, lyLayerSum, lyCoverage, lyTarget, lyPile, lyCounted, lyNumbers, lyReceipt, lyLifetime, lyShares, lyTaxPlan, lyEndsAt, lyFlex } from '../js/math/paylayers.js';
 
 const near = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} is not ${b}`);
 // a made-up tax: nothing on the first 16,100, then 12%, then 22% over 66,500
@@ -237,4 +237,36 @@ test('the capital gains lines of the dated reference data are the lines of the l
   const T = JSON.parse(m[1]);
   assert.deepEqual(T.standardDeduction, ref.tax.standardDeduction); assert.deepEqual(T.brackets, ref.tax.brackets); assert.deepEqual(T.zeroGainsTo, G.zeroTo);
   for (const k of Object.keys(T.sources)) assert.ok(T.sources[k].source && /^2026-\d\d-\d\d$/.test(T.sources[k].date), k);
+});
+
+// Batch B, phases 2b and 2c (Nov 27 2026)
+test('a flexible way to take money out sizes What it could be at its own rate, only when that is above the standard rate', () => {
+  const p = base({ take: 0.04, tax: null, health: null });
+  const N = lyNumbers(p, { flex: { take: 0.05 } });
+  assert.equal(N.counted, true); near(N.could.target, 42000 / 0.05, 0.5); assert.equal(N.is.target, 1050000);
+  assert.ok(N.could.age < N.is.age, 'a smaller number is reached sooner');
+  assert.equal(lyFlex(p, { flex: { take: 0.05 } }), 0.05);
+  for (const take of [0.04, 0.035, null, NaN]) { assert.equal(lyFlex(p, { flex: { take } }), null); assert.equal(lyNumbers(p, { flex: { take } }).counted, false); }
+  assert.equal(lyFlex(p, {}), null);
+  // with Social Security counted too, the target is still below the one at the standard rate
+  assert.ok(lyNumbers(p, { ss: {}, flex: { take: 0.05 } }).could.target < lyNumbers(p, { ss: {} }).could.target);
+  assert.equal(lyCounted(p, { flex: { take: 0.05 } }).take, 0.05); assert.equal(lyCounted(p, {}).take, 0.04);
+});
+test('a payment that ends lowers the year from the age it ends, the needs first, and the number only when it is counted', () => {
+  const ends = [{ year: 12000, from: 47 }], p = base({ take: 0.04, tax: null, health: null, ends, stop: 60 });
+  assert.equal(lyEndsAt(p, 46), 0); assert.equal(lyEndsAt(p, 47), 12000); assert.equal(lyEndsAt({}, 50), 0);
+  const rows = lyYears(p), at = a => rows.find(r => r.age === a);
+  near(at(46).needs, 42000 * 0.75); near(at(47).needs, 42000 * 0.75 - 12000); near(at(47).wants, 42000 * 0.25);
+  rows.forEach(sumsTo);
+  // more than the needs: the rest comes off the wants, and the year never costs less than nothing
+  const big = lyYears({ ...p, ends: [{ year: 40000, from: 47 }] }).find(r => r.age === 47);
+  near(big.needs, 0); near(big.wants, 2000);
+  near(lyYears({ ...p, ends: [{ year: 99000, from: 47 }] }).find(r => r.age === 47).line, 0);
+  assert.equal(lyNumbers(p, {}).counted, false);
+  const N = lyNumbers(p, { ends: {} });
+  assert.equal(N.counted, true); assert.ok(N.could.target < N.is.target);
+  // paid off before work stops: the whole of the free years costs 12,000 less, so the target is 25 times that lower
+  near(lyTarget(lyCounted(p, { ends: {} }), 60), (42000 - 12000) / 0.04, 0.5);
+  assert.deepEqual(lyCounted(p, {}).ends, []);
+  assert.equal(lyNumbers(base({ take: 0.04, tax: null }), { ends: {} }).counted, false, 'nothing ends: nothing counted');
 });

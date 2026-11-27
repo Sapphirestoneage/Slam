@@ -663,7 +663,9 @@ for (let i = 0; i < N; i++) {
     health: rnd() < 0.2 ? null : { year: money(2400, 30000), until: 65 }, shape: rnd() < 0.3 ? [{ from: 75, f: 0.85 }, { from: 85, f: 0.7 }] : null,
     stop: rnd() < 0.1 ? null : whole(age, 75), off, taxSteps: rnd() < 0.2 ? null : steps,
     // the tax plan of the years after work (Batch B, phase 2a): traditional money first up to a fill line, the rest moved to Roth
-    plan: rnd() < 0.35 ? { fill: pick([steps[1][0], steps[2][0], whole(5000, 90000)]) } : null };
+    plan: rnd() < 0.35 ? { fill: pick([steps[1][0], steps[2][0], whole(5000, 90000)]) } : null,
+    // payments that end (Batch B, phase 2c): a mortgage that is paid off at an age, sometimes more than the needs
+    ends: rnd() < 0.3 ? [{ year: Math.round(spend * between(0.05, 0.6)), from: whole(age, 80) }] : [] };
   if (x.draw == null) delete x.draw; // one growth rate for the whole chart (the owner's choice, 2026-11-27): `grow` is used
   if (rnd() < 0.15) { delete x.take; x.draw = x.draw ?? 0.04; } // an older caller: the withdrawal rate is `draw`
   const p = { ...x, tax: x.taxSteps ? taxOf : null };
@@ -678,6 +680,9 @@ for (let i = 0; i < N; i++) {
   const lifeShape = rnd() < 0.5 ? null : lyShapeBands(rp, scale), Lf = lyLifetime({ age, spend, shape: lifeShape });
   add('lyLifetime', { age, spend, shape: lifeShape }, { total: Lf.total, years: Lf.years, from: Lf.from, to: Lf.to, year: Lf.year });
   if (counted.wtax && rnd() < 0.4) counted.taxplan = { fill: pick([steps[1][0], steps[2][0], whole(5000, 90000)]) };
+  // a flexible way to take money out (phase 2b): its starting rate, sometimes not above the standard rate; and the ends
+  if (rnd() < 0.35) counted.flex = { take: pick([0.045, 0.05, 0.052, 0.055, 0.035]) };
+  if (rnd() < 0.5) counted.ends = {};
   const Nn = lyNumbers(p, counted);
   add('lyNumbers', { ...x, counted }, { is: [Nn.is.target, Nn.is.age], could: [Nn.could.target, Nn.could.age], counted: Nn.counted, raisedBy: Nn.raisedBy });
   // the tax plan (Batch B, phase 2a): the fill lines are the steps of the made-up tax table and one more

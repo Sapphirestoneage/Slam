@@ -38,6 +38,8 @@ open them ("Finish setup: five short rounds"), with the age, the amounts and the
 | 9 | Way 3 of 3, "Pay less tax on the way out" (Batch B, phase 2a): two taps (how you file, your state), then Count this, Already doing it, Not for me when a plan applies |
 | 10 | The last screen: both numbers, the chart, every way of the flow with where it stands, Finish setup, Next Steps, Home |
 
+(Changed in Batch B, phases 2b to 2f: after the chart comes the stack, one list of every way. See the last section.)
+
 Taps from the landing to the first number: 35 before (to the reveal's FI card), 5 now.
 
 A returning player with a profile lands on Home as before. The flow is in the Menu (What it is / What it could be)
@@ -207,3 +209,61 @@ The way "Pay less tax on the way out", Way 3 of 3. File: `game/features/cbtax.js
   `cbParams` that a function stands on into `taxKey` or a plain value, so two inputs are told apart.
 - The tests of the flow count ways from `cbWays()`, not from a fixed number, so a new way breaks none of them.
 - For 2e (hide what cannot apply, say why): each way gives `applies` and `why`; `cbTaxPlan(c)` is the example.
+
+## Batch B, phases 2b to 2f: the rest of the stack (Nov 27 2026)
+
+What a new player sees now, after the four taps and "What it is":
+
+| Tap | Screen |
+|----:|--------|
+| 6 | The layer chart |
+| 7 | The stack: every way in two groups, sorted, with a counter and the backups meter. One tap on "Count this" beside a way counts it; a tap on the way opens its screen |
+| 8 | The last screen (11 when three ways are counted from the list) |
+
+- **The stack** (`game/features/cbstack.js`, W.step `stack`, not in `CB_STEPS`). `cbStack(c)` gives the two groups.
+  "After work: ways to shrink the number" is the ways of `cbWays()` that can apply, the most months sooner first, then
+  the most dollars off. "Before FI: ways to get there sooner" is `cbMoves(c)`, the most months first. What cannot apply
+  is under a closed "i" with its reason, and each reason opens the way's own screen.
+- **Each way gives two things with `cbStepAdd`**: `info(c)` returns `{ applies, why, receipt, st, backup: { words,
+  auto } }` and `set(how)` takes count, did or no. The stack sorts, hides and counts with them. `cbStepNear` makes Next
+  and Back pass over a way that cannot apply. The last screen lists only the ways that can apply.
+- **2b, flexible withdrawals** (`game/features/cbflex.js`). `cbFlexFind(stop, stock)` runs each real start year from
+  the stop age to 95 (`cmpReal` of ways.js, the rules of `core/withdraw.js`): the fixed 4% rule, then guardrails at
+  4.1%, 4.2% and so on, and keeps the highest rate at which guardrails held in at least as many start years. Social
+  Security and other income are left out, so both rules get the same test. `lyFlex` in `js/math/paylayers.js` reads
+  the rate only when it is above the standard rate, so the way can never raise the number. The profile holds no rate.
+- **2c, money that shows up later** (`game/features/cblater.js`). The three questions are the game's own (`LIFE`:
+  pension, homepmt, homeyrs) and `lifeSet` writes them. A pension is the count `other`. A payment that ends is the new
+  count `ends`: `lyEndsAt(p, age)` takes it off the year's spending from the age it ends, the needs first. The list of
+  payments is the game's own `endsOf(c)`.
+- **2d, the accumulation stack** (`game/features/cbmoves.js`). No new card. Each row is a move of the Strategy Engine
+  (`stgRank`), or a lever or multiplier that no move covers (`lvLevers`, `muAll`). Months sooner is `stgImpact` of
+  strat.js for all of them: the game's month-by-month goal run. A counted move does not change the two pinned numbers,
+  because they come from `core/paylayers.js`; the stack shows the months of the counted moves together.
+  "Already doing it" writes the move's own answer (`c.x.stg[id].already`); a counted multiplier is switched on on its
+  board (`c.x.mu.on`).
+- **2f, the counter and the backups.** `cbStackLine` shows "3 of 14 stacked" and "Backups in place: N of M" on the
+  stack and on the last screen. `cbBackupRow` shows the backup of a way on its screen. A backup is in place by the
+  choice where the game can read it (half as much easing; part of Social Security; needs that fit inside the deepest
+  cut; the tax plan, which is a choice made again each year), and by one tap where it cannot (`c.x.cb.bk`). No backup
+  changes a number. "What it is" is never moved by anything in the flow.
+- **No new outside figure.** The guardrails rule (20% bands, 10% steps, never under 70%) and its source are in
+  `js/math/withdraw.js` since the withdrawal ways were built. The market history is `game/data/market.js` (Robert
+  Shiller's data, fetched Nov 12 2026). The search step of 0.1% is a setting of the search, not a rate.
+
+### The pattern for the next phase (3 to 7)
+
+- A screen between the ways (the "Yes, but" cards of phase 3): `cbStepAdd("id", view)` with no title. It is a step of
+  the flow and not a way: not numbered, not on the stack. To put it between the two groups of the stack, add a row or
+  a button to `cbStackView` (it is the screen that decides the order of its parts), or open it with
+  `data-a="cbgo" data-v="id"`.
+- A new way to shrink the number: one file `game/features/cb<name>.js`, a script tag after `features/cblater.js` and
+  before `features/cbmoves.js`, and `cbStepAdd(id, view, { title, info, set })`. Use `cbWhyRow(id, term)` for the "i"
+  and the backup, and `cbWayNav(done)` for Next, Back and All the ways.
+- A count the math must read: `lyCounted` and `lyNumbers` in `js/math/paylayers.js`, the build tool, both audit files.
+  If two ways resolve a number for each other (`taxplan` and `flex` do), one of them must stand on the profile alone:
+  `cbFlexTake` does, so there is no loop.
+- The reveal of phase 4 can read everything from `cbStack(c)`: what is counted, the counter, the backups, and
+  `movesSum` (the months of the counted moves).
+- The code map takes about 6 minutes. Change all scripts first.
+

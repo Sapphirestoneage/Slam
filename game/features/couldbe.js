@@ -34,7 +34,9 @@
                features/kit.js (kitPill, kitInfo, kitTerms, kitMenu, kitScreen, kitValue),
                features/retire.js (retireTax, retireReady), features/look.js (lkK), features/taxview.js
                (taxvInputs: the one home of the filing status and the state).
-               USES LATER, behind a typeof test: features/cbtax.js (cbTaxFill: the fill line of the tax plan).
+               USES LATER, behind a typeof test: features/cbtax.js (cbTaxFill: the fill line of the tax plan),
+               features/cbflex.js (cbFlexTake: the starting rate of flexible withdrawals), features/cbstack.js
+               (cbStackView: the list of all the ways, cbStackLine, cbBackupRow), features/cbmoves.js (cbMoveView).
    RULES       A view shows what the math functions return. The four answers go to the rows that setup
                writes (c.incs, c.spends, c.invs) as a Guess; a typed amount is Exact. No verdict on a
                guess. The line of account/trust.js is on each screen of the flow, from cbFoot() only.
@@ -48,6 +50,10 @@
    COMPAT      One new optional key on a profile: c.x.cb { a (the four answers), count, off, split,
                health, setup (true when the rest of setup is done), how (the answer of each strategy
                step: count, did, no) }. An old saved game has none.
+               Batch B, phases 2b to 2f: a way gives info(c) ({ applies, why, receipt, st, backup }) and
+               set(how) with cbStepAdd. Next and Back pass over a way that cannot apply to this player. The
+               chart leads to the stack (W.step stack: every way, sorted, in features/cbstack.js); a way of
+               the accumulation stack is W.step move (features/cbmoves.js). Neither is in CB_STEPS.
    STATE       CB (the numbers that the header showed last, for the short animation; the flag of the
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
@@ -57,8 +63,14 @@ const CB = { last: null, rest: false, taps: 0, memo: new Map() };
 const CB_STEPS = [
   { id: "is", view: () => cbIsView() },
   { id: "chart", view: () => cbChartView() },
-  { id: "shape", way: true, view: () => cbWayView("shape") },
-  { id: "ss", way: true, view: () => cbWayView("ss") },
+  {
+    id: "shape",
+    way: true,
+    view: () => cbWayView("shape"),
+    info: c => cbWayInfo(c, "shape"),
+    set: h => cbWaySet("shape", h),
+  },
+  { id: "ss", way: true, view: () => cbWayView("ss"), info: c => cbWayInfo(c, "ss"), set: h => cbWaySet("ss", h) },
   { id: "end", view: () => cbEndView() },
 ];
 /* The range chips of the four questions: [low, high]. The amount of a chip is the middle. A last chip with no
@@ -270,6 +282,8 @@ function cbParams(c, d) {
       P.now > 0 ? [{ year: P.now * 12, from: c.age }] : [],
       P.pen ? [{ year: P.pen.amt * 12, from: P.pen.age }] : []
     ),
+    /* payments that end (Batch B, phase 2c): the game's own list (endsOf: a mortgage, and what setup noted) */
+    ends: endsOf(c).map(e => ({ year: e.amt * 12, from: c.age + e.yrs, k: e.k })),
     health: H.year > 0 ? { year: H.year, until: H.until } : null,
     tax: typeof retireReady === "function" && retireReady() ? w => cbTaxOn(w, F.filing, c.age, F.state) : null,
     /* what the tax function stands on, in words: cbLy() tells two inputs apart by it */
@@ -312,11 +326,19 @@ function cbCountedRaw(c) {
    dollars on the profile: its fill line is the best line for the player now (cbtax.js, cbTaxFill). */
 function cbCounted(c) {
   const raw = cbCountedRaw(c);
-  if (!raw.taxplan) return raw;
-  const fill = raw.wtax && typeof cbTaxFill === "function" ? cbTaxFill(c) : null,
-    out = Object.assign({}, raw);
-  if (fill == null) delete out.taxplan;
-  else out.taxplan = { fill };
+  if (!raw.taxplan && !raw.flex) return raw;
+  const out = Object.assign({}, raw);
+  if (raw.taxplan) {
+    const fill = raw.wtax && typeof cbTaxFill === "function" ? cbTaxFill(c) : null;
+    if (fill == null) delete out.taxplan;
+    else out.taxplan = { fill };
+  }
+  /* flexible withdrawals (Batch B, phase 2b): the starting rate is found again from market history (cbflex.js) */
+  if (raw.flex) {
+    const take = typeof cbFlexTake === "function" ? cbFlexTake(c) : null;
+    if (take == null) delete out.flex;
+    else out.flex = { take };
+  }
   return out;
 }
 /* The two numbers of core/paylayers.js for one input, kept: the same input is asked for many times in one screen,
@@ -352,6 +374,10 @@ function cbChart(c, zoom, o) {
   p.stop = N.could.age != null ? N.could.age : N.is.age;
   if (cnt.shape && cnt.shape.bands) p.shape = cnt.shape.bands;
   if (cnt.ss && cnt.ss.share != null && p.ss) p.ss = Object.assign({}, p.ss, { year: p.ss.full * cnt.ss.share });
+  /* a payment that ends lowers the line of the chart only when it is counted; a counted flexible rate is the rate
+     the words of the cushion name */
+  if (!cnt.ends) p.ends = [];
+  if (cnt.flex && cnt.flex.take > p.take) p.take = cnt.flex.take;
   /* the tax plan (Batch B, phase 2a): the order the money comes out, and what moves to Roth. o.plan: a fill line
      to show before it is counted (null: the plain order). */
   const fill = o.plan !== undefined ? o.plan : cnt.taxplan ? cnt.taxplan.fill : null,
@@ -672,6 +698,47 @@ function cbWayState(c, id) {
     how = (s.how || {})[id] || null;
   return { counted, how: how === "no" ? (counted ? null : "no") : counted ? how : null };
 }
+/* What a built-in way gives the stack (Batch B, phase 2e): { applies, why, receipt, st, backup: { words, auto } }.
+   receipt: the drop with the way counted against the same numbers without it. A player who counts no Social
+   Security sees the drop for all of it. backup.auto: true when the backup is in place by the choice made. */
+function cbWayInfo(c, id) {
+  const none = id === "ss" && c.x && c.x.ss === 0,
+    V = cbPreview(c, id, none ? "1" : null);
+  return {
+    applies: !!V.has,
+    why: V.has ? "" : "There is no Social Security estimate yet: it needs your pay from work.",
+    receipt: V.receipt,
+    st: id === "ss" ? "Guess" : cbState(c),
+    backup:
+      id === "ss"
+        ? { words: "Count part of it, not all of it.", auto: V.set.share > 0 && V.set.share < 1 }
+        : { words: "Count half as much easing. The difference stays as a cushion for care.", auto: V.set.scale < 1 },
+  };
+}
+/* The answer of a built-in way from the stack, with no chip tapped: a player who counted no Social Security counts
+   all of it. */
+function cbWaySet(id, how) {
+  const c = C();
+  return cbWayDo(id, how, id === "ss" && how !== "no" && c.x && c.x.ss === 0 ? "1" : null);
+}
+/* What a way gives the stack: the info of its step, or "it applies" for a step that gives none. */
+function cbStepInfo(c, id) {
+  const st = CB_STEPS.find(s => s.id === id);
+  try {
+    return st && typeof st.info === "function" ? st.info(c) : { applies: true, why: "", receipt: null, st: null };
+  } catch (e) {
+    report(e, "couldbe.js: cbStepInfo");
+    return { applies: true, why: "", receipt: null, st: null };
+  }
+}
+/* The step after (dir 1) or before (dir -1) a step of the flow. A way that cannot apply to this player is passed
+   over (Batch B, phase 2e). */
+function cbStepNear(c, id, dir) {
+  let i = CB_STEPS.findIndex(s => s.id === id);
+  for (i += dir; i > 0 && i < CB_STEPS.length - 1; i += dir)
+    if (!CB_STEPS[i].way || cbStepInfo(c, CB_STEPS[i].id).applies) break;
+  return CB_STEPS[Math.max(0, Math.min(CB_STEPS.length - 1, i))].id;
+}
 /* Switch a layer off or on. A layer that is off is not counted in the number. id: work, inv (the four accounts),
    tax, pre, roth, hsa, ss, other. */
 function cbToggle(id) {
@@ -728,7 +795,12 @@ function cbBook(c) {
         label: "Social Security: the share the trust fund report says can still be paid",
         v: LY_SS_REF.payable,
       },
-    ].concat(typeof cbTaxBookRows === "function" ? cbTaxBookRows(c) : []) /* cbtax.js: the tax plan */,
+    ]
+      .concat(typeof cbTaxBookRows === "function" ? cbTaxBookRows(c) : []) /* cbtax.js: the tax plan */
+      .concat(typeof cbFlexBookRows === "function" ? cbFlexBookRows(c) : []) /* cbflex.js: flexible withdrawals */
+      .concat(
+        typeof cbLaterBookRows === "function" ? cbLaterBookRows(c) : []
+      ) /* cblater.js: money that shows up later */,
   };
 }
 
@@ -914,7 +986,7 @@ function cbCushionWords(p) {
     "Grows " +
     Math.round(p.grow * 100) +
     "% a year, for the whole chart. You take " +
-    Math.round(p.take * 100) +
+    Math.round(p.take * 1000) / 10 +
     "%. The rest is cushion for years the market goes down."
   );
 }
@@ -1013,7 +1085,7 @@ function cbChartView() {
       cbCushionWords(K.p),
       "All amounts are in today's dollars.",
     ]) +
-    `<button class="primary wide go" data-a="cbgo" data-v="next">Next</button>` +
+    `<button class="primary wide go" data-a="cbgo" data-v="${typeof cbStackView === "function" ? "stack" : "next"}">Next</button>` +
     cbFoot()
   );
 }
@@ -1088,6 +1160,23 @@ function cbChartCard(K, title, cap) {
         .join("")}</div>` +
       `<button class="ghost wide" data-a="cbgo" data-v="chart">Open the full chart</button>`,
     { cap }
+  );
+}
+/* The buttons under a way: Next, Back, and the way back to the list of all the ways. done: the player answered. */
+function cbWayNav(done) {
+  return (
+    `<button class="${done ? "primary go" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
+    `<button class="ghost wide" data-a="cbgo" data-v="prev">Back</button>` +
+    (typeof cbStackView === "function"
+      ? `<button class="ghost wide" data-a="cbgo" data-v="stack">All the ways</button>`
+      : "")
+  );
+}
+/* The row "What has to go right" of a way (the "i"), and under it the backup of the way (cbstack.js). */
+function cbWhyRow(id, term) {
+  return (
+    `<button class="rowbtn cbwhy" data-a="info" data-k="term:${term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
+    (typeof cbBackupRow === "function" ? cbBackupRow(C(), id) : "")
   );
 }
 /* ONE STRATEGY STEP: a headline, one line of why, the drop for this player, three buttons, the receipt, the chart. */
@@ -1174,7 +1263,7 @@ function cbWayView(id) {
     head(cbWayNo(id), Wy.title) +
     cbTop(c) +
     `<div class="small">${esc(Wy.why)}</div>` +
-    `<button class="rowbtn cbwhy" data-a="info" data-k="term:${Wy.term}"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
+    cbWhyRow(id, Wy.term) +
     `<div class="stack" style="gap:6px"><b class="small">${esc(Wy.ask)}</b><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub)}</div></div>` +
     `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you</span>${kitPill(id === "ss" ? "Guess" : cbState(c))}</div><b class="cbdropn">${esc(V.has ? cbReceiptWords(V.receipt) : "No estimate yet")}</b><div class="tiny muted">${St.counted ? "With the choice above, against not counting it." : "If you count it, with the choice above."}</div></div>` +
     `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
@@ -1187,8 +1276,7 @@ function cbWayView(id) {
         : "Social Security is one of the colors, from the age it starts."
     ) +
     mathBox(math) +
-    `<button class="${St.how ? "primary go" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
-    `<button class="ghost wide" data-a="cbgo" data-v="prev">Back</button>` +
+    cbWayNav(!!St.how) +
     cbFoot()
   );
 }
@@ -1214,8 +1302,15 @@ function cbEndView() {
     `<div class="tile small" data-fid="cb:cushion"><b>${esc(cbCushionWords(K.p))}</b><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". Ending with more than you started is the point: it is there in case the market goes down." : "The number is 25 times a year of spending for that reason: you take less than the growth."}</div></div>` +
     dkCard(
       "What you counted",
-      `<div class="stack" style="gap:6px" data-fid="cb:ways">${cbWays().map(way).join("")}</div>`,
-      { cap: "Every way in the flow, in order. Tap one to change your answer." }
+      (typeof cbStackLine === "function" ? cbStackLine(c) : "") +
+        `<div class="stack" style="gap:6px" data-fid="cb:ways">${cbWays()
+          .filter(w => cbStepInfo(c, w.id).applies || cbWayState(c, w.id).counted)
+          .map(way)
+          .join("")}</div>` +
+        (typeof cbStackView === "function"
+          ? `<button class="ghost wide" data-a="cbgo" data-v="stack">Open the whole stack</button>`
+          : ""),
+      { cap: "The ways that can apply to you, in the order of the flow. Tap one to change your answer." }
     ) +
     (done
       ? ""
@@ -1238,11 +1333,14 @@ function cbSheet() {
   const w = W;
   if (w.step === "entry") return cbEntryView();
   if (w.step === "layer") return cbLayerView();
+  if (w.step === "stack" && typeof cbStackView === "function") return cbStackView(); /* cbstack.js */
+  if (w.step === "move" && typeof cbMoveView === "function") return cbMoveView(); /* cbmoves.js */
   const st = CB_STEPS.find(s => s.id === w.step) || CB_STEPS[0];
   return st.view();
 }
 /* A later file adds a step of the flow: cbStepAdd("taxplan", view, { title: "Pay less tax on the way out" }) puts it
-   before the last screen. view() returns the HTML of the sheet; it starts with head(cbWayNo(id), title) and
+   before the last screen. meta can also give info (c => ({ applies, why, receipt, st, backup })) and set (how =>
+   the answer count, did or no): the stack (cbstack.js) sorts, hides and counts the ways with them. view() returns the HTML of the sheet; it starts with head(cbWayNo(id), title) and
    cbTop(C()) and ends with cbFoot(). A step with a title is a way to shrink the number: it is numbered with the
    others (cbWayNo) and is a row of "What you counted" on the last screen, which reads cbWayState(c, id): what
    cbCount(id, opts) counted and the answer in c.x.cb.how[id] (count, did, no). A step with no title (a card between
@@ -1439,13 +1537,23 @@ Object.assign(ACT, {
       const c = C();
       W = { kind: "cb", step: "entry", q: 0, o: { a: clone((c.x && c.x.cb && c.x.cb.a) || {}) } };
     } else {
-      const id =
-        v === "next"
-          ? CB_STEPS[Math.min(CB_STEPS.length - 1, at + 1)].id
-          : v === "prev"
-            ? CB_STEPS[Math.max(0, at - 1)].id
-            : v;
-      W = { kind: "cb", step: id, o: {} };
+      /* the stack and a move of it are not steps of the list: Back from them is the chart or the stack */
+      const side = at < 0,
+        id =
+          v === "next"
+            ? side
+              ? W.step === "move"
+                ? "stack"
+                : "end"
+              : cbStepNear(C(), W.step, 1)
+            : v === "prev"
+              ? side
+                ? W.step === "move"
+                  ? "stack"
+                  : "chart"
+                : cbStepNear(C(), W.step, -1)
+              : v;
+      W = { kind: "cb", step: id, o: {}, id: t.dataset.k || undefined };
     }
     sheet(cbSheet);
     if (typeof spUpSoon === "function") spUpSoon(); /* spiral.js: a new screen starts at its top */

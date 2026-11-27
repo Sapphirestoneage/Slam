@@ -802,6 +802,52 @@ const WB = [
     "cb",
   ],
   [
+    "see",
+    "What it could be, way 4: bend your spending when markets fall",
+    "b",
+    () =>
+      WB_FN("lyFlex") &&
+      WB_FN("cbFlexFind") &&
+      WB_FN("cbFlexPlan") &&
+      WB_FN("cbFlexTake") &&
+      WB_FN("cbFlexView") &&
+      WB_HAS("cbflexdo"),
+    "Batch B, phase 2b. A way of What it is / What it could be: guardrails in place of a fixed 4%. The game finds the highest starting rate at which the guardrails rule held in the real start years of market history as often as the fixed 4% rule, and sizes What it could be at that rate. The screen shows the rule, the test it comes from, what the deepest cut looks like next to your needs, the drop, and the three buttons.",
+    "cb",
+  ],
+  [
+    "see",
+    "What it could be, way 5: money that shows up later",
+    "p",
+    () =>
+      WB_FN("lyEndsAt") &&
+      WB_FN("cbLaterPlan") &&
+      WB_FN("cbLaterSet") &&
+      WB_FN("cbLaterView") &&
+      WB_HAS("cblaterdo") &&
+      WB_HAS("cblaterset"),
+    "Batch B, phase 2c. A way of What it is / What it could be: a pension, and a home loan that is paid off. Up to three taps ask for them and write the game's own answers. A pension pays part of each year from 65; a payment that ends makes each year cost less from the age it ends. Partly: the pension starts at 65 until setup has your own age, and the value of the home itself (selling, a smaller home) is not counted.",
+    "cb",
+  ],
+  [
+    "see",
+    "What it could be: the stack, the counter and the backups",
+    "b",
+    () =>
+      WB_FN("cbStack") &&
+      WB_FN("cbStackView") &&
+      WB_FN("cbStackLine") &&
+      WB_FN("cbBackupRow") &&
+      WB_FN("cbMoves") &&
+      WB_FN("cbMoveView") &&
+      WB_FN("cbStepNear") &&
+      WB_HAS("cbquick") &&
+      WB_HAS("cbbk") &&
+      WB_HAS("cbmovedo"),
+    "Batch B, phases 2d, 2e and 2f. After the chart, one screen lists every way in two groups: the ways to shrink the number, and the ways to get there sooner (the moves of the Strategy Engine, the levers and the multipliers, each with months sooner from the same engine as Moves to try). Each group has the biggest effect for you first. What cannot apply sits under an i with the reason. One tap counts a way. A counter shows how many are stacked, and a meter how many backups are in place. A backup changes no number.",
+    "cb",
+  ],
+  [
     "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",

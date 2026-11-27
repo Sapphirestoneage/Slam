@@ -1249,6 +1249,9 @@ def layers_check(fn, x, o, ck):
             working = plan_work and not off.get('work')
             f = shape_at(xx.get('shape'), age)
             needs, wants = xx['spend'] * xx['needsShare'] * f, xx['spend'] * (1 - xx['needsShare']) * f
+            # a payment that has ended (a mortgage that is paid off) comes off the needs first, then off the wants
+            less = ends_at(xx.get('ends'), age)
+            needs, wants = max(0.0, needs - less), max(0.0, wants - max(0.0, less - needs))
             health = health_at(xx, age, stop)
             ss_all, oth_all = steady_at(xx, age, off)
             r = xx['grow'] if plan_work else (xx['draw'] if xx.get('draw') is not None else xx['grow'])
@@ -1304,6 +1307,8 @@ def layers_check(fn, x, o, ck):
             met_from = (met_from if met_from is not None else age) if met else None
             line_sum += line; gap_sum += gap if gap >= 0.005 else 0.0
         return rows, met_from, line_sum, gap_sum
+    def ends_at(ends, age):
+        return sum(max(0.0, e['year']) for e in (ends or []) if e.get('from') is not None and age >= e['from'])
     def pile_of(v, save, grow, n):
         for _ in range(n):
             v = v * (1 + grow) + save
@@ -1314,6 +1319,13 @@ def layers_check(fn, x, o, ck):
         inv = sum(max(0.0, x['bal'].get(k) or 0) for k in keys)
         pile = lambda n: pile_of(inv, x['save'], x['grow'], n)
         is_t = x['spend'] / r
+        # a counted flexible way starts at its own rate, only when that is above the standard rate (phase 2b)
+        flex = (c.get('flex') or {}).get('take')
+        flexed = flex is not None and flex > r + 1e-9
+        if flexed:
+            r = flex
+        # payments that end (phase 2c)
+        ends = x.get('ends') if c.get('ends') is not None else []
         def first(target):
             for n in range(81):
                 if pile(n) >= target(x['age'] + n):
@@ -1324,10 +1336,11 @@ def layers_check(fn, x, o, ck):
              'other': x.get('other') if c.get('other') is not None and not off.get('other') else [], 'health': x.get('health') if c.get('health') is not None else None}
         bands = (c.get('shape') or {}).get('bands') if c.get('shape') is not None else None
         use_tax = c.get('wtax') is not None and bool(steps)
-        any_c = bool(q['ss'] or (c.get('other') is not None and x.get('other') and not off.get('other')) or c.get('shape') is not None or (c.get('health') is not None and x.get('health')) or (c.get('wtax') is not None and steps))
+        any_c = bool(q['ss'] or (c.get('other') is not None and x.get('other') and not off.get('other')) or c.get('shape') is not None or (c.get('health') is not None and x.get('health')) or (c.get('wtax') is not None and steps)
+                     or flexed or (c.get('ends') is not None and ends_at(x.get('ends'), 10 ** 9) > 0))
         def base(age, stop):
             ss, oth = steady_at(q, age, {})
-            return max(0.0, x['spend'] * shape_at(bands, age) + health_at(q, age, stop) - ss - oth)
+            return max(0.0, max(0.0, x['spend'] * shape_at(bands, age) - ends_at(ends, age)) + health_at(q, age, stop) - ss - oth)
         def target(at):
             def worth(tax_at):
                 pv, v = 0.0, 1.0
@@ -1348,7 +1361,7 @@ def layers_check(fn, x, o, ck):
             start = min(at, 95)
             for _ in range(40):
                 rows = run({'age': start, 'stop': start, 'off': {}, 'bal': {k: t_now * share[k] for k in keys}, 'spend': x['spend'], 'needsShare': x['needsShare'], 'shape': bands,
-                            'grow': r, 'draw': r, 'workPay': 0.0, 'save': 0.0, 'saveTo': to, 'ss': q['ss'], 'other': q['other'], 'health': q['health'], 'plan': plan}, bisect=False)[0]
+                            'grow': r, 'draw': r, 'workPay': 0.0, 'save': 0.0, 'saveTo': to, 'ss': q['ss'], 'other': q['other'], 'health': q['health'], 'plan': plan, 'ends': ends}, bisect=False)[0]
                 nxt = worth(lambda age: rows[age - start][10])
                 done = abs(nxt - t_now) < 0.5
                 t_now = nxt

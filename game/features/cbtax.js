@@ -13,11 +13,11 @@
    OUTPUT      Math: cbTaxLines (the fill lines to try), cbTaxPlan (the plan and its receipt), cbTaxFill
                (the fill line that is counted; couldbe.js cbCounted reads it), cbTaxYears (the years after
                work, one row each, and 5 years a row), cbTaxDo (the answer of the player), cbTaxBookRows (part
-               of cbBook in couldbe.js). View: cbTaxView.
+               of cbBook in couldbe.js), cbTaxInfo (what the stack reads). View: cbTaxView.
                Actions (ACT): cbtaxdo. A step of the flow, added with cbStepAdd("taxplan", ...).
    DEPENDS ON  core/report.js, core/paylayers.js (lyTaxPlan, lyBars, LY_TAX_REF, LY_END),
                features/couldbe.js (cbParams, cbCountedRaw, cbFiling, cbState, cbStore, cbChart, cbTop,
-               cbFoot, cbWayNo, cbWayState, cbReceiptWords, cbChartCard, cbStepAdd, cbM, CB_COL),
+               cbFoot, cbWayNo, cbWayState, cbReceiptWords, cbChartCard, cbStepAdd, cbM, CB_COL, cbWhyRow, cbWayNav),
                features/retire.js (retireTax), features/taxview.js (TAXV_FILING), features/kit.js (kitAsk,
                kitPill, kitInfo, kitTerms), features/look.js (lkK), screens/ui.js (head, mathBox, esc).
    RULES       A view shows what the math functions return. The tax is the game's one tax engine
@@ -60,6 +60,12 @@ function cbTaxPlan(c) {
     F = cbFiling(c);
   delete raw.taxplan;
   delete raw.wtax;
+  /* flexible withdrawals (cbflex.js): the plan is found at the rate that is counted */
+  if (raw.flex) {
+    const take = typeof cbFlexTake === "function" ? cbFlexTake(c) : null;
+    if (take == null) delete raw.flex;
+    else raw.flex = { take };
+  }
   if (typeof p.tax !== "function")
     return {
       ok: false,
@@ -317,7 +323,7 @@ function cbTaxView() {
     head(cbWayNo("taxplan"), "Pay less tax on the way out") +
     cbTop(c) +
     `<div class="small">Money in a traditional 401(k) or IRA is taxed when you take it out. The order you take money out changes how much. The 25 times rule counts no tax at all.</div>` +
-    `<button class="rowbtn cbwhy" data-a="info" data-k="term:cbtaxplan"><span><b>What has to go right</b><div class="tiny muted">And the backup if it doesn't.</div></span><span class="i" aria-hidden="true">i</span></button>` +
+    cbWhyRow("taxplan", "cbtaxplan") +
     `<div class="stack" style="gap:6px" data-fid="cbtax:asks"><b class="small">Two taps: how you file, and your state</b>${asks}</div>` +
     (P.ok
       ? `<div class="tile small" data-fid="cbtax:adds"><div class="row between"><b>What the tax adds</b>${kitPill(P.st)}</div><div>The usual order (taxable, then traditional, then Roth): ${esc(cbReceiptWords(P.cost).replace(/^No change to the number$/, "nothing on your numbers"))}.</div>${P.applies ? `<div>With the plan: ${P.adds.plan > 0 ? "about " + cbM(P.adds.plan) + " more on the target" : "nothing more on the target"}.</div>` : ""}</div>`
@@ -393,8 +399,7 @@ function cbTaxView() {
           : []
       )
     ) +
-    `<button class="${St.how || !P.applies ? "primary go" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
-    `<button class="ghost wide" data-a="cbgo" data-v="prev">Back</button>` +
+    cbWayNav(!!St.how || !P.applies) +
     cbFoot()
   );
 }
@@ -436,4 +441,15 @@ kitTerms({
       "), the federal tax on that gain is 0%.",
   ],
 });
-cbStepAdd("taxplan", () => cbTaxView(), { title: "Pay less tax on the way out" });
+/* What this way gives the stack (cbstack.js): whether a plan applies, the reason when none does, and the drop. */
+function cbTaxInfo(c) {
+  const P = cbTaxPlan(c);
+  return {
+    applies: !!P.applies,
+    why: P.applies ? "" : cbTaxWhy(P),
+    receipt: P.receipt,
+    st: P.st,
+    backup: { words: "The usual order still pays for every year. You choose again each year.", auto: true },
+  };
+}
+cbStepAdd("taxplan", () => cbTaxView(), { title: "Pay less tax on the way out", info: cbTaxInfo, set: cbTaxDo });

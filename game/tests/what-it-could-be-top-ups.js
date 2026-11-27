@@ -204,9 +204,14 @@
     W.step === "end" && !/coming/i.test(text(h)) && !/data-fid="cb:more"/.test(h)
   );
   chk(
-    "it lists every way of the flow, one tap away, with where each stands",
+    "it lists every way of the flow that can apply to this player, one tap away, with where each stands (Batch B, phase 2e: a way that cannot apply is behind the i of the stack)",
     cbWays().length >= 2 &&
-      cbWays().every(w => new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h) && text(h).includes(w.title)) &&
+      cbWays()
+        .filter(w => cbStepInfo(c, w.id).applies)
+        .every(w => new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h) && text(h).includes(w.title)) &&
+      cbWays()
+        .filter(w => !cbStepInfo(c, w.id).applies)
+        .every(w => !new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h)) &&
       /Counted\. Tap to change/.test(text(h)) &&
       /Not counted yet\. Tap to change/.test(text(h))
   );

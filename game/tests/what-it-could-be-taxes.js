@@ -102,9 +102,14 @@
   );
   go("ss");
   go("next");
+  chk(
+    "Next from Social Security passes over the way while it cannot apply to this player (Batch B, phase 2e)",
+    W.step !== "taxplan" && !cbStepInfo(c, "taxplan").applies
+  );
+  go("taxplan");
   let h = ov();
   chk(
-    "Next from Social Security opens the way",
+    "the way opens from the list of what cannot apply yet",
     W.step === "taxplan" && text(h).includes("Pay less tax on the way out")
   );
   chk("the screen is clean: no undefined, no long dash, no verdict word", junk(h) === "", junk(h));
