@@ -1906,6 +1906,14 @@ const WB = [
     "Tap one or more people onto each job: a couple, a poly household, roommates, family, by their own names. The admin time of the home, who carries what, and its value at your time price. Labor counts in Sharing costs fairly adds these hours.",
     "rolemap",
   ],
+  [
+    "in",
+    "Find your era in 60 seconds: the demo page, and its answers come into the game",
+    "b",
+    () => WB_FN("erIn") && WB_FN("erResult") && WB_FN("erNext") && WB_FN("erBase"),
+    "Run CC-1, item 7. One small page at game/era/ asks six or seven questions by taps: age, spending, cash cushion, what you owe, invested, saved a month, and tax-friendly accounts when you invest. It shows your era, one next move, and Start my full game. The era comes from the game's own rule. The answers stay on the device and come into the game, so a new player does not answer them again. A printable page with a QR code is at game/era/print.html.",
+    null,
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
