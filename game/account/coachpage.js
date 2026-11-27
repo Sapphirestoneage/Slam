@@ -8,8 +8,9 @@
    INPUT       The Supabase client of the page (CP.sb). The table games (the rows that are shared),
                the table coach_notes and the function audit_write
                (supabase/migrations/20261124170000_roles_audit_coach.sql).
-   OUTPUT      Functions that only work out values: cpGame, cpNums, cpFlags, cpSnap, cpDiff, cpAssign,
-               cpPack, cpCsv, cpInvite, cpInviteUrl. Functions of the page: cpLoad, cpDraw, cpClick.
+   OUTPUT      Functions that only work out values: cpGame, cpNums, cpFlags, cpLead (the flag "New lead"
+               of the form before a call), cpSnap, cpDiff, cpAssign, cpPack, cpCsv, cpInvite, cpInviteUrl,
+               cpIntakeUrl. Functions of the page: cpLoad, cpDraw, cpClick.
    PARTS       account/livecoach.js adds Live Session Mode by four named parts: lcLoad (cpLoad), lcCard
                (cpDraw), lcClientRow (cpClientCard), lcClick (cpClick).
    DEPENDS ON  core/report.js, account/supa.js (the two public settings), account/roles.js. With
@@ -110,6 +111,12 @@ function cpFlags(cl, now, prev) {
   });
   return out;
 }
+/* NEW LEAD (run CC-1, item 11): the day a person of this client filled the form before a call, while the coach has
+   not marked the client as seen. "" when there is none, or the coach already looked. prev: cpLastSeen(). */
+function cpLead(cl, prev) {
+  const p = (cl.people || []).find(x => x.lead);
+  return p && !prev ? p.lead : "";
+}
 /* What a coach saw: kept when the coach taps "Mark as seen". */
 function cpSnap(cl) {
   return {
@@ -159,6 +166,8 @@ function cpClient(owner, G0) {
       name: c.name || "Someone",
       c /* the saved profile itself: coachplus.js reads its history for the milestones */,
       placed: !!c.placed,
+      /* run CC-1, item 11: the person filled the form before a call (intake/index.html; c.x.lead in erain.js) */
+      lead: c.x && c.x.lead && c.x.lead.d ? String(c.x.lead.d) : "",
       n: cpNums(c),
       done: ((c.x && c.x.plan) || []).filter(p => p.st === "done").length,
       open: ((c.x && c.x.plan) || []).filter(p => p.st !== "done" && p.st !== "na").length,
@@ -240,6 +249,11 @@ function cpCsv(list, now) {
    "Share with my coach" on (suInvited in supa.js). An account from any other link starts with it off. */
 function cpInviteUrl(page) {
   return String(page).replace(/coach\.html$/, "") + "?coach=1";
+}
+/* The link of the form before a call (run CC-1, item 11): the page intake/ of the game, with the same mark
+   ?coach=1. The link holds no name and no code of the coach. */
+function cpIntakeUrl(page) {
+  return String(page).replace(/coach\.html$/, "") + "intake/?coach=1";
 }
 /* The invite: an email that the coach sends from their own mail app. */
 function cpInvite(email, url) {
@@ -335,13 +349,15 @@ function cpClientCard(cl) {
   const now = Date.now(),
     prev = cpLastSeen(cl.owner),
     flags = cpFlags(cl, now, prev),
+    lead = cpLead(cl, prev),
     notes = CP.notes
       .filter(x => x.kind === "note" && x.client === cl.owner && String(x.body).indexOf("#stage:") !== 0)
       .sort((a, b) => (a.at < b.at ? 1 : -1)),
     quests = CP.notes.filter(x => x.kind === "quest" && x.client === cl.owner),
     first = cl.people[0],
     who = CP.who && CP.who[cl.owner] != null ? CP.who[cl.owner] : first ? first.i : 0;
-  return `<details class="card cl" data-o="${cl.owner}"${CP.open === cl.owner ? " open" : ""}><summary><span class="clsum"><b>${cpEsc(cl.names)}</b>${flags.length ? ` <span class="pill amber">Needs attention</span>` : ""}<span class="muted">Last active ${cpDay(cl.at)}${first && first.n.era != null ? " · Era " + first.n.era + (first.n.eraName ? ", " + cpEsc(first.n.eraName) : "") : ""}</span></span></summary><div class="inner">
+  return `<details class="card cl" data-o="${cl.owner}"${CP.open === cl.owner ? " open" : ""}><summary><span class="clsum"><b>${cpEsc(cl.names)}</b>${lead ? ` <span class="pill amber" data-lead="1">New lead</span>` : ""}${flags.length ? ` <span class="pill amber">Needs attention</span>` : ""}<span class="muted">Last active ${cpDay(cl.at)}${first && first.n.era != null ? " · Era " + first.n.era + (first.n.eraName ? ", " + cpEsc(first.n.eraName) : "") : ""}</span></span></summary><div class="inner">
+  ${lead ? `<div class="flag" data-lead="1">New lead: filled the form before your call on ${cpEsc(cpDay(lead + "T12:00:00"))}. The numbers are guesses from taps. Mark as seen, below, takes this flag off.</div>` : ""}
   ${flags.length ? `<div class="flag">${flags.map(f => `<div>${cpEsc(f)}</div>`).join("")}</div>` : ""}
   ${cl.people
     .map(
@@ -407,6 +423,8 @@ function cpDraw() {
         : CP.list.map(cpClientCard).join("")
       : `<div class="card"><p>No one shares a game with you yet. A client shows up here when they sign in with "Share with my coach" on, which is the default.</p></div>`) +
     `<details class="card"><summary>Invite a client by email</summary><div class="inner"><label for="inv">Their email address</label><input id="inv" type="email" autocomplete="off"><button class="wide" data-a="invite">Write the invite in my mail app</button><p class="muted">It opens an email, ready to send, with the link and three steps. Nothing is sent until you send it.</p></div></details>` +
+    /* run CC-1, item 11: the form a lead fills before a discovery call */
+    `<details class="card" data-intake="1"><summary>Form before a first call</summary><div class="inner"><p class="muted">Send this link to a lead before a discovery call. It is all taps, about 2 minutes. At the end they make their account, and they show up here with the flag New lead.</p><div class="lclink">${cpEsc(typeof location !== "undefined" ? cpIntakeUrl(location.origin + location.pathname) : "")}</div><p class="muted">Tap the link to select it, then copy it. The link holds no name and no code.</p></div></details>` +
     `<details class="card"><summary>Export to a sheet</summary><div class="inner"><button class="wide" data-a="csv">Save the roster as a CSV file</button><p class="muted">One row for each person: last active, era, the four numbers, open steps, flags. Open it in Google Sheets or Excel.</p></div></details>` +
     `<button class="wide" data-a="reload">Check again</button>`;
 }
