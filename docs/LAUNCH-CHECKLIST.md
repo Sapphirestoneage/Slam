@@ -1,7 +1,7 @@
 # Launch checklist for Eli (soft launch, Nov 30 2026)
 
 Six steps, in this order. Steps 1 to 5 are for you to do by hand. Step 6 can wait.
-The link for the slide is **https://sapphirestoneage.github.io/Slam/game/** and its QR picture is `docs/qr-slam.png`
+The link for the slide is **https://play.stresslessaboutmoney.com/game/** and its QR picture is `docs/qr-slam.png`
 (`docs/LAUNCH-LINK.md`). No key or password belongs in this file, in the repository or in a chat.
 
 ## 1. Switch the public site to the branch `release` (about a minute)

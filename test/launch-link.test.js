@@ -19,7 +19,7 @@ test('the link for the slide is the same in the doc, in the game and in the QR t
   assert.ok(inDoc && inGame && inTool, 'each place has the link');
   assert.equal(inGame, inDoc, 'game/account/door.js');
   assert.equal(inTool, inDoc, 'tools/qr_slam.py');
-  assert.match(inDoc, /^https:\/\/sapphirestoneage\.github\.io\/Slam\/game\/$/, 'the public address of the game');
+  assert.match(inDoc, /^https:\/\/play\.stresslessaboutmoney\.com\/game\/$/, 'the public address of the game');
   assert.ok(read('docs/RELEASE.md').toString().includes(inDoc), 'docs/RELEASE.md names the same public link');
 });
 

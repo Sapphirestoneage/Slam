@@ -40,7 +40,24 @@ const srcOf = (list, id) => { const a = list.find(x => x.id === id); return { so
 const taxRef = { year: all.tax.capitalGains.taxYear, standardDeduction: all.tax.standardDeduction, brackets: all.tax.brackets, zeroGainsTo: all.tax.capitalGains.zeroTo,
   sources: { standardDeduction: srcOf(ASSUMPTIONS, 'tax.standardDeduction.single'), standardDeductionHead: srcOf(ASSUMPTIONS, 'tax.standardDeduction.head'), brackets: srcOf(TABLES, 'Fed_single'), bracketsHead: srcOf(TABLES, 'Fed_head'),
     zeroGainsTo: { source: all.tax.capitalGains.source, date: all.tax.capitalGains.read } } };
-const out = head + body + `// The go-go, slow-go and no-go shares and their source (data/reference-2026.json, retirementPhases), read with lyShapeBands.\nconst LY_SHAPE_REF = ${JSON.stringify(ref)};\n// The share of Social Security that the trust fund report says can still be paid (socialSecurity.trustFund).\nconst LY_SS_REF = ${JSON.stringify(ssRef)};\n// The federal tax lines of the back-end tax step and where each comes from (data/reference-2026.json, tax; js/registry/assumptions.js).\nconst LY_TAX_REF = ${JSON.stringify(taxRef)};\n`;
+// The typical values of the chip "No idea, use typical" (run SLAM-ONBOARD-1, Nov 27 2026), each with its source:
+// spending by age (CE 2024: total expenditures less personal insurance and pensions, the rule of
+// docs/engines/priors-sources.md), the personal saving rate (BEA), and the typical amount invested by age
+// (typicalInvested of the reference data). The game reads them with cbTypical (game/features/couldbe.js).
+const priors = JSON.parse(readFileSync(new URL('../data/priors-2026.json', import.meta.url), 'utf8'));
+const plainRow = r => r.household == null && r.place == null;
+const ceRow = (field, band) => priors.rows.find(r => r.field === field && r.band === band && r.source === 'ce2024' && plainRow(r));
+const srcLine = r => { const S = priors.sources[r.source]; return `${S.publisher}, ${S.name}`; };
+const ceTotals = priors.rows.filter(r => r.field === 'spending.total' && r.ages && r.source === 'ce2024' && plainRow(r));
+const saveRow = priors.rows.find(r => r.field === 'savingRate' && !r.ages && plainRow(r));
+const typRef = {
+  spend: { rows: ceTotals.map(t => { const p = ceRow('spending.personalInsurance', t.band); if (!p) throw new Error(`no personal insurance row for ${t.band}`); return { ages: t.ages, band: t.band, year: t.mean - p.mean }; }),
+    who: ceTotals[0].among, source: `${srcLine(ceTotals[0])}: total expenditures less personal insurance and pensions (payroll taxes and retirement contributions), annual mean per consumer unit`, date: priors.asOf },
+  saveRate: { share: saveRow.share, source: `${srcLine(saveRow)}: ${saveRow.table}, ${saveRow.period}`, date: priors.sources[saveRow.source].released },
+  inv: { rows: all.typicalInvested.byAge.map(([from, median], i, L) => ({ ages: [from || null, i + 1 < L.length ? L[i + 1][0] - 1 : all.typicalInvested.to], median })),
+    who: all.typicalInvested.who, source: all.typicalInvested.source, date: all.typicalInvested.date },
+};
+const out = head + body + `// The go-go, slow-go and no-go shares and their source (data/reference-2026.json, retirementPhases), read with lyShapeBands.\nconst LY_SHAPE_REF = ${JSON.stringify(ref)};\n// The share of Social Security that the trust fund report says can still be paid (socialSecurity.trustFund).\nconst LY_SS_REF = ${JSON.stringify(ssRef)};\n// The federal tax lines of the back-end tax step and where each comes from (data/reference-2026.json, tax; js/registry/assumptions.js).\nconst LY_TAX_REF = ${JSON.stringify(taxRef)};\n\n// The typical values of the chip No idea, use typical, with their sources (data/priors-2026.json: CE 2024 by age and the BEA saving rate; data/reference-2026.json: typicalInvested).\nconst LY_TYP_REF = ${JSON.stringify(typRef)};\n`;
 if (process.argv.includes('--check')) {
   let now = '';
   try { now = readFileSync(to, 'utf8'); } catch { now = ''; }

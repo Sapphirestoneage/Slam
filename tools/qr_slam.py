@@ -15,7 +15,7 @@ all three, then run this file again. No web service is used: the picture is made
 import os
 import sys
 
-LINK = "https://sapphirestoneage.github.io/Slam/game/"
+LINK = "https://play.stresslessaboutmoney.com/game/"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "qr-slam.png")
 MIN_WIDTH = 1000  # pixels
 QUIET = 4  # modules of white around the code (the QR standard asks for 4)

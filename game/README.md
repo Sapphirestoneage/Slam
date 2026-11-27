@@ -2,7 +2,7 @@
 
 SLAM the Game is a money game for one household. It runs in a browser. It has no build step.
 
-Live site: https://sapphirestoneage.github.io/Slam/game/
+Live site: https://play.stresslessaboutmoney.com/game/
 
 Retirement engine by Zack, MIT license (section 11).
 

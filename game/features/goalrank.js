@@ -6,8 +6,9 @@
                Someday list, dimmed below, and the next one moves up when a top goal is done.
    INPUT       The profile: c.goals (g.rank, g.era, g.eraWas), c.x.grank, c.x.noGoals. The open sheet
                (W.kind): draft. The taps of the player (the actions in OUTPUT).
-   OUTPUT      Math: grOrder, grApply, grMove, grPromote. Views: draftSheet (the card draft and its ranking),
-               grRows (part of goalsCard in ui.js). Actions (ACT): grkeep, grown, grnext, grup, grdown,
+   OUTPUT      Math: grOrder, grApply, grMove, grPromote, grNew. Views: draftSheet (the card draft and its
+               ranking), grOwnField (the field "Add my own"; features/wants.js shows it too), grRows (part
+               of goalsCard in ui.js). Actions (ACT): grkeep, grown, grnext, grup, grdown,
                grdone, grnone. Also rkMove and the drag listener used by the ranking of values.js.
    DEPENDS ON  core/engine.js (GOAL_K, GOAL_ONE, goalTypical, derive), screens/ui.js (gid, goalsCard),
                features/games2.js (draftDeal, G2B, g2done, GX).
@@ -108,9 +109,14 @@ function draftSheet() {
   return (
     head("Card draft", "Which of these are yours?") +
     `<div class="small muted">Keep as many as you like. Next you put them in order.</div><div class="stack" style="gap:6px">${cards.map(card).join("")}${ownRows}</div>${cards.length ? "" : `<div class="tile small">You already have all of these on your list.</div>`}<button class="ghost wide slim" data-a="draftdeal">Deal me different ones</button>
- <div class="field"><label class="small" for="grown">Add my own</label><div class="row" style="gap:8px"><input id="grown" class="mnfind" type="text" maxlength="40" placeholder="A goal in a few words" style="flex:1;min-height:44px"><button class="ghost slim" data-a="grown">Add</button></div><div class="tiny muted">Optional. Typing is never needed.</div></div>` +
+ ${grOwnField()}` +
     `<button class="primary wide" data-a="grnext" ${pick.length || own.length || grOrder(c).length ? "" : `disabled title="Keep one first"`}>Next: rank them</button>${pick.length || own.length ? "" : `<div class="tiny muted">Keep one first, then rank.</div>`}<button class="linkish" data-a="grnone">None of these, for now</button>`
   );
+}
+/* The field "Add my own": one box and the button Add (ACT.grown puts the name on W.own). The card draft shows it,
+   and "Something else" of What you want (features/wants.js) opens the same one. */
+function grOwnField() {
+  return `<div class="field"><label class="small" for="grown">Add my own</label><div class="row" style="gap:8px"><input id="grown" class="mnfind" type="text" maxlength="40" placeholder="A goal in a few words" style="flex:1;min-height:44px"><button class="ghost slim" data-a="grown">Add</button></div><div class="tiny muted">Optional. Typing is never needed.</div></div>`;
 }
 /* Part of goalsCard() in ui.js: the goals in rank order, the top 3 under "Working on now", the rest dimmed. */
 function grRows(c, gs, row) {
@@ -124,10 +130,11 @@ function grRows(c, gs, row) {
     `<button class="ghost wide slim" data-a="grrank">Change the order</button>`
   );
 }
-const grNew = (c, k) => ({
+/* A new goal. k: its kind, which is also its name. n: a name of its own (What you want: features/wants.js). */
+const grNew = (c, k, n) => ({
   id: gid(),
   k: GOAL_ONE[k] ? k : "Something else",
-  n: k,
+  n: n || k,
   cost: goalTypical(c, GOAL_ONE[k] ? k : "Something else"),
   s: false,
   era: null,

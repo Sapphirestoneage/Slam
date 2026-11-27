@@ -51,7 +51,7 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   let { ctx, page, errs } = await open(browser, false, 390, 640);
   chk('a new visitor sees the landing screen', await page.locator('#door').isVisible());
   const box = async sel => page.locator(sel).first().boundingBox();
-  for (const [name, sel] of [['the one line', '#door h1'], ['Start', '#door [data-door=start]'], ['Sign in', '#door [data-door=in]'], ['What is this?', '#door summary'], ['Report', '#door [data-a=flag]']]) {
+  for (const [name, sel] of [['the one line', '#door h1'], ['Start', '#door [data-door=start]'], ['Sign in', '#door [data-door=in]'], ['the trust line', '#door .door-by'], ['What is this?', '#door summary'], ['Report', '#door [data-a=flag]']]) {
     const b = await box(sel);
     chk(name + ' is on the first screen at 390 x 640, with no scroll', b && b.y >= 0 && b.y + b.height <= 640 && b.x >= 0 && b.x + b.width <= 390, b);
   }
@@ -82,12 +82,17 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   chk('Start: no sign-in screen, no landing', !(await page.locator('#su-gate').count()) && !(await page.locator('#door').count()));
   // Run A (Nov 27 2026): the one opening of a new player is What it is / What it could be (game/features/couldbe.js):
   // four answers by range chips, then the first number. The setup rounds come after it, from its last screen.
-  chk('the first screen is the first of four questions, not the setup rounds', /Question 1 of 4/.test(await page.locator('#ov').innerText()) && /How old are you\?/.test(await page.locator('#ov').innerText()) && !/Am I okay\?|Question 1 of 5|Here's where you stand/.test(await page.locator('#ov').innerText()));
+  // Run SLAM-ONBOARD-1 (Nov 27 2026): the first screen is What you want (game/features/wants.js): chips, no typing.
+  chk('the first screen is What you want: chips, no typing', /What do you want\?/.test(await page.locator('#ov').innerText()) && (await page.locator('#ov [data-a=wnpick]').count()) === 11 && !(await page.locator('#ov input:visible').count()));
+  chk('What you want: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
+  await shot(page, '2b-what-you-want-390');
+  await tap('#ov [data-a=wnskip]'); await page.waitForTimeout(400);
+  chk('then the first of four questions, not the setup rounds', /Question 1 of 4/.test(await page.locator('#ov').innerText()) && /How old are you\?/.test(await page.locator('#ov').innerText()) && !/Am I okay\?|Question 1 of 5|Here's where you stand/.test(await page.locator('#ov').innerText()));
   chk('the first question asks for no typing', !(await page.locator('#ov input:visible').count()));
   await shot(page, '3-first-question-390');
   for (const [q, i] of [['age', 2], ['spend', 2], ['inv', 2], ['save', 3]]) { await tap(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`); await page.waitForTimeout(550); }
   const top = await page.locator('#ov .cbtop').innerText();
-  chk('the first number shows after 5 taps or fewer from the landing', taps <= 5 && /What it is/i.test(top) && /\$[\d,]+/.test(top), [taps, top]);
+  chk('the first number shows after 6 taps or fewer from the landing (Start, What you want, four answers)', taps <= 6 && /What it is/i.test(top) && /\$[\d,]+/.test(top), [taps, top]);
   console.log(`     taps from the landing to the first number: ${taps}`);
   chk('the two numbers start equal', (await page.locator('#ov [data-cbn=is]').innerText()) === (await page.locator('#ov [data-cbn=could]').innerText()) && /equal until you count something/.test(await page.locator('#ov').innerText()));
   chk('What it is: no sideways scroll, no undefined', !(await sideways(page)) && !(await junk(page)));
@@ -100,10 +105,11 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   // the stack, the reveal, the last screen (three buttons only), then Home, where the rest of setup is
   await tap('#ov [data-a=cbgo][data-v=stack]'); await page.waitForTimeout(1000);
   await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
-  chk('the reveal comes at the eighth tap, with the difference and the finished chart', taps === 8 && (await page.locator('#ov [data-fid="cb:diff"]').isVisible()) && (await page.locator('#ov svg.dkstack').count()) === 1 && !(await sideways(page)) && !(await junk(page)), taps);
+  chk('the reveal comes at the ninth tap, with the difference and the finished chart', taps === 9 && (await page.locator('#ov [data-fid="cb:diff"]').isVisible()) && (await page.locator('#ov svg.dkstack').count()) === 1 && !(await sideways(page)) && !(await junk(page)), taps);
   await shot(page, '3d-reveal-390');
   await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
-  chk('the last screen has three buttons only: Save my plan, Share my card, Tell Eli what broke', (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await page.locator('#ov [data-a=cbrest]').count()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
+  console.log(`     taps from the landing to the last screen of the flow: ${taps}`);
+  chk('the last screen has three buttons only: Keep my plan: make a free account, Share my card, Tell Eli what broke', /Keep my plan: make a free account/.test(await page.locator('#ov [data-a=cbsave]').innerText()) && (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await page.locator('#ov [data-a=cbrest]').count()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
   await shot(page, '3e-last-screen-390');
   await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
   chk('Home starts with the two numbers and the small chart, and has the rest of setup', (await page.locator('#app [data-fid="cb:home"] svg.dkstack').isVisible()) && (await page.locator('#app [data-fid="cb:homerest"]').isVisible()) && !(await sideways(page)) && !(await junk(page)));

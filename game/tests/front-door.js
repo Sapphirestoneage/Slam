@@ -72,8 +72,18 @@
   doorGate(done);
   chk("a new visitor: the landing screen is on the page", kids.length === 1 && kids[0].id === "door" && DOOR.shown);
   const L = kids[0].innerHTML;
-  chk("the one line", L.includes("Find out if you're okay with money in 2 minutes, no typing, free."));
-  chk("the first step is named: four taps, then the number", L.includes("First: four taps, then your freedom number."));
+  chk("the one promise", L.includes("<h1>See your FI number, then see how much smaller it could be.</h1>"));
+  chk("the sub line", L.includes("About 2 minutes. All taps. Free."));
+  chk(
+    "one name for the number on the landing: no freedom number, no okay with money",
+    !/freedom number|okay with money/i.test(L) && /your FI number/.test(L)
+  );
+  chk(
+    "one trust line under the buttons",
+    L.includes("Built by Eli Saperstein, money coach. 250+ people coached.") &&
+      L.indexOf("Built by Eli Saperstein") > L.indexOf('data-door="in"') &&
+      L.indexOf("Built by Eli Saperstein") < L.indexOf("<details>")
+  );
   chk("one Start button", (L.match(/data-door="start"/g) || []).length === 1 && />Start<\/button>/.test(L));
   chk(
     "Sign in is there, and it is not the primary button",
@@ -145,8 +155,15 @@
   ]);
   chk("Start: the visitor plays with no account", doorGuest() && store.slam_guest === "1");
   /* the one opening of a new player: What it is / What it could be (features/couldbe.js) */
-  chk("Start opens the one opening: four questions by taps", W && W.kind === "cb" && W.step === "entry", W && W.kind);
+  /* run SLAM-ONBOARD-1: What you want comes first (features/wants.js), then the four questions */
+  chk("Start opens What you want first", W && W.kind === "cb" && W.step === "wants", W && W.step);
+  X("wnskip");
+  chk("then the one opening: four questions by taps", W && W.kind === "cb" && W.step === "entry", W && W.kind);
   let h = ov();
+  chk(
+    "the entry names the number: your FI number",
+    /Four taps, then your FI number\./.test(h) && !/freedom number|okay with money/i.test(h)
+  );
   chk("the old opening is not shown first", !/Am I okay\? · page|Question 1 of 5|Here's where you stand/.test(h));
   chk(
     "the first question asks the age, with range chips and no box to type in",
@@ -159,8 +176,8 @@
   X("cbset", "", "", { q: "save", i: 3 });
   h = ov();
   chk(
-    "the first number comes at the fifth tap, with the tap on Start",
-    cbTaps() === 5 && W.kind === "cb" && W.step === "is" && /What it is/.test(h) && /data-cbn="is"/.test(h),
+    "the first number comes at the sixth tap: Start, What you want, four answers",
+    cbTaps() === 6 && W.kind === "cb" && W.step === "is" && /What it is/.test(h) && /data-cbn="is"/.test(h),
     cbTaps()
   );
   chk(
@@ -371,10 +388,7 @@
   UX_NOSAMPLE = false;
 
   /* 8. The link for the slide */
-  chk(
-    "the link for the slide is the address of the game",
-    DOOR_LINK === "https://sapphirestoneage.github.io/Slam/game/"
-  );
+  chk("the link for the slide is the address of the game", DOOR_LINK === "https://play.stresslessaboutmoney.com/game/");
   const idx = fs.readFileSync(GAME_DIR + "index.html", "utf8");
   chk(
     "What is this? links the privacy page, with the words of the trust file",

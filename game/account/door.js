@@ -1,8 +1,9 @@
 /* ============================================================================
    SLAM the Game: account/door.js
    PURPOSE     The front door. A person who arrives from the QR code or a link, with no account on this
-               device, sees one landing screen: one line, one big Start button, "What is this?" (closed
-               by default) and Sign in. Start needs no account and no typing: it opens the one opening
+               device, sees one landing screen: one promise (your FI number, then how much smaller it
+               could be), one big Start button, Sign in, one trust line (who built it), and "What is
+               this?" (closed by default). Start needs no account and no typing: it opens the one opening
                of a new player, What it is / What it could be (features/couldbe.js). The setup by taps
                with the question "Am I okay?" (features/okay.js) comes after it. The game of such a
                visitor stays on this device until the visitor makes an account.
@@ -26,7 +27,7 @@
                the link here, in the tool and in docs/LAUNCH-LINK.md.
    STATE       DOOR (done, want, el, guest, shown, saved).
    ========================================================================= */
-const DOOR_LINK = "https://sapphirestoneage.github.io/Slam/game/";
+const DOOR_LINK = "https://play.stresslessaboutmoney.com/game/";
 const DOOR = { done: null, want: "", el: null, guest: false, shown: false };
 
 function doorGet(k) {
@@ -76,13 +77,14 @@ function doorHtml(wait) {
  #door .door-what p{margin:0}#door .door-tiny{font-size:13px;line-height:1.35;color:var(--muted,#9fb0dd)}
  #door .door-sheet{display:block;text-align:center;min-height:44px;box-sizing:border-box;padding:11px 10px;border-radius:12px;border:2px solid var(--line,#3a55a0);color:inherit;font-size:15px;font-weight:600;text-decoration:none;box-shadow:0 2px 0 rgba(0,0,0,.25)}
  #door .door-link{color:var(--a3,#8fb0ff);text-decoration:underline}
- #door .door-msg{min-height:18px;font-size:14px}#door .door-rep{display:flex;justify-content:flex-end}`;
+ #door .door-by{margin:0;text-align:center}#door .door-msg{min-height:18px;font-size:14px}#door .door-rep{display:flex;justify-content:flex-end}`;
   return `<style>${css}</style><div class="door-in">
  <p class="door-eye">SLAM the Game</p>
- <h1>Find out if you're okay with money in 2 minutes, no typing, free.</h1>
- <p class="door-q">First: four taps, then your freedom number.</p>
+ <h1>See your FI number, then see how much smaller it could be.</h1>
+ <p class="door-q">About 2 minutes. All taps. Free.</p>
  <button type="button" class="door-go" data-door="start">Start</button>
  <button type="button" class="door-in2" data-door="in">I have an account. Sign in</button>
+ <p class="door-tiny door-by">Built by Eli Saperstein, money coach. 250+ people coached.</p>
  <div class="door-msg" role="status">${wait ? "One moment. The sign-in screen is on its way." : ""}</div>
  <details><summary>What is this?</summary><div class="door-what">
  <p>A money game by a money coach. You tap your answers and it shows where you stand and one next step.</p>

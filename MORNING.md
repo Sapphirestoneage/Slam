@@ -1,6 +1,6 @@
 # Good morning: what to try first on your phone
 
-Open https://sapphirestoneage.github.io/Slam/game/ and pull down to refresh one time.
+Open https://play.stresslessaboutmoney.com/game/ and pull down to refresh one time.
 
 1. **Menu, then "Add another person".** Do setup as a new person (about 17 taps). At the end you get the new reveal:
    strengths and weak spots as numbers, your element, "Does this feel accurate?", "Which do you want to improve most?".

@@ -34,6 +34,7 @@
       W = null;
       SH = null;
       X("start");
+      X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
       X("cbset", "", "", { q: "age", i: 1 });
       X("cbset", "", "", { q: "spend", i: 2 });
       X("cbset", "", "", { q: "inv", i: 3 });
@@ -44,7 +45,7 @@
   /* ---- 1. a new player: the taps to the first number and to the reveal ---- */
   let c = fresh(),
     taps = cbTaps();
-  chk("the first number comes at the fifth tap", taps === 5 && W.step === "is", taps);
+  chk("the first number comes at the sixth tap", taps === 6 && W.step === "is", taps);
   go("next");
   go("stack");
   taps += 2;
@@ -53,7 +54,7 @@
   go("reveal");
   taps += 1;
   h = ov();
-  chk("the reveal comes at the eighth tap, well inside 15", W.step === "reveal" && taps === 8, taps);
+  chk("the reveal comes at the ninth tap, well inside 15", W.step === "reveal" && taps === 9, taps);
   chk(
     "the reveal and the last screen are the two last steps of the flow",
     CB_STEPS[CB_STEPS.length - 2].id === "reveal" && CB_STEPS[CB_STEPS.length - 1].id === "end"
@@ -220,7 +221,7 @@
     "the last screen has three buttons, in the owner's words and order",
     W.step === "end" &&
       (three.match(/<button/g) || []).length === 3 &&
-      /data-a="cbsave">Save my plan<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="flag">Tell Eli what broke</.test(
+      /data-a="cbsave">Keep my plan: make a free account<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="flag">Tell Eli what broke</.test(
         three
       )
   );
@@ -241,7 +242,7 @@
   );
   chk("the last screen is clean", junk(h) === "", junk(h));
   chk("Tell Eli what broke is the report tool of the game", ACT.flag === ACT.flag && typeof flagSheet === "function");
-  /* Save my plan */
+  /* Keep my plan */
   {
     const was = ACT.doorsave,
       g0 = DOOR.guest;
@@ -250,7 +251,7 @@
     DOOR.guest = true;
     chk("a visitor with no account: the screen says the plan is on this device only", cbSaveState().guest === true);
     X("cbsave");
-    chk("Save my plan opens the door of a free account for a visitor", hit === 1);
+    chk("Keep my plan opens the door of a free account for a visitor", hit === 1);
     DOOR.guest = false;
     X("cbsave");
     chk(

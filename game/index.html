@@ -508,6 +508,8 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .cbtop{position:sticky;top:-16px;z-index:6;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--panel);padding:8px 0 6px;border-bottom:1px solid var(--line)}
 .cbnum{display:flex;flex-direction:column;gap:1px;min-width:0;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--panel2)}.cbnum.could{border-color:var(--sap)}
 .cbnum .dknum{font-size:21px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}.cbnum .dknum.cbmove{color:var(--good)}
+.cbtop.cbstrip{display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline;padding:6px 0 5px}.cbstrip .cbnum{flex-direction:row;align-items:baseline;gap:5px;border:0;border-radius:0;padding:0;background:none}.cbstrip .cbnum .dknum{font-size:16px}.cbstrip .cbnum.could .dknum{text-decoration:underline;text-decoration-color:var(--sap);text-underline-offset:3px}
+.wntags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.wntag{font-size:12px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis}.cbfirst{display:flex;flex-direction:column;gap:6px;border-color:var(--sap)}.cbtypbox{display:flex;flex-direction:column;gap:6px}.cbtyprow{align-items:center}
 .cbtopsub{gap:8px;align-items:center}.cbfoot{text-align:center;margin-top:6px}.cbql{font-size:19px;line-height:1.3}.cbwarn{color:var(--warn)}
 .cbdots{display:flex;gap:6px}.cbdots i{flex:1;height:5px;border-radius:99px;background:var(--line)}.cbdots i.done{background:var(--good)}.cbdots i.on{background:var(--sap)}
 .dkstack .dkline{stroke:var(--text);stroke-width:2}.dkstack .dkmark{stroke:var(--text);stroke-width:1;stroke-dasharray:3 2;opacity:.75}.dkstack .dkgapl{fill:var(--warn);font-weight:700;font-size:9.5px}.dkstack .dktap{cursor:pointer}.dkstack .dktap:focus-visible rect:first-child{stroke:var(--sap);stroke-width:2}.dkstack rect[data-a]{cursor:pointer}
@@ -633,12 +635,12 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/firelink.js?v=fc984112"></script>
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
-<script src="account/door.js?v=3253c4c5"></script>
+<script src="account/door.js?v=0ecc1e58"></script>
 <script src="account/lock.js?v=1a52a1d9"></script>
 <script src="account/supa.js?v=2a963457"></script>
 <script src="data/skills.js?v=aa53a193"></script>
 <script src="data/skillthemes.js?v=1db0fcfa"></script>
-<script src="data/qr.js?v=9704603a"></script>
+<script src="data/qr.js?v=2ccd5729"></script>
 <script src="data/market.js?v=cd121024"></script>
 <script src="core/withdraw.js?v=0d5888cd"></script>
 <script src="data/limits2026.js?v=504f72bd"></script>
@@ -662,7 +664,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="core/feel.js?v=5ffd145b"></script>
 <script src="core/recalc.js?v=9ee7e7ea"></script>
 <script src="core/statuses.js?v=8ac638be"></script>
-<script src="core/paylayers.js?v=92304524"></script>
+<script src="core/paylayers.js?v=64761a5b"></script>
 <script src="core/jobs.js?v=db70fca4"></script>
 <script src="core/hhold.js?v=58b95f8b"></script>
 <script src="core/enough.js?v=cad03dc6"></script>
@@ -682,7 +684,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="screens/dash.js?v=55bc825e"></script>
 <script src="features/games.js?v=95b1f98f"></script>
 <script src="features/games2.js?v=c2827cda"></script>
-<script src="features/goalrank.js?v=c7526049"></script>
+<script src="features/goalrank.js?v=fcf5812f"></script>
 <script src="features/year.js?v=db3aac5f"></script>
 <script src="features/chart.js?v=843c18bc"></script>
 <script src="screens/profiles.js?v=d0f900aa"></script>
@@ -802,7 +804,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/peers.js?v=2c804668"></script>
 <script src="data/patchnotes.js?v=84429fd2"></script>
 <script src="data/toollib.js?v=cd9e1119"></script>
-<script src="features/founding.js?v=3590d608"></script>
+<script src="features/founding.js?v=23920de3"></script>
 <script src="features/mycards.js?v=02c367bf"></script>
 <script src="features/tally.js?v=bf86cf3e"></script>
 <script src="features/look.js?v=5c00967f"></script>
@@ -829,14 +831,15 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/hhold.js?v=3fb0b8a0"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
 <script src="features/results.js?v=213dedc7"></script>
-<script src="features/couldbe.js?v=0db5ee6e"></script>
+<script src="features/couldbe.js?v=fc107f0b"></script>
+<script src="features/wants.js?v=b18aa900"></script>
 <script src="features/cbtax.js?v=3193fafa"></script>
 <script src="features/cbflex.js?v=ac2e765e"></script>
 <script src="features/cblater.js?v=ee9dd0d5"></script>
 <script src="features/cbmoves.js?v=9427a024"></script>
 <script src="features/cbyesbut.js?v=5166503e"></script>
 <script src="features/cbstack.js?v=ce0a7727"></script>
-<script src="features/cbreveal.js?v=26d55a0c"></script>
+<script src="features/cbreveal.js?v=e88c28b0"></script>
 <script src="features/firstweek.js?v=0c50eb9c"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>

@@ -1,7 +1,7 @@
 /* ============================================================================
    SLAM the Game, test: tests/what-it-could-be.js
    PURPOSE     Examine What it is / What it could be (run A, Nov 27 2026), steps 0 to 3: the one opening of
-               a new player (four answers by taps, the first number in 5 taps or fewer), "What it is" from
+               a new player (four answers by taps, the first number in 6 taps or fewer), "What it is" from
                the engine, the two pinned numbers that start equal, the count of a cost or an income, the
                layer chart (in every year the layers plus the gap equal the line; a layer that is off never
                raises what is covered; 5-year bars and single years), the rest of setup behind the flow, and
@@ -34,6 +34,7 @@
   G.demo = true;
   W = null;
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
   let h = ov();
   chk(
     "a new player: Start opens the flow at its first question",
@@ -72,7 +73,7 @@
   chk("no profile is made before the fourth answer", G.demo === true);
   X("cbset", "", "", { q: "save", i: 4 });
   h = ov();
-  chk("the first number comes in 5 taps or fewer, with the tap on Start", cbTaps() <= 5 && W.step === "is", cbTaps());
+  chk("the first number comes in 6 taps or fewer, with the tap on Start", cbTaps() <= 6 && W.step === "is", cbTaps());
   chk("the profile is the player's own now", !G.demo && G.chars.length === 1);
   let c = C(),
     d = derive(c);
@@ -383,6 +384,7 @@
   /* ---- 6. a returning player ---- */
   chk("a returning player: the flow does not open by itself", cbStart() === false && !SH);
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
   chk("their Start is Change my answers, as before", W && W.kind === "setup" && W.mode === "edit");
   closeSheet();
   X("cb");

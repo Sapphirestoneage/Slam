@@ -32,6 +32,7 @@
   G.demo = true;
   W = null;
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
   kinds.push(W && W.kind + ":" + W.step);
   let h = ov();
   chk(
@@ -56,7 +57,7 @@
     kinds.join() === "cb:entry,cb:entry,cb:entry,cb:entry,cb:is",
     kinds.join()
   );
-  chk("the first number comes in 5 taps", cbTaps() === 5, cbTaps());
+  chk("the first number comes in 6 taps", cbTaps() === 6, cbTaps());
   chk("the profile is made once, and Start does not open the entry again for it", !G.demo && cbStart() === false);
   chk(
     "the three ways in (the landing, Start, a first game from the cloud) all call the one opening",

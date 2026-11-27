@@ -117,7 +117,7 @@ The switch does nothing while `LIVE_SESSION_READY` is off: the AI pass is a part
 The simulated call answers the AI pass from a stand-in: no word is sent to Anthropic, and it costs nothing. It
 shows what the screens look like.
 
-1. Open `https://sapphirestoneage.github.io/Slam/game/session.html?sim=coach` in Chrome on a laptop.
+1. Open `https://play.stresslessaboutmoney.com/game/session.html?sim=coach` in Chrome on a laptop.
 2. Tap OK, Allow the microphone (a stand-in), Yes for headphones, and Start when it lights up.
 3. Let the made-up call play (about a minute), then tap End, and "Yes, end the session".
    You should see: "Check what was heard", and a card "The AI pass" with "Drop in your recording's text file"

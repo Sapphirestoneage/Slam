@@ -44,6 +44,7 @@
     X(a, v, k, x);
   };
   tap("start");
+  tap("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
   tap("cbset", "", "", { q: "age", i: 1 });
   tap("cbset", "", "", { q: "spend", i: 2 });
   tap("cbset", "", "", { q: "inv", i: 3 });
@@ -51,7 +52,7 @@
   let c = C();
   const first = taps,
     N0 = cbNumbers(c);
-  chk("the first number comes in 5 taps", first === 5 && W.step === "is");
+  chk("the first number comes in 6 taps", first === 6 && W.step === "is");
   tap("cbgo", "next");
   let h = ov();
   chk("Next on the chart goes to the stack", W.step === "chart" && /data-a="cbgo" data-v="stack"/.test(h));
@@ -64,18 +65,18 @@
   chk("the screen is clean: no undefined, no long dash, no verdict word", junk(h) === "", junk(h));
   tap("cbgo", "reveal");
   chk(
-    "a new player who counts nothing reaches the reveal in 8 taps: the flow is not a forced march",
-    W.step === "reveal" && /data-a="cbgo" data-v="reveal"/.test(h) && taps === 8,
+    "a new player who counts nothing reaches the reveal in 9 taps: the flow is not a forced march",
+    W.step === "reveal" && /data-a="cbgo" data-v="reveal"/.test(h) && taps === 9,
     taps
   );
   go("stack");
-  taps = 7;
+  taps = 8;
   let S = cbStack(c);
   S.after.slice(0, 3).forEach(w => tap("cbquick", "", w.id));
   tap("cbgo", "reveal");
   chk(
-    "with three ways counted from the list it is 11 taps",
-    W.step === "reveal" && taps === 11 && cbStack(c).stacked === 3,
+    "with three ways counted from the list it is 12 taps",
+    W.step === "reveal" && taps === 12 && cbStack(c).stacked === 3,
     taps
   );
   S.after.slice(0, 3).forEach(w => quick(w.id));

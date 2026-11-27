@@ -25,7 +25,7 @@
    ========================================================================= */
 const FD_MAIL = "stresslessaboutmoney@gmail.com",
   FD_LIMIT = 50,
-  FD_SITE = "https://sapphirestoneage.github.io/Slam/game/",
+  FD_SITE = "https://play.stresslessaboutmoney.com/game/",
   FD_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const FD = { tried: false, busy: false, wait: false };
 

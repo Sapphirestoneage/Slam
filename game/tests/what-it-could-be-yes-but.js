@@ -35,6 +35,7 @@
   G.demo = true;
   W = null;
   X("start");
+  X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
   X("cbset", "", "", { q: "age", i: 1 });
   X("cbset", "", "", { q: "spend", i: 2 });
   X("cbset", "", "", { q: "inv", i: 3 });

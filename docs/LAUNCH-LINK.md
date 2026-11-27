@@ -1,6 +1,6 @@
 # The link for the slide, and its QR code
 
-**The link:** https://sapphirestoneage.github.io/Slam/game/
+**The link:** https://play.stresslessaboutmoney.com/game/
 
 **The QR code:** `docs/qr-slam.png` (1025 x 1025 pixels, black on white, with the white edge that a phone camera
 needs). Put the picture on the slide as it is. Do not crop the white edge and do not put a logo on it.
@@ -23,7 +23,7 @@ save the game by making a free account. Until then the game is on that phone onl
 
 Text after the link stays in the address while the landing screen and the sign-in screen are open, so the parts
 that read it still find it: `?ref=code` (a share link), `?as=` (the admin opens a game). Example:
-https://sapphirestoneage.github.io/Slam/game/?ref=abc123
+https://play.stresslessaboutmoney.com/game/?ref=abc123
 
 ## When the link changes
 

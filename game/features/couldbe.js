@@ -17,14 +17,16 @@
    OUTPUT      Math: cbRng, cbRows, cbHas, cbState, cbHealth, cbParams, cbCounted, cbNumbers, cbChart,
                cbLayerInfo, cbCount, cbToggle, cbReceipt, cbTaps, cbBook, cbWaySets, cbWayPick, cbPreview,
                cbWayDo, cbWayState, cbLife (the lifetime spending total), cbPartShare, cbWays, cbWayNo,
-               cbCountedRaw, cbLy (the two numbers, kept for the same input), cbFiling. Views: cbTop, cbFoot,
+               cbCountedRaw, cbLy (the two numbers, kept for the same input), cbFiling, cbTypical (the
+               typical value of a question for an age, from the reference data), cbTypUsed, cbTypBookRows,
+               cbSlim. Views: cbTop (two big numbers, or one slim strip from the first way screen on), cbFoot,
                cbSheet, cbWayView (a strategy step), cbEndView,
                cbStepAdd (a later file adds a step), cbChartHtml. Parts of functions in other files:
                cbStart (doorBegin in door.js, ACT.start in ui.js, clFirstGame in cloud.js),
                finishSetupCb (finishSetupBase in ui.js), openSetupCb (openSetup in ui.js),
                drawSheetCb (drawSheetOnce in ui.js), planTabCb (planTab in planner.js). Actions (ACT):
                cb, cbset, cbknow, cbuse, cbgo, cbtog, cbsplit, cbzoom, cblayer, cbcount, cbrest,
-               cbpick, cbdo, cbback.
+               cbpick, cbdo, cbback, cbtyp (No idea, use typical), cbmine (Make it mine).
    DEPENDS ON  core/report.js, core/paylayers.js (lyNumbers, lyYears, lyBars, lyNeedsAge, lyLayerSum,
                lyCoverage, lyReceipt, lyShapeBands, lyLifetime, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, LY_END,
                LY_MEDICARE, LY_SHAPE_REF, LY_SS_REF),
@@ -37,7 +39,10 @@
                USES LATER, behind a typeof test: features/cbtax.js (cbTaxFill: the fill line of the tax plan),
                features/cbflex.js (cbFlexTake: the starting rate of flexible withdrawals), features/cbstack.js
                (cbStackView: the list of all the ways, cbStackLine, cbBackupRow), features/cbmoves.js (cbMoveView),
-               features/cbyesbut.js (cbYbBookRows: the rows of the Yes, but card in the spreadsheet).
+               features/cbyesbut.js (cbYbBookRows: the rows of the Yes, but card in the spreadsheet),
+               features/wants.js (wnView, wnTags, wnBack, wnGoals: What you want), features/cbreveal.js
+               (cbFirstMove: the first move of the last screen), core/peers.js (peInBand: a row for an age),
+               core/paylayers.js (LY_TYP_REF: the typical values with their sources).
    RULES       A view shows what the math functions return. The four answers go to the rows that setup
                writes (c.incs, c.spends, c.invs) as a Guess; a typed amount is Exact. No verdict on a
                guess. The line of account/trust.js is on each screen of the flow, from cbFoot() only.
@@ -55,6 +60,10 @@
                set(how) with cbStepAdd. Next and Back pass over a way that cannot apply to this player. The
                chart leads to the stack (W.step stack: every way, sorted, in features/cbstack.js); a way of
                the accumulation stack is W.step move (features/cbmoves.js). Neither is in CB_STEPS.
+               Run SLAM-ONBOARD-1 (Nov 27 2026): the first screen of a new player is What you want
+               (features/wants.js, W.step wants), then the four questions. An answer of the four can be a
+               typical value: c.x.cb.a[q] { v, cf: 1, typ: true, band }. The picks of What you want are
+               goals (c.goals); the rest of setup keeps them.
    STATE       CB (the numbers that the header showed last, for the short animation; the flag of the
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
@@ -203,6 +212,91 @@ function cbRows(a) {
           ]
         : [],
   };
+}
+/* THE TYPICAL VALUE of one question for an age (the chip "No idea, use typical"; run SLAM-ONBOARD-1). q: spend, inv
+   or save. It comes from the reference data (LY_TYP_REF in core/paylayers.js), never from a guess of the game:
+   spend: what households of that age spend in a year, over 12 (BLS). inv: the median balance of the families of that
+   age that have a retirement account (the Fed's survey). save: the typical spending of the age times the share of
+   income after tax that the country saves (BEA): spending x rate / (1 - rate). Returns { v, band, who, source, date,
+   math }, or null when the data has no row for the age. */
+function cbTypical(q, age) {
+  if (typeof LY_TYP_REF === "undefined" || typeof peInBand !== "function" || !(age > 0)) return null;
+  const T = LY_TYP_REF,
+    S = T.spend.rows.find(r => peInBand(r, age)) || null,
+    month = S ? S.year / 12 : null,
+    r10 = v => Math.round(v / 10) * 10;
+  if (q === "spend")
+    return S
+      ? {
+          v: r10(month),
+          band: S.band,
+          who: T.spend.who,
+          source: T.spend.source,
+          date: T.spend.date,
+          math: [cbM(S.year) + " a year for ages " + S.band + ", over 12, to the nearest $10."],
+        }
+      : null;
+  if (q === "inv") {
+    const I = T.inv.rows.find(r => peInBand(r, age)) || null;
+    return I
+      ? {
+          v: I.median,
+          band: I.ages[0] == null ? "under " + (I.ages[1] + 1) : I.ages[0] + " to " + I.ages[1],
+          who: T.inv.who,
+          source: T.inv.source,
+          date: T.inv.date,
+          math: ["The median balance of the families of that age that have a retirement account."],
+        }
+      : null;
+  }
+  if (q === "save") {
+    const rate = T.saveRate.share;
+    return S && rate > 0 && rate < 1
+      ? {
+          v: r10((month * rate) / (1 - rate)),
+          band: S.band,
+          who: "the whole country, on the typical spending of ages " + S.band,
+          source: T.saveRate.source + ". The spending: " + T.spend.source,
+          date: T.saveRate.date,
+          rate,
+          month,
+          math: [
+            "The country saves " +
+              Math.round(rate * 1000) / 10 +
+              "% of its income after tax. Typical spending for ages " +
+              S.band +
+              ": " +
+              cbM(month) +
+              " a month.",
+            "Saving = spending x rate / (1 - rate) = " +
+              cbM((month * rate) / (1 - rate)) +
+              " a month, to the nearest $10.",
+          ],
+        }
+      : null;
+  }
+  return null;
+}
+/* The answers of the four questions that are a typical value now: [{ q, name, v, per, band, source }]. None after the
+   rest of setup: the rows are then the player's own. */
+function cbTypUsed(c) {
+  const s = (c && c.x && c.x.cb) || {},
+    a = s.a || {},
+    names = { spend: "What you spend", inv: "What you have invested", save: "What you save or invest" };
+  if (s.setup) return [];
+  return ["spend", "inv", "save"]
+    .filter(q => a[q] && a[q].typ)
+    .map(q => {
+      const T = cbTypical(q, c.age) || {};
+      return {
+        q,
+        name: names[q],
+        v: a[q].v,
+        per: q === "inv" ? "" : " a month",
+        band: a[q].band || T.band || "",
+        source: T.source || "",
+      };
+    });
 }
 /* True when the profile has what the two numbers need, so the entry is passed over. */
 function cbHas(c) {
@@ -758,6 +852,30 @@ function cbToggle(id) {
 function cbTaps() {
   return CB.taps;
 }
+/* Part of cbBook(). The rows of the typical values that stand in for an answer (the chip "No idea, use typical"). */
+function cbTypBookRows(c) {
+  const U = cbTypUsed(c),
+    S = cbTypical("save", c.age),
+    rows = [];
+  U.forEach(u => {
+    if (u.q === "save" && S && S.v === u.v) {
+      rows.push({ id: "cb_typ_month", label: "Typical spending a month for ages " + S.band, v: S.month });
+      rows.push({ id: "cb_typ_rate", label: "The share of income after tax that the country saves", v: S.rate });
+      rows.push({
+        id: "cb_typ_save",
+        label: "A typical value for what you save a month: spending x rate / (1 - rate), to the nearest $10",
+        v: u.v,
+        f: "=ROUND({cb_typ_month}*{cb_typ_rate}/(1-{cb_typ_rate})/10,0)*10",
+      });
+    } else
+      rows.push({
+        id: "cb_typ_" + u.q,
+        label: "A typical value for " + u.name.replace(/^What you /, "what you ") + u.per + ", ages " + u.band,
+        v: u.v,
+      });
+  });
+  return rows;
+}
 /* The spreadsheet of the plan (book.js): the standard number. */
 function cbBook(c) {
   const d = derive(c),
@@ -802,6 +920,7 @@ function cbBook(c) {
       .concat(
         typeof cbLaterBookRows === "function" ? cbLaterBookRows(c) : []
       ) /* cblater.js: money that shows up later */
+      .concat(cbTypBookRows(c)) /* the typical values that stand in for an answer */
       .concat(typeof cbYbBookRows === "function" ? cbYbBookRows(c) : []) /* cbyesbut.js: the Yes, but card */
       .concat(
         typeof cbRevealBookRows === "function" ? cbRevealBookRows(c) : []
@@ -824,14 +943,30 @@ function cbLab(q, i) {
 function cbFoot() {
   return `<div class="tiny muted cbfoot" data-fid="cb:trust">${esc(typeof TRUST_LINE === "string" ? TRUST_LINE : "")}</div>`;
 }
-/* The two numbers, pinned at the top of each screen of the flow. */
+/* True from the first way screen on (the stack, each way, the Yes, but card, the reveal, the last screen): the two
+   numbers are then one slim strip. The first screens (What it is, the chart, a layer) keep the two big numbers. */
+function cbSlim(step) {
+  return !["entry", "wants", "is", "chart", "layer"].includes(step);
+}
+/* The two numbers, pinned at the top of each screen of the flow: two big numbers on the first screens, one slim
+   strip from the first way screen on. The number that changed counts to its new value (drawSheetCb). Under them:
+   what the player wants, as small tags (wants.js). */
 function cbTop(c) {
   const N = cbNumbers(c),
+    slim = !!(W && W.kind === "cb" && cbSlim(W.step)),
     age = x => (x.age == null ? "not at this pace yet" : x.years === 0 ? "now" : "at age " + x.age),
+    num = (k, x) =>
+      `<b class="dknum" data-cbn="${k}" data-to="${x.shown == null ? "" : x.shown}">${x.shown == null ? "No number yet" : cbM(x.shown)}</b>`,
     cell = (k, label, x) =>
-      `<div class="cbnum ${k}"><span class="dklabel">${label}</span><b class="dknum" data-cbn="${k}" data-to="${x.shown == null ? "" : x.shown}">${x.shown == null ? "No number yet" : cbM(x.shown)}</b><span class="tiny" data-cba="${k}">${esc(age(x))}</span></div>`;
+      slim
+        ? `<span class="cbnum ${k}"><span class="dklabel">${label}:</span> ${num(k, x)}</span>`
+        : `<div class="cbnum ${k}"><span class="dklabel">${label}</span>${num(k, x)}<span class="tiny" data-cba="${k}">${esc(age(x))}</span></div>`;
   return (
-    `<div class="cbtop" data-fid="cb:top">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</div>` +
+    `<div class="cbtop ${slim ? "cbstrip" : ""}" data-fid="cb:top">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</div>` +
+    (slim
+      ? `<div class="tiny muted cbages" data-fid="cb:ages">What it is: <span data-cba="is">${esc(age(N.is))}</span>. What it could be: <span data-cba="could">${esc(age(N.could))}</span>.</div>`
+      : "") +
+    (typeof wnTags === "function" ? wnTags(c) : "") /* wants.js: what the player wants, as tags */ +
     `<div class="row between cbtopsub"><span class="tiny muted">${N.same ? "The two are equal until you count something." : N.above ? "Above What it is, because you counted " + N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ") + "." : "What you counted moved it."}</span>${kitPill(N.st)}</div>`
   );
 }
@@ -869,9 +1004,14 @@ function drawSheetCb() {
 }
 /* The chips of one question, with "I know it" and its number box in the same spot. */
 function cbChips(w, q, cur) {
-  const open = w.know === q;
+  const open = w.know === q,
+    /* the chip "No idea, use typical": spend, inv and save, when the reference data has a row for the age */
+    typ = ["spend", "inv", "save"].includes(q) && w.o.a && w.o.a.age ? cbTypical(q, w.o.a.age.v) : null;
   return (
-    `<div class="chips">${CB_RNG[q].map((r, i) => `<button class="chip ${cur && cur.cf !== 3 && cur.i === i ? "on" : ""}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(cbLab(q, i))}</button>`).join("")}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}" data-a="cbknow" data-q="${q}">I know it</button></div>` +
+    `<div class="chips">${CB_RNG[q].map((r, i) => `<button class="chip ${cur && cur.cf !== 3 && cur.i === i ? "on" : ""}" data-a="cbset" data-q="${q}" data-i="${i}">${esc(cbLab(q, i))}</button>`).join("")}<button class="chip know ${open || (cur && cur.cf === 3) ? "on" : ""}" data-a="cbknow" data-q="${q}">I know it</button>${typ ? `<button class="chip cbtyp ${cur && cur.typ ? "on" : ""}" data-a="cbtyp" data-q="${q}">No idea, use typical</button>` : ""}</div>` +
+    (typ
+      ? `<div class="tiny muted" data-fid="cb:typhint">Typical for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess, and you can make it yours later.</div>`
+      : "") +
     (open
       ? `<div class="amknow row" style="gap:8px;align-items:flex-end"><div class="field" style="flex:1;margin:0"><label class="small" for="cbIn">${q === "age" ? "Your age" : "The amount, in dollars"}</label><input type="text" id="cbIn" inputmode="decimal" data-k="cbIn" value="${esc(w.o.cbIn != null ? w.o.cbIn : cur && cur.cf === 3 ? String(cur.v) : "")}" autocomplete="off"></div><button class="primary" data-a="cbuse" data-q="${q}">Use this</button></div>${w.err ? `<div class="tiny cbwarn">That needs a number, 0 or more.</div>` : ""}`
       : "")
@@ -884,13 +1024,17 @@ function cbEntryView() {
     Q = CB_QS[i],
     a = (w.o.a = w.o.a || {});
   return (
-    head("Question " + (i + 1) + " of " + CB_QS.length, "Your FI number") +
-    `<div class="small muted">Four taps, then your number. No typing needed.</div>` +
+    head(w.one ? "One answer" : "Question " + (i + 1) + " of " + CB_QS.length, "Your FI number") +
+    `<div class="small muted">${w.one ? "Tap your own answer. Your FI number recalculates." : "Four taps, then your FI number. No typing needed."}</div>` +
     `<div class="cbdots" aria-hidden="true">${CB_QS.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
     `<div class="stack cbq" style="gap:8px"><b class="cbql" data-fid="cb:q">${esc(Q.l)}</b>${cbChips(w, Q.id, a[Q.id])}<div class="tiny muted">${esc(Q.h)}</div></div>` +
-    (i > 0
-      ? `<div class="row"><button class="ghost" data-a="cbgo" data-v="qback">Back one question</button></div>`
-      : "") +
+    (w.one
+      ? `<div class="row"><button class="ghost" data-a="cbgo" data-v="${esc(w.back || "reveal")}">Back, no change</button></div>`
+      : i > 0
+        ? `<div class="row"><button class="ghost" data-a="cbgo" data-v="qback">Back one question</button></div>`
+        : typeof wnBack === "function"
+          ? wnBack(w) /* wants.js: back to What you want */
+          : "") +
     cbFoot()
   );
 }
@@ -1293,19 +1437,24 @@ function cbWayView(id) {
     cbFoot()
   );
 }
-/* THE LAST SCREEN (Batch B, phase 4b): the two numbers and three buttons only. Save my plan (an account keeps it),
-   Share my card (the image of cbreveal.js), Tell Eli what broke (the report tool of the game). Back and Home are on
+/* THE LAST SCREEN (Batch B, phase 4b; run SLAM-ONBOARD-1): the two numbers, the first move (the #1 move of Next
+   Steps: what to do, why, about how long, Add to my steps), then three buttons only. Keep my plan (an account keeps
+   it), Share my card (the image of cbreveal.js), Tell Eli what broke (the report tool of the game). Back and Home are on
    the top row of the sheet. The rest of setup is on Home (the first tile) and on Next Steps. */
 function cbEndView() {
   const c = C(),
     V = typeof cbReveal === "function" ? cbReveal(c) : null /* cbreveal.js: the words of the difference */,
     N = V ? V.N : cbNumbers(c),
-    S = typeof cbSaveState === "function" ? cbSaveState() : { guest: false, words: "" };
+    S = typeof cbSaveState === "function" ? cbSaveState() : { guest: false, words: "" },
+    M = typeof cbFirstMove === "function" ? cbFirstMove(c) : null; /* cbreveal.js: the #1 move of Next Steps */
   return (
-    head("Your plan", "Keep it, share it") +
+    head("Your plan", "Your first move, then keep it") +
     cbTop(c) +
     `<div class="tile small" data-fid="cb:endsum"><b>${esc(V ? V.diff.words : N.same ? "The two numbers are equal for now." : cbReceiptWords(lyReceipt(N.is, N.could)))}</b><div class="tiny muted">${esc(S.words)}</div></div>` +
-    `<div class="stack cbend3" style="gap:10px" data-fid="cb:end3"><button class="primary wide go" data-a="cbsave">Save my plan</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button></div>` +
+    (M
+      ? `<div class="tile cbfirst" data-fid="cb:first"><div class="row between" style="gap:8px"><span class="dklabel">Your first move</span>${M.added ? `<span class="pill okp">On your steps</span>` : ""}</div><b data-fid="cb:firstname">${esc(M.name)}</b><div class="small" data-fid="cb:firstwhy">${esc(M.why)}</div><div class="tiny muted">${esc(M.words)}${M.time ? `. <span data-fid="cb:firsttime">${esc(M.time)}</span>` : ""}.</div>${M.canAdd ? `<button class="ghost wide" data-a="cbaddstep" data-k="${esc(M.key)}">Add to my steps</button>` : M.added ? "" : `<button class="ghost wide" data-a="${esc(M.open.a)}" data-v="${esc(M.open.v)}">See this move</button>`}</div>`
+      : "") +
+    `<div class="stack cbend3" style="gap:10px" data-fid="cb:end3"><button class="primary wide go" data-a="cbsave">${S.signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button></div>` +
     (W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : "") +
     `<div class="tiny muted">The card is an image: the two ages, what you counted, and the time between them. It has no dollar amount. Nothing leaves this device until you send it.</div>` +
     `<div class="tiny muted" data-fid="cb:endnext">Home has your two numbers, the rest of setup and your next move. Home and Back are at the top.</div>` +
@@ -1322,7 +1471,8 @@ function cbEndView() {
 /* THE SHEET of the flow. */
 function cbSheet() {
   const w = W;
-  if (w.step === "entry") return cbEntryView();
+  if (w.step === "wants" && typeof wnView === "function") return wnView(); /* wants.js: What you want */
+  if (w.step === "entry" || w.step === "wants") return cbEntryView();
   if (w.step === "layer") return cbLayerView();
   if (w.step === "stack" && typeof cbStackView === "function") return cbStackView(); /* cbstack.js */
   if (w.step === "move" && typeof cbMoveView === "function") return cbMoveView(); /* cbmoves.js */
@@ -1357,12 +1507,19 @@ function cbAt(step) {
   /* cbreveal.js: the numbers as they are now, for "since last time" on a later day */
   if ((at === "reveal" || at === "end") && typeof cbSeenKeep === "function") cbSeenKeep();
 }
-/* Open the flow: the entry for a new player, else "What it is". */
+/* Open the flow: for a new player What you want (wants.js) and then the entry, else "What it is". The order of the
+   first screens is set here and in cbSheet(): wants, entry, then the steps of CB_STEPS. */
 function cbOpen(step) {
   const has = cbHas(C());
   W = {
     kind: "cb",
-    step: has ? (step === "stack" || CB_STEPS.some(x => x.id === step) ? step : "is") : "entry",
+    step: has
+      ? step === "stack" || CB_STEPS.some(x => x.id === step)
+        ? step
+        : "is"
+      : typeof wnView === "function"
+        ? "wants"
+        : "entry",
     q: 0,
     o: {},
   };
@@ -1384,8 +1541,8 @@ function cbStart() {
   }
 }
 /* The four answers are in: make the profile the way setup makes it (finishSetup), or change the rows of a profile
-   that this flow made. */
-function cbMake(a) {
+   that this flow made. wants: the picks of What you want ([{ k, n }]), for a new profile. */
+function cbMake(a, wants) {
   const rows = cbRows(a);
   if (cbHas(C())) {
     const c = C(),
@@ -1413,6 +1570,9 @@ function cbMake(a) {
     )
   );
   base.x = { cb: { a, count: {}, off: {} } };
+  /* wants.js: what the player wants becomes goals, in the shape of the card draft */
+  if (wants && wants.length && typeof wnGoals === "function")
+    base.goals = wnGoals(Object.assign({}, base, { spend: Math.max(1, Math.round(a.spend.v)) }), wants);
   W = { kind: "setup", mode: "new", step: 0, o: base, cbMade: true };
   finishSetup();
 }
@@ -1450,6 +1610,8 @@ function openSetupCb(base, mode) {
     base.accts = (c.invs || []).map(r => r.k).filter((k, i, a) => a.indexOf(k) === i);
     base.invest = c.invest;
     base.x = clone(c.x || {});
+    /* what the player wants (wants.js) and any goal made since: the rounds must not lose them */
+    base.goals = clone(c.goals || []);
   } catch (e) {
     report(e, "couldbe.js: openSetupCb");
   }
@@ -1507,6 +1669,22 @@ function cbAnswer(q, ans) {
   w.o.a = w.o.a || {};
   w.o.a[q] = ans;
   CB.taps++;
+  /* a new age: a typical value that stands in for an answer follows the age (no row for the age: asked again) */
+  if (q === "age")
+    ["spend", "inv", "save"].forEach(k => {
+      if (!w.o.a[k] || !w.o.a[k].typ) return;
+      const T = cbTypical(k, ans.v);
+      if (T) w.o.a[k] = { v: T.v, cf: 1, typ: true, band: T.band };
+      else delete w.o.a[k];
+    });
+  /* "Make it mine" of the reveal: one answer, then back to the screen it came from */
+  if (w.one && CB_QS.every(x => w.o.a[x.id])) {
+    const back = w.back || "reveal";
+    cbMake(w.o.a);
+    W = { kind: "cb", step: back, o: {} };
+    sheet(cbSheet);
+    return;
+  }
   const i = CB_QS.findIndex(x => x.id === q);
   if (i < CB_QS.length - 1) {
     w.q = i + 1;
@@ -1520,7 +1698,7 @@ function cbAnswer(q, ans) {
   }
   const a = w.o.a,
     had = cbHas(C());
-  cbMake(a);
+  cbMake(a, w.o.wants);
   if (had) {
     W = { kind: "cb", step: "is", o: {} };
     sheet(cbSheet);
@@ -1534,8 +1712,25 @@ Object.assign(ACT, {
     const q = t.dataset.q,
       i = +t.dataset.i,
       r = cbRng(q, i);
-    if (!W || W.kind !== "cb" || !r) return;
+    if (!W || W.kind !== "cb" || W.step === "wants" || !r) return;
     cbAnswer(q, { v: r.v, i, cf: 1, rg: [r.lo, r.hi] });
+  },
+  /* No idea, use typical: the typical value for the age, as a Guess */
+  cbtyp: t => {
+    if (!W || W.kind !== "cb" || W.step !== "entry" || !W.o.a || !W.o.a.age) return;
+    const q = t.dataset.q,
+      T = cbTypical(q, W.o.a.age.v);
+    if (!T) return;
+    cbAnswer(q, { v: T.v, cf: 1, typ: true, band: T.band });
+  },
+  /* Make it mine (the reveal): open the one question whose answer is a typical value */
+  cbmine: t => {
+    const c = C(),
+      i = CB_QS.findIndex(x => x.id === t.dataset.q);
+    if (!W || W.kind !== "cb" || i < 0 || !cbHas(c) || !(c.x && c.x.cb && c.x.cb.a)) return;
+    W = { kind: "cb", step: "entry", q: i, o: { a: clone(c.x.cb.a) }, one: true, back: W.step };
+    sheet(cbSheet);
+    if (typeof spUpSoon === "function") spUpSoon();
   },
   cbknow: t => {
     if (!W || W.kind !== "cb") return;

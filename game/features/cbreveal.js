@@ -4,7 +4,7 @@
                Home, and the day after.
                (4a) The reveal: the two numbers side by side, the difference in dollars and in years, what
                was counted (each with the way to its deeper feature), and the finished chart with every
-               switch. (4b) The words of "Save my plan" and the card of "Share my card" for the last screen
+               switch. (4b) The words of "Keep my plan" and the card of "Share my card" for the last screen
                (cbEndView in couldbe.js). (4c) The top 3 moves as cards on Next Steps, each with "Add to my
                steps" (the plan items of the Strategy Engine). (4d) The first tile of Home: the two numbers
                and a small layer chart; a tap opens the flow where the player left off. (4e) On a later day
@@ -13,7 +13,8 @@
                The open sheet (W.kind cb, W.step reveal or end; W.msg: one line after a tap).
    OUTPUT      Math (compositions of the flow's functions, no formula of their own): cbIn, cbReveal,
                cbPlanCard, cbTopMoves, cbTopIds, cbSnap, cbSince, cbSeenKeep, cbSaveState, cbHomeData,
-               cbRevealBookRows (part of cbBook in couldbe.js). Views: cbRevealView. Parts of functions in
+               cbFirstMove (the first move of the last screen), cbRevealBookRows (part of cbBook in
+               couldbe.js). Views: cbRevealView. Parts of functions in
                other files: homeCbTile (homeQuadTop in ux.js), cbTopRows (planTabCb in couldbe.js), cbTopIds
                (planTabStrat in strat.js). Actions (ACT): cbsave, cbshare, cbaddstep. A step of the flow, added
                with cbStepAdd("reveal", ...).
@@ -199,8 +200,36 @@ function cbTopMoves(c) {
         added,
         canAdd: !!S && !added && S.quests.length > 0,
         open: r.open,
+        one: r.one || "",
+        /* what the move is about, for "because you picked ..." (wants.js): the lever of a move of the Strategy
+           Engine; trimming spending is the spending lever */
+        lever: S ? S.lever : r.src === "lv" && r.key === "spend" ? "spending" : null,
+        /* about how long: the minutes of its steps, as Next Steps counts them (stgAddSteps). A lever or a
+           multiplier has no steps, so it has no time. */
+        steps: S ? S.quests.length : 0,
+        mins: S && S.quests.length ? S.quests.reduce((t, q) => t + (q.mins || 15), 0) : null,
       };
     });
+}
+/* THE FIRST MOVE of the last screen (run SLAM-ONBOARD-1): the #1 of the top moves of Next Steps. { key, name, why
+   (tied to a want of the player when one matches: wants.js), want, words (its effect on the date), time (about how
+   long, from the minutes of its steps; null when the move has no steps), canAdd, added, open }, or null. */
+function cbFirstMove(c) {
+  const T = cbTopMoves(c)[0];
+  if (!T) return null;
+  const want = typeof wnMatch === "function" ? wnMatch(c, (T.lever ? [T.lever] : []).concat(["fi"])) : null;
+  return {
+    key: T.key,
+    src: T.src,
+    name: T.name,
+    want: want ? want.l : null,
+    why: (want ? "Because you picked " + want.l + ". " : "") + T.one,
+    words: T.words,
+    time: T.mins ? "About " + T.mins + " min, in " + T.steps + (T.steps === 1 ? " step" : " steps") : null,
+    canAdd: T.canAdd,
+    added: T.added,
+    open: T.open,
+  };
 }
 /* Part of planTabStrat() in strat.js. The ids of the moves of the Strategy Engine that have their own card on Next
    Steps, so that "Moves to try" shows the next ones. */
@@ -266,7 +295,7 @@ function cbSince(c, today) {
   num("cbcould", "What it could be", a.could, b.could, a.couldAge, b.couldAge);
   return { day: base.day, days: daysBetween(base.day, t), lines };
 }
-/* Where the plan is kept now, and what "Save my plan" does. { guest, signed, words }. */
+/* Where the plan is kept now, and what "Keep my plan" does. { guest, signed, words }. */
 function cbSaveState() {
   const guest = typeof doorGuest === "function" && doorGuest(),
     signed = !guest && typeof SUPA !== "undefined" && !!SUPA.uid;
@@ -324,6 +353,7 @@ function cbRevealView() {
     K = V.K,
     N = V.N,
     S = V.S,
+    U = cbTypUsed(c) /* couldbe.js: the answers that are a typical value */,
     row = x =>
       x.deep
         ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Go deeper: ${esc(x.deep.l)}.</div></span><span class="caret">›</span></button>`
@@ -344,11 +374,14 @@ function cbRevealView() {
       )
       .join("");
   return (
-    head("The reveal", "What it is, and what it could be") +
+    head("The reveal", "Your FI number, and what it could be") +
     cbTop(c) +
     `<div class="tile cbdrop cbrev" data-fid="cb:diff"><div class="row between" style="gap:8px"><span class="dklabel">The difference ${kitInfo("cbdiff")}</span>${kitPill(V.st)}</div><b class="cbdropn" data-fid="cb:diffn">${esc(V.diff.words)}</b><div class="tiny muted">${N.same ? "Count a way below, or on the stack, and What it could be moves." : N.above ? "It is above What it is because a cost the 25 times rule leaves out is counted: " + esc(N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ")) + "." : "What it is stays where it is: it is the floor. What it could be follows what you count."}</div></div>` +
     (V.movesSum.n || V.yb
       ? `<div class="tile small" data-fid="cb:revmoves"><div class="row between" style="gap:8px;align-items:flex-start"><span>${V.movesSum.n ? `<b>${V.movesSum.n === 1 ? "The move you counted" : "The " + V.movesSum.n + " moves you counted"}: ${esc(V.movesSum.words.replace(/^./, x => x.toLowerCase()))}.</b> ` : ""}${V.yb ? `<b>Your Yes, but card: ${esc(V.yb.net.words.replace(/^./, x => x.toLowerCase()))}.</b>` : ""}</span>${kitInfo("cbtwo")}</div><div class="tiny muted">On their own line: these move the date you reach your number. They are not added to the difference above.</div></div>`
+      : "") +
+    (U.length
+      ? `<div class="tile small cbtypbox" data-fid="cb:typ"><div class="row between" style="gap:8px"><b>${U.length === 1 ? "One answer is a typical value" : U.length + " answers are typical values"}</b>${kitPill("Guess")}</div><div class="tiny muted">Not yours yet: what is usual for your age. One tap makes it yours, and the numbers recalculate.</div>${U.map(u => `<div class="row between cbtyprow" style="gap:8px" data-fid="cb:typrow"><span class="small" style="min-width:0">${esc(u.name)}: <b class="guess">${u.q === "inv" ? lkK(u.v) : cbM(u.v)}</b>${esc(u.per)}, typical for ages ${esc(u.band)}</span><button class="ghost slim" data-a="cbmine" data-q="${u.q}">Make it mine</button></div>`).join("")}</div>`
       : "") +
     dkCard(
       "What you counted",
@@ -369,19 +402,33 @@ function cbRevealView() {
     cbGapLine(K) +
     cbNeedsLine(K) +
     `<div class="tile small" data-fid="cb:cushion"><b>${esc(cbCushionWords(K.p))}</b><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". It is there in case the market goes down." : "The number is 25 times a year of spending for that reason: you take less than the growth."}</div></div>` +
-    mathBox([
-      "What it is: " + cbM(K.p.spend) + " a year x 25 = " + cbM(N.is.target) + ".",
-      "What it could be: what must be invested the day work stops, so that it pays each year's cost less the steady income you counted, to " +
-        LY_END +
-        " and beyond" +
-        (N.could.target == null ? "." : ": " + cbM(N.could.target) + "."),
-      "The difference: What it is less What it could be, to the nearest $1,000. The time is the age you reach each one at today's pace.",
-      "The moves before FI and the Yes, but card are a different run (your plan month by month), so their months are on their own line.",
-      V.st === "Guess"
-        ? "This is a Guess: it stands on the ranges you tapped. Each real number you add recalculates it."
-        : "",
-      "Each way has its own Show the math, with its source.",
-    ]) +
+    mathBox(
+      [
+        "What it is: " + cbM(K.p.spend) + " a year x 25 = " + cbM(N.is.target) + ".",
+        "What it could be: what must be invested the day work stops, so that it pays each year's cost less the steady income you counted, to " +
+          LY_END +
+          " and beyond" +
+          (N.could.target == null ? "." : ": " + cbM(N.could.target) + "."),
+        "The difference: What it is less What it could be, to the nearest $1,000. The time is the age you reach each one at today's pace.",
+        "The moves before FI and the Yes, but card are a different run (your plan month by month), so their months are on their own line.",
+        V.st === "Guess"
+          ? "This is a Guess: it stands on the ranges you tapped. Each real number you add recalculates it."
+          : "",
+        "Each way has its own Show the math, with its source.",
+      ].concat(
+        U.map(
+          u =>
+            "A typical value, " +
+            u.name.toLowerCase() +
+            ": " +
+            (u.q === "inv" ? lkK(u.v) : cbM(u.v)) +
+            u.per +
+            ". Source: " +
+            u.source +
+            "."
+        )
+      )
+    ) +
     `<button class="primary wide go" data-a="cbgo" data-v="end">Next</button>` +
     `<button class="ghost wide" data-a="cbgo" data-v="stack">Back to the stack</button>` +
     cbFoot()
@@ -444,7 +491,7 @@ function cbTopRows(c) {
   }
 }
 Object.assign(ACT, {
-  /* Save my plan: a visitor with no account goes to the door of a free account; a signed-in player sees where the
+  /* Keep my plan: a visitor with no account goes to the door of a free account; a signed-in player sees where the
      plan is kept */
   cbsave: () => {
     const S = cbSaveState();
@@ -465,6 +512,8 @@ Object.assign(ACT, {
     if (stgAddSteps(C(), t.dataset.k)) {
       save();
       render();
+      /* the last screen of the flow has the same button: its tile then says "On your steps" */
+      if (SH && W && W.kind === "cb") drawSheet();
     }
   },
 });

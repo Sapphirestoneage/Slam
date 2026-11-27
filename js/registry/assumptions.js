@@ -591,6 +591,9 @@ export const TABLES = [
     rows: () => Object.keys(LISTS.perMonth).map(k => [k, LISTS.perMonth[k], LISTS.perYear[k]]), source: RULE('js/math/income.js, M01'), date: '2026-10-28' },
   { id: 'Card_limit', label: 'Typical credit card limit by age, when no limit is typed (batch 37, QUESTIONS 320)', columns: [['from', 'Age from', 'number'], ['limit', 'Limit', 'money']],
     rows: r => r.typicalCardLimit.byAge, source: 'Experian, What\'s the Average Credit Limit on a Credit Card? (June 2026 data, by generation)', date: '2026-11-06' },
+  // Run SLAM-ONBOARD-1 (Nov 27 2026): the chip "No idea, use typical" of the game's opening (game/features/couldbe.js, cbTypical).
+  { id: 'Typical_invested', label: 'Typical amount invested by age: the median retirement account balance among families that have one (the game: No idea, use typical)', columns: [['from', 'Age from', 'number'], ['median', 'Median balance', 'money']],
+    rows: r => r.typicalInvested.byAge, source: 'Federal Reserve Board, Survey of Consumer Finances 2025 (released Oct 9 2026): retirement accounts, median for families that hold them, by age of the reference person; read through a web search on Nov 27 2026 from summaries of the Fed tables, not yet checked against the Fed\'s own table', date: '2026-11-27' },
   { id: 'Typical', label: 'Typical APR by debt type (Not sure)', columns: [['type', 'Debt type', 'text'], ['apr', 'APR', 'pct']],
     rows: r => Object.entries(r.typicalRates), source: FED, date: '2026-08-07' },
   { id: 'Consumer', label: 'Consumer debt types (left out of liquid net worth)', columns: [['type', 'Debt type', 'text']],
@@ -654,6 +657,8 @@ export const REFERENCE_LISTS = {
   'limits.commuterNote': 'a note on the commuter limit',
   fiStress: 'run of Nov 25 2026: the grid of the FI date stress test on Plan › Goals (M9X), the withdrawal rates 3.25%, 3.5%, 4% and 4.5% and the returns 3%, 5% and 7% after inflation, from the prompt of that run (Nov 25 2026); what-if choices, not rates anyone is told to expect',
   typicalRatesNote: 'a note: the card Guess is 25% on purpose; the Fed average is 22.15%',
+  'typicalInvested.byAge': 'the Typical_invested table', 'typicalInvested.about': 'what the table is for (the chip No idea, use typical of the game)', 'typicalInvested.to': 'the last age the table covers (74): no row from 75, so the chip does not show there',
+  'typicalInvested.who': 'who the medians describe', 'typicalInvested.source': 'the source of the table (SCF 2025, read through a web search)', 'typicalInvested.date': 'the day it was read',
   'typicalCardLimit.byAge': 'the Card_limit table', 'typicalCardLimit.source': 'the source of the typical card limits (Experian, June 2026)',
   'limits.rothIncome.note': 'a note on the Roth income limit',
   'tax.brackets': 'the Fed_single, Fed_joint and Fed_head tables', 'tax.quarterlyDue': 'the QuarterlyDue table', 'tax.safeHarbor.source': 'where the safe harbor rules come from (IRS 2026 Form 1040-ES, Pub 505, read Nov 26 2026)',

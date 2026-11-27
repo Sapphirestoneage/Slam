@@ -63,6 +63,13 @@ async function walk(browser, base, want) {
   // Run A (Nov 27 2026): the one opening of a new player, What it is / What it could be: four range chips, then the
   // first number; then its screens to the last one, and from there the rest of setup.
   let first = null;
+  // Run SLAM-ONBOARD-1 (Nov 27 2026): What you want comes first. The fastest path is one tap: Skip for now.
+  if (await page.locator("#ov [data-a=wnskip]").count()) {
+    await page.locator("#ov [data-a=wnskip]").click();
+    taps++;
+    trace.push(taps + ". Skip for now (What you want)");
+    await page.waitForTimeout(650);
+  }
   if (await page.locator("#ov [data-a=cbset]").count()) {
     for (const [q, i] of want.cb || [["age", 2], ["spend", 2], ["inv", 2], ["save", 3]]) {
       await page.locator(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`).click();

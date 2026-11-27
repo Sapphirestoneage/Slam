@@ -147,7 +147,12 @@ async function setup(page, tap, step) {
     await tap('#door [data-door=start]');
     // Run A (Nov 27 2026): the one opening of a new player is What it is / What it could be (four taps to the first
     // number, the chart, the last screen). The rest of setup ("Am I okay?") opens from its last screen.
-    chk(`${tag}: the first screen is the first of four questions, with no typing`, /Question 1 of 4/.test(await page.locator('#ov').innerText()) && !(await page.locator('#ov input:visible').count()));
+    // Run SLAM-ONBOARD-1 (Nov 27 2026): the first screen is What you want (game/features/wants.js): chips, no typing.
+    const wants = await step('what you want');
+    chk(`${tag}: the first screen is What you want, with no typing`, /What do you want\?/.test(wants) && /Next: four quick taps/.test(wants) && /Skip for now/.test(wants) && !(await page.locator('#ov input:visible').count()));
+    await tap('#ov [data-a=wnpick][data-v=debt]');
+    await tap('#ov [data-a=wnnext]'); await page.waitForTimeout(600);
+    chk(`${tag}: then the first of four questions, with no typing`, /Question 1 of 4/.test(await page.locator('#ov').innerText()) && !(await page.locator('#ov input:visible').count()));
     for (const [q, i] of [['age', 2], ['spend', 2], ['inv', 2], ['save', 3]]) { await tap(`#ov [data-a=cbset][data-q=${q}][data-i="${i}"]`); await page.waitForTimeout(600); }
     const first = await step('what it is');
     chk(`${tag}: the first number after the four answers, with What it could be beside it`, /What it is/i.test(first) && /What it could be/i.test(first) && /equal until you count something/.test(first) && /Education and tools, not financial advice\./.test(first));
@@ -159,7 +164,7 @@ async function setup(page, tap, step) {
     await step('the reveal');
     await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
     const last = await step('the last screen of the flow');
-    chk(`${tag}: the last screen has Save my plan, Share my card and Tell Eli what broke`, /Save my plan/.test(last) && /Share my card/.test(last) && /Tell Eli what broke/.test(last));
+    chk(`${tag}: the last screen has Keep my plan: make a free account, Share my card and Tell Eli what broke`, /Keep my plan: make a free account/.test(last) && /Share my card/.test(last) && /Tell Eli what broke/.test(last));
     await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
     await tap('#app [data-fid="cb:homerest"]'); await page.waitForTimeout(600);
     chk(`${tag}: the rest of setup opens under "Am I okay?"`, /Am I okay\?/.test(await page.locator('#ov').innerText()));

@@ -485,6 +485,14 @@
     "byAge": [[18, 16139], [30, 32727], [46, 43481], [62, 44653], [81, 33185]],
     "source": "Experian, What's the Average Credit Limit on a Credit Card? (June 2026 data; by generation: Gen Z 18 to 29, Millennials 30 to 45, Gen X 46 to 61, Baby Boomers 62 to 80, Silent 81 and up)"
   },
+  "typicalInvested": {
+    "about": "Run SLAM-ONBOARD-1 (Nov 27 2026): the chip No idea, use typical on the question About how much do you have invested? of the game's opening (game/features/couldbe.js, cbTypical). The row for the player's age is the amount, as a Guess. No row from age 75: the chip does not show there.",
+    "byAge": [[0, 21000], [35, 61200], [45, 133000], [55, 239000], [65, 257000]],
+    "to": 74,
+    "who": "families that have a retirement account: the median balance among them, by age of the reference person",
+    "source": "Federal Reserve Board, Survey of Consumer Finances 2025 (Changes in U.S. Family Finances from 2022 to 2025, released Oct 9 2026): retirement accounts, median value for families that hold them, under 35, 35 to 44, 45 to 54, 55 to 64 and 65 to 74. Read through a web search on Nov 27 2026 from summaries of the Fed's tables (richify.ai for each age; financebuzz.com gives the same 55 to 64 figure); federalreserve.gov was not reachable from the session, so the five figures are not yet checked against the Fed's own table. The all-ages median of the same table, $106,000, is in data/priors-2026.json as a Primary row",
+    "date": "2026-11-27"
+  },
   "hoursPerMonthFallback": 173,
   "lists": {
     "debtTypesTop": [

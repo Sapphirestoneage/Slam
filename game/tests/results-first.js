@@ -81,6 +81,7 @@
     G.demo = true;
     W = null;
     X("start");
+    X("wnskip"); /* What you want (run SLAM-ONBOARD-1): Skip for now */
     [
       ["age", 1],
       ["spend", 2],
