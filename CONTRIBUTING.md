@@ -47,11 +47,13 @@ The public site is served from the branch `release`, not from `main`. `release` 
 bash tools/promote.sh
 ```
 
-It tests the exact commit of `main` on GitHub in a temporary folder (`node --test` and `npm run test:game`) and,
-only when both pass, fast-forwards `release` to it. It never forces or merges. Run it at the end of every run,
-after the last push to `main`, and put its last line in the run's summary ("release is now ...", or "not promoted:
-..." with the reason). A part that is not finished must show the card "Coming soon", never a broken screen. The
-details, and the steps for GitHub Pages, are in `docs/RELEASE.md`.
+It works in two stages. Stage 1 puts the game of `main` at `/game-next/`, the test build, with the strip
+"TEST BUILD". Then it tests the exact commit of `main` on GitHub in a temporary folder (`node --test`, with the math
+checks of `test/mathchecks.test.js`, and `npm run test:game`). Stage 2, only when both pass, puts the files of `main`
+on `release`. It never forces or rewrites. Run it at the end of every run, after the last push to `main`, and put its
+last line in the run's summary ("release is now ...", or "not promoted: ..." with the reason).
+`bash tools/promote.sh --next` renews the test build only. A part that is not finished must show the card "Coming
+soon", never a broken screen. The details, and the steps for GitHub Pages, are in `docs/RELEASE.md`.
 
 ## Patch notes: each run adds one entry
 
