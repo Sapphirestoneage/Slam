@@ -420,3 +420,23 @@ Taps, fastest path: 6 to the first number, 10 to the result, 11 to Home. From th
 | The Krug self-check after | Done | The tap counts did not change (the table in `docs/WHAT-IT-COULD-BE.md`). | `tools/e2e/krug_flow.cjs` |
 
 Tests: `game/tests/flow-one-pulse-forward-keep.js` (items 1, 3, 5), `game/tests/flow-no-zeros-outside-tap.js` (items 8 to 13). The layout walk of the flow: `tools/e2e/flow_walk.cjs` (592 checks at 390, 1280 and 1440). The Krug walk: `tools/e2e/krug_flow.cjs`; the numbers before and after the run are in `docs/WHAT-IT-COULD-BE.md`. Questions: 659, 660.
+
+## RUN 15: CC-1 "Five strategies" (Nov 27 2026)
+
+Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Part A is done. Parts B to E are open.
+
+| Item | Status | What | Where |
+|---|---|---|---|
+| A1. Weekly backup | Built, waits for two secrets | A GitHub Action each Sunday, and a "Run workflow" button. It sends pg_dump straight into gpg, so no plain copy is written, and uploads only the encrypted file, kept 90 days. It stops with a plain line when a secret is not set. Tried on the build machine against a small made-up database (dump, decrypt, restore). Not run on GitHub: it needs `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE`. | `.github/workflows/backup.yml`, `tools/backup.sh`, `RESTORE.md` |
+| A2. Staging | Done | `bash tools/promote.sh` now has two stages: the game of main goes to `/game-next/` first (the test build, with an amber strip "TEST BUILD"), then both suites run, then `/game/` and the rest. `--next` renews the test build only. The same as a button: Actions, publish. | `tools/promote.sh`, `game/core/testbuild.js`, `.github/workflows/publish.yml`, `docs/RELEASE.md`, `test/promote.test.js` |
+| A3. Math checks | Done, one check open | One suite names the eight rules: FI number, Coast FI, Quiet Quitting FI, Rule of 5, little e, the order of debts (Avalanche, Snowball, Return on Hassle), the 8% rule, the 7/4/2 defaults. The second engine agrees on FI number, Coast FI, Avalanche and Snowball. It has no Quiet Quitting FI (marked to do, question 661 a). CI runs it on every push; the publish stops when it does not pass. | `test/mathchecks.test.js`, `.github/workflows/test.yml` |
+| A4. Report a bug | Was built; the public template is new | The game had it: Menu, Report a bug or idea (and Report on each screen), three categories, a note and a picture if wanted, the screen name and version by themselves, the admin inbox. The table is in the database. New: the issue template for public bugs, which says not to post money details. | `features/fbreport.js`, `core/reportcore.js`, `.github/ISSUE_TEMPLATE/bug_report.yml` |
+| A5. Privacy page | Done (a draft, not legal advice) | A short version at the top (what, where, who, delete, not sold, no affiliates), the weekly backup, and the note for Eli in the code. The links at sign-up and in the Menu were there. | `game/privacy.html` |
+| A6. What's new | Done | The Menu sheet was there. New: one note on Home when SLAM changed since the last look, with Got it and Don't show again; the sheet turns it back on. | `homeWhatsNew` in `features/founding.js`; `game/tests/whats-new-note-and-test-build.js` |
+| B. Faster (8 to 11) | Open | | |
+| C. Easier (12 to 17) | Open | | |
+| D. Better (18 to 20) | Open | | |
+| E. Cheaper (21 to 23) | Open | | |
+| The finish (publish, the summary, What's new entry) | Open | | |
+
+Questions and the placeholders of part A: 661.
