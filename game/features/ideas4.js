@@ -1,6 +1,7 @@
 /* ============================================================================
    SLAM the Game: features/ideas4.js
-   PURPOSE     Famous money ideas 34 to 45: spending, deals, real estate. The same frame and rules as
+   PURPOSE     Famous money ideas 34 to 45: spending, deals, real estate. And the credit of the Yes, but card
+               (features/cbyesbut.js), in the same list. The same frame and rules as
                ideas.js.
    INPUT       The taps of the player (the actions in OUTPUT).
    OUTPUT      2 functions. Actions (ACT): igbuy, igunbuy.
@@ -970,4 +971,40 @@ Object.assign(GLOSS, {
     "The 1% and 50% rules",
     "Two quick rental checks. Rent should be about 1% of the price a month, and about half the rent goes to running costs.",
   ],
+});
+/* ---------- Yes, but (Batch B, phase 3). The card itself is features/cbyesbut.js; this is its credit. ---------- */
+igAdd({
+  id: "yesbut",
+  grp: "spend",
+  n: "Yes, but: a cut that pays for a keep",
+  by: "A well-known trade-off idea. The name of its source is to be added here",
+  one: "Say yes to a cut, but name what you keep or upgrade because of it. Then the cut is a choice and not a loss.",
+  what: "A trade in two halves. Yes: a cut you make, or would make. But: what you keep, or give more to, because of that cut. The game prices each half in months to your FI number, and shows the net of both. The wording and the design of the card are SLAM's own.",
+  fit: c => (c.spends || []).some(r => (r.amt || 0) > 0),
+  body: x => {
+    const P = typeof cbYbPick === "function" ? cbYbPick(x.c) : null,
+      links = [["Open your Yes, but card", "cbyb", ""]];
+    if (!P || !P.has)
+      return {
+        html: `<div class="tile small">The card needs your spending lines. The rest of setup makes them.</div>`,
+        links,
+      };
+    return {
+      big: P.n ? P.net.words : "No card yet",
+      cap: P.n
+        ? "The net of your card: " +
+          (P.yes.names.length ? "yes to a cut on " + P.yes.names.join(", ") : "no cut") +
+          "; but " +
+          (P.but.names.length ? P.but.names.join(", ") + " " + P.but.sizeWords : "no keep yet") +
+          "."
+        : "Two taps make a card: one cut, and what you keep because of it.",
+      math: [
+        "Months sooner or later: the game runs your plan month by month, with the change of spending and without it, and compares the month each one reaches your FI number.",
+        "The net is one run with both halves together.",
+        "The card is a what-if. It changes none of your spending lines.",
+      ],
+      links,
+    };
+  },
+  val: () => "One cut, one keep, and the net in months",
 });

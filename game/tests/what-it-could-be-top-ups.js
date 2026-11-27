@@ -255,7 +255,10 @@
   );
   cbCount("tpway", false);
   go(ways0[ways0.length - 1]);
-  go("next");
+  /* a card between the ways (phase 3: the Yes, but card) is a screen of the flow and not a way: Next passes it */
+  let hops = 0;
+  do go("next");
+  while (++hops < 6 && !CB_STEPS.find(s => s.id === W.step).way && W.step !== "end");
   chk(
     "Next from the last built way goes to the added way, then on to the last screen",
     W.step === "tpway" && text(ov()).includes(nth)

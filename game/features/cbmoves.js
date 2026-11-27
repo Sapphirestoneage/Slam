@@ -98,7 +98,8 @@ function cbMoves(c) {
       imp: x.yr > 0 ? stgImpact(c, F, "full") : { fi: 0, days: 0 },
       month: F.value,
       st: stOf(x.cf || 0),
-      risks: [x.worst || x.note || x.math[x.math.length - 1]],
+      /* a multiplier that is locked (costly debt) has no worst case and no math of its own: its lock is the risk */
+      risks: [x.worst || x.note || (x.math || []).slice(-1)[0] || x.lock || ""],
       math: x.math || [],
       tiles: [],
       open:

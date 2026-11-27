@@ -848,6 +848,24 @@ const WB = [
     "cb",
   ],
   [
+    "see",
+    "What it could be: the Yes, but card",
+    "b",
+    () =>
+      WB_FN("cbYb") &&
+      WB_FN("cbYbPick") &&
+      WB_FN("cbYbView") &&
+      WB_FN("cbYbStackRow") &&
+      WB_FN("cbYbPaint") &&
+      WB_HAS("cbybtap") &&
+      WB_HAS("cbybpair") &&
+      WB_HAS("cbybsave") &&
+      typeof IG === "object" &&
+      !!IG.yesbut,
+    "Batch B, phase 3. A trade in two halves, between the two groups of the stack. Yes: tap a cut you make or would make. But: tap what you keep or upgrade because of it. Each half shows its price in months and the net is in the middle, all from the same engine as Moves to try. The game suggests pairs from the values you ranked, or by size until you rank them. The card saves as an image with no dollar amount. It is a what-if: it changes no spending line and neither of the two numbers. Its credit is in Famous money ideas; the name of the source waits on Eli.",
+    "cb",
+  ],
+  [
     "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",

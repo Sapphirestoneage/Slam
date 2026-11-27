@@ -36,7 +36,8 @@
                (taxvInputs: the one home of the filing status and the state).
                USES LATER, behind a typeof test: features/cbtax.js (cbTaxFill: the fill line of the tax plan),
                features/cbflex.js (cbFlexTake: the starting rate of flexible withdrawals), features/cbstack.js
-               (cbStackView: the list of all the ways, cbStackLine, cbBackupRow), features/cbmoves.js (cbMoveView).
+               (cbStackView: the list of all the ways, cbStackLine, cbBackupRow), features/cbmoves.js (cbMoveView),
+               features/cbyesbut.js (cbYbBookRows: the rows of the Yes, but card in the spreadsheet).
    RULES       A view shows what the math functions return. The four answers go to the rows that setup
                writes (c.incs, c.spends, c.invs) as a Guess; a typed amount is Exact. No verdict on a
                guess. The line of account/trust.js is on each screen of the flow, from cbFoot() only.
@@ -800,7 +801,8 @@ function cbBook(c) {
       .concat(typeof cbFlexBookRows === "function" ? cbFlexBookRows(c) : []) /* cbflex.js: flexible withdrawals */
       .concat(
         typeof cbLaterBookRows === "function" ? cbLaterBookRows(c) : []
-      ) /* cblater.js: money that shows up later */,
+      ) /* cblater.js: money that shows up later */
+      .concat(typeof cbYbBookRows === "function" ? cbYbBookRows(c) : []) /* cbyesbut.js: the Yes, but card */,
   };
 }
 

@@ -115,6 +115,9 @@ function cbStackView() {
         ),
       { cap: "The biggest drop for you is first." }
     ) +
+    (typeof cbYbStackRow === "function"
+      ? cbYbStackRow(c)
+      : "") /* cbyesbut.js: the Yes, but card, between the groups */ +
     dkCard(
       "Before FI: ways to get there sooner",
       `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:moves">${first.map(moveRow).join("")}</div>` +

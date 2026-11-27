@@ -119,7 +119,12 @@
   );
   chk(
     "Next and Back pass over a way that cannot apply",
-    cbStepNear(c, "ss", 1) === "flex" && cbStepNear(c, "flex", 1) === "end" && cbStepNear(c, "flex", -1) === "ss"
+    cbStepNear(c, "ss", 1) === "flex" &&
+      /* after the last way that applies: the Yes, but card (phase 3), then the last screen */
+      cbStepNear(c, "flex", 1) === "yesbut" &&
+      cbStepNear(c, "yesbut", 1) === "end" &&
+      cbStepNear(c, "yesbut", -1) === "flex" &&
+      cbStepNear(c, "flex", -1) === "ss"
   );
   chk(
     "the last screen lists only the ways that can apply",

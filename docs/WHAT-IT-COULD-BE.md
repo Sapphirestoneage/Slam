@@ -267,3 +267,44 @@ What a new player sees now, after the four taps and "What it is":
   `movesSum` (the months of the counted moves).
 - The code map takes about 6 minutes. Change all scripts first.
 
+
+## Batch B, phase 3: the "Yes, but" card (Nov 27 2026)
+
+File: `game/features/cbyesbut.js`. Test: `game/tests/what-it-could-be-yes-but.js`.
+
+- **Where.** A step of the flow with no title (W.step `yesbut`): not a way, not numbered, not in the counter. The
+  stack has a row for it between its two groups (`cbYbStackRow`, called from `cbStackView`). Next from the last way
+  that applies goes to it, then to the last screen.
+- **The halves.** Yes: each spending line of the player (`c.spends` with an amount) is a toggle; three chips set how
+  big the cut is (a tenth, a quarter, half). But: the same lines; three chips (keep as it is, a tenth more, a quarter
+  more). A line is in one half only. `CBY_SIZE` holds the chips: they are choices of the player, not rates from
+  outside.
+- **The math.** `cbYbStep` is `vlStep` of values.js (to the $10, at least $10; a cut is never more than the line).
+  `cbYbImp(c, monthly)` is `stgImpact(c, { save: monthly })`: the game's month-by-month goal run, the same engine as
+  the moves of the stack. It fits a monthly change of spending because the run both saves more each month and sizes
+  the FI number on the lower spending. The engine of the two pinned numbers (`core/paylayers.js`) is not used here,
+  so the card moves neither of them. The net is one more run with the cuts less the upgrades, not the two prices
+  subtracted. `cbYbPick(c)` returns the two halves and the net; `cbYb(c)` adds each line with its price and the pairs.
+- **The pairs.** `cbYbOrder`: with ranked values and at least one line that has its values (`vlGet`, `vlServes`), the
+  first cut is the line whose best value is ranked lowest (a line that serves none comes first), and the first keep
+  is the line that serves the top value. Without them: the biggest line as the cut, the smallest as the keep, and the
+  screen says so, with the reason behind an "i" and a button to the ranking.
+- **The image.** `cbYbCard(P)` gives the words (line names, the size in words, the months of each half, the net, the
+  advice line); `cbYbPaint(card)` draws them on a 1080 by 1350 canvas with the colors of the page root, so a look that
+  is switched on does not change it. Save is a download; Send uses the share sheet of the device when it takes files.
+  No dollar amount is on the image.
+- **Stored.** `c.x.cb.yb { yes, but, ys, bs }`: names of lines and two sizes. No dollars.
+- **The credit.** The idea `yesbut` in `game/features/ideas4.js` (Famous money ideas, group spending). Its `by` line
+  says that the name of the source is to be added (QUESTIONS 650).
+- **Not built.** A card does not change What it could be, the counter, or the months of the counted moves. Typical
+  prices of named cuts (a streaming plan, a gym) are not used: every price is the player's own line.
+
+### The pattern for the next phase (4 to 7)
+
+- The reveal can read the card from `cbYbPick(c)`: `n` (lines on the card), `yes.names`, `but.names`, `net.words`,
+  `net.months`. "Share my card" can use `cbYbCard` and `cbYbPaint` as they are, or draw its own card with the same
+  painter pattern (words first as plain data, then one function that draws).
+- A row on the stack from another file: a named part (`cbYbStackRow`) called from `cbStackView` behind a typeof test.
+- A test that walks Next through the flow must pass a step that is not a way (see `what-it-could-be-top-ups.js`).
+- A test player with costly debt belongs in every new test of the flow: phase 2d broke for one and no test saw it.
+- In Chromium wait about a second after a tap that opens a screen: the sheet scrolls to its top first.

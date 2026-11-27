@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 212. Lines: 123,780. Top-level functions: 3027. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 213. Lines: 124,388. Top-level functions: 3041. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -111,7 +111,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 97 | `features/ideas.js` | 1,120 | 21 | 5 | 0 | Famous money ideas, the frame and ideas 1 to 8 |
 | 98 | `features/ideas2.js` | 778 | 2 | 2 | 0 | Famous money ideas 9 to 16. The same frame and rules as ideas.js |
 | 99 | `features/ideas3.js` | 1,107 | 1 | 1 | 0 | Famous money ideas 17 to 33: retirement, investing, earning |
-| 100 | `features/ideas4.js` | 974 | 2 | 3 | 0 | Famous money ideas 34 to 45: spending, deals, real estate |
+| 100 | `features/ideas4.js` | 1,011 | 2 | 3 | 0 | Famous money ideas 34 to 45: spending, deals, real estate |
 | 101 | `features/ideas5.js` | 1,305 | 2 | 0 | 0 | Famous money ideas 46 to 63: mindset, time, family and giving |
 | 102 | `features/roof.js` | 273 | 7 | 1 | 0 | One list of the famous money ideas that are built in this game |
 | 103 | `features/ideasz.js` | 338 | 7 | 3 | 0 | The last file of the famous money ideas: the glossary of each idea, which ideas fit the player now, and the block on Next Steps |
@@ -211,19 +211,20 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 197 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 198 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 199 | `features/results.js` | 569 | 22 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 200 | `features/couldbe.js` | 1,668 | 61 | 14 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 200 | `features/couldbe.js` | 1,670 | 61 | 14 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
 | 201 | `features/cbtax.js` | 456 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
 | 202 | `features/cbflex.js` | 321 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
 | 203 | `features/cblater.js` | 244 | 7 | 3 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
-| 204 | `features/cbmoves.js` | 239 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
-| 205 | `features/cbstack.js` | 186 | 4 | 6 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
-| 206 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
-| 207 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
-| 208 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
-| 209 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 210 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 211 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 212 | `features/built.js` | 1,958 | 4 | 31 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 204 | `features/cbmoves.js` | 240 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
+| 205 | `features/cbyesbut.js` | 547 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
+| 206 | `features/cbstack.js` | 189 | 4 | 6 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
+| 207 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
+| 208 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
+| 209 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
+| 210 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 211 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 212 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 213 | `features/built.js` | 1,976 | 4 | 32 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -241,7 +242,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1059 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1066 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
