@@ -39,8 +39,8 @@
   /* THE PURE PART */
   const s = taNew();
   chk(
-    "the default tasks are Eli's three",
-    s.tasks.map(x => x.t).join("|") === "Find out how close you are to FI|Do your next win|Get back Home"
+    "the default tasks are Eli's three (Batch B, phase 7: the same list as Test with a friend)",
+    s.tasks.map(x => x.t).join("|") === TK_TASKS.map(x => x.t).join("|") && s.tasks.length === 3
   );
   chk("no task runs at the start, so a tap counts for nothing", taTap(s) === null && s.tasks[0].taps === 0);
   taStart(s, 1000);
@@ -69,7 +69,7 @@
   const txt = taText(Object.assign({ d: "2026-11-26" }, s));
   chk(
     "the text to copy names each task with its taps and time",
-    txt.includes("1. Find out how close you are to FI\n   Done · 3 taps · 45 sec") &&
+    txt.includes("1. Find out what your number could be.\n   Done · 3 taps · 45 sec") &&
       txt.includes("   Skipped · 1 tap · 3 min") &&
       txt.includes("Done 2 of 3, 4 taps in all, 0 reports"),
     txt
@@ -104,7 +104,7 @@
     sh.includes("Tester drives") &&
       sh.includes('class="dkcap"') &&
       sh.includes("?think=1") &&
-      sh.includes("Get back Home") &&
+      sh.includes("Get back Home and find your next move.") &&
       (sh.match(/class="primary/g) || []).length === 1 &&
       clean(sh),
     junk(sh)
@@ -152,7 +152,7 @@
       row &&
         row.screen === "money" &&
         row.type === "confusing" &&
-        row.note === "Think-aloud, task 1 (Find out how close you are to FI), 2 taps",
+        row.note === "Think-aloud, task 1 (Find out what your number could be.), 2 taps",
       row && JSON.stringify([row.screen, row.note])
     );
     chk("the count of reports goes up, and the type is cleared", G.ta.sent === 1 && TA.type === null);

@@ -277,7 +277,8 @@ function pnDay(d) {
   return m && FD_MON[+m[2] - 1] ? FD_MON[+m[2] - 1] + " " + +m[3] + ", " + m[1] : "";
 }
 function pnSheet() {
-  const L = pnSorted(typeof PATCH_NOTES !== "undefined" ? PATCH_NOTES : []),
+  /* an entry about an add-on (ao: true) is not shown in the game: add-ons are off for standard players */
+  const L = pnSorted(typeof PATCH_NOTES !== "undefined" ? PATCH_NOTES : []).filter(e => !e.ao),
     all = !!(W && W.all),
     show = all ? L : L.slice(0, 3);
   return (

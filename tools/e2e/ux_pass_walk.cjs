@@ -1,9 +1,9 @@
 // The UX pass of SLAM the Game, walked in a real browser (Chromium through Playwright), with three fresh profiles.
 // Serve the repository (python3 -m http.server 8765), then: node tools/e2e/ux_pass_walk.cjs
 // Env: SLAM_URL (default http://localhost:8765), UX_OUT (a folder for screenshots; default: none), UX_W (widths, "1280,390").
-// Each profile: rapid taps on one chip (counted once), all 5 rounds to "Your first plan", Guess tags and "Where's this
+// Each profile: the four taps of the opening (What it is), then Finish setup; rapid taps on one chip (counted once), all 5 rounds to "Your first plan", Guess tags and "Where's this
 // from?", net worth as a range while it has guesses, every top tile opens, an answer edited with the numbers moving,
-// leaving mid-round by a tab and coming back through Where am I, the values ranking, the goals ranking with the top 3.
+// leaving mid-round by a tab and coming back through Finish setup on Next Steps, the values ranking, the goals ranking with the top 3.
 // Then a signed-in player: no coach or admin rows, and the coach and admin pages send the player Home.
 // The walk answers each setup screen by itself: the answers of the profile first, then the second range, then Next.
 // Exit code 1 when a check fails.
@@ -105,19 +105,27 @@ async function setup(page, P, who) {
   const ev = (f, a) => page.evaluate(f, a);
   const used = new Set();
   const seen = { reveals: 0, tagged: 0, from: 0, guess: 0, rapid: null, left: null };
-  await ev(() => openSetup('new'));
-  await page.waitForTimeout(300);
+  /* The opening of a new player is the four taps of What it is / What it could be. The five rounds come after it,
+     from "Finish setup: five short rounds" (cbrest). */
+  await ev(() => ACT.start({ dataset: {} }));
+  await page.waitForTimeout(600);
   for (let n = 0; n < 160; n++) {
     const st = await ev(() => ({ kind: W && W.kind, step: W && W.step, sp: W && W.sp && W.sp.at, txt: (document.querySelector('#ov') || document.body).innerText }));
     if (DBG) console.log('  ', n, st.kind, st.step, st.sp, JSON.stringify(st.txt.slice(0, 160)));
     if (st.kind === 'firstplan') return Object.assign(seen, { done: true });
+    if (st.kind === 'cb' && st.step === 'is' && !seen.rest) {
+      seen.rest = true;
+      await ev(() => ACT.cbrest());
+      await page.waitForTimeout(800);
+      continue;
+    }
     if (st.sp === 'reveal') {
       seen.reveals++;
       const tag = await ev(() => { const p = document.querySelector('#ov .spnum .pill, #ov .pill'); return p ? p.innerText : ''; });
       if (/^(Guess|Close|Exact)$/.test(tag.trim())) seen.tagged++;
       if (/Guess/.test(tag)) { seen.guess++; if (/Where's this from\?/.test(st.txt)) seen.from++; }
     }
-    /* leave mid-round by a tab, then come back through Where am I */
+    /* leave mid-round by a tab, then come back through Finish setup on Next Steps */
     const round = (st.txt.match(/(Debts|Assets|Income|Taxes|Expenses):/) || [])[1];
     const L = { D: 'Debts', A: 'Assets', I: 'Income', T: 'Taxes', E: 'Expenses' }[P.leaveAt];
     if (seen.left === null && round === L && st.sp !== 'reveal') {
@@ -126,8 +134,9 @@ async function setup(page, P, who) {
       if (tab) {
         await tab.click(); await page.waitForTimeout(700);
         const out = await ev(() => !(W && W.kind === 'setup'));
-        await ev(() => ACT.quest && ACT.quest()); await page.waitForTimeout(600);
-        const g = await page.$('[data-a="questgo"]');
+        /* the way back for a player of the new opening: "Finish setup: five short rounds" on Next Steps */
+        await ev(() => go('plan')); await page.waitForTimeout(600);
+        const g = await page.$('#app [data-a="cbrest"]');
         const label = g ? await g.innerText() : '';
         if (g) { await g.click(); await page.waitForTimeout(800); }
         const back = await ev(() => ({ kind: W && W.kind, step: W && W.step }));
@@ -209,7 +218,7 @@ async function afterSetup(page, P, who, seen) {
   chk(who, 'rapid taps on one chip count once (no stacking)', got && String(got.v) === rv && seen.rapid.am.step - seen.rapid.s0 <= 1 && seen.rapid.am.toasts <= 1, seen.rapid);
   chk(who, 'each round shows its one number with a status tag', seen.reveals >= 5 && seen.tagged >= 5, seen);
   chk(who, "a Guess number has Where's this from?", seen.guess === seen.from, [seen.guess, seen.from]);
-  chk(who, 'leaving mid-round by a tab and Where am I comes back to the same page', seen.left && seen.left.ok, seen.left);
+  chk(who, 'leaving mid-round by a tab and Finish setup on Next Steps comes back to the same page', seen.left && seen.left.ok, seen.left);
   await shot(page, who.replace(/\W+/g, '-') + '-firstplan');
   /* the two taps after the first plan */
   const n2 = await page.$('#ov [data-a="spplan2"]');

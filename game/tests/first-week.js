@@ -200,7 +200,14 @@
   /* ---- 5. the Tool library: the pages at the top of the repository ---- */
   const pages = fs.readdirSync(ROOT).filter(f => /\.html$/.test(f)),
     listed = TOOL_LIB.map(x => x[0]),
-    lost = pages.filter(p => !listed.includes(p) && !TOOL_LIB_SKIP[p]),
+    heldAll = JSON.parse(
+      require("child_process").execFileSync("node", [path.join(ROOT, "tools", "game_toollib_build.mjs"), "--held"], {
+        encoding: "utf8",
+      })
+    ),
+    heldOut = heldAll.why,
+    held = Object.keys(heldOut),
+    lost = pages.filter(p => !listed.includes(p) && !TOOL_LIB_SKIP[p] && !heldOut[p]),
     gone = listed.filter(p => !pages.includes(p));
   chk("each page at the top of the repository is in the library or has a reason", lost.length === 0, lost.join(","));
   chk("each page of the library is there", gone.length === 0 && listed.length > 60, gone.join(","));
@@ -209,6 +216,57 @@
     new Set(listed).size === listed.length && TOOL_LIB.every(x => x[1] && TOOL_LIB_GROUPS.some(g => g[0] === x[2]))
   );
   chk("the page for coaches is not in the library", !listed.includes("pro.html") && !!TOOL_LIB_SKIP["pro.html"]);
+  /* Eli, Nov 27 2026: the pages of an add-on are off for standard players, like the other add-ons */
+  const src = fs.readFileSync(path.join(GAME_DIR, "data", "toollib.js"), "utf8"),
+    heldNames = Object.values(heldAll.names),
+    X0 = clone(G),
+    everyMenu = () => {
+      X("menu");
+      const a = ov();
+      X("close");
+      return a;
+    };
+  chk(
+    "the pages of an add-on are held out with a reason: 10 pages, and the page that shows them to everyone",
+    held.length === 11 &&
+      held.filter(p => heldOut[p] === "add-on: off for standard players").length === 10 &&
+      /shows an add-on fold/.test(heldOut["one.html"]) &&
+      TOOL_LIB_HELD === 11,
+    JSON.stringify(heldOut)
+  );
+  chk("each held page has a name on the web app's front door to look for", heldNames.length >= 10, heldNames.length);
+  chk(
+    "no held page is in the list, and the data file of the game does not name one",
+    held.every(p => !listed.includes(p) && !src.includes(p)) &&
+      !/LGBTQ/i.test(src) &&
+      !TOOL_LIB_GROUPS.some(g => g[0] === "own"),
+    held.filter(p => listed.includes(p) || src.includes(p)).join(",")
+  );
+  const mFirst = everyMenu();
+  G.chars.forEach(x => x.hist && x.hist[0] && (x.hist[0].d = addDays(todayISO(), -40)));
+  const mLater = everyMenu(),
+    inMenu = m => held.filter(p => m.includes(p)).concat(heldNames.filter(n => m.includes(esc(n)))),
+    finds = heldNames
+      .concat(["LGBTQ", "transition", "chosen family", "marker", "every tool"])
+      .filter(q => /fwlib/.test(fwLibFind(q)) && held.some(p => fwLibFind(q).includes(p)));
+  chk(
+    "a standard player's menu holds none of those pages, in the first week and after it",
+    inMenu(mFirst).length === 0 && inMenu(mLater).length === 0 && !/LGBTQ/i.test(mFirst + mLater),
+    inMenu(mFirst).concat(inMenu(mLater)).join(",")
+  );
+  chk("Find a tool finds none of them, by name or by word", finds.length === 0, finds.join(","));
+  chk(
+    "the words about where everything went do not name them",
+    !/LGBTQ/i.test(JSON.stringify(GLOSS.fwwhere || "")) && !/LGBTQ/i.test(fwMenuInfo())
+  );
+  X("whatsnew");
+  X("pnall");
+  chk(
+    "What's new in the game shows no entry about an add-on",
+    !/LGBTQ/i.test(ov()) && PATCH_NOTES.some(e => e.ao) && ov().includes(esc(PATCH_NOTES.filter(e => !e.ao)[0].t))
+  );
+  X("close");
+  G = X0;
   let stale = "";
   try {
     require("child_process").execFileSync("node", [path.join(ROOT, "tools", "game_toollib_build.mjs"), "--check"], {

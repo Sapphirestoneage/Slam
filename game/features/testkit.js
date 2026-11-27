@@ -1,17 +1,50 @@
 /* ============================================================================
    SLAM the Game: features/testkit.js
-   PURPOSE     Test with a friend. A think-aloud usability test: one person tries five tasks, and the
-               coach records how each task went with one tap. The tasks come from the profile of that
-               person. The results stay in the game, and the coach can copy them as plain text.
+   PURPOSE     Test with a friend. A think-aloud usability test: one person tries three tasks, and the
+               coach records how each task went with one tap. The three tasks are Eli's (Batch B, phase 7):
+               the number that could be, Social Security off, back Home. While a task runs the game counts
+               the taps and keeps the names of the screens, and it notes the screen where the person
+               stopped. No sound and no picture of the screen is recorded, and no value of a field. The
+               results stay in the saved game, and the coach can copy them as plain text.
    INPUT       The game: G.active, G.chars, G.tests, G.tk. The open sheet (W.kind): testkit. The taps of
                the player (the actions in OUTPUT).
-   OUTPUT      9 functions. Parts of functions in other files: tkChipSafe. Actions (ACT): testkit,
+   OUTPUT      Functions: tkTasks, tkAt, tkTapAdd, tkStop, tkText, tkSheet and more. Parts of functions in
+               other files: tkChipSafe. Actions (ACT): testkit,
                tkstart, tkgo, tkback, tkout, tkwhere, tkwhy, tknext, tkquit, tkview, tkcopy. Menu: "Test
                with a friend".
    DEPENDS ON  core/report.js, core/engine.js, screens/ui.js, screens/planner.js.
    SOURCE      The method is from Rocket Surgery Made Easy (Steve Krug).
    ========================================================================= */
-const TK_WHERE = ["Home", "Next Steps", "My Money", "My Goals", "Me", "The menu", "A pop-up"];
+const TK_WHERE = ["Home", "Next Steps", "My Money", "My number", "My Goals", "Me", "The menu", "A pop-up"];
+/* The three tasks, in Eli's words (Batch B, phase 7). thinkaloud.js uses the same list. */
+const TK_TASKS = [
+  { t: "Find out what your number could be.", see: "My number in the bar, or Your two numbers on Home" },
+  {
+    t: "Switch Social Security off and say what changed.",
+    see: "My number, All the ways, Social Security, Not counting on it. Both numbers at the top move",
+  },
+  { t: "Get back Home and find your next move.", see: "Home in the bar, then the next move on Home or on Next Steps" },
+];
+const TK_PATH_MAX = 40;
+const TK_TABS = {
+  home: "Home",
+  plan: "Next Steps",
+  next: "Next Steps",
+  money: "My Money",
+  goals: "My Goals",
+  me: "Me",
+};
+const TK_CB = {
+  entry: "the four questions",
+  is: "What it is",
+  chart: "the chart",
+  layer: "one layer of the chart",
+  stack: "All the ways",
+  move: "one move",
+  ss: "Social Security",
+  reveal: "the reveal",
+  end: "the last screen",
+};
 const TK_WHY = [
   "Didn't see the button",
   "Didn't know a word",
@@ -20,37 +53,38 @@ const TK_WHY = [
   "Thought it was done",
   "Gave up",
 ];
-function tkTasks(c) {
-  const d = derive(c),
-    hasDebt = (c.debts || []).some(x => x.amt > 0),
-    guess = !c.placed || (c.incs || []).some(x => !x.s),
-    T = [];
-  T.push({ t: "Find out how much you can spend this week without hurting anything.", see: "Home or Safe to spend" });
-  T.push(
-    guess
-      ? {
-          t: "The game is guessing what you bring in each month. Fix it so it's right.",
-          see: "Make your numbers real, or My Money",
-        }
-      : {
-          t: "Something changed: you now bring in $200 more a month. Update the game.",
-          see: "My Money, Money coming in",
-        }
-  );
-  T.push(
-    hasDebt
-      ? { t: "Find out when you would be completely out of debt.", see: "My Money, Make a debt plan" }
-      : { t: "There's something you want to buy. Add it and find out when you could have it.", see: "My Goals" }
-  );
-  T.push({
-    t: "Find your savings rate, and decide whether it's something you want to work on.",
-    see: "My Money, Key numbers",
-  });
-  T.push({
-    t: "You get paid tomorrow. Find out what the game wants you to do with it.",
-    see: "Next Steps, or the payday prompt on Home",
-  });
-  return T;
+function tkTasks() {
+  return TK_TASKS.map(x => ({ t: x.t, see: x.see }));
+}
+/* The name of the screen that is open now: the tab, and the sheet over it. Names only, never a value. */
+function tkAt() {
+  const t = typeof tab === "string" ? tab : "home",
+    w = typeof W !== "undefined" && typeof SH !== "undefined" && SH ? W : null,
+    base = TK_TABS[t] || t;
+  if (!w || !w.kind) return base;
+  if (w.kind === "cb") return base + " > My number: " + (TK_CB[w.step] || String(w.step || ""));
+  return base + " > " + (w.kind === "menu" ? "The menu" : w.kind);
+}
+/* One tap while a task runs: the count goes up by one, and the screen joins the path when it is a new one. */
+function tkTapAdd(s, at) {
+  if (!s || s.stage !== "run") return null;
+  s.taps = (s.taps || 0) + 1;
+  const P = (s.path = s.path || []);
+  if (at && P[P.length - 1] !== at && P.length < TK_PATH_MAX) P.push(at);
+  return s.taps;
+}
+/* The person stopped: the time, and the screen they were on. */
+function tkStop(s, now, at) {
+  if (!s) return s;
+  s.secs = Math.max(1, Math.round((now - (s.t0 || now)) / 1000));
+  s.at = at || "";
+  s.taps = s.taps || 0;
+  s.path = s.path || [];
+  s.stage = "note";
+  return s;
+}
+function tkTapsLabel(n) {
+  return n + (n === 1 ? " tap" : " taps");
 }
 function tkS() {
   return G.tk || null;
@@ -66,9 +100,12 @@ function tkText(r) {
       "   " +
         tkLabel(x.o) +
         (x.secs != null ? " · " + (x.secs < 90 ? x.secs + " sec" : Math.round(x.secs / 60) + " min") : "") +
-        (x.where ? " · where: " + x.where : "") +
+        (x.taps != null ? " · " + tkTapsLabel(x.taps) : "") +
+        (x.at ? " · stopped on: " + x.at : "") +
+        (x.where ? " · got lost: " + x.where : "") +
         (x.why && x.why.length ? " · " + x.why.join(", ") : "")
     );
+    if (x.path && x.path.length) L.push("   Screens: " + x.path.join(", "));
   });
   const n = k => r.tasks.filter(x => x.o === k).length;
   L.push("");
@@ -87,7 +124,7 @@ function tkSheet() {
       r.tasks
         .map(
           (x, i) =>
-            `<div class="tile stack" style="gap:4px"><div class="small"><b>${i + 1}.</b> ${esc(x.t)}</div><div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill ${x.o === "alone" ? "okp" : x.o === "stuck" ? "warn" : ""}">${tkLabel(x.o)}</span>${x.secs != null ? `<span class="pill">${x.secs < 90 ? x.secs + " sec" : Math.round(x.secs / 60) + " min"}</span>` : ""}${x.where ? `<span class="pill">${esc(x.where)}</span>` : ""}</div>${x.why && x.why.length ? `<div class="tiny muted">${x.why.map(esc).join(" · ")}</div>` : ""}</div>`
+            `<div class="tile stack" style="gap:4px"><div class="small"><b>${i + 1}.</b> ${esc(x.t)}</div><div class="row" style="gap:6px;flex-wrap:wrap"><span class="pill ${x.o === "alone" ? "okp" : x.o === "stuck" ? "warn" : ""}">${tkLabel(x.o)}</span>${x.secs != null ? `<span class="pill">${x.secs < 90 ? x.secs + " sec" : Math.round(x.secs / 60) + " min"}</span>` : ""}${x.taps != null ? `<span class="pill">${tkTapsLabel(x.taps)}</span>` : ""}${x.where ? `<span class="pill">${esc(x.where)}</span>` : ""}</div>${x.at ? `<div class="tiny muted">Stopped on: ${esc(x.at)}</div>` : ""}${x.path && x.path.length ? `<div class="tiny muted">Screens: ${x.path.map(esc).join(", ")}</div>` : ""}${x.why && x.why.length ? `<div class="tiny muted">${x.why.map(esc).join(" · ")}</div>` : ""}</div>`
         )
         .join("") +
       `<div class="small muted">What to fix first: anything marked stuck, then anything two people needed a nudge on.</div><button class="primary wide" data-a="tkcopy" data-v="${w.view}">${w.copied ? "Copied. Paste it to Claude ✓" : "Copy these results"}</button><button class="ghost wide slim" data-a="testkit">Back to the list</button>`
@@ -97,7 +134,8 @@ function tkSheet() {
     const past = G.tests || [];
     return (
       head("Menu", "Test with a friend") +
-      `<div class="small muted">Watch one person try five things. You learn more from one quiet watch than from ten opinions.</div>
+      `<div class="small muted">Watch one person try three things. You learn more from one quiet watch than from ten opinions.</div>
+  <div class="tile stack" style="gap:4px"><b class="small">The three tasks</b>${TK_TASKS.map((x, i) => `<div class="small">${i + 1}. ${esc(x.t)}</div>`).join("")}<div class="tiny muted">The game counts the taps of each task and notes the screen where the person stopped. It records no sound and no picture of the screen.</div></div>
   <div class="tile stack" style="gap:6px"><b class="small">Read this to them</b><div class="small mrow k-note">"I'm testing the app, not you. You can't do anything wrong."</div><div class="small mrow k-note">"Say what you're thinking out loud as you go: what you're looking for, what you expect."</div><div class="small mrow k-note">"I can't answer questions while you try. I'll answer everything after."</div></div>
   <div class="tile stack" style="gap:6px"><b class="small">Your job</b><div class="small mrow">Hand them the phone. Say nothing. Count to ten before any hint.</div><div class="small mrow">If they ask what to do: "What would you do if I weren't here?"</div><div class="small mrow">After each task, take the phone back and tap how it went.</div></div>
   <b class="small">Who is trying it?</b><div class="stack" style="gap:6px">${G.chars
@@ -108,7 +146,7 @@ function tkSheet() {
             .trim()
             .charAt(0)
             .toUpperCase()
-        )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Five tasks picked from their own numbers</div></span><span class="pill">Start ›</span></button>`
+        )}</span><span class="pn"><b>${esc(c.name)}</b><div class="tiny muted">Three tasks, on their own numbers</div></span><span class="pill">Start ›</span></button>`
     )
     .join("")}</div>` +
       (past.length
@@ -123,7 +161,7 @@ function tkSheet() {
     const r = s.res[i] || {};
     return (
       head("Task " + (i + 1) + " of " + T.length, "How did it go?") +
-      `<div class="tile small">${esc(x.t)}</div>${r.o ? "" : `<div class="tiny muted">Coach: this part is yours. Take the phone back.</div>`}<div class="stack" style="gap:6px">${[
+      `<div class="tile small">${esc(x.t)}</div><div class="tiny muted">${tkTapsLabel(s.taps || 0)}${s.at ? " · stopped on: " + esc(s.at) : ""}</div>${r.o ? "" : `<div class="tiny muted">Coach: this part is yours. Take the phone back.</div>`}<div class="stack" style="gap:6px">${[
         ["alone", "Did it alone", "No help, no hints"],
         ["nudge", "Needed a nudge", "Got there after a hint or a long pause"],
         ["stuck", "Got stuck", "Gave up, or you had to show them"],
@@ -156,13 +194,18 @@ function tkChip() {
   if (typeof document === "undefined" || !document.body || !document.createElement) return;
   let el = document.getElementById("tkchip");
   const s = tkS(),
-    show = s && s.stage === "run" && !SH;
+    /* over a sheet too: the flow of the three tasks is a sheet, and the stop must be noted where the person is */
+    show = s && s.stage === "run" && !(SH && W && W.kind === "testkit");
   if (!el) {
     if (!show) return;
     el = document.createElement("div");
     el.id = "tkchip";
     document.body.appendChild(el);
   }
+  /* over a sheet the chip sits at the bottom, clear of the top row of the sheet (Back, Home, the menu, Close) */
+  if (el.classList) el.classList.toggle("low", !!SH);
+  /* the sheet gets room under its last row, so nothing stays behind the chip */
+  if (document.body.classList) document.body.classList.toggle("tk-low", !!show && !!SH);
   el.innerHTML = show ? `<button data-a="tkback">Task ${s.i + 1} · done or stuck</button>` : "";
 }
 function tkOpen() {
@@ -193,7 +236,7 @@ Object.assign(ACT, {
     const i = +t.dataset.v,
       c = G.chars[i];
     if (!c) return;
-    G.tk = { who: c.name, ci: i, back: G.active, i: 0, stage: "task", tasks: tkTasks(c), res: [] };
+    G.tk = { who: c.name, ci: i, back: G.active, i: 0, stage: "task", tasks: tkTasks(), res: [] };
     save();
     tkOpen();
   },
@@ -203,6 +246,9 @@ Object.assign(ACT, {
     if (G.chars[s.ci]) G.active = s.ci;
     s.stage = "run";
     s.t0 = Date.now();
+    s.taps = 0;
+    s.path = [];
+    s.at = "";
     save();
     closeSheet();
     go("home");
@@ -222,8 +268,7 @@ Object.assign(ACT, {
   tkback: () => {
     const s = G.tk;
     if (!s) return;
-    s.secs = Math.max(1, Math.round((Date.now() - (s.t0 || Date.now())) / 1000));
-    s.stage = "note";
+    tkStop(s, Date.now(), tkAt());
     save();
     tkOpen();
     tkChip();
@@ -232,7 +277,13 @@ Object.assign(ACT, {
     const s = G.tk;
     if (!s) return;
     const o = t.dataset.v;
-    s.res[s.i] = Object.assign(s.res[s.i] || {}, { o, secs: s.secs });
+    s.res[s.i] = Object.assign(s.res[s.i] || {}, {
+      o,
+      secs: s.secs,
+      taps: s.taps || 0,
+      at: s.at || "",
+      path: (s.path || []).slice(),
+    });
     if (o === "alone" || o === "skip") {
       ACT.tknext();
       return;
@@ -268,6 +319,9 @@ Object.assign(ACT, {
     s.i++;
     s.stage = "task";
     s.secs = null;
+    s.taps = 0;
+    s.path = [];
+    s.at = "";
     save();
     tkOpen();
   },
@@ -300,6 +354,7 @@ Object.assign(ACT, {
     try {
       navigator.clipboard.writeText(tkText(r)).then(done, done);
     } catch (e) {
+      report(e, "testkit.js: tkcopy");
       done();
     }
   },
@@ -318,6 +373,25 @@ if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] =
     "Test with a friend",
     "testkit",
     "act",
-    "Watch someone try five tasks and note where they get stuck",
+    "Watch someone try three tasks: it counts the taps and notes where they stopped",
   ]);
+/* At page load: each tap outside the chip counts for the task that runs. The name of the screen only. */
+if (typeof document !== "undefined" && document.addEventListener)
+  document.addEventListener(
+    "click",
+    e => {
+      try {
+        const s = G && G.tk;
+        if (!s || s.stage !== "run") return;
+        const t =
+          e.target && e.target.closest ? e.target.closest("button,a,summary,[data-a],input,select,label") : null;
+        if (!t || (t.closest && t.closest("#tkchip,#tadock"))) return;
+        tkTapAdd(s, tkAt());
+        saveQuiet();
+      } catch (err) {
+        report(err, "testkit.js: tap counter");
+      }
+    },
+    true
+  );
 if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

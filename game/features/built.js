@@ -1216,7 +1216,14 @@ const WB = [
   ],
   ["who", "Saved to your account, on every device", "b", () => WB_FN("clPush") && WB_FN("clPull"), "", null],
   ["who", "Hand someone their game with a code", "b", () => WB_HAS("handoff") && WB_FN("hoRead"), "", "handoff"],
-  ["who", "Test with a friend", "b", () => WB_HAS("testkit"), "", "testkit"],
+  [
+    "who",
+    "Test with a friend: three tasks, a tap counter, and the screen where the person stopped",
+    "b",
+    () => WB_HAS("testkit") && WB_FN("tkTapAdd") && WB_FN("tkStop") && WB_FN("tkAt"),
+    "Admin menu. The three tasks: find out what your number could be, switch Social Security off and say what changed, get back Home and find your next move. The game counts the taps of each task, keeps the names of the screens and notes where the person stopped. No sound and no picture of the screen is recorded. The results stay in the saved game; Copy these results gives them as text.",
+    "testkit",
+  ],
   [
     "who",
     "Tester drives: a think-aloud test with a tap counter and Report this pinned open",
