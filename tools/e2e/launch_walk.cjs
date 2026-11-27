@@ -154,9 +154,14 @@ async function setup(page, tap, step) {
     await tap('#ov [data-a=cbgo][data-v=next]'); await page.waitForTimeout(600);
     const chart = await step('the layer chart');
     chk(`${tag}: the layer chart, with its layers and what is not covered yet`, (await page.locator('#ov svg.dkstack').isVisible()) && /Social Security/.test(chart) && /Not covered yet/.test(chart));
-    for (let i = 0; i < 8 && !(await page.locator('#ov [data-a=cbrest]').count()); i++) { await tap('#ov [data-a=cbgo][data-v=next]'); await page.waitForTimeout(600); }
-    await step('the last screen of the flow');
-    await tap('#ov [data-a=cbrest]'); await page.waitForTimeout(600);
+    await tap('#ov [data-a=cbgo][data-v=stack]'); await page.waitForTimeout(1000);
+    await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
+    await step('the reveal');
+    await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
+    const last = await step('the last screen of the flow');
+    chk(`${tag}: the last screen has Save my plan, Share my card and Tell Eli what broke`, /Save my plan/.test(last) && /Share my card/.test(last) && /Tell Eli what broke/.test(last));
+    await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
+    await tap('#app [data-fid="cb:homerest"]'); await page.waitForTimeout(600);
     chk(`${tag}: the rest of setup opens under "Am I okay?"`, /Am I okay\?/.test(await page.locator('#ov').innerText()));
     const taps = await setup(page, tap, step);
     await page.waitForTimeout(400);
@@ -203,8 +208,9 @@ async function setup(page, tap, step) {
     // The Menu rows
     for (const [row, want] of [["What's new", /What's new/], ['Share SLAM', /ref=/], ['Privacy', null], ['Export', /Excel or Google Sheets/], ['Am I okay?', /From your taps/]]) {
       await tap('[data-a=menu]');
-      // the Menu is in groups (UX pass, phase 2): the robot finds the row with "Find a tool", as a person can
-      await page.waitForTimeout(400);
+      // the Menu is in groups (UX pass, phase 2): the robot finds the row with "Find a tool", as a person can.
+      // The first save to the new account draws the Menu again and empties the box, so the robot waits for it.
+      await page.waitForTimeout(row === "What's new" ? 2500 : 400);
       await page.locator('#ov #mnfind').fill(row);
       await page.waitForTimeout(400);
       const btn = page.locator('#ov #mnres .menurow', { hasText: row }).first();

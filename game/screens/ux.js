@@ -127,10 +127,17 @@ function homeQuadTop(h) {
   if (h.indexOf('class="stack"') < 0 || /Nothing here needs you/.test(h)) return h;
   /* results.js: the four cards of results first (Your next win, By the end of this month, You are here, the tiles) */
   const rs = typeof homeResults === "function" ? homeResults(C(), D) : null;
+  /* cbreveal.js: the two numbers and the small layer chart, the first tile of a player of What it could be */
+  const cb = rs !== null && typeof homeCbTile === "function" ? homeCbTile(C(), D) : "";
   const top =
     tabHead() +
     (rs !== null
-      ? '<div class="rstop">' + rs + "</div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
+      ? '<div class="rstop' +
+        (cb ? " cbq" : "") +
+        '">' +
+        cb +
+        rs +
+        "</div><!--homerows-->" /* reveal.js homeRowAdd: the rows go under the cards */
       : /* look.js: the stat row, kept with the four boxes in one block so "Show less" keeps both */
         '<div class="hqtop">' +
         (typeof homeStatRow === "function" ? homeStatRow(C(), D) : "") +

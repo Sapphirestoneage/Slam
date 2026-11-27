@@ -343,20 +343,27 @@
     "the last screen has both numbers and no dead end",
     W.step === "end" &&
       (h.match(/data-cbn=/g) || []).length === 2 &&
-      /data-a="cbrest"/.test(h) &&
-      /data-a="cbsteps"/.test(h) &&
+      /data-a="cbsave"/.test(h) &&
+      /data-a="cbshare"/.test(h) &&
+      /data-a="flag"/.test(h) &&
       /data-a="gohome"/.test(h) &&
       h.includes(TRUST_LINE)
   );
   chk(
     "a later file can add a step before the last screen",
     (cbStepAdd("demo_step", () => head("x", "y") + cbTop(C()) + cbFoot()),
-    CB_STEPS[CB_STEPS.length - 2].id === "demo_step" && CB_STEPS[CB_STEPS.length - 1].id === "end")
+    CB_STEPS.findIndex(s => s.id === "demo_step") > 0 &&
+      CB_STEPS.findIndex(s => s.id === "demo_step") < CB_STEPS.findIndex(s => s.id === "reveal") &&
+      CB_STEPS[CB_STEPS.length - 1].id === "end")
   );
-  CB_STEPS.splice(CB_STEPS.length - 2, 1);
-  X("cbsteps");
+  CB_STEPS.splice(
+    CB_STEPS.findIndex(s => s.id === "demo_step"),
+    1
+  );
+  X("gohome");
+  X("tab", "plan");
   chk(
-    "Go to Next Steps closes the flow on the tab",
+    "Next Steps, after the flow, has the rest of setup",
     !SH && tab === "plan" && /data-a="cbrest"/.test(app()) && /Finish setup: five short rounds/.test(app())
   );
   X("cbrest");

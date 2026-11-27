@@ -519,6 +519,12 @@ button.dktile{cursor:pointer}button.dktile:hover{border-color:var(--sap)}
 .cbgapbtn{gap:8px;flex-wrap:wrap;margin-top:8px}.cbgapbtn .chip{border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.25);min-height:44px}.cbtwo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cbways .ghost.on{border-color:var(--sap);background:var(--hl);font-weight:700}.cbdropn{display:block;font-size:17px;line-height:1.3;margin:2px 0}.cbwhy{align-items:center}.cbwhy span.i{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:14px}
 .cbtaxt{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:12px;table-layout:fixed}.cbtaxt th,.cbtaxt td{padding:6px 2px;text-align:right;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.cbtaxt thead th{font-weight:600;color:var(--muted);vertical-align:bottom;font-size:11px}.cbtaxt th:first-child{text-align:left}.cbtaxst{gap:8px;align-items:center}.cbtaxst button{min-height:44px}
 .cbstkrow{display:flex;gap:8px;align-items:center}.cbstkrow .rowbtn{flex:1;min-width:0;min-height:48px}.cbstkrow .cbcnt{flex:none;min-width:104px;min-height:46px;border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.25)}.cbstkrow .cbcnt.on{border-color:var(--sap);background:var(--hl);font-weight:700}.cbhid{margin-top:8px}.cbhid summary .i{display:inline-flex;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);color:var(--muted);align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:13px;margin-right:6px}.cbbk .chip{margin-top:6px;min-height:44px;border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.25)}.cbstk .i{flex:none}
+/* the reveal, the last screen and the tile of Home (features/cbreveal.js) */
+.cbrev{border:1px solid var(--sap);text-align:left}.cbrev .cbdropn{font-size:19px}.cbend3 button{min-height:50px}
+.cbhome{display:flex;flex-direction:column;gap:8px;margin:0}.cbhomego{display:flex;flex-direction:column;gap:8px;width:100%;box-sizing:border-box;margin:0;min-width:0;text-align:left;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 2px 0 rgba(0,0,0,.25);cursor:pointer;font:inherit}.cbhomego:focus-visible{outline:2px solid var(--sap);outline-offset:2px}.cbhomego:active{transform:translateY(1px);box-shadow:none}
+.cbhnums{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cbhnums .cbnum{background:var(--panel)}.cbhomego .dkchart{width:100%;max-height:150px}.cbhgo{gap:8px;align-items:center;min-height:24px}.cbsince{display:flex;flex-direction:column;gap:6px}
+/* Home of a player of the flow: the one next move is the only thing that pulses */
+.rstop.cbq .rsstrip i.here,.rstop.cbq~.pulse,.rstop.cbq~* .pulse,.rstop.cbq~* button.go,.rstop.cbq~button.go,.rstop.cbq .cbhome button.go{animation:none}
 /* the Yes, but card (features/cbyesbut.js): the lines of a half are toggles, the net sits between the halves */
 .cbybrow{min-height:52px}.cbybrow .cbybin{flex:none;font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:4px 10px;white-space:nowrap}.cbybrow.on .cbybin{border-color:var(--a3)}.cbybsz .chip{border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.25)}.cbybsum{margin-top:8px;width:100%;box-sizing:border-box}.cbybnet{border:1px solid var(--sap);text-align:center}.cbybnet .cbdropn{font-size:21px}
 .cbcost{display:flex;flex-direction:column;gap:6px}.cbcost .rowbtn{min-height:48px}.cbcost .cbcnt{align-self:flex-start;border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.25)}.cbzrow{gap:8px;flex-wrap:wrap;margin-bottom:4px}.cbzrow button{min-height:44px}
@@ -679,7 +685,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="screens/smart.js?v=96e07bbd"></script>
 <script src="screens/planner.js?v=a63595d9"></script>
 <script src="account/cloud.js?v=575526c7"></script>
-<script src="screens/ux.js?v=cfcddd02"></script>
+<script src="screens/ux.js?v=e2b0f578"></script>
 <script src="core/metrics.js?v=ab902b52"></script>
 <script src="features/debts.js?v=03c85bb0"></script>
 <script src="features/import.js?v=1e499e73"></script>
@@ -779,7 +785,7 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/kids.js?v=ee17bb0a"></script>
 <script src="data/metros.js?v=10acde40"></script>
 <script src="data/strategies.js?v=b8975c5b"></script>
-<script src="features/strat.js?v=41660a27"></script>
+<script src="features/strat.js?v=ceea7238"></script>
 <script src="account/roles.js?v=16f6dd76"></script>
 <script src="features/stars.js?v=0735ed6f"></script>
 <script src="features/exletter.js?v=95c473d8"></script>
@@ -818,19 +824,20 @@ details.mng>summary::after{content:"Open"}details.mng[open]>summary::after{conte
 <script src="features/hhold.js?v=3fb0b8a0"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
 <script src="features/results.js?v=213dedc7"></script>
-<script src="features/couldbe.js?v=12eb3956"></script>
+<script src="features/couldbe.js?v=51660121"></script>
 <script src="features/cbtax.js?v=3193fafa"></script>
 <script src="features/cbflex.js?v=ac2e765e"></script>
 <script src="features/cblater.js?v=ee9dd0d5"></script>
 <script src="features/cbmoves.js?v=9427a024"></script>
-<script src="features/cbyesbut.js?v=ec99d64f"></script>
-<script src="features/cbstack.js?v=27f850a6"></script>
+<script src="features/cbyesbut.js?v=5166503e"></script>
+<script src="features/cbstack.js?v=ce0a7727"></script>
+<script src="features/cbreveal.js?v=26d55a0c"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
 <script src="features/lifemap.js?v=762a5948"></script>
 <script src="features/book.js?v=cf713f1a"></script>
 <script src="features/questlog.js?v=8b6cf8c0"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=01cc9f28"></script>
+<script src="features/built.js?v=c7707e8b"></script>
 </body>
 </html>

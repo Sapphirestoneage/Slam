@@ -196,28 +196,28 @@
 
   /* ---- 5. the last screen follows the ways of the flow ---- */
   cbWayDo("shape", "count", "1");
-  W = { kind: "cb", step: "end", o: {} };
+  W = { kind: "cb", step: "reveal", o: {} };
   sheet(cbSheet);
   h = ov();
   chk(
-    "the last screen promises nothing that is not built",
-    W.step === "end" && !/coming/i.test(text(h)) && !/data-fid="cb:more"/.test(h)
+    "the reveal promises nothing that is not built",
+    W.step === "reveal" && !/coming/i.test(text(h)) && !/data-fid="cb:more"/.test(h)
   );
   chk(
     "it lists every way of the flow that can apply to this player, one tap away, with where each stands (Batch B, phase 2e: a way that cannot apply is behind the i of the stack)",
     cbWays().length >= 2 &&
       cbWays()
         .filter(w => cbStepInfo(c, w.id).applies)
-        .every(w => new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h) && text(h).includes(w.title)) &&
+        .every(w => new RegExp('data-a="cbquick" data-k="' + w.id + '"').test(h) && text(h).includes(w.title)) &&
       cbWays()
         .filter(w => !cbStepInfo(c, w.id).applies)
-        .every(w => !new RegExp('data-a="cbgo" data-v="' + w.id + '"').test(h)) &&
-      /Counted\. Tap to change/.test(text(h)) &&
-      /Not counted yet\. Tap to change/.test(text(h))
+        .every(w => !new RegExp('data-a="cbquick" data-k="' + w.id + '"').test(h)) &&
+      /aria-pressed="true">Spending eases as you age \u2713/.test(h) &&
+      /data-a="cbquick" data-k="ss" aria-pressed="false"/.test(h)
   );
   chk(
-    "no dead end: the rest of setup, Next Steps and Home",
-    /data-a="cbrest"/.test(h) && /data-a="cbsteps"/.test(h) && /data-a="gohome"/.test(h)
+    "no dead end: the last screen, the stack and Home",
+    /data-a="cbgo" data-v="end"/.test(h) && /data-a="cbgo" data-v="stack"/.test(h) && /data-a="gohome"/.test(h)
   );
   /* a way that a later phase adds */
   /* the ways and the steps that are built now: a later phase adds its own, so the checks count from these */
@@ -241,8 +241,10 @@
   sheet(cbSheet);
   h = ov();
   chk(
-    "the last screen lists the new way with no other change, as Not counted yet",
-    /data-a="cbgo" data-v="tpway"/.test(h) && /A made-up way/.test(text(h)) && !/data-v="tpcard"/.test(h)
+    "the reveal lists the new way with no other change, as not counted yet",
+    /data-a="cbquick" data-k="tpway" aria-pressed="false"/.test(h) &&
+      /A made-up way/.test(text(h)) &&
+      !/data-k="tpcard"/.test(h)
   );
   const before = cbNumbers(c).could.target;
   cbCount("tpway", {});
@@ -251,7 +253,7 @@
     "cbCount of the new way shows as Counted, and a key the math does not read moves no number",
     cbWayState(c, "tpway").counted &&
       cbNumbers(c).could.target === before &&
-      (text(ov()).match(/Counted\. Tap to change/g) || []).length === 2
+      (ov().match(/data-a="cbquick" data-k="[a-z]+" aria-pressed="true"/g) || []).length === 2
   );
   cbCount("tpway", false);
   go(ways0[ways0.length - 1]);
@@ -264,6 +266,8 @@
     W.step === "tpway" && text(ov()).includes(nth)
   );
   go("next");
+  go("next");
+  chk("after the added steps comes the reveal", W.step === "reveal");
   go("next");
   chk("the flow still ends on the last screen", W.step === "end");
   CB_STEPS.splice(

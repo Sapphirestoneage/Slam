@@ -62,20 +62,20 @@
     W.step === "stack" && /data-fid="cb:top"/.test(h) && text(h).includes(TRUST_LINE)
   );
   chk("the screen is clean: no undefined, no long dash, no verdict word", junk(h) === "", junk(h));
-  tap("cbgo", "end");
+  tap("cbgo", "reveal");
   chk(
-    "a new player who counts nothing reaches the last screen in 8 taps: the flow is not a forced march",
-    W.step === "end" && taps === 8,
+    "a new player who counts nothing reaches the reveal in 8 taps: the flow is not a forced march",
+    W.step === "reveal" && /data-a="cbgo" data-v="reveal"/.test(h) && taps === 8,
     taps
   );
   go("stack");
   taps = 7;
   let S = cbStack(c);
   S.after.slice(0, 3).forEach(w => tap("cbquick", "", w.id));
-  tap("cbgo", "end");
+  tap("cbgo", "reveal");
   chk(
     "with three ways counted from the list it is 11 taps",
-    W.step === "end" && taps === 11 && cbStack(c).stacked === 3,
+    W.step === "reveal" && taps === 11 && cbStack(c).stacked === 3,
     taps
   );
   S.after.slice(0, 3).forEach(w => quick(w.id));
@@ -122,19 +122,20 @@
     cbStepNear(c, "ss", 1) === "flex" &&
       /* after the last way that applies: the Yes, but card (phase 3), then the last screen */
       cbStepNear(c, "flex", 1) === "yesbut" &&
-      cbStepNear(c, "yesbut", 1) === "end" &&
+      cbStepNear(c, "yesbut", 1) === "reveal" &&
+      cbStepNear(c, "reveal", 1) === "end" &&
       cbStepNear(c, "yesbut", -1) === "flex" &&
       cbStepNear(c, "flex", -1) === "ss"
   );
   chk(
-    "the last screen lists only the ways that can apply",
+    "the reveal lists only the ways that can apply",
     (() => {
-      go("end");
+      go("reveal");
       const e = ov();
       go("stack");
       return (
-        /data-a="cbgo" data-v="flex"/.test(e) &&
-        !/data-a="cbgo" data-v="taxplan"/.test(e) &&
+        /data-a="cbquick" data-k="flex"/.test(e) &&
+        !/data-a="cbquick" data-k="taxplan"/.test(e) &&
         /data-fid="cb:stack"/.test(e)
       );
     })()
@@ -326,9 +327,9 @@
   h = ov();
   chk("the stack with ways counted is clean", junk(h) === "", junk(h));
   chk(
-    "the counter is on the last screen too",
+    "the counter is on the reveal too",
     (() => {
-      go("end");
+      go("reveal");
       return /data-fid="cb:stackn"/.test(ov()) && /data-fid="cb:backups"/.test(ov()) && junk(ov()) === "";
     })()
   );

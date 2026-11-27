@@ -96,7 +96,7 @@
     const hm = app();
     chk(
       "four answers: Home is results first",
-      /class="rstop"/.test(hm) && /Your next win/i.test(text(hm)),
+      /class="rstop cbq"/.test(hm) && /Your next win/i.test(text(hm)),
       text(hm).slice(0, 200)
     );
     chk(

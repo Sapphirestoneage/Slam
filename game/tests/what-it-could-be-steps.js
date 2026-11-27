@@ -268,7 +268,7 @@
   cbCount("health", {});
   cbCount("wtax", {});
   N = cbNumbers(c);
-  W = { kind: "cb", step: "end", o: {} };
+  W = { kind: "cb", step: "reveal", o: {} };
   sheet(cbSheet);
   h = ov();
   chk(
@@ -284,7 +284,7 @@
     "only the costs counted: What it could be is above What it is, and the screen says which costs",
     N.above &&
       /Above What it is, because you counted health insurance before 65 and tax on traditional withdrawals\./.test(h) &&
-      /more on the target/.test(text(h)),
+      /more to reach/.test(text(h)),
     [N.is.target, N.could.target]
   );
   cbStore(c).count = {};
@@ -296,28 +296,27 @@
   sheet(cbSheet);
   h = ov();
   chk(
-    "the last screen has both numbers, the chart and the words of the run",
-    W.step === "end" &&
+    "the reveal has both numbers, the chart and the words of the run",
+    W.step === "reveal" &&
       /data-cbn="is"/.test(h) &&
       /data-cbn="could"/.test(h) &&
       /dkstack/.test(h) &&
-      /data-fid="cb:ways"/.test(h) &&
+      /data-fid="cb:revways"/.test(h) &&
       !/coming/i.test(text(h))
   );
   chk(
-    "no dead end: the rest of setup, Next Steps and Home are buttons",
-    /data-a="cbrest"/.test(h) && /data-a="cbsteps"/.test(h) && /data-a="gohome"/.test(h)
+    "no dead end: the reveal goes on to the last screen, back to the stack, and Home is on the top row",
+    /data-a="cbgo" data-v="end"/.test(h) && /data-a="cbgo" data-v="stack"/.test(h) && /data-a="gohome"/.test(h)
   );
   chk(
-    "it says what is counted, and each step is one tap away",
-    /data-a="cbgo" data-v="shape"/.test(h) &&
-      /data-a="cbgo" data-v="ss"/.test(h) &&
-      /Counted\. Tap to change/.test(text(h)) &&
-      /Not counted yet\. Tap to change/.test(text(h)) &&
-      /What you counted: .* off the target/.test(text(h))
+    "it says what is counted, and each way is one tap away",
+    /data-a="cbquick" data-k="shape" aria-pressed="true"/.test(h) &&
+      /data-a="cbquick" data-k="ss" aria-pressed="false"/.test(h) &&
+      /Spending eases as you age \u2713/.test(text(h)) &&
+      /less to reach/.test(text(h))
   );
   chk(
-    "the last screen is clean, with Show the math and the line of trust.js",
+    "the reveal is clean, with Show the math and the line of trust.js",
     clean(h) && /Show the math/.test(h) && h.includes(TRUST_LINE),
     junk(h)
   );
@@ -344,10 +343,11 @@
     );
   }
   X("cbgo", "shape");
-  chk("a row of the last screen opens its step", W.step === "shape");
+  chk("a way opens from the reveal", W.step === "shape");
   go("end");
-  X("cbsteps");
-  chk("Next Steps opens from the last screen", !SH && /cbplan/.test(app()));
+  X("gohome");
+  X("tab", "plan");
+  chk("Next Steps has the flow after the last screen", !SH && /cbplan/.test(app()));
   const B = cbBook(c);
   chk(
     "the spreadsheet has the shares of the shape and of Social Security",
@@ -439,9 +439,12 @@
       [n1.is, n1.could]
     );
     chk(name + ": every year adds up", every(k.rows));
+    W = { kind: "cb", step: "reveal", o: {} };
+    sheet(cbSheet);
+    chk(name + ": the reveal is clean", clean(ov()) && /dkstack/.test(ov()), junk(ov()));
     W = { kind: "cb", step: "end", o: {} };
     sheet(cbSheet);
-    chk(name + ": the last screen is clean", clean(ov()) && /dkstack/.test(ov()), junk(ov()));
+    chk(name + ": the last screen is clean", clean(ov()) && /data-fid="cb:end3"/.test(ov()), junk(ov()));
     closeSheet();
   });
   chk(

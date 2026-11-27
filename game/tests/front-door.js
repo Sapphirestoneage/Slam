@@ -167,9 +167,14 @@
     "the game is the visitor's own after the four answers",
     !G.demo && G.chars.length === 1 && store.slam_guest === "2"
   );
-  /* the rest of setup, from the last screen of the flow */
+  /* the rest of setup: the last screen has three buttons only (Batch B, phase 4b), so it is on Home */
   X("cbgo", "end");
-  chk("the last screen opens the rest of setup", /data-a="cbrest"/.test(ov()) && /data-a="cbsteps"/.test(ov()));
+  chk(
+    "the last screen saves the plan with a free account, and has no rest of setup",
+    /data-a="cbsave"/.test(ov()) && !/data-a="cbrest"/.test(ov())
+  );
+  X("gohome");
+  chk("the first tile of Home opens the rest of setup", !SH && /data-fid="cb:homerest"/.test(app()));
   X("cbrest");
   chk("the rest of setup is the setup by taps", W && W.kind === "setup" && W.door === true && W.cbRest === true);
   h = ov();

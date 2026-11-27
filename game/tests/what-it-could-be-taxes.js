@@ -366,11 +366,11 @@
   );
 
   /* ---- 6. the last screen and the spreadsheet ---- */
-  go("end");
+  go("reveal");
   h = ov();
   chk(
-    "the last screen lists the way with where it stands, one tap away",
-    /data-a="cbgo" data-v="taxplan"/.test(h) && /Pay less tax on the way out/.test(text(h)) && junk(h) === ""
+    "the reveal lists the way with where it stands, one tap away",
+    /data-a="cbquick" data-k="taxplan"/.test(h) && /Pay less tax on the way out/.test(text(h)) && junk(h) === ""
   );
   const B = cbBook(c).rows,
     row = id => B.find(r => r.id === id);

@@ -478,9 +478,11 @@ function planTabStrat(h) {
   try {
     const c = C();
     if (G.demo || !c || !c.placed || h.indexOf("<!--moveshere-->") < 0) return h.replace("<!--moveshere-->", "");
-    const top = stgRank(c)
-      .filter(r => r.V.v === "fits" || r.V.v === "notyet")
-      .slice(0, 3);
+    /* cbreveal.js: the top moves of What it could be have their own cards on Next Steps; this card shows the next ones */
+    const mine = typeof cbTopIds === "function" ? cbTopIds(c) : [],
+      top = stgRank(c)
+        .filter(r => (r.V.v === "fits" || r.V.v === "notyet") && !mine.includes(r.S.id))
+        .slice(0, 3);
     return h.replace(
       "<!--moveshere-->",
       () =>
@@ -674,6 +676,35 @@ function stgAdded(c, S) {
   return plX(c).plan.some(
     p => p.a === "strat" && String(p.v).split(":")[0] === S.id && p.st !== "done" && p.st !== "na"
   );
+}
+/* Put the steps of one move on Next Steps: one plan item for each of its quests, a day apart. A step that is already
+   there and open is not added twice. The button "Add to my steps" of the full card, and of the top moves of What it
+   could be (cbreveal.js). Returns false when there is no such move. */
+function stgAddSteps(c, id) {
+  const S = stgOf(id);
+  if (!S) return false;
+  const x = plX(c),
+    X = stgX(c, S.id),
+    F = stgCalc(c, S);
+  S.quests.forEach((q, i) => {
+    const v = S.id + ":" + i;
+    if (x.plan.some(p => p.a === "strat" && p.v === v && p.st !== "done" && p.st !== "na")) return;
+    x.plan.push({
+      id: plId(),
+      t: q.t,
+      s: "From the move: " + S.name,
+      a: "strat",
+      v,
+      mins: q.mins || 15,
+      when: addDays(todayISO(), i),
+      slot: "Any",
+      st: "todo",
+      made: todayISO(),
+    });
+  });
+  X.added = todayISO();
+  X.hours = F.hours || 0;
+  return true;
 }
 /* The landlord and side-work hours of the moves in the plan, for the time ledger. */
 function stgHours(c) {
@@ -881,29 +912,7 @@ Object.assign(ACT, {
     kitRedraw();
   },
   stgadd: () => {
-    const c = C(),
-      S = stgOf(W.id),
-      x = plX(c),
-      X = stgX(c, S.id),
-      F = stgCalc(c, S);
-    S.quests.forEach((q, i) => {
-      const v = S.id + ":" + i;
-      if (x.plan.some(p => p.a === "strat" && p.v === v && p.st !== "done" && p.st !== "na")) return;
-      x.plan.push({
-        id: plId(),
-        t: q.t,
-        s: "From the move: " + S.name,
-        a: "strat",
-        v,
-        mins: q.mins || 15,
-        when: addDays(todayISO(), i),
-        slot: "Any",
-        st: "todo",
-        made: todayISO(),
-      });
-    });
-    X.added = todayISO();
-    X.hours = F.hours || 0;
+    stgAddSteps(C(), W.id);
     W.sec = 6;
     kitRedraw();
   },

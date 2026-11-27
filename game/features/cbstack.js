@@ -134,7 +134,7 @@ function cbStackView() {
         ),
       { cap: "The most months sooner for you is first. Each one keeps its own full card." }
     ) +
-    `<button class="primary wide go" data-a="cbgo" data-v="end">See where this leaves you</button>` +
+    `<button class="primary wide go" data-a="cbgo" data-v="${CB_STEPS.some(s => s.id === "reveal") ? "reveal" : "end"}">See where this leaves you</button>` +
     `<button class="ghost wide" data-a="cbgo" data-v="chart">Back to the chart</button>` +
     mathBox([
       "Stacked: the ways you counted, or already do, out of the ways that can apply to you (" + S.of + ").",

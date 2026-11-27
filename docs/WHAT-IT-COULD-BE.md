@@ -308,3 +308,57 @@ File: `game/features/cbyesbut.js`. Test: `game/tests/what-it-could-be-yes-but.js
 - A test that walks Next through the flow must pass a step that is not a way (see `what-it-could-be-top-ups.js`).
 - A test player with costly debt belongs in every new test of the flow: phase 2d broke for one and no test saw it.
 - In Chromium wait about a second after a tap that opens a screen: the sheet scrolls to its top first.
+
+
+## Batch B, phase 4: the reveal, the card to share, Home, the day after (Nov 27 2026)
+
+File: `game/features/cbreveal.js`. Test: `game/tests/what-it-could-be-reveal.js`.
+
+| Tap | Screen |
+|----:|--------|
+| 5 | What it is (the first number) |
+| 6 | The layer chart |
+| 7 | The stack |
+| 8 | The reveal (11 with three things counted on the stack) |
+| 9 | The last screen: Save my plan, Share my card, Tell Eli what broke |
+
+- **The reveal** (W.step `reveal`, added with `cbStepAdd`; `cbStepAdd` puts every later step before it). `cbReveal(c)`
+  returns the chart, the two numbers, the stack, `diff` (`off` to the $1,000, `months`, `years`, the words) and `items`
+  (each counted way, cost, move and the Yes, but card, with `deep`: the action that opens its deeper feature). The
+  difference is `lyReceipt` of the two numbers and nothing else. The months of the counted moves and the net of the
+  Yes, but card are on their own line (`cb:revmoves`) with the "i" `cbtwo`: two engines, not added.
+- **Every switch** is on the reveal: the layers and the split (`cbLayerToggles`, a part of the chart screen now), the
+  ways as chips in the order of the flow (`cbquick`), the two costs (`cbcount`).
+- **Deeper features** (`CBR_DEEP`): shape and ss open Retirement odds; taxplan and the tax cost open Your tax view;
+  flex opens Taking money out, Guardrails; later opens Make it exact; health opens Taking money out, Health cover; a
+  move carries its own (`cbMoves`: `open`); the card opens Is my money going where I want.
+- **The last screen** (`cbEndView` in couldbe.js): the two numbers, one line, three buttons. `cbsave`: a visitor goes
+  to the account door (`doorsave`), anyone else reads where the plan is kept (`cbSaveState`). `cbshare`:
+  `cbYbImage("send", cbPlanCard(cbReveal(c)))`, the one painter. The card has ages, names and time, no dollars. The
+  rest of setup is on the tile of Home and on Next Steps.
+- **Next Steps** (`cbTopRows`, called from `planTabCb`): `cbTopMoves(c)` gives 3 at most, counted first, then the most
+  days sooner. "Add to my steps" is `stgAddSteps(c, id)` of strat.js. They show after the reveal was seen once
+  (`c.x.cb.rev`).
+- **Home** (`homeCbTile`, called from `homeQuadTop` in ux.js before the four cards): the two numbers, the small chart
+  (`cbChartHtml(K, { small: true })`: no taps inside), "Pick up where you left off" (`c.x.cb.at`, kept by `cbAt` on each
+  move in the flow; `ACT.cbback`). Only for a player with `c.x.cb`. The class `cbq` on `.rstop` stills every pulse on
+  Home but the button of Your next win.
+- **The day after.** `cbSeenKeep()` writes `c.x.cb.seen = { day, n }` when the page is put away, at the reveal and on
+  the last screen; a snapshot of an earlier day moves to `was`. `cbSince(c)` compares the last earlier day with now:
+  `rcpDiff` of receipt.js, and one line for each of the two numbers that moved ("Recalculating route" when one went
+  up).
+
+### The pattern for the next phase (5 to 7)
+
+- "After the reveal" for phase 5 is `c.x.cb.rev` (the ISO day the reveal was first seen). The first day of a player is
+  `c.x.cb.seen` or the day the profile was made.
+- A new step of the flow goes before the reveal by itself (`cbStepAdd`). Do not add a button to the last screen: it has
+  three. Put a new way on in the stack, the reveal lists it from `cbStack(c)`, and give it a row in `CBR_DEEP`.
+- A row or a tile on Home: a named part called from `homeQuadTop` (ux.js) inside `.rstop`, before or after the cards.
+  A new pulse on Home breaks 4e: the test reads the CSS rule, and the walk counts what pulses in Chromium.
+- Phase 6 (the in-debt version) can reuse the reveal's shape: a function that returns `{ N, diff, items }` and the
+  same views. The card to share is `cbYbPaint` with `{ brand, title, yes, mid, net, but, foot, file }`.
+- Tests that open the last screen must not look for `cbrest` there: it is on Home (`cb:homerest`) and Next Steps.
+- The browser walks `tools/e2e/door_walk.cjs` and `launch_walk.cjs` now tap stack, reveal, end, Home. Run them after a
+  change of the flow's order (serve the repository first; `SLAM_URL`).
+

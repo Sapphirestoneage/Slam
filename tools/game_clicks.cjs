@@ -71,13 +71,21 @@ async function walk(browser, base, want) {
       await page.waitForTimeout(650);
     }
     if (await page.locator("#ov [data-cbn=is]").count()) first = taps;
-    for (let i = 0; i < 8 && !(await page.locator("#ov [data-a=cbrest]").count()); i++) {
-      await page.locator("#ov [data-a=cbgo][data-v=next]").first().click();
+    /* Batch B, phase 4: What it is, the chart, the stack, the reveal, the last screen (three buttons), then Home,
+       where the rest of setup is (the first tile). */
+    for (const [sel, name] of [
+      ["#ov [data-a=cbgo][data-v=next]", "See what it could be"],
+      ["#ov [data-a=cbgo][data-v=stack]", "Next (the chart)"],
+      ["#ov [data-a=cbgo][data-v=reveal]", "See where this leaves you"],
+      ["#ov [data-a=cbgo][data-v=end]", "Next (the reveal)"],
+      ["#ov [data-a=gohome]", "Home"],
+    ]) {
+      await page.locator(sel).first().click();
       taps++;
-      trace.push(taps + ". Next (the flow)");
-      await page.waitForTimeout(650);
+      trace.push(taps + ". " + name);
+      await page.waitForTimeout(1000);
     }
-    await page.locator("#ov [data-a=cbrest]").click();
+    await page.locator('#app [data-fid="cb:homerest"]').click();
     taps++;
     trace.push(taps + ". Finish setup: five short rounds");
     await page.waitForTimeout(650);

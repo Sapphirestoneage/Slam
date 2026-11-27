@@ -866,6 +866,25 @@ const WB = [
     "cb",
   ],
   [
+    "see",
+    "What it could be: the reveal, the card to share, Home and the day after",
+    "b",
+    () =>
+      WB_FN("cbReveal") &&
+      WB_FN("cbRevealView") &&
+      WB_FN("cbPlanCard") &&
+      WB_FN("cbTopMoves") &&
+      WB_FN("cbSince") &&
+      WB_FN("homeCbTile") &&
+      WB_FN("stgAddSteps") &&
+      WB_HAS("cbsave") &&
+      WB_HAS("cbshare") &&
+      WB_HAS("cbaddstep") &&
+      WB_HAS("cbback"),
+    "Batch B, phase 4. The reveal shows What it is and What it could be side by side, the difference in dollars and in years, what you counted (each one opens its deeper feature) and the finished chart with every switch. The moves before FI and the Yes, but card keep their months on their own line, and an i says why. The last screen has three buttons: Save my plan, Share my card, Tell Eli what broke. The card is an image with ages and names and no dollar amount. Your top 3 moves are cards on Next Steps, with Add to my steps. Home starts with the two numbers and a small chart, and a tap opens the flow where you left off. On a later day the tile says what changed since last time.",
+    "cb",
+  ],
+  [
     "feel",
     "FIRE statuses: markers on your path, and the options each one opens",
     "b",

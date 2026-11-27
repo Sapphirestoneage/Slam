@@ -23,8 +23,8 @@
                cbStart (doorBegin in door.js, ACT.start in ui.js, clFirstGame in cloud.js),
                finishSetupCb (finishSetupBase in ui.js), openSetupCb (openSetup in ui.js),
                drawSheetCb (drawSheetOnce in ui.js), planTabCb (planTab in planner.js). Actions (ACT):
-               cb, cbset, cbknow, cbuse, cbgo, cbtog, cbsplit, cbzoom, cblayer, cbcount, cbrest, cbsteps,
-               cbpick, cbdo.
+               cb, cbset, cbknow, cbuse, cbgo, cbtog, cbsplit, cbzoom, cblayer, cbcount, cbrest,
+               cbpick, cbdo, cbback.
    DEPENDS ON  core/report.js, core/paylayers.js (lyNumbers, lyYears, lyBars, lyNeedsAge, lyLayerSum,
                lyCoverage, lyReceipt, lyShapeBands, lyLifetime, LY_LAYERS, LY_ACCOUNTS, LY_SPENDING, LY_END,
                LY_MEDICARE, LY_SHAPE_REF, LY_SS_REF),
@@ -802,7 +802,10 @@ function cbBook(c) {
       .concat(
         typeof cbLaterBookRows === "function" ? cbLaterBookRows(c) : []
       ) /* cblater.js: money that shows up later */
-      .concat(typeof cbYbBookRows === "function" ? cbYbBookRows(c) : []) /* cbyesbut.js: the Yes, but card */,
+      .concat(typeof cbYbBookRows === "function" ? cbYbBookRows(c) : []) /* cbyesbut.js: the Yes, but card */
+      .concat(
+        typeof cbRevealBookRows === "function" ? cbRevealBookRows(c) : []
+      ) /* cbreveal.js: the second number and the difference */,
   };
 }
 
@@ -939,13 +942,15 @@ function cbIsView() {
     cbFoot()
   );
 }
-/* The chart of the layers, from the kit (dkBars with the stacked option). K: cbChart(). */
-function cbChartHtml(K) {
-  const on = K.layers.filter(l => !l.off),
+/* The chart of the layers, from the kit (dkBars with the stacked option). K: cbChart(). o.small: the small chart of
+   Home (cbreveal.js): lower, 5 years a bar, and no part of it takes a tap. */
+function cbChartHtml(K, o) {
+  const small = !!(o && o.small),
+    on = K.layers.filter(l => !l.off),
     ids = on.map(l => (l.id === "inv" ? "inv" : l.id)),
     val = (r, id) =>
       id === "inv" ? ["tax", "pre", "roth", "hsa"].filter(k => !K.p.off[k]).reduce((t, k) => t + r[k], 0) : r[id],
-    zoom = K.zoom,
+    zoom = small ? null : K.zoom,
     src = zoom || K.bars,
     top = Math.max.apply(
       null,
@@ -959,11 +964,11 @@ function cbChartHtml(K) {
       v: ids.map(id => val(r, id)),
       acts: ids,
       gap: r.gap,
-      gapL: r.gap > 0 && (zoom || src.indexOf(r) === topAt) ? lkK(r.gap) : "",
+      gapL: !small && r.gap > 0 && (zoom || src.indexOf(r) === topAt) ? lkK(r.gap) : "",
       line: r.line,
       mark: r.needs + r.health,
       side: [r.needs, r.wants, r.health, r.wtax],
-      act: zoom ? null : "cbzoom",
+      act: zoom || small ? null : "cbzoom",
       av: zoom ? null : r.from,
       al: zoom ? null : "Ages " + r.from + " to " + r.to + ": open the single years",
     }));
@@ -975,8 +980,8 @@ function cbChartHtml(K) {
       colors: on.map(l => l.color),
       sideColors: [CB_COL.needs, CB_COL.wants, CB_COL.health, CB_COL.wtax],
       partAct: zoom ? "cblayer" : null,
-      h: 190,
-      top: "Up to " + lkK(K.max) + " a year",
+      h: small ? 120 : 190,
+      top: small ? "" : "Up to " + lkK(K.max) + " a year",
       label: "What pays for each year, from age " + K.p.age + " to " + LY_END,
     }
   );
@@ -1024,6 +1029,18 @@ function cbNeedsLine(K) {
     ? `<div class="banner small cbneeds" data-fid="cb:needs">From ${K.needsAge}, your needs are covered without touching investments.</div>`
     : "";
 }
+/* The switches of the layers: one chip for each layer (off or on), View for what it is, and the split by account.
+   On the chart screen and on the reveal (cbreveal.js). K: cbChart(). */
+function cbLayerToggles(K) {
+  const sq = col => `<i class="cbsq" style="background:${col}"></i>`,
+    chips = K.layers
+      .map(
+        l =>
+          `<div class="cblay"><button class="chip cbchip ${l.off ? "" : "on"}" data-a="cbtog" data-v="${l.id}" aria-pressed="${l.off ? "false" : "true"}">${sq(l.color)}<span>${esc(l.name)}</span><span class="tiny cbonoff">${l.off ? "Off" : "On"}</span></button><button class="ghost slim cbview" data-a="cblayer" data-v="${l.id}" aria-label="${esc(l.name)}: what it is">View ›</button></div>`
+      )
+      .join("");
+  return `<div class="stack" style="gap:6px" data-fid="cb:toggles"><b class="small">The layers: tap one to switch it off or on</b><div class="cblays">${chips}</div><button class="ghost wide" data-a="cbsplit" aria-pressed="${K.split ? "true" : "false"}">${K.split ? "Show Investments as one layer" : "Split by account"}</button></div>`;
+}
 /* THE LAYER CHART. */
 function cbChartView() {
   const c = C(),
@@ -1031,12 +1048,6 @@ function cbChartView() {
     zoom = K.zoom,
     cnt = cbCounted(c),
     sq = col => `<i class="cbsq" style="background:${col}"></i>`,
-    chips = K.layers
-      .map(
-        l =>
-          `<div class="cblay"><button class="chip cbchip ${l.off ? "" : "on"}" data-a="cbtog" data-v="${l.id}" aria-pressed="${l.off ? "false" : "true"}">${sq(l.color)}<span>${esc(l.name)}</span><span class="tiny cbonoff">${l.off ? "Off" : "On"}</span></button><button class="ghost slim cbview" data-a="cblayer" data-v="${l.id}" aria-label="${esc(l.name)}: what it is">View ›</button></div>`
-      )
-      .join(""),
     gapLine = cbGapLine(K),
     needsLine = cbNeedsLine(K),
     costRow = (id, S, extra) =>
@@ -1066,7 +1077,7 @@ function cbChartView() {
     ) +
     gapLine +
     needsLine +
-    `<div class="stack" style="gap:6px"><b class="small">The layers: tap one to switch it off or on</b><div class="cblays">${chips}</div><button class="ghost wide" data-a="cbsplit" aria-pressed="${K.split ? "true" : "false"}">${K.split ? "Show Investments as one layer" : "Split by account"}</button></div>` +
+    cbLayerToggles(K) +
     dkCard(
       "What a year costs",
       `<div class="stack" style="gap:6px">${costRow("needs", K.sums.needs, cbM(K.rows[0].needs) + " a year: food, a place to live, getting around")}${costRow("wants", K.sums.wants, cbM(K.rows[0].wants) + " a year: everything else")}${costRow(
@@ -1282,50 +1293,28 @@ function cbWayView(id) {
     cbFoot()
   );
 }
-/* THE LAST SCREEN: both numbers, the chart, what is counted, and the ways on. No dead end. */
+/* THE LAST SCREEN (Batch B, phase 4b): the two numbers and three buttons only. Save my plan (an account keeps it),
+   Share my card (the image of cbreveal.js), Tell Eli what broke (the report tool of the game). Back and Home are on
+   the top row of the sheet. The rest of setup is on Home (the first tile) and on Next Steps. */
 function cbEndView() {
   const c = C(),
-    K = cbChart(c),
-    N = K.N,
-    R = lyReceipt(N.is, N.could),
-    done = !!(c.x && c.x.cb && c.x.cb.setup) || !(c.x && c.x.cb && c.x.cb.a),
-    way = w => {
-      const id = w.id,
-        St = cbWayState(c, id);
-      return `<button class="rowbtn" data-a="cbgo" data-v="${id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${St.how === "did" ? "Already yours, and counted" : St.counted ? "Counted" : St.how === "no" ? "Left out" : "Not counted yet"}. Tap to change.</div></span><span class="caret">›</span></button>`;
-    };
+    V = typeof cbReveal === "function" ? cbReveal(c) : null /* cbreveal.js: the words of the difference */,
+    N = V ? V.N : cbNumbers(c),
+    S = typeof cbSaveState === "function" ? cbSaveState() : { guest: false, words: "" };
   return (
-    head("Where this leaves you", "Your two numbers") +
+    head("Your plan", "Keep it, share it") +
     cbTop(c) +
-    `<div class="tile small" data-fid="cb:endsum"><b>${N.same ? "Nothing is counted yet, so the two are equal." : "What you counted: " + esc(cbReceiptWords(R)) + "."}</b><div class="tiny muted">${N.above ? "It is above What it is because a cost the 25 times rule leaves out is counted." : "What it is does not change. What it could be follows what you count."}</div></div>` +
-    cbChartCard(K, "What pays for each year", "From " + K.p.age + " to " + LY_END + ", 5 years a bar.") +
-    cbGapLine(K) +
-    cbNeedsLine(K) +
-    `<div class="tile small" data-fid="cb:cushion"><b>${esc(cbCushionWords(K.p))}</b><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". Ending with more than you started is the point: it is there in case the market goes down." : "The number is 25 times a year of spending for that reason: you take less than the growth."}</div></div>` +
-    dkCard(
-      "What you counted",
-      (typeof cbStackLine === "function" ? cbStackLine(c) : "") +
-        `<div class="stack" style="gap:6px" data-fid="cb:ways">${cbWays()
-          .filter(w => cbStepInfo(c, w.id).applies || cbWayState(c, w.id).counted)
-          .map(way)
-          .join("")}</div>` +
-        (typeof cbStackView === "function"
-          ? `<button class="ghost wide" data-a="cbgo" data-v="stack">Open the whole stack</button>`
-          : ""),
-      { cap: "The ways that can apply to you, in the order of the flow. Tap one to change your answer." }
-    ) +
-    (done
-      ? ""
-      : `<button class="primary wide go" data-a="cbrest">Finish setup: five short rounds</button><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div>`) +
-    `<button class="${done ? "primary go" : "ghost"} wide" data-a="cbsteps">Go to Next Steps</button>` +
-    `<button class="ghost wide" data-a="gohome">Home</button>` +
+    `<div class="tile small" data-fid="cb:endsum"><b>${esc(V ? V.diff.words : N.same ? "The two numbers are equal for now." : cbReceiptWords(lyReceipt(N.is, N.could)))}</b><div class="tiny muted">${esc(S.words)}</div></div>` +
+    `<div class="stack cbend3" style="gap:10px" data-fid="cb:end3"><button class="primary wide go" data-a="cbsave">Save my plan</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button></div>` +
+    (W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : "") +
+    `<div class="tiny muted">The card is an image: the two ages, what you counted, and the time between them. It has no dollar amount. Nothing leaves this device until you send it.</div>` +
+    `<div class="tiny muted" data-fid="cb:endnext">Home has your two numbers, the rest of setup and your next move. Home and Back are at the top.</div>` +
     mathBox([
-      "What it is: " + cbM(K.p.spend) + " a year x 25 = " + cbM(N.is.target) + ".",
+      "What it is: " + cbM(derive(c).fiSpend) + " a year x 25 = " + cbM(N.is.target) + ".",
       "What it could be: what must be invested the day work stops, so that it pays each year's cost less the steady income you counted, to " +
         LY_END +
         " and beyond.",
-      cbCushionWords(K.p),
-      "Each step has its own Show the math, with its source.",
+      "Each way has its own Show the math, with its source. The screen before this one has them all.",
     ]) +
     cbFoot()
   );
@@ -1350,12 +1339,33 @@ function cbSheet() {
 function cbStepAdd(id, view, meta) {
   if (CB_STEPS.some(s => s.id === id)) return;
   const m = meta || {};
-  CB_STEPS.splice(CB_STEPS.length - 1, 0, Object.assign({}, m, { id, view, way: !!m.title }));
+  /* before the reveal (cbreveal.js) when it is there, so that the reveal and the last screen stay the two last */
+  const rev = CB_STEPS.findIndex(s => s.id === "reveal");
+  CB_STEPS.splice(rev > 0 ? rev : CB_STEPS.length - 1, 0, Object.assign({}, m, { id, view, way: !!m.title }));
+}
+/* Keep the screen of the flow the player is on, so that Home can open the flow there again (Batch B, phase 4d).
+   A move of the stack counts as the stack, a layer as the chart. The day the reveal was first seen is kept too. */
+function cbAt(step) {
+  const c = C();
+  if (!cbHas(c)) return;
+  const s = cbStore(c),
+    at = step === "move" ? "stack" : step === "layer" ? "chart" : step;
+  if (at === "entry" || (s.at === at && (at !== "reveal" || s.rev))) return;
+  s.at = at;
+  if (at === "reveal" && !s.rev) s.rev = todayISO();
+  save();
+  /* cbreveal.js: the numbers as they are now, for "since last time" on a later day */
+  if ((at === "reveal" || at === "end") && typeof cbSeenKeep === "function") cbSeenKeep();
 }
 /* Open the flow: the entry for a new player, else "What it is". */
 function cbOpen(step) {
   const has = cbHas(C());
-  W = { kind: "cb", step: has ? step || "is" : "entry", q: 0, o: {} };
+  W = {
+    kind: "cb",
+    step: has ? (step === "stack" || CB_STEPS.some(x => x.id === step) ? step : "is") : "entry",
+    q: 0,
+    o: {},
+  };
   if (!has) CB.taps = 0;
   CB.last = null;
   sheet(cbSheet);
@@ -1449,10 +1459,11 @@ function openSetupCb(base, mode) {
 function planTabCb(h) {
   try {
     const c = C();
-    if (G.demo || !c.x || !c.x.cb || !c.x.cb.a) return h;
+    if (G.demo || !c.x || !c.x.cb || !(c.x.cb.a || c.x.cb.rev)) return h;
     const row =
+      (typeof cbTopRows === "function" ? cbTopRows(c) : "") /* cbreveal.js: the top 3 moves, as cards */ +
       `<div class="stack cbplan" style="gap:6px">` +
-      (c.x.cb.setup
+      (c.x.cb.setup || !c.x.cb.a
         ? ""
         : `<button class="rowbtn" data-a="cbrest"><span><b>Finish setup: five short rounds</b><div class="tiny muted">Debts, what you have, income, taxes, spending. It turns the guesses into your real picture.</div></span><span class="caret">›</span></button>`) +
       `<button class="rowbtn" data-a="cb"><span><b>What it is / What it could be</b><div class="tiny muted">Your FI number, and the chart of what pays for each year.</div></span><span class="caret">›</span></button></div>`;
@@ -1499,6 +1510,8 @@ function cbAnswer(q, ans) {
 }
 Object.assign(ACT, {
   cb: () => cbOpen(),
+  /* Home: open the flow where the player left off */
+  cbback: () => cbOpen((C().x && C().x.cb && C().x.cb.at) || "is"),
   cbset: t => {
     const q = t.dataset.q,
       i = +t.dataset.i,
@@ -1546,7 +1559,9 @@ Object.assign(ACT, {
             ? side
               ? W.step === "move"
                 ? "stack"
-                : "end"
+                : CB_STEPS.some(s => s.id === "reveal")
+                  ? "reveal"
+                  : "end"
               : cbStepNear(C(), W.step, 1)
             : v === "prev"
               ? side
@@ -1556,6 +1571,7 @@ Object.assign(ACT, {
                 : cbStepNear(C(), W.step, -1)
               : v;
       W = { kind: "cb", step: id, o: {}, id: t.dataset.k || undefined };
+      cbAt(id);
     }
     sheet(cbSheet);
     if (typeof spUpSoon === "function") spUpSoon(); /* spiral.js: a new screen starts at its top */
@@ -1624,10 +1640,6 @@ Object.assign(ACT, {
     cbWayDo(t.dataset.k, t.dataset.v, W.pick);
     W.pick = null;
     drawSheet();
-  },
-  cbsteps: () => {
-    if (SH) closeSheet();
-    ACT.tab({ dataset: { a: "tab", v: "plan" } });
   },
 });
 kitTerms({

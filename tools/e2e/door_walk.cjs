@@ -97,11 +97,18 @@ const junk = page => page.evaluate(() => /undefined|NaN/.test((document.querySel
   const cw = await page.locator('#ov svg.dkstack').boundingBox();
   chk('the chart fits 390 wide', cw && cw.x >= 0 && cw.x + cw.width <= 390 && !(await sideways(page)) && !(await junk(page)), cw);
   await shot(page, '3c-chart-390');
-  // to the last screen of the flow (a later step may sit between), then the rest of setup
-  for (let i = 0; i < 8 && !(await page.locator('#ov [data-a=cbrest]').count()); i++) { await tap('#ov [data-a=cbgo][data-v=next]'); await page.waitForTimeout(550); }
-  chk('the last screen of the flow has no dead end: the rest of setup, Next Steps, Home', (await page.locator('#ov [data-a=cbrest]').isVisible()) && (await page.locator('#ov [data-a=cbsteps]').isVisible()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
-  await shot(page, '3d-last-screen-390');
-  await tap('#ov [data-a=cbrest]'); await page.waitForTimeout(550);
+  // the stack, the reveal, the last screen (three buttons only), then Home, where the rest of setup is
+  await tap('#ov [data-a=cbgo][data-v=stack]'); await page.waitForTimeout(1000);
+  await tap('#ov [data-a=cbgo][data-v=reveal]'); await page.waitForTimeout(1000);
+  chk('the reveal comes at the eighth tap, with the difference and the finished chart', taps === 8 && (await page.locator('#ov [data-fid="cb:diff"]').isVisible()) && (await page.locator('#ov svg.dkstack').count()) === 1 && !(await sideways(page)) && !(await junk(page)), taps);
+  await shot(page, '3d-reveal-390');
+  await tap('#ov [data-a=cbgo][data-v=end]'); await page.waitForTimeout(1000);
+  chk('the last screen has three buttons only: Save my plan, Share my card, Tell Eli what broke', (await page.locator('#ov [data-fid="cb:end3"] button').count()) === 3 && (await page.locator('#ov [data-a=cbsave]').isVisible()) && (await page.locator('#ov [data-a=cbshare]').isVisible()) && (await page.locator('#ov [data-fid="cb:end3"] [data-a=flag]').isVisible()) && !(await page.locator('#ov [data-a=cbrest]').count()) && (await page.locator('#ov [data-a=gohome]').first().isVisible()));
+  await shot(page, '3e-last-screen-390');
+  await tap('#ov [data-a=gohome]'); await page.waitForTimeout(1000);
+  chk('Home starts with the two numbers and the small chart, and has the rest of setup', (await page.locator('#app [data-fid="cb:home"] svg.dkstack').isVisible()) && (await page.locator('#app [data-fid="cb:homerest"]').isVisible()) && !(await sideways(page)) && !(await junk(page)));
+  await shot(page, '3f-home-390');
+  await tap('#app [data-fid="cb:homerest"]'); await page.waitForTimeout(550);
   chk('the rest of setup opens under "Am I okay?"', /Am I okay\?/.test(await page.locator('#ov').innerText()) && (await page.evaluate(() => W && W.kind === 'setup' && W.cbRest === true)));
   // The setup asks one question at a time and fills in what the earlier taps already say. So the robot looks at the
   // screen as a person does: it taps its answer to the open question, or "That's all", or Next.

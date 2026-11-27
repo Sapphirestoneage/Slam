@@ -433,7 +433,7 @@ function cbYbPaint(card) {
   box(674, 150, sap, ink);
   x.fillStyle = muted;
   font(30, true);
-  x.fillText("THE NET", pad + 40, 726);
+  x.fillText(String(card.mid || "The net").toUpperCase(), pad + 40, 726);
   x.fillStyle = text;
   font(56, true);
   wrap(card.net || "", pad + 40, 792, Wd - 2 * pad - 80, 60, 1);
@@ -443,8 +443,9 @@ function cbYbPaint(card) {
   wrap(card.foot, pad, 1296, Wd - 2 * pad, 36, 2);
   return cv;
 }
-/* Make the image and hand it on. how: save (a file on this device) or send (the share sheet of the device). */
-function cbYbImage(how) {
+/* Make the image and hand it on. how: save (a file on this device) or send (the share sheet of the device).
+   card: the words of a card with the same parts (cbreveal.js gives the card of the two numbers); none: this card. */
+function cbYbImage(how, card) {
   const say = m => {
     if (W && W.kind === "cb") {
       W.msg = m;
@@ -452,8 +453,8 @@ function cbYbImage(how) {
     }
   };
   try {
-    const card = cbYbCard(cbYbPick(C())),
-      cv = cbYbPaint(card);
+    card = card || cbYbCard(cbYbPick(C()));
+    const cv = cbYbPaint(card);
     if (!cv || typeof cv.toBlob !== "function")
       return say("This browser cannot make the image. A screenshot works too.");
     cv.toBlob(b => {
