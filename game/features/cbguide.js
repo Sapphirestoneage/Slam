@@ -210,6 +210,16 @@ const CB_GUIDE = {
     "Tap a line in each list to build a pair of your own.",
     "cbyesbut",
   ],
+  starter: [
+    "Starting points",
+    "Ten common situations. Each one fills in typical amounts for your age, from public data.",
+    "You confirm numbers in place of typing them. Each one is a Guess until you change it.",
+  ],
+  stok: [
+    "Your check",
+    "The four answers the game will use. A grey one is a typical amount, not yours yet.",
+    "One look, then your number. Change opens one answer.",
+  ],
   movenums: ["The numbers of this move", "What this move changes for you.", "It shows where the months come from."],
 };
 
@@ -288,6 +298,9 @@ function cbNav(o) {
    count (What you want, a layer, a move, the result). It is never 0: the last screen of a part has no line. */
 function cbLeft() {
   if (!W || W.kind !== "cb") return null;
+  /* starter.js: with a starting point, only the open questions and the one check are left */
+  if ((W.step === "entry" || W.step === "stok") && !W.one && W.o && W.o.st && typeof sitLeft === "function")
+    return sitLeft(W);
   if (W.step === "entry")
     return W.one
       ? { n: 1, to: "back" }

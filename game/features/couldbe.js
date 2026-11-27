@@ -64,6 +64,8 @@
                (features/wants.js, W.step wants), then the four questions. An answer of the four can be a
                typical value: c.x.cb.a[q] { v, cf: 1, typ: true, band }. The picks of What you want are
                goals (c.goals); the rest of setup keeps them.
+               Run CC-1, item 10 (Nov 27 2026): a starting point (features/starter.js: W.step starter and
+               stok, W.o.st, c.x.cb.st) fills answers of the four questions with typical values.
    STATE       CB (the numbers that the header showed last, for the short animation; the flag of the
                rest of setup), CB_STEPS (the steps after the entry).
    ========================================================================= */
@@ -1144,7 +1146,13 @@ function cbEntryView() {
     Q = CB_QS[i],
     a = (w.o.a = w.o.a || {});
   return (
-    head(w.one ? "One answer" : "Question " + (i + 1) + " of " + CB_QS.length, "Your FI number") +
+    head(
+      w.one
+        ? "One answer"
+        : (w.o.st && typeof sitName === "function" && sitName(w.o.st)) /* starter.js: only the open questions come */ ||
+            "Question " + (i + 1) + " of " + CB_QS.length,
+      "Your FI number"
+    ) +
     /* cbguide.js: the countdown (run 14, item 12). It is never "0 taps left" */
     `<div class="small muted" data-fid="cb:left">${w.one ? "Tap your own answer. Then you go back, and your number recalculates." : cbLeftWords()}</div>` +
     `<div class="cbdots" aria-hidden="true">${CB_QS.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
@@ -1643,7 +1651,10 @@ function cbSheet() {
 function cbScreen() {
   const w = W;
   if (w.step === "wants" && typeof wnView === "function") return wnView(); /* wants.js: What you want */
-  if (w.step === "entry" || w.step === "wants") return cbEntryView();
+  /* starter.js (run CC-1, item 10): the list of starting points, and the screen that confirms one */
+  if (w.step === "starter" && typeof sitView === "function") return sitView();
+  if (w.step === "stok" && typeof sitOkView === "function" && w.o && w.o.st) return sitOkView();
+  if (w.step === "entry" || w.step === "wants" || w.step === "starter" || w.step === "stok") return cbEntryView();
   if (w.step === "layer") return cbLayerView();
   if (w.step === "stack" && typeof cbStackView === "function") return cbStackView(); /* cbstack.js */
   if (w.step === "move" && typeof cbMoveView === "function") return cbMoveView(); /* cbmoves.js */
@@ -1744,6 +1755,8 @@ function cbMake(a, wants) {
     )
   );
   base.x = { cb: { a, count: {}, off: {} } };
+  /* starter.js: the starting point of the player stays on the profile, with its quests */
+  if (typeof sitBase === "function") sitBase(base, W && W.kind === "cb" && W.o ? W.o.st : null);
   /* wants.js: what the player wants becomes goals, in the shape of the card draft */
   if (wants && wants.length && typeof wnGoals === "function")
     base.goals = wnGoals(Object.assign({}, base, { spend: Math.max(1, Math.round(a.spend.v)) }), wants);
@@ -1775,6 +1788,7 @@ function finishSetupCb(w, o) {
     W = { kind: "cb", step: "is", o: {} };
     CB.last = null;
     sheet(cbSheet);
+    if (typeof fnDone === "function") fnDone(); /* firstnum.js: the seconds and the taps to this first number */
     return true;
   } catch (e) {
     report(e, "couldbe.js: finishSetupCb");
@@ -1884,6 +1898,8 @@ function cbAnswer(q, ans) {
       if (T) w.o.a[k] = { v: T.v, cf: 1, typ: true, band: T.band };
       else delete w.o.a[k];
     });
+  /* starter.js: with a starting point, the typical values come in, and only an open question is asked */
+  if (w.o.st && typeof sitNext === "function" && sitNext(w)) return;
   /* "Make it mine" of the reveal: one answer, then back to the screen it came from */
   if (w.one && CB_QS.every(x => w.o.a[x.id])) {
     const back = w.back || "reveal";
@@ -2082,6 +2098,7 @@ Object.assign(ACT, {
       /* smart.js: the age of the four questions is not asked again, so the rounds start on the next page */
       if (typeof smSkip === "function" && smSkip(W, W.step)) W.step = smNextPage(W.step, W);
       if (typeof doorGuest === "function" && doorGuest()) W.door = true;
+      if (typeof sitSetup === "function") sitSetup(W); /* starter.js: the setup answers of the starting point, filled */
       cbRestSpot(); /* the page the player left, with the answers so far */
       drawSheet();
     }
