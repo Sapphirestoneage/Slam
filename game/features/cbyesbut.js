@@ -295,7 +295,7 @@ function cbYbView() {
     cbFold(
       "how",
       "How this card works",
-      `<div class="row between" style="gap:8px;align-items:flex-start"><div class="small">Yes: tap a cut you make, or would make. But: tap what you keep or upgrade because of it. A cut is a choice. It pays for what you care about more.</div>${kitInfo("cbyesbut")}</div>`
+      `<div class="row between" style="gap:8px;align-items:flex-start"><div class="small">Yes: tap a cut you make, or would make. But: tap what you keep because of it. A cut is a choice. It pays for what you care about more. Tap a row again to take it off the card.</div>${kitInfo("cbyesbut")}</div>`
     ) +
     dkCard(
       "Pairs to try",
@@ -307,7 +307,8 @@ function cbYbView() {
         .join("")}</div>` +
         (Y.basis === "values"
           ? ""
-          : `<button class="ghost wide" data-a="values">${Y.ranked ? "Say what each line is for" : "Rank what matters to me"}</button>`),
+          : cbLeaves("Is my money going where I want?") /* cbguide.js: said before the jump (run 14, item 13) */ +
+            `<button class="ghost wide" data-a="values">${Y.ranked ? "Say what each line is for" : "Rank what matters to me"}</button>`),
       {
         cap:
           Y.basis === "values"
@@ -342,7 +343,7 @@ function cbYbView() {
         (can ? `<button class="ghost wide" data-a="cbybsend">Send the image with an app on this device</button>` : "") +
         (W && W.msg ? `<div class="small" data-fid="cbyb:msg">${esc(W.msg)}</div>` : "") +
         `<div class="tiny muted">The image has the names of the lines you tapped and the months. It has no dollar amount, and nothing else about you. Nothing leaves until you send it.</div>` +
-        `<button class="ghost wide" data-a="cbybclear">Start the card again</button>`
+        `<button class="ghost wide" data-a="cbybclear">Undo: clear the card</button>`
       : "") +
     mathBox([
       "A step: the share of the line you picked, to the nearest $10, at least $10. It is the same step as on Is my money going where I want.",

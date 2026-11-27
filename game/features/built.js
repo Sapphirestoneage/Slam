@@ -926,10 +926,14 @@ const WB = [
       WB_FN("cbFold") &&
       WB_FN("cbI") &&
       WB_FN("cbLikely") &&
+      WB_FN("cbLeft") &&
+      WB_FN("cbLeaves") &&
+      WB_FN("cbOutTap") &&
+      WB_FN("cbWhyAsk") &&
       WB_HAS("cbfwd") &&
       WB_HAS("cbi") &&
       WB_HAS("cbfold"),
-    "Run 14, items 1 to 7. On each screen of What it is / What it could be one control pulses, the next tap, and the others are a little paler. Explanations, lists and backups open with one tap. One row has Back and Forward: Forward returns to the screen you left with Back. A screen keeps its place after a tap. On a question the most usual answer for your age is first, and one line says what your tap means. Each card, chart, number and group of buttons has an i with two lines: what it is, what it is for.",
+    "Run 14, items 8 to 13: no count reads 0 of (the counter and the backups meter wait for the first count), the reveal is four blocks side by side, a tap outside an open i closes it, a countdown shows the taps left, each question has one line of why, each counted way says how to undo it, and one line comes before a button that leaves these screens. Items 1 to 7. On each screen of What it is / What it could be one control pulses, the next tap, and the others are a little paler. Explanations, lists and backups open with one tap. One row has Back and Forward: Forward returns to the screen you left with Back. A screen keeps its place after a tap. On a question the most usual answer for your age is first, and one line says what your tap means. Each card, chart, number and group of buttons has an i with two lines: what it is, what it is for.",
     "cb",
   ],
   [

@@ -6,12 +6,15 @@
                or a button sits behind one tap, closed. (3) Back and Forward: one row on each screen.
                Forward returns to the screen the player left with Back. (4) The screen keeps its place
                after a tap. (5) The "i" of a card, a chart, a number, a meter or a group of buttons: two
-               lines, what it is and what it is for.
+               lines, what it is and what it is for. Run 14, items 10, 12 and 13: (6) a tap outside an "i"
+               that is open closes it. (7) The countdown: how many taps are left in this part of the flow.
+               (8) One line before a button that leaves the flow.
    INPUT       The open sheet (W.kind cb): W.fo (the folds that are open, by key). CB.fwd (the screens
                that Forward returns to, the last one first out).
    OUTPUT      Data: CB_GUIDE (the two lines of each "i"). Views: cbI (the "i" button), cbFold, cbNav
                (the row Back and Forward), cbOne (exactly one cbnext in the HTML of a screen). Functions:
-               cbFwdKeep, cbFwdDrop, cbFwdCan, cbStaySoon. Actions (ACT): cbi, cbfold, cbfwd.
+               cbFwdKeep, cbFwdDrop, cbFwdCan, cbStaySoon, cbLeft, cbLeftWords, cbLeftLine, cbLeaves, cbOutTap.
+               Actions (ACT): cbi, cbfold, cbfwd.
    DEPENDS ON  core/report.js, screens/ui.js (head, esc, sheet, GLOSS). At the time of a tap:
                features/couldbe.js (CB, cbSheet, cbAt).
    RULES       No number is worked out here. The words of an "i" are plain: two short lines. A control
@@ -25,63 +28,63 @@
 const CB_GUIDE = {
   top: [
     "The two numbers",
-    "What it is: your FI number the usual way, 25 times what you spend in a year. What it could be: that number after what you count.",
+    "What it is: 25 times what you spend in a year. What it could be: the same number after what you count.",
     "They show how far each choice moves your number.",
     "cbfi",
   ],
   wants: [
     "What you want",
-    "A list of things people want from their money.",
+    "A list of things people want from money.",
     "Your picks tell the game why a step matters to you.",
   ],
   answers: [
     "The answers",
     "Each button is a range. The game counts the middle of the range you tap.",
-    "One tap answers the question. Where the game knows the usual answer for your age, that one is first.",
+    "One tap answers the question. The most usual answer for your age comes first.",
   ],
   pace: [
     "At today's pace",
-    "The age when your investments reach your number, if you keep saving what you save now.",
+    "The age when your investments reach your number, if you keep saving as you do now.",
     "It tells you when work can be a choice.",
   ],
   life: [
     "The rest of your life costs",
     "What you spend in a year, for each year from now to 95.",
-    "It shows why your FI number is smaller: invested money keeps growing while you spend from it.",
+    "It shows why your number is smaller: invested money keeps growing while you spend it.",
     "cblife",
   ],
   chart: [
     "The chart",
-    "Each bar is a stretch of your life. The colors are the kinds of money that pay for it.",
-    "It shows which years are paid for, and which are not covered yet.",
+    "Each bar is 5 years of your life. Each color is a kind of money that pays for those years.",
+    "It shows which years are paid for, and which are not yet.",
   ],
   words: [
     "What the chart says",
-    "The chart in words: the years that are not covered yet, and the age when steady income pays for your needs.",
+    "The chart in words: the years not paid for yet, and the age when steady income pays for your needs.",
     "Read it when the bars are hard to read.",
   ],
   layers: [
     "The layers",
-    "One button for each kind of money that pays for a year: work, investments, Social Security, other.",
-    "Switch one off to see the chart without it. Tap again to switch it on.",
+    "One button for each kind of money: work, investments, Social Security, other.",
+    "Tap one to take it off the chart. Tap again to put it on.",
   ],
   costs: [
     "What a year costs",
     "The parts of one year of spending: needs, wants, health insurance and tax.",
-    "Open a part to read about it, or count it in What it could be.",
+    "Tap a part to read about it, or to count it in What it could be.",
   ],
   layer: [
     "This part of the chart",
-    "One color of the chart, with the years it is there and about how much a year.",
+    "One color of the chart, the years it is there, and about how much a year.",
     "It shows what this money does for you.",
   ],
   health: [
     "A plan of your own",
-    "What health insurance would cost you each month from the day work stops until Medicare at 65.",
-    "Tap a range so the chart uses your price in place of a typical one.",
+    "What health insurance costs you each month, from the day work stops until Medicare at 65.",
+    "Tap a range. The chart then uses your price.",
   ],
   stackn: [
-    "Stacked",
+    "Your count",
     "How many ways you counted, out of the ways that fit you.",
     "It shows how much there is still to try.",
   ],
@@ -92,13 +95,13 @@ const CB_GUIDE = {
   ],
   before: [
     "Before FI",
-    "Moves that bring the date closer while you still work.",
+    "Moves that bring your date closer while you still work.",
     "Count one to see how many months sooner you get there.",
   ],
   choices: [
     "The choices",
     "Each button is one way to count this.",
-    "Tap one. The line under the buttons says what that choice means.",
+    "Tap one. The line under the buttons says what it means.",
   ],
   drop: [
     "The drop for you",
@@ -112,18 +115,18 @@ const CB_GUIDE = {
   ],
   receipt: [
     "What your answer did",
-    "The dollars your answer took off the target, and the months it changed.",
+    "The dollars your answer took off the number, and the months it changed.",
     "It shows what the tap did.",
   ],
   backup: [
     "The backup",
-    "What you fall back on if this way does not work out, and what has to go right for it to work.",
+    "What has to go right for this way to work, and what you do if it does not.",
     "A backup keeps the plan steady when life changes.",
   ],
   plan: ["For your numbers", "What this way does with your own numbers.", "Read it before you count this way."],
   taxadds: [
     "What the tax adds",
-    "How much the tax on money you take out adds to your target.",
+    "How much the tax on money you take out adds to your number.",
     "It shows why the order you take money out matters.",
   ],
   cut: [
@@ -139,8 +142,13 @@ const CB_GUIDE = {
   ],
   nav: [
     "Back and Forward",
-    "Back opens the screen before this one. Forward returns to the screen you left with Back.",
+    "Back opens the screen before this one. Forward opens the screen you left with Back.",
     "Look again at a screen, and keep your place.",
+  ],
+  left: [
+    "Taps left",
+    "How many taps are left in this part, if you tap the main button each time.",
+    "It shows how close you are to the end.",
   ],
   diff: [
     "The difference",
@@ -151,7 +159,7 @@ const CB_GUIDE = {
   dates: [
     "Moves and your card",
     "The months that your counted moves and your Yes, but card change.",
-    "They move the date you reach your number. They do not change the two numbers on top.",
+    "They move your date. They do not change the two numbers.",
     "cbtwo",
   ],
   typ: [
@@ -162,7 +170,12 @@ const CB_GUIDE = {
   counted: [
     "What you counted",
     "The list of what is in What it could be now.",
-    "Tap a row to open the part of the game that goes deeper.",
+    "Tap a row with an arrow to open a deeper part of the game.",
+  ],
+  top3: [
+    "Your top moves",
+    "The moves that bring your date closest, the best one first.",
+    "Tap one to read it and to count it.",
   ],
   switches: [
     "Ways and costs",
@@ -177,7 +190,7 @@ const CB_GUIDE = {
   keep: [
     "Keep it, share it, or tell Eli",
     "Three buttons: keep your plan with a free account, share a card, or tell Eli about a problem.",
-    "Your plan is kept on this device as you go. Nothing is sent until you tap.",
+    "Your plan stays on this device as you go. Nothing is sent until you tap.",
   ],
   pairs: [
     "Pairs to try",
@@ -257,15 +270,83 @@ function cbFwdCan() {
 function cbNav(o) {
   const back = o && o.back,
     fwd = cbFwdCan(),
+    left = W && W.kind === "cb" && W.step !== "entry" ? cbLeftLine() : "",
     why = [back ? "" : "Back: this is the first screen.", fwd ? "" : "Forward works after you tap Back."]
       .filter(Boolean)
       .join(" ");
   return (
     `<div class="row cbnav" data-fid="cb:nav"><button class="ghost slim cbbk${o && o.next && back ? " cbnext" : ""}" ${back ? back + ' data-b="1"' : 'disabled aria-disabled="true"'}><i class=chevl aria-hidden=true></i> Back</button>` +
     `<button class="ghost slim cbfw" data-a="cbfwd"${fwd ? "" : ' disabled aria-disabled="true"'}>Forward <i class=chev aria-hidden=true></i></button>${cbI("nav")}</div>` +
-    (why ? `<div class="tiny muted" data-fid="cb:navwhy">${why}</div>` : "")
+    (why ? `<div class="tiny muted" data-fid="cb:navwhy">${why}</div>` : "") +
+    left
   );
 }
+
+/* ---------- THE COUNTDOWN (run 14, item 12) ---------- */
+/* How many taps are left in this part of the flow, when the player taps the main button of each screen. The four
+   questions: the questions that are left. From What it is on: the screens to the result. Null where there is no
+   count (What you want, a layer, a move, the result). It is never 0: the last screen of a part has no line. */
+function cbLeft() {
+  if (!W || W.kind !== "cb") return null;
+  if (W.step === "entry")
+    return W.one
+      ? { n: 1, to: "back" }
+      : { n: CB_QS.length - Math.max(0, Math.min(CB_QS.length - 1, W.q || 0)), to: "number" };
+  if (W.step === "stack") return { n: 2, to: "result" };
+  /* the main button of the chart opens the list of ways, and its main button opens the reveal */
+  if (W.step === "chart" && typeof cbStackView === "function") return { n: 3, to: "result" };
+  if (W.step === "is" && typeof cbStackView === "function") return { n: 4, to: "result" };
+  if (W.step === "end" || !CB_STEPS.some(s => s.id === W.step)) return null;
+  let n = 0;
+  const c = C();
+  for (let id = W.step; id !== "end" && n < 40; n++) id = cbStepNear(c, id, 1);
+  return n > 0 ? { n, to: "result" } : null;
+}
+/* The words of the countdown. */
+function cbLeftWords() {
+  const L = cbLeft();
+  if (!L) return "";
+  const t = L.n === 1 ? "1 tap left" : L.n + " taps left";
+  return L.to === "number"
+    ? t + ", then your number. No typing needed."
+    : L.to === "back"
+      ? "1 tap, then you go back to where you were."
+      : t + " to your result.";
+}
+/* The line of the countdown, with its "i". */
+function cbLeftLine() {
+  const t = cbLeftWords();
+  return t
+    ? `<div class="row between cbleft" style="gap:8px" data-fid="cb:left"><span class="tiny muted">${t}</span>${cbI("left")}</div>`
+    : "";
+}
+
+/* ---------- ONE THING PER STEP (run 14, item 13) ---------- */
+/* One line before a button that leaves the screens of the flow. what: the part of the game the button opens. */
+function cbLeaves(what) {
+  return `<div class="tiny muted cbleave" data-fid="cb:leave">The next button leaves these screens. It opens ${esc(what)}. Back brings you here again.</div>`;
+}
+
+/* ---------- A TAP OUTSIDE (run 14, item 10) ---------- */
+/* A tap outside a sheet that is open on top of a screen of the flow (an "i", a word of the glossary) closes it: the
+   screen of the flow is there again, at the same place. A screen of the flow is not a sheet on top of something: a tap
+   outside it changes nothing, so no answer is lost. Returns true when a sheet was closed. */
+function cbOutTap() {
+  try {
+    if (!SH || !W || W.kind !== "cb" || SH === cbSheet) return false;
+    if (typeof ACT.navback === "function") ACT.navback();
+    else closeSheet();
+    return true;
+  } catch (e) {
+    report(e, "cbguide.js: cbOutTap");
+    return false;
+  }
+}
+if (typeof document !== "undefined" && document.addEventListener)
+  document.addEventListener("click", e => {
+    const t = e.target;
+    if (t && t.classList && t.classList.contains("overlay") && t.parentNode && t.parentNode.id === "ov") cbOutTap();
+  });
 
 /* ---------- ONE PULSE ---------- */
 /* Exactly one control of a screen has the class cbnext (the next tap). h: the HTML of the screen. When a view marked

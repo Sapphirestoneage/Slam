@@ -103,7 +103,7 @@
   );
   chk(
     "for this player the total is more than the FI number, and the screen says why the number is smaller",
-    L.aboveFi && L.total > cbNumbers(c).is.target && /Your FI number is smaller/.test(text(h))
+    L.aboveFi && L.total > cbNumbers(c).is.target && /Your number is smaller/.test(text(h))
   );
   chk(
     "What it is still has both numbers, one trust line and no junk",
@@ -117,7 +117,7 @@
   c.age = 80;
   chk(
     "a player of 80: 16 years, less than 25 times, and the screen does not say the number is smaller",
-    cbLife(c).years === 16 && !cbLife(c).aboveFi && !/Your FI number is smaller/.test(text(cbIsView()))
+    cbLife(c).years === 16 && !cbLife(c).aboveFi && !/Your number is smaller/.test(text(cbIsView()))
   );
   c.age = old.age;
   chk(

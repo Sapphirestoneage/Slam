@@ -150,7 +150,7 @@
     JSON.stringify(c.x.cb.count.flex) === "{}" && cbCounted(c).flex.take === P.rate && cbFlexTake(c) === P.rate
   );
   chk(
-    "the receipt says what was counted: dollars off the target and months sooner",
+    "the receipt says what was counted: dollars off your number and months sooner",
     /data-fid="cb:receipt"/.test(h) && /Counted\./.test(text(h)) && text(h).includes(cbReceiptWords(P.receipt))
   );
   X("cbflexdo", "did");

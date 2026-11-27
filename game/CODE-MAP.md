@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 219. Lines: 127,369. Top-level functions: 3150. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 219. Lines: 127,536. Top-level functions: 3156. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -183,7 +183,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 169 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 170 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 171 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 172 | `data/patchnotes.js` | 661 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 172 | `data/patchnotes.js` | 672 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 173 | `data/toollib.js` | 94 | 0 | 1 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
 | 174 | `features/founding.js` | 381 | 20 | 1 | 0 | Three small things for the soft launch |
 | 175 | `features/mycards.js` | 788 | 30 | 5 | 0 | Credit cards as a list of cards, not one balance |
@@ -213,16 +213,16 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 199 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 200 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 201 | `features/results.js` | 582 | 23 | 6 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 202 | `features/cbguide.js` | 333 | 10 | 0 | 0 | What it is / What it could be, run 14 (Nov 27 2026): the parts that make each screen of the flow easy to follow |
-| 203 | `features/couldbe.js` | 2,108 | 75 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 202 | `features/cbguide.js` | 414 | 15 | 0 | 0 | What it is / What it could be, run 14 (Nov 27 2026): the parts that make each screen of the flow easy to follow |
+| 203 | `features/couldbe.js` | 2,144 | 76 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
 | 204 | `features/wants.js` | 157 | 8 | 1 | 0 | What you want (run SLAM-ONBOARD-1, Nov 27 2026): the first screen of a new player, before the four questions of What it is / What it could be |
-| 205 | `features/cbtax.js` | 461 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
+| 205 | `features/cbtax.js` | 462 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
 | 206 | `features/cbflex.js` | 326 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
 | 207 | `features/cblater.js` | 249 | 7 | 4 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
-| 208 | `features/cbmoves.js` | 248 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
-| 209 | `features/cbyesbut.js` | 565 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
-| 210 | `features/cbstack.js` | 193 | 4 | 7 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
-| 211 | `features/cbreveal.js` | 639 | 19 | 14 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
+| 208 | `features/cbmoves.js` | 251 | 4 | 1 | 0 | What it is / What it could be, Batch B phase 2d (Nov 27 2026): the accumulation stack, the ways to get to the number sooner |
+| 209 | `features/cbyesbut.js` | 566 | 14 | 8 | 0 | What it is / What it could be, Batch B phase 3 (Nov 27 2026): the "Yes, but" card |
+| 210 | `features/cbstack.js` | 202 | 4 | 7 | 0 | What it is / What it could be, Batch B phases 2e and 2f (Nov 27 2026): the stack |
+| 211 | `features/cbreveal.js` | 660 | 19 | 15 | 0 | What it is / What it could be, Batch B, phase 4 (Nov 27 2026): the reveal, the card to share, Home, and the day after |
 | 212 | `features/firstweek.js` | 208 | 12 | 1 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
 | 213 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
 | 214 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
@@ -230,7 +230,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 216 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 217 | `features/questlog.js` | 549 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 218 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 219 | `features/built.js` | 2,107 | 4 | 41 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 219 | `features/built.js` | 2,111 | 4 | 41 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 

@@ -207,7 +207,7 @@
         h = look(T("the way " + w.id + ", counted"));
         chk(
           T(w.id + ": after the answer, Next is the one pulse"),
-          /cbnext[^"]*" data-a="cbgo" data-v="next">Next</.test(h)
+          /cbnext[^"]*" data-a="cbgo" data-v="next">Next[^<]*</.test(h)
         );
         CB_STEPS.find(s => s.id === w.id).set("no");
       }

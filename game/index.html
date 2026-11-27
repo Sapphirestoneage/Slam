@@ -609,6 +609,15 @@ button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.
 /* the "i" of a part of the flow: the circle stays small, the place to tap is 44 by 44 */
 .sheet:has(.cbfoot) button.i{position:relative}.sheet:has(.cbfoot) button.i::after{content:"";position:absolute;inset:-9px}.sheet:has(.cbresgo) button.ghost.slim{min-height:44px}
 .cbfold>.inner{padding-top:4px}.cbsaid{border-left:3px solid var(--sap);padding-left:8px}
+/* run 14, item 9: the reveal as four blocks. One under the other on a phone, the first with the biggest type. Side by side from 900 wide: the two numbers top left (the widest), the chart top right, the top moves and the row Keep it under them. */
+.cbrevg{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.cbrevb{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cbtop.cbtopin{position:static;padding:0;border-bottom:0;background:none}.cbrev1 .cbnum .dknum{font-size:26px}.cbrev1 .cbrev .cbdropn{font-size:21px}
+@media (min-width:900px){.sheet:has(.cbrevg){max-width:1080px}.overlay.full .sheet:has(.cbrevg){max-width:1080px}.cbrevg{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}.cbrev1{grid-column:1;grid-row:1}.cbrev2{grid-column:2;grid-row:1/span 2}.cbrev3{grid-column:1;grid-row:2}.cbrev4{grid-column:2;grid-row:3}.cbrev1 .cbnum .dknum{font-size:34px}.cbrev1 .cbrev .cbdropn{font-size:23px}}
+.cbrevg .cblays{grid-template-columns:minmax(0,1fr)}
+.cbleft{align-items:center}
+/* run 14, item 10: no sideways scroll. On a screen of the flow a number that changed lights up and does not grow: a wide line that grows for a moment is wider than a phone. */
+@keyframes cbflash{0%{color:#fff;text-shadow:0 0 16px var(--a3),0 0 4px #fff}100%{text-shadow:none}}
+.sheet:has(.cbfoot) .flash{animation-name:cbflash}
 .cbres{display:flex;flex-direction:column;gap:6px}.cbresn{font-size:30px;line-height:1.15}.cbfirst{display:flex;flex-direction:column;gap:4px}.cbfirst b{font-size:19px;line-height:1.25}.cbresgo{min-height:56px;font-size:18px}
 /* Krug self-test (run Results-first Home, item 5): on a phone the numbers come right after Your next win, so "how close am I to FI" needs no scroll past the chart */
 /* the life map (features/lifemap.js): the ten eras from age 15, done bright, the one being unlocked pulsing, later fogged */
@@ -835,7 +844,7 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/rings.js?v=ef105278"></script>
 <script src="features/quest.js?v=12215f87"></script>
 <script src="features/peers.js?v=2c804668"></script>
-<script src="data/patchnotes.js?v=133eb0b6"></script>
+<script src="data/patchnotes.js?v=8874775c"></script>
 <script src="data/toollib.js?v=cd9e1119"></script>
 <script src="features/founding.js?v=23920de3"></script>
 <script src="features/mycards.js?v=fb858b6a"></script>
@@ -865,16 +874,16 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/hhold.js?v=c1337c52"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
 <script src="features/results.js?v=36e0764a"></script>
-<script src="features/cbguide.js?v=d29aa8a6"></script>
-<script src="features/couldbe.js?v=d3fc7f8d"></script>
+<script src="features/cbguide.js?v=9dfe3aac"></script>
+<script src="features/couldbe.js?v=bb64c8f3"></script>
 <script src="features/wants.js?v=7d867574"></script>
-<script src="features/cbtax.js?v=23aba2e6"></script>
-<script src="features/cbflex.js?v=2962ba30"></script>
-<script src="features/cblater.js?v=529f1150"></script>
-<script src="features/cbmoves.js?v=fdfd38dd"></script>
-<script src="features/cbyesbut.js?v=53e8d563"></script>
-<script src="features/cbstack.js?v=717dd130"></script>
-<script src="features/cbreveal.js?v=084fba95"></script>
+<script src="features/cbtax.js?v=8507a1cb"></script>
+<script src="features/cbflex.js?v=1b5ac4d2"></script>
+<script src="features/cblater.js?v=194294f3"></script>
+<script src="features/cbmoves.js?v=d411fa4f"></script>
+<script src="features/cbyesbut.js?v=f25c069f"></script>
+<script src="features/cbstack.js?v=b2754fd2"></script>
+<script src="features/cbreveal.js?v=38dbc755"></script>
 <script src="features/firstweek.js?v=3d4ab9ed"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
@@ -882,6 +891,6 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/book.js?v=cf713f1a"></script>
 <script src="features/questlog.js?v=1f871118"></script>
 <script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=b42429d8"></script>
+<script src="features/built.js?v=f7a268fc"></script>
 </body>
 </html>

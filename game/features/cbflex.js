@@ -230,7 +230,7 @@ function cbFlexView() {
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : St.counted
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}. ${cbI("receipt")}</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}. ${CB_UNDO} ${cbI("receipt")}</div>`
           : "";
   return (
     head(cbWayNo("flex"), "Bend your spending when markets fall") +

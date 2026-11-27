@@ -135,11 +135,11 @@
     !!cbCounted(c).shape && cbCounted(c).shape.pre === "1" && N.could.target < N.is.target && !N.above
   );
   chk(
-    "the top number changed, and the receipt has the dollars off the target and the months sooner",
+    "the top number changed, and the receipt has the dollars off your number and the months sooner",
     (h.match(/data-cbn="could" data-to="(\d+)"/) || [])[1] !== top0 &&
       /data-fid="cb:receipt"/.test(h) &&
       /Counted\./.test(text(h)) &&
-      /off the target/.test(text(h)) &&
+      /off your number/.test(text(h)) &&
       /(months sooner|at the same age|date is still open)/.test(text(h))
   );
   chk(

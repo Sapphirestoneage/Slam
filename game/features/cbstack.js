@@ -4,8 +4,9 @@
                after the chart lists every way of the flow in two groups: the ways to shrink the number
                (after work) and the ways to get there sooner (before FI). Inside a group the biggest effect
                for this player is first. A way that cannot apply is not in the list: it is behind an "i"
-               with the reason. A counter shows how many are stacked, and a meter shows how many of the
-               counted ways have their backup in place. The player opens a way by choice, or counts it
+               with the reason. A counter shows how many are counted, and a meter shows how many of the
+               counted ways have their backup in place. Neither shows before the first way is counted
+               (run 14, item 8: no zeros). The player opens a way by choice, or counts it
                with one tap in the list, so the flow is not a long march.
    INPUT       The profile, through features/couldbe.js (cbWays, cbStepInfo, cbWayState, CB_STEPS: each way
                gives info(c) and set(how)) and features/cbmoves.js (cbMoves). c.x.cb.bk (the backups the
@@ -69,10 +70,18 @@ function cbStack(c) {
     backups: { n: withBk.filter(w => w.backupOn).length, m: withBk.length },
   };
 }
-/* The counter and the meter: "3 of 12 stacked" and "Backups in place: 2 of 3". Also on the last screen. */
+/* The counter and the meter: "3 of 12 counted" and "Backups ready: 2 of 3". Also on the reveal. Run 14, item 8: no
+   zeros. The counter and its bar wait until the first way is counted. The meter waits until a counted way has a
+   backup. A count of none is said in words, so the screen never reads "0 of". */
 function cbStackLine(c, S) {
   S = S || cbStack(c);
-  return `<div class="tile small cbstk" data-fid="cb:stack"><div class="row between"><b data-fid="cb:stackn">${S.stacked} of ${S.of} stacked</b><span class="row" style="gap:6px;flex:none"><span class="tiny muted">Tap a way to add it</span>${cbI("stackn")}</span></div>${dkProgress(S.pct)}<div class="row between" style="gap:8px"><span data-fid="cb:backups">Backups in place: ${S.backups.n} of ${S.backups.m}</span><button class="i" data-a="info" data-k="term:cbbackups" aria-label="What is a backup?">i</button></div><div class="tiny muted">${S.backups.m ? "One for each way you counted to shrink the number. " : "Count a way to shrink the number, and its backup shows here. "}A backup changes no number.</div></div>`;
+  if (!S.stacked)
+    return `<div class="tile small cbstk" data-fid="cb:stack"><div class="row between" style="gap:8px"><span data-fid="cb:stackhint">Tap Count this on a row. Your count shows here.</span>${cbI("stackn")}</div></div>`;
+  const B = S.backups,
+    meter = B.m
+      ? `<div class="row between" style="gap:8px"><span data-fid="cb:backups">${B.n ? "Backups ready: " + B.n + " of " + B.m : B.m === 1 ? "Backups ready: none yet. 1 to check" : "Backups ready: none yet. " + B.m + " to check"}</span><button class="i" data-a="info" data-k="term:cbbackups" aria-label="What is a backup?">i</button></div><div class="tiny muted">One backup for each way you counted. A backup changes no number.</div>`
+      : "";
+  return `<div class="tile small cbstk" data-fid="cb:stack"><div class="row between"><b data-fid="cb:stackn">${S.stacked} of ${S.of} counted</b>${cbI("stackn")}</div>${dkProgress(S.pct)}<div class="tiny muted" data-fid="cb:undo">To undo one, tap Counted on its row.</div>${meter}</div>`;
 }
 /* The backup of one way, on the screen of that way: its words, and whether it is in place. A backup the game can
    read from the choice shows by itself; the others have one tap. */
@@ -92,12 +101,12 @@ function cbStackView() {
     /* the chip beside a row says counted or not; the row adds only what the chip cannot say */
     state = w => (w.state.how === "did" ? ". Already yours" : w.state.how === "no" ? ". Left out" : ""),
     wayRow = w =>
-      `<div class="cbstkrow" data-fid="cb:stkway"><button class="rowbtn" data-a="cbgo" data-v="${w.id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${esc(w.words || "Open it to see the drop")}${state(w)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${chip(w.id, w.stacked)}</div>`,
+      `<div class="cbstkrow" data-fid="cb:stkway"><button class="rowbtn" data-a="cbgo" data-v="${w.id}"><span><b>${esc(w.title)}</b><div class="tiny muted">${esc(w.words || "Tap to see the drop")}${state(w)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${chip(w.id, w.stacked)}</div>`,
     moveRow = r =>
       `<div class="cbstkrow" data-fid="cb:stkmove"><button class="rowbtn" data-a="cbgo" data-v="move" data-k="${r.id}"><span><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.notyet ? ". Not yet: " + esc(r.notyet.block.toLowerCase()) : ""}${r.how === "did" ? ". Already yours" : r.how === "no" ? ". Left out" : ""}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>${chip(r.id, r.stacked)}</div>`,
     hid = (list, open, name) =>
       list.length
-        ? `<details class="math cbhid" data-fid="cb:hidden"><summary><span class="i" aria-hidden="true">i</span> ${list.length} ${list.length === 1 ? "way" : "ways"} that cannot apply to you yet, and why</summary><div class="inner stack" style="gap:6px">${list.map(x => `<button class="rowbtn" data-a="cbgo" ${open(x)}><span><b>${esc(name(x))}</b><div class="tiny muted">${esc(x.why)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div></details>`
+        ? `<details class="math cbhid" data-fid="cb:hidden"><summary><span class="i" aria-hidden="true">i</span> ${list.length} ${list.length === 1 ? "way" : "ways"} that do not fit you yet, and why</summary><div class="inner stack" style="gap:6px">${list.map(x => `<button class="rowbtn" data-a="cbgo" ${open(x)}><span><b>${esc(name(x))}</b><div class="tiny muted">${esc(x.why)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div></details>`
         : "",
     first = W.all ? S.moves : S.moves.slice(0, CBS_FIRST);
   return (
@@ -106,12 +115,12 @@ function cbStackView() {
     cbFold(
       "how",
       "How this list works",
-      `<div class="small">Count what fits you. Each way you add moves What it could be, or the date you get there. What it is stays where it is: it is the floor.</div>`
+      `<div class="small">Count what fits you. Each way you count moves What it could be, or your date. What it is stays put. Tap Counted on a row to undo it.</div>`
     ) /* cbguide.js: behind one tap (run 14, item 2) */ +
     cbStackLine(c, S) +
     dkCard(
       "After work: ways to shrink the number",
-      `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:after">${S.after.map(wayRow).join("") || `<div class="tiny muted">None applies to your numbers yet.</div>`}</div>` +
+      `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:after">${S.after.map(wayRow).join("") || `<div class="tiny muted">None fits your numbers yet.</div>`}</div>` +
         hid(
           S.afterHidden,
           x => `data-v="${x.id}"`,
@@ -136,13 +145,13 @@ function cbStackView() {
           x => `data-v="move" data-k="${x.id}"`,
           x => x.name
         ),
-      { cap: "The most months sooner for you is first. Each one keeps its own full card.", right: cbI("before") }
+      { cap: "The one that saves you the most months is first.", right: cbI("before") }
     ) +
-    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${CB_STEPS.some(s => s.id === "reveal") ? "reveal" : "end"}">See where this leaves you</button>` +
+    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${CB_STEPS.some(s => s.id === "reveal") ? "reveal" : "end"}">Next: the reveal</button>` +
     cbNav({ back: `data-a="cbgo" data-v="chart"` }) /* cbguide.js: Back (the chart) and Forward */ +
     mathBox([
-      "Stacked: the ways you counted, or already do, out of the ways that can apply to you (" + S.of + ").",
-      "After work, each drop is What it could be with that one way against the same numbers without it: dollars off the target, and months sooner.",
+      "Your count: the ways you counted, or already do, out of the ways that can apply to you (" + S.of + ").",
+      "After work, each drop is What it could be with that one way against the same numbers without it: dollars off your number, and months sooner.",
       "Before FI, months sooner comes from the game's month-by-month run of your plan (the same engine as Moves to try). It moves the date. The two numbers on top are about the target, so a counted move does not change them.",
       "Backups in place: of the ways you counted to shrink the number, how many have their backup. A backup never makes What it could be smaller, and What it is does not count on any of this.",
     ]) +

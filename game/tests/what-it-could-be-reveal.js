@@ -136,7 +136,7 @@
     V.N.above &&
       V.diff.off < 0 &&
       /more to reach/.test(text(h)) &&
-      /because a cost the 25 times rule leaves out is counted: health insurance before 65/.test(text(h)),
+      /You counted a cost the 25 times rule leaves out: health insurance before 65/.test(text(h)),
     V.diff
   );
   chk(
@@ -218,7 +218,8 @@
   /* ---- 4. the three buttons live on the reveal; the last screen is the result (run 16, A1) ---- */
   go("reveal");
   h = ov();
-  const three = fid(h, "cb:end3");
+  /* run 14, item 9: the main button follows the row, so the start of its tag is cut off */
+  const three = fid(h, "cb:end3").replace(/<button $/, "");
   chk(
     "the reveal has the three buttons of the old last screen, in the owner's words and order, all quiet",
     /* three buttons, and the small "i" of the group (run 14, item 7) */

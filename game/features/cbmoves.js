@@ -182,7 +182,7 @@ function cbMoveView() {
     return (
       head("The stack", "A move") +
       cbTop(c) +
-      `<button class="primary wide cbnext" data-a="cbgo" data-v="stack">All the ways</button>` +
+      `<button class="primary wide cbnext" data-a="cbgo" data-v="stack">See all the ways</button>` +
       cbNav({ back: `data-a="cbgo" data-v="prev"` }) +
       cbFoot()
     );
@@ -192,7 +192,7 @@ function cbMoveView() {
     said = no
       ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> One tap on Count this puts it in the stack.</div>`
       : r.stacked
-        ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${r.how === "did" ? "Already yours, and in the stack." : "In the stack."}</b> ${esc(r.words)}${r.how === "did" ? "" : ". " + esc(cbM(0)) + " off the target: this one moves the date"}. ${cbI("receipt")}</div>`
+        ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${r.how === "did" ? "Already yours, and in the stack." : "In the stack."}</b> ${esc(r.words)}${r.how === "did" ? "" : ". It moves your date, not your number"}. ${CB_UNDO} ${cbI("receipt")}</div>`
         : "";
   return (
     head("Before FI: get there sooner", esc(r.name)) +
@@ -231,8 +231,11 @@ function cbMoveView() {
           : "",
       ])
     ) +
+    cbLeaves("the full card of this move") /* cbguide.js: say it before a button that leaves the flow (item 13) */ +
     `<button class="ghost wide" data-a="${r.open.a}" data-v="${r.open.v}">${esc(r.open.l)}</button>` +
-    `<button class="${r.how ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="stack">All the ways</button>` +
+    (W.from === "reveal"
+      ? `<button class="${r.how ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="reveal">Back to the reveal</button>`
+      : `<button class="${r.how ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="stack">See all the ways</button>`) +
     cbNav({ back: `data-a="cbgo" data-v="prev"` }) /* cbguide.js: Back (the stack) and Forward */ +
     cbFoot()
   );

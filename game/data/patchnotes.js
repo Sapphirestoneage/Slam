@@ -654,6 +654,17 @@ const PATCH_NOTES = [
       "Arrows are drawn as icons now, and Where am I is lit only when it is your next step.",
     ],
   },
+  {
+    d: "2026-11-27",
+    t: "An opening that is easier to follow",
+    l: [
+      "On each screen of the opening one button pulses: your next tap. The screens are slimmer, and the extra parts open with one tap.",
+      "Back and Forward are on every screen, and a screen keeps its place after a tap. It does not jump to the top.",
+      "Everything has an i with two lines: what it is, and what it is for. Tap outside an open i to close it.",
+      "No more counts that start at zero. A line shows how many taps are left, and each question says why it asks.",
+      "The reveal shows your two numbers first and biggest, then the chart, your top 3 moves, and Keep it, share it, or tell Eli. Anything you count says how to undo it.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

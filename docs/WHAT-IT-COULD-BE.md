@@ -513,3 +513,42 @@ The script is `tools/e2e/krug_flow.cjs` (serve the repository, then `SLAM_URL=ht
 - **The most likely answer (item 6).** `cbLikely(q, age)` is the range chip that holds the typical value of the age (`cbTypical`); -1 when the reference data has none (the age itself, the health price). The rules are given to `screens/smart.js` (`SM.cb_spend` and so on) and `cbChips()` orders and fades the chips with `smOrder()`, as setup does. "I know it" and "I'm not sure" stay last. `cbOptWords(q, answer)` is the one line about the tapped choice; it shows on the screen that follows the tap (`cbSaid()`), because a tap on a chip answers and moves on.
 - **The "i" (item 7).** `cbI("key")` is the button and `CB_GUIDE` has the two lines of each key (what it is, what it is for) and, where one exists, the word of the glossary with the longer text. A new card, chart, number, meter or group of buttons of the flow gets one line in `CB_GUIDE` and one `cbI()`. On a card: `dkCard(title, body, { right: cbI("key") })`.
 - **Not built.** The result has no Forward and no "i" (the newer prompt asks for one button and a small Back). The age question has no "most likely" answer: the game has no dated figure for it, so the whole group of chips is the one pulse there.
+
+## Run 14, the usability pass, worker 2 (Nov 27 2026): items 8 to 13
+
+### The Krug self-check, AFTER (the same walk, the same four players, 390, 1280 and 1440 wide)
+
+| Player | To the first number, before / after | To the result, before / after | To Home, before / after |
+|--------|------------------------------------:|------------------------------:|------------------------:|
+| 27, renting, $60K invested | 7 / 7 | 11 / 11 | 12 / 12 |
+| 38, a couple, a 401(k) match and a mortgage | 8 / 8 | 12 / 12 | 13 / 13 |
+| 31, self-employed, uneven income | 8 / 8 | 12 / 12 | 13 / 13 |
+| 29, with $18K of card debt | 7 / 7 | 11 / 11 | 12 / 12 |
+
+- The tap counts did not change, and they are the same at the three widths. The run changed what each screen shows, not how many screens there are.
+- Each screen has one pulse. No screen opens at the top after a tap. No sideways scroll.
+- How tall each screen is, in windows. At 390 (844 high): What it is 1.0, the chart 1.5, the stack 2.2, the reveal 2.1 (before the run: 1.1, 2.2, 2.2, 2.6). At 1280 and 1440 (900 high): 0.9, 1.4, 1.8, 1.3 (before: 0.9, 2.0, 1.8, 2.3). The reveal on a phone is a little taller than after worker 1 (1.9): it now holds the top 3 moves.
+
+### What changed, and the pattern for the next change
+
+- **No zeros (item 8).** `cbStackLine` shows one line of help until the first way or move is counted. Then the counter and its bar show. The backups meter shows when a counted way has a backup; none in place is said in words. A new counter of the flow follows the same rule: no count before the first item, and never the words "0 of". `tools/e2e/flow_walk.cjs` and `tests/flow-no-zeros-outside-tap.js` read every screen for it.
+- **The reveal (item 9).** `cbRevealView` builds four blocks (`cb:rev1` to `cb:rev4`) in a grid (`.cbrevg`): the two big numbers and the difference; the chart; the top moves (`cbTopMoves`, the list of Next Steps); the closed row Keep it, share it, or tell Eli. From 900 wide the sheet of the reveal is 1080 wide and the blocks are two columns, the first the widest. `cbTop(c, { big: true })` gives the two big numbers inside a block, not pinned.
+- **A tap outside (item 10).** `cbOutTap()` closes a sheet that is open on top of a screen of the flow (the "i", a word of the glossary). A screen of the flow itself stays. On a screen of the flow `.flash` uses the animation `cbflash`, which does not grow.
+- **The countdown (item 12).** `cbLeft()` gives the taps left; `cbNav` shows the line on each screen, and the four questions show it at the top. A new screen of the main path needs its count there.
+- **Why, and undo (item 12).** A question of `CB_QS` has `y`, its one line of why. `CB_UNDO` is the one sentence of every receipt.
+- **One thing per step (item 13).** Before a button that leaves the flow: `cbLeaves("the part it opens")`.
+
+### Item 13: the steps that did two things, or left the flow
+
+| Step | What it did | What it does now |
+|------|-------------|------------------|
+| A move: the button to its full card | Left the flow for another part of the game | One line before it says so, and that Back returns |
+| The Yes, but card: "Rank what matters to me" | Left the flow for Is my money going where I want | The same line before it |
+| The tax way: "Finish setup: five short rounds" | Left the flow for the rest of setup | The same line before it |
+| The reveal: a row of What you counted | Left the flow for a deeper feature | The row says "Opens: ..." and the list says that a row with an arrow leaves these screens |
+| The reveal: "Make it mine" | Opened one question, then returned | The box says so before the tap |
+| The reveal: a top move | New in this run | Opens the move inside the flow; Back returns to the reveal |
+| Social Security: the chip "Not counting on it" | Picked a choice and answered the way in one tap | The line under the chips says that this tap is the answer |
+| Home: "Start this move" | Put the steps on Next Steps and opened the move | The card says both, before the tap |
+| A range chip of a question | Answers and moves on | As before: "Tap one to keep going." |
+| "Keep my plan: make a free account", "Tell Eli what broke", "Start my first move" | Leave the flow | As before: the words of the button say where it goes (the owner's own strings) |

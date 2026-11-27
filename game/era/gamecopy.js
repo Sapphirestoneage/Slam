@@ -9,7 +9,7 @@
                screens/ui.js, features/look.js, features/couldbe.js.
                tools/game_era_build.mjs makes it. Change the source, then run the tool.
                The game does not load this file. Prettier does not format it (.prettierignore).
-   SOURCE-HASH  581356d38bf97dbc
+   SOURCE-HASH  0512d24625afd569
    ========================================================================= */
 /* The demo has no saved game. The money words read G for the switch "Rough numbers". */
 const G = null;
@@ -88,23 +88,32 @@ const CB_RNG = {
   ],
 };
 const CB_QS = [
-  { id: "age", l: "How old are you?", h: "Pick the group your age is in.", zero: "" },
+  {
+    id: "age",
+    l: "How old are you?",
+    h: "Pick the group your age is in.",
+    y: "Your age sets how many years your money can grow.",
+    zero: "",
+  },
   {
     id: "spend",
     l: "How much money do you spend in one month?",
     h: "Count it all: rent, food, bills and fun. Your best guess is fine.",
+    y: "Your number is 25 times what you spend in a year.",
     zero: "",
   },
   {
     id: "inv",
     l: "How much money do you have in investments?",
     h: "Investments are money in a 401(k), an IRA, or stocks and funds. Do not count checking or savings.",
+    y: "This is your head start toward your number.",
     zero: "Nothing yet",
   },
   {
     id: "save",
     l: "How much money do you put away each month?",
     h: "Count money you move into savings, a 401(k), an IRA or other investments.",
+    y: "This sets how fast you get to your number.",
     zero: "Nothing right now",
   },
 ];

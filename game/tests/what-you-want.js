@@ -261,7 +261,7 @@
   chk(
     "spend has the chip I'm not sure, with the typical value under the chips",
     /data-a="cbtyp" data-q="spend"[^>]*>I'm not sure</.test(h) &&
-      fid(h, "cb:typhint").includes("typical for ages 25 to 34: " + money(sp.v) + " a month")
+      fid(h, "cb:typhint").includes("the usual amount for ages 25 to 34: " + money(sp.v) + " a month")
   );
   X("cbtyp", "", "", { q: "spend" });
   chk(

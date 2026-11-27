@@ -201,7 +201,7 @@
   );
   chk("a color in a single year opens its layer", /<rect[^>]*data-a="cblayer" data-v="inv"/.test(h));
   X("cbzoom", "");
-  chk("Back shows all years again", W.n === undefined && /5 years a bar/.test(ov()));
+  chk("Back shows all years again", W.n === undefined && /Each bar is 5 years/.test(ov()));
 
   /* ---- 3. a layer that is off never raises what is covered ---- */
   const base = lyCoverage(K.rows);

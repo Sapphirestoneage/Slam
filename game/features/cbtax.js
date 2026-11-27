@@ -284,7 +284,7 @@ function cbTaxView() {
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : St.counted
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}, against the usual order. The tax itself is in your number now${P.adds.plan > 0 ? ": it adds about " + cbM(P.adds.plan) : ""}. ${cbI("receipt")}</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(P.receipt))}, against the usual order. The tax itself is in your number now${P.adds.plan > 0 ? ": it adds about " + cbM(P.adds.plan) : ""}. ${CB_UNDO} ${cbI("receipt")}</div>`
           : "",
     table = Y
       ? `<details class="math cbtaxy" data-fid="cbtax:years"><summary>Year by year, from age ${Y.stop == null ? c.age : Y.stop}</summary><div class="inner"><table class="cbtaxt"><thead><tr><th>Ages</th><th>Traditional</th><th>Moved to Roth</th><th>Taxable</th><th>Roth</th><th>Tax</th><th>Bracket</th></tr></thead><tbody>${Y.bars
@@ -330,7 +330,7 @@ function cbTaxView() {
       "plan",
       "The plan for your numbers, and what the tax adds",
       (P.ok
-        ? `<div class="tile small" data-fid="cbtax:adds"><div class="row between"><b>What the tax adds ${cbI("taxadds")}</b>${kitPill(P.st)}</div><div>The usual order (taxable, then traditional, then Roth): ${esc(cbReceiptWords(P.cost).replace(/^No change to the number$/, "nothing on your numbers"))}.</div>${P.applies ? `<div>With the plan: ${P.adds.plan > 0 ? "about " + cbM(P.adds.plan) + " more on the target" : "nothing more on the target"}.</div>` : ""}</div>`
+        ? `<div class="tile small" data-fid="cbtax:adds"><div class="row between"><b>What the tax adds ${cbI("taxadds")}</b>${kitPill(P.st)}</div><div>The usual order (taxable, then traditional, then Roth): ${esc(cbReceiptWords(P.cost).replace(/^No change to the number$/, "nothing on your numbers"))}.</div>${P.applies ? `<div>With the plan: ${P.adds.plan > 0 ? "about " + cbM(P.adds.plan) + " more on your number" : "nothing more on your number"}.</div>` : ""}</div>`
         : "") + planTile
     ) +
     (P.applies
@@ -340,7 +340,8 @@ function cbTaxView() {
         said
       : `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(P.st)}</div><b class="cbdropn">No drop yet</b><div class="small" data-fid="cbtax:why">${esc(cbTaxWhy(P))}</div>${P.acctGuess && P.why === "onekind" ? `<div class="tiny muted">Until you list your accounts, the game counts all of it as a traditional plan at work.</div>` : ""}</div>` +
         (P.acctGuess && !setupDone
-          ? `<button class="ghost wide" data-a="cbrest">Finish setup: five short rounds</button><div class="tiny muted">It asks which accounts you have. Then this screen recalculates.</div>`
+          ? cbLeaves("the rest of setup") /* cbguide.js: said before the jump (run 14, item 13) */ +
+            `<button class="ghost wide" data-a="cbrest">Finish setup: five short rounds</button><div class="tiny muted">It asks which accounts you have. Then this screen recalculates.</div>`
           : "")) +
     (Y
       ? cbChartCard(

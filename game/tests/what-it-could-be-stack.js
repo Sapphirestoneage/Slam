@@ -264,11 +264,13 @@
   h = ov();
   S = cbStack(c);
   chk(
-    "the counter counts from the ways that can apply to this player",
+    "the counter counts from the ways that can apply to this player, and shows no count while nothing is counted (run 14, item 8)",
     S.stacked === 0 &&
       S.of === S.after.length + S.moves.length &&
-      text(h).includes("0 of " + S.of + " stacked") &&
-      /Backups in place: 0 of 0/.test(text(h))
+      !/\b0 of\b/.test(text(h)) &&
+      !/data-fid="cb:stackn"/.test(h) &&
+      !/data-fid="cb:backups"/.test(h) &&
+      /Tap Count this on a row\. Your count shows here\./.test(text(h))
   );
   quick("shape");
   S = cbStack(c);
@@ -277,8 +279,9 @@
     S.stacked === 1 &&
       S.backups.m === 1 &&
       S.backups.n === 0 &&
-      text(ov()).includes("1 of " + S.of + " stacked") &&
-      /Backups in place: 0 of 1/.test(text(ov()))
+      text(ov()).includes("1 of " + S.of + " counted") &&
+      /Backups ready: none yet\. 1 to check/.test(text(ov())) &&
+      !/\b0 of\b/.test(text(ov()))
   );
   const Nfull = cbNumbers(c);
   cbWayDo("shape", "count", "0.5");

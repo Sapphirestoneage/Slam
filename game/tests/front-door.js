@@ -162,7 +162,7 @@
   let h = ov();
   chk(
     "the entry names the number: your FI number",
-    /Four taps, then your FI number\./.test(h) && !/freedom number|okay with money/i.test(h)
+    /4 taps left, then your number\./.test(h) && !/freedom number|okay with money/i.test(h)
   );
   chk("the old opening is not shown first", !/Am I okay\? · page|Question 1 of 5|Here's where you stand/.test(h));
   chk(

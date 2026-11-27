@@ -136,23 +136,32 @@ const CB_RNG = {
   ],
 };
 const CB_QS = [
-  { id: "age", l: "How old are you?", h: "Pick the group your age is in.", zero: "" },
+  {
+    id: "age",
+    l: "How old are you?",
+    h: "Pick the group your age is in.",
+    y: "Your age sets how many years your money can grow.",
+    zero: "",
+  },
   {
     id: "spend",
     l: "How much money do you spend in one month?",
     h: "Count it all: rent, food, bills and fun. Your best guess is fine.",
+    y: "Your number is 25 times what you spend in a year.",
     zero: "",
   },
   {
     id: "inv",
     l: "How much money do you have in investments?",
     h: "Investments are money in a 401(k), an IRA, or stocks and funds. Do not count checking or savings.",
+    y: "This is your head start toward your number.",
     zero: "Nothing yet",
   },
   {
     id: "save",
     l: "How much money do you put away each month?",
     h: "Count money you move into savings, a 401(k), an IRA or other investments.",
+    y: "This sets how fast you get to your number.",
     zero: "Nothing right now",
   },
 ];
@@ -682,7 +691,7 @@ function cbLayerInfo(c, id) {
   }
   return { id, name: def.name, what: def.what, cost: !!def.cost, steady: !!def.steady, sum: S, covers, math, K };
 }
-/* The receipt of a change of the two numbers: { off (dollars off the target), months (sooner) }. */
+/* The receipt of a change of the two numbers: { off (dollars off your number), months (sooner) }. */
 function cbReceipt(before, after) {
   return lyReceipt(before.could, after.could);
 }
@@ -997,10 +1006,12 @@ function cbSlim(step) {
 }
 /* The two numbers, pinned at the top of each screen of the flow: two big numbers on the first screens, one slim
    strip from the first way screen on. The number that changed counts to its new value (drawSheetCb). Under them:
-   what the player wants, as small tags (wants.js). */
-function cbTop(c) {
+   what the player wants, as small tags (wants.js). o.big (the reveal, run 14 item 9): the two big numbers, inside the
+   first block of the screen and not pinned. */
+function cbTop(c, o) {
   const N = cbNumbers(c),
-    slim = !!(W && W.kind === "cb" && cbSlim(W.step)),
+    big = !!(o && o.big),
+    slim = !big && !!(W && W.kind === "cb" && cbSlim(W.step)),
     age = x => (x.age == null ? "not at this pace yet" : x.years === 0 ? "now" : "at age " + x.age),
     num = (k, x) =>
       `<b class="dknum" data-cbn="${k}" data-to="${x.shown == null ? "" : x.shown}">${x.shown == null ? "No number yet" : cbM(x.shown)}</b>`,
@@ -1009,7 +1020,7 @@ function cbTop(c) {
         ? `<span class="cbnum ${k}"><span class="dklabel">${label}:</span> ${num(k, x)}</span>`
         : `<div class="cbnum ${k}"><span class="dklabel">${label}</span>${num(k, x)}<span class="tiny" data-cba="${k}">${esc(age(x))}</span></div>`;
   return (
-    `<div class="cbtop ${slim ? "cbstrip" : ""}" data-fid="cb:top">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</div>` +
+    `<div class="cbtop ${slim ? "cbstrip" : ""}${big ? "cbtopin" : ""}" data-fid="cb:top">${cell("is", "What it is", N.is)}${cell("could", "What it could be", N.could)}</div>` +
     (slim
       ? `<div class="tiny muted cbages" data-fid="cb:ages">What it is: <span data-cba="is">${esc(age(N.is))}</span>. What it could be: <span data-cba="could">${esc(age(N.could))}</span>.</div>`
       : "") +
@@ -1104,7 +1115,7 @@ function cbChips(w, q, cur, pulse) {
       ? `<div class="tiny muted" data-fid="cb:likely">The first one is the most usual for your age.</div>`
       : "") +
     (typ
-      ? `<div class="tiny muted" data-fid="cb:typhint">Not sure? The game uses what is typical for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess, and you can make it yours later.</div>`
+      ? `<div class="tiny muted" data-fid="cb:typhint">Not sure? The game uses the usual amount for ages ${esc(typ.band)}: ${q === "inv" ? lkK(typ.v) : cbM(typ.v) + " a month"}. It counts as a Guess. You can change it later.</div>`
       : w.unsure === q
         ? `<div class="tiny muted" data-fid="cb:unsure" role="status">${q === "age" ? "Your age is the one answer this number needs. Your best guess is fine." : "The game has no typical amount for your age yet. Pick the closest one. Your best guess is fine."}</div>`
         : "") +
@@ -1119,6 +1130,13 @@ function cbSaid() {
     ? `<div class="small cbsaid" data-fid="cb:said" role="status"><b>Your last tap.</b> ${esc(CB.said)}</div>`
     : "";
 }
+/* The one line of why a question is asked (run 14, item 12): tied to a want of the player when one is about the FI
+   date (wants.js), else "Why we ask". w: the open sheet. Q: the question (CB_QS). */
+function cbWhyAsk(w, Q) {
+  const picks = ((w && w.o && w.o.wants) || []).map(x => ({ n: x.n })),
+    m = picks.length && typeof wnMatch === "function" ? wnMatch({ goals: picks }, ["fi"]) : null;
+  return Q && Q.y ? (m ? "Asking because you picked " + m.l + ". " : "Why we ask: ") + Q.y : "";
+}
 /* THE ENTRY: one question at a time, four in all. */
 function cbEntryView() {
   const w = W,
@@ -1127,9 +1145,10 @@ function cbEntryView() {
     a = (w.o.a = w.o.a || {});
   return (
     head(w.one ? "One answer" : "Question " + (i + 1) + " of " + CB_QS.length, "Your FI number") +
-    `<div class="small muted">${w.one ? "Tap your own answer. Your FI number recalculates." : "Four taps, then your FI number. No typing needed."}</div>` +
+    /* cbguide.js: the countdown (run 14, item 12). It is never "0 taps left" */
+    `<div class="small muted" data-fid="cb:left">${w.one ? "Tap your own answer. Then you go back, and your number recalculates." : cbLeftWords()}</div>` +
     `<div class="cbdots" aria-hidden="true">${CB_QS.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
-    `<div class="stack cbq" style="gap:8px"><b class="cbql" data-fid="cb:q">${esc(Q.l)}</b>${cbChips(w, Q.id, a[Q.id], true)}<div class="tiny muted">${esc(Q.h)}</div></div>` +
+    `<div class="stack cbq" style="gap:8px"><b class="cbql" data-fid="cb:q">${esc(Q.l)}</b>${cbChips(w, Q.id, a[Q.id], true)}<div class="tiny muted">${esc(Q.h)}</div><div class="tiny muted" data-fid="cb:why">${esc(cbWhyAsk(w, Q))}</div></div>` +
     cbSaid() +
     /* Back: the screen it came from (one answer), the question before, What you want (wants.js), or What it is */
     cbNav({
@@ -1161,9 +1180,9 @@ function cbIsView() {
     cbFold(
       "about",
       "What this number means",
-      `<div class="small">This is your FI number the standard way: enough invested that work is optional. It is 25 times what you spend in a year. ${kitInfo("cbfi")}</div>` +
-        `<div class="tile small"><b>${N.is.age == null ? "At today's pace the date is still open" : N.is.years === 0 ? "You are there now" : "At today's pace: age " + N.is.age}</b> ${cbI("pace")}<div class="tiny muted">${N.is.age == null ? "The saving each month does not reach it yet. The next screens show what can move it." : "What you have invested grows, and what you save each month goes in."}</div></div>` +
-        `<div class="tile small cblife" data-fid="cb:life"><div class="row between"><b>The rest of your life costs about ${cbM(L.shown)}</b>${kitPill(L.st)}</div><div class="tiny muted">${L.years} years of today's spending, from ${L.from} to ${L.to}, in today's dollars. ${L.aboveFi ? "Your FI number is smaller: what is invested keeps growing while you spend from it. " : ""}${cbI("life")}</div></div>`
+      `<div class="small">This is your FI number. With this much invested, work is a choice. It is 25 times what you spend in a year. ${kitInfo("cbfi")}</div>` +
+        `<div class="tile small"><b>${N.is.age == null ? "At today's pace the date is still open" : N.is.years === 0 ? "You are there now" : "At today's pace: age " + N.is.age}</b> ${cbI("pace")}<div class="tiny muted">${N.is.age == null ? "What you save each month does not get there yet. The next screens show what can move it." : "What you have invested grows, and what you save each month goes in."}</div></div>` +
+        `<div class="tile small cblife" data-fid="cb:life"><div class="row between"><b>The rest of your life costs about ${cbM(L.shown)}</b>${kitPill(L.st)}</div><div class="tiny muted">${L.years} years of today's spending, from ${L.from} to ${L.to}, in today's dollars. ${L.aboveFi ? "Your number is smaller. Invested money keeps growing while you spend it. " : ""}${cbI("life")}</div></div>`
     ) +
     mathBox([
       "Spending: " + cbM(L.month) + " a month, " + cbM(L.year) + " a year.",
@@ -1323,7 +1342,7 @@ function cbChartView() {
     dkCard(
       zoom
         ? "Ages " + zoom[0].age + " to " + zoom[zoom.length - 1].age + ", year by year"
-        : "From " + K.p.age + " to " + LY_END + ", 5 years a bar",
+        : "From " + K.p.age + " to " + LY_END + ". Each bar is 5 years",
       (zoom
         ? `<div class="row between cbzrow"><button class="ghost" data-a="cbzoom" data-v=""><i class=chevl aria-hidden=true></i> Back to all years</button><span class="row" style="gap:6px"><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age - 5}" ${zoom[0].age - 5 < K.p.age ? "disabled" : ""} aria-label="The 5 years before"><i class=chevl aria-hidden=true></i> Earlier</button><button class="ghost slim" data-a="cbzoom" data-v="${zoom[0].age + 5}" ${zoom[0].age + 5 > LY_END ? "disabled" : ""} aria-label="The 5 years after">Later <i class=chev aria-hidden=true></i></button></span></div>`
         : "") +
@@ -1338,7 +1357,7 @@ function cbChartView() {
         (zoom
           ? `<div class="tiny muted">Tap a color in a bar to see that layer.</div>`
           : `<button class="ghost wide" data-a="cbzoom" data-v="${K.N.could.age != null ? K.bars.find(b => b.to >= K.N.could.age).from : K.p.age}">See single years</button><div class="tiny muted">Or tap a bar to open its 5 years.</div>`),
-      { cap: "Each bar is one stretch of your life. The colors are what pays for it.", right: cbI("chart") }
+      { cap: "Each bar is 5 years of your life. The colors show what pays for them.", right: cbI("chart") }
     ) +
     /* run 14, item 2: the chart in words, the switches of the layers and the costs are behind one tap each */
     cbFold(
@@ -1374,7 +1393,7 @@ function cbChartView() {
       cbCushionWords(K.p),
       "All amounts are in today's dollars.",
     ]) +
-    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${typeof cbStackView === "function" ? "stack" : "next"}">Next</button>` +
+    `<button class="primary wide go cbnext" data-a="cbgo" data-v="${typeof cbStackView === "function" ? "stack" : "next"}">Next: ways to shrink it</button>` +
     cbNav({ back: `data-a="cbgo" data-v="prev"` }) +
     cbFoot()
   );
@@ -1423,14 +1442,14 @@ function cbLayerView() {
     cbFoot()
   );
 }
-/* The words of a receipt: dollars off the target and months sooner. R: { off, months }. */
+/* The words of a receipt: dollars off your number and months sooner. R: { off, months }. */
 function cbReceiptWords(R) {
   if (!R || R.off == null) return "No number yet";
   const off = Math.round(R.off / 1000) * 1000,
     m = R.months;
   if (off === 0 && !m) return "No change to the number";
   return (
-    (off >= 0 ? cbM(off) + " off the target" : cbM(-off) + " more on the target") +
+    (off >= 0 ? cbM(off) + " off your number" : cbM(-off) + " more on your number") +
     (m == null
       ? ", and the date is still open"
       : m > 0
@@ -1461,10 +1480,21 @@ function cbWayUnsure(info) {
 }
 /* The buttons under a way: Next, Back, and the way back to the list of all the ways. done: the player answered. */
 function cbWayNav(done) {
+  const to = W && W.kind === "cb" && CB_STEPS.some(s => s.id === W.step) ? cbStepNear(C(), W.step, 1) : "",
+    st = CB_STEPS.find(s => s.id === to),
+    /* the button says where it goes (run 14, item 11) */
+    label =
+      st && st.way
+        ? "Next way"
+        : to === "yesbut"
+          ? "Next: the Yes, but card"
+          : to === "reveal"
+            ? "Next: the reveal"
+            : "Next";
   return (
-    `<button class="${done ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="next">Next</button>` +
+    `<button class="${done ? "primary go cbnext" : "ghost"} wide" data-a="cbgo" data-v="next">${label}</button>` +
     (typeof cbStackView === "function"
-      ? `<button class="ghost wide" data-a="cbgo" data-v="stack">All the ways</button>`
+      ? `<button class="ghost wide" data-a="cbgo" data-v="stack">See all the ways</button>`
       : "") +
     cbNav({ back: `data-a="cbgo" data-v="prev"` }) /* cbguide.js: Back and Forward */
   );
@@ -1479,6 +1509,8 @@ function cbWhyRow(id, term) {
       (typeof cbBackupRow === "function" ? cbBackupRow(C(), id) : "")
   );
 }
+/* The line of every receipt of a counted way or move: how to undo it (run 14, item 12). */
+const CB_UNDO = "To undo, tap Not for me.";
 /* ONE STRATEGY STEP: a headline, one line of why, the drop for this player, three buttons, the receipt, the chart. */
 function cbWayView(id) {
   const c = C(),
@@ -1500,7 +1532,7 @@ function cbWayView(id) {
       St.how === "no"
         ? `<div class="banner small" data-fid="cb:receipt"><b>Left out.</b> What it could be does not count this. One tap on Count this puts it in.</div>`
         : held
-          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(held.receipt))}. ${cbI("receipt")}</div>`
+          ? `<div class="banner small cbrec" data-fid="cb:receipt"><b>${St.how === "did" ? "Already yours, and counted." : "Counted."}</b> ${esc(cbReceiptWords(held.receipt))}. ${CB_UNDO} ${cbI("receipt")}</div>`
           : "",
     sub =
       id === "shape"
@@ -1517,6 +1549,8 @@ function cbWayView(id) {
               ? "This choice counts " + V.set.pct + "% of it: " + cbM(V.ssCount) + " a month."
               : "This choice counts none of it.")
           : "No estimate yet: it needs your pay from work.",
+    /* run 14, item 13: one chip of Social Security is an answer by itself, and the screen says so before the tap */
+    one = id === "ss" ? " A tap on Not counting on it is your answer: it leaves this way out." : "",
     math =
       id === "shape"
         ? [
@@ -1564,7 +1598,7 @@ function cbWayView(id) {
     cbTop(c) +
     `<div class="small">${esc(Wy.why)}</div>` +
     cbWhyRow(id, Wy.term) +
-    `<div class="stack" style="gap:6px"><div class="row between" style="gap:8px"><b class="small">${esc(Wy.ask)}</b>${cbI("choices")}</div><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub)}</div></div>` +
+    `<div class="stack" style="gap:6px"><div class="row between" style="gap:8px"><b class="small">${esc(Wy.ask)}</b>${cbI("choices")}</div><div class="chips">${chips}</div><div class="tiny muted" data-fid="cb:waysub">${esc(sub + one)}</div></div>` +
     `<div class="tile cbdrop" data-fid="cb:drop"><div class="row between"><span class="dklabel">The drop for you ${cbI("drop")}</span>${kitPill(id === "ss" ? "Guess" : cbState(c))}</div><b class="cbdropn">${esc(V.has ? cbReceiptWords(V.receipt) : "No estimate yet")}</b><div class="tiny muted">${St.counted ? "With the choice above, against not counting it." : "If you count it, with the choice above."}</div></div>` +
     `<div class="stack cbways" style="gap:8px">${btn("count", "Count this")}<div class="cbtwo">${btn("did", "Already doing it")}${btn("no", "Not for me")}</div></div>` +
     cbWayUnsure() +
@@ -1987,12 +2021,14 @@ Object.assign(ACT, {
             : v === "prev"
               ? side
                 ? W.step === "move"
-                  ? "stack"
+                  ? W.from || "stack"
                   : "chart"
                 : cbStepNear(C(), W.step, -1)
-              : v;
+              : v,
+        /* a move opened from the reveal (its top 3 moves): Back returns to the reveal */
+        from = id === "move" && W.step === "reveal" ? "reveal" : undefined;
       if (!back) cbFwdDrop(id, t.dataset.k);
-      W = { kind: "cb", step: id, o: {}, id: t.dataset.k || undefined };
+      W = { kind: "cb", step: id, o: {}, id: t.dataset.k || undefined, from };
       cbAt(id);
     }
     sheet(cbSheet);

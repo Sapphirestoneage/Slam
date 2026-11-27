@@ -152,7 +152,9 @@ function cbReveal(c) {
           ? cap(time)
           : m == null && N.could.age != null
             ? "A date on the calendar"
-            : S.stacked + " of " + S.of + " ways stacked",
+            : S.stacked
+              ? S.stacked + " of " + S.of + " ways counted"
+              : "Equal for now",
     },
     items,
     nodeep: items.filter(x => !x.deep),
@@ -417,7 +419,7 @@ function cbRevealView() {
     U = cbTypUsed(c) /* couldbe.js: the answers that are a typical value */,
     row = x =>
       x.deep
-        ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Go deeper: ${esc(x.deep.l)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
+        ? `<button class="rowbtn" data-a="${esc(x.deep.a)}" data-v="${esc(x.deep.v)}" data-fid="cb:revitem"><span style="min-width:0"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}. Opens: ${esc(x.deep.l)}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
         : `<div class="tile small" data-fid="cb:revitem"><b>${esc(x.name)}</b><div class="tiny muted">${esc(x.words)}.</div></div>`,
     /* in the order of the flow, so that a chip stays in its place when it is tapped */
     ways = S.after
@@ -434,52 +436,75 @@ function cbRevealView() {
           `<button class="chip cbcnt ${K.cnt[x.id] ? "on" : ""}" data-a="cbcount" data-v="${x.id}" aria-pressed="${K.cnt[x.id] ? "true" : "false"}">${esc(x.name)}${K.cnt[x.id] ? " ✓" : ""}</button>`
       )
       .join("");
+  /* run 14, item 9: four blocks, side by side on a wide screen, in the order of what matters most. 1 (top left, the
+     biggest): the two numbers and the difference. 2: the chart. 3: the top 3 moves. 4: the closed row Keep it, share
+     it, or tell Eli. On a phone the same order, one under the other, and the first block has the biggest type. */
+  const top3 = cbTopMoves(c),
+    b1 =
+      cbTop(c, { big: true }) +
+      `<div class="tile cbdrop cbrev" data-fid="cb:diff"><div class="row between" style="gap:8px"><span class="dklabel">The difference ${cbI("diff")}</span>${kitPill(V.st)}</div><b class="cbdropn" data-fid="cb:diffn">${esc(V.diff.words)}</b><div class="tiny muted">${N.same ? "Count a way, and What it could be moves." : N.above ? "It is above What it is. You counted a cost the 25 times rule leaves out: " + esc(N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ")) + "." : "What it is stays put. What it could be moves with what you count."}</div></div>` +
+      (V.movesSum.n || V.yb
+        ? `<div class="tile small" data-fid="cb:revmoves"><div class="row between" style="gap:8px;align-items:flex-start"><span>${V.movesSum.n ? `<b>${V.movesSum.n === 1 ? "The move you counted" : "The " + V.movesSum.n + " moves you counted"}: ${esc(V.movesSum.words.replace(/^./, x => x.toLowerCase()))}.</b> ` : ""}${V.yb ? `<b>Your Yes, but card: ${esc(V.yb.net.words.replace(/^./, x => x.toLowerCase()))}.</b>` : ""}</span>${cbI("dates")}</div><div class="tiny muted">These move your date. They are not part of the difference above.</div></div>`
+        : "") +
+      (U.length
+        ? `<div class="tile small cbtypbox" data-fid="cb:typ"><div class="row between" style="gap:8px"><b>${U.length === 1 ? "One answer is a typical value" : U.length + " answers are typical values"}</b><span class="row" style="gap:6px;flex:none">${kitPill("Guess")}${cbI("typ")}</span></div><div class="tiny muted">Not yours yet. It is what is usual for your age. Make it mine opens that one question. Then you come back here.</div>${U.map(u => `<div class="row between cbtyprow" style="gap:8px" data-fid="cb:typrow"><span class="small" style="min-width:0">${esc(u.name)}: <b class="guess">${u.q === "inv" ? lkK(u.v) : cbM(u.v)}</b>${esc(u.per)}, typical for ages ${esc(u.band)}</span><button class="ghost slim" data-a="cbmine" data-q="${u.q}">Make it mine</button></div>`).join("")}</div>`
+        : "") +
+      /* cbguide.js: what is counted is behind one tap (run 14, item 2) */
+      cbFold(
+        "counted",
+        "What you counted",
+        `<div class="row between" style="gap:8px"><span class="tiny muted">A row with an arrow leaves these screens and opens a deeper part of the game. Back brings you here.</span>${cbI("counted")}</div>` +
+          (typeof cbStackLine === "function" ? cbStackLine(c, S) : "") +
+          `<div class="stack" style="gap:6px;margin-top:6px" data-fid="cb:revlist">${V.items.map(row).join("") || `<div class="tiny muted">Nothing yet. Open the list of ways to count one.</div>`}</div>` +
+          `<button class="ghost wide" data-a="cbgo" data-v="stack">Change what is counted</button>`
+      ),
+    b2 =
+      dkCard(
+        "The finished chart",
+        cbChartHtml(K) +
+          `<div class="cbkey tiny muted"><span><i class="cbln"></i>The line: what the year costs</span><span><i class="cbsq hatch"></i>Not covered yet</span>${K.layers
+            .filter(l => !l.off)
+            .map(l => `<span><i class="cbsq" style="background:${l.color}"></i>${esc(l.name)}</span>`)
+            .join("")}</div>` +
+          cbFold(
+            "parts",
+            "Switch a layer, a way or a cost",
+            cbLayerToggles(K) +
+              `<div class="stack" style="gap:6px;margin-top:8px"><div class="row between" style="gap:8px"><b class="small">Ways to shrink the number. Tap one to count it or take it out.</b>${cbI("switches")}</div><div class="row cbgapbtn" data-fid="cb:revways">${ways || `<span class="tiny muted">None fits your numbers yet.</span>`}</div><b class="small">Costs the 25 times rule leaves out</b><div class="row cbgapbtn" data-fid="cb:revcosts">${costs}</div></div>`
+          ) +
+          `<button class="ghost wide" data-a="cbgo" data-v="chart">Open the full chart</button>`,
+        { cap: "From " + K.p.age + " to " + LY_END + ". Each bar is 5 years.", right: cbI("chart") }
+      ) +
+      cbFold(
+        "words",
+        "What the chart says, in words",
+        `<div class="row between" style="gap:8px"><span class="tiny muted">The chart, in words.</span>${cbI("words")}</div>` +
+          cbGapLine(K) +
+          cbNeedsLine(K) +
+          `<div class="tile small" data-fid="cb:cushion"><div class="row between" style="gap:8px"><b>${esc(cbCushionWords(K.p))}</b>${cbI("cushion")}</div><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". It is there in case the market goes down." : "That is why the number is 25 times a year of spending: you take out less than the money grows."}</div></div>`
+      ),
+    /* the top 3 moves (cbTopMoves, the same list as Next Steps). A row opens the move inside the flow, and Back
+       returns here (ACT.cbgo keeps where the player came from) */
+    b3 = top3.length
+      ? dkCard(
+          top3.length === 1 ? "Your top move" : "Your top " + top3.length + " moves",
+          `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:revtop">${top3
+            .map(
+              r =>
+                `<button class="rowbtn" data-a="cbgo" data-v="move" data-k="${esc(r.id)}" data-fid="cb:revtopmove"><span style="min-width:0"><b>${esc(r.name)}</b><div class="tiny muted">${esc(r.words)}${r.counted ? ". You counted it" : ""}.</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`
+            )
+            .join("")}</div>`,
+          { cap: "The moves that bring your date closest. Tap one to read it.", right: cbI("top3") }
+        )
+      : "",
+    /* run 16, A1: the three buttons of the old last screen live here, quiet and closed */
+    b4 = `<details class="math cbkeep" data-fid="cb:end3"${W && W.msg ? " open" : ""}><summary>Keep it, share it, or tell Eli</summary><div class="inner stack cbend3" style="gap:8px"><div class="row between" style="gap:8px"><span class="tiny muted">${esc(cbSaveState().words)}</span>${cbI("keep")}</div><button class="ghost wide" data-a="cbsave">${cbSaveState().signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button>${W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : ""}<div class="tiny muted">The card is a picture. It shows your two ages, what you counted, and the time between. It shows no dollar amount. Nothing leaves this device until you send it.</div></div></details>`,
+    block = (n, h) => (h ? `<div class="cbrevb cbrev${n}" data-fid="cb:rev${n}">${h}</div>` : "");
   return (
-    head("The reveal", "Your FI number, and what it could be") +
-    cbTop(c) +
-    `<div class="tile cbdrop cbrev" data-fid="cb:diff"><div class="row between" style="gap:8px"><span class="dklabel">The difference ${cbI("diff")}</span>${kitPill(V.st)}</div><b class="cbdropn" data-fid="cb:diffn">${esc(V.diff.words)}</b><div class="tiny muted">${N.same ? "Count a way below, or on the stack, and What it could be moves." : N.above ? "It is above What it is because a cost the 25 times rule leaves out is counted: " + esc(N.raisedBy.map(k => LY_SPENDING.find(s => s.id === k).name.toLowerCase()).join(" and ")) + "." : "What it is stays where it is: it is the floor. What it could be follows what you count."}</div></div>` +
-    (V.movesSum.n || V.yb
-      ? `<div class="tile small" data-fid="cb:revmoves"><div class="row between" style="gap:8px;align-items:flex-start"><span>${V.movesSum.n ? `<b>${V.movesSum.n === 1 ? "The move you counted" : "The " + V.movesSum.n + " moves you counted"}: ${esc(V.movesSum.words.replace(/^./, x => x.toLowerCase()))}.</b> ` : ""}${V.yb ? `<b>Your Yes, but card: ${esc(V.yb.net.words.replace(/^./, x => x.toLowerCase()))}.</b>` : ""}</span>${cbI("dates")}</div><div class="tiny muted">On their own line: these move the date you reach your number. They are not added to the difference above.</div></div>`
-      : "") +
-    (U.length
-      ? `<div class="tile small cbtypbox" data-fid="cb:typ"><div class="row between" style="gap:8px"><b>${U.length === 1 ? "One answer is a typical value" : U.length + " answers are typical values"}</b><span class="row" style="gap:6px;flex:none">${kitPill("Guess")}${cbI("typ")}</span></div><div class="tiny muted">Not yours yet: what is usual for your age. One tap makes it yours, and the numbers recalculate.</div>${U.map(u => `<div class="row between cbtyprow" style="gap:8px" data-fid="cb:typrow"><span class="small" style="min-width:0">${esc(u.name)}: <b class="guess">${u.q === "inv" ? lkK(u.v) : cbM(u.v)}</b>${esc(u.per)}, typical for ages ${esc(u.band)}</span><button class="ghost slim" data-a="cbmine" data-q="${u.q}">Make it mine</button></div>`).join("")}</div>`
-      : "") +
-    dkCard(
-      "What you counted",
-      (typeof cbStackLine === "function" ? cbStackLine(c, S) : "") +
-        /* cbguide.js: the list is behind one tap (run 14, item 2) */
-        cbFold(
-          "counted",
-          "The list of what you counted",
-          `<div class="stack" style="gap:6px;margin-top:6px" data-fid="cb:revlist">${V.items.map(row).join("") || `<div class="tiny muted">Nothing yet. The switches under the chart count a way with one tap.</div>`}</div>`
-        ) +
-        `<button class="ghost wide" data-a="cbgo" data-v="stack">Change what is counted</button>`,
-      { cap: "Open the list, then tap a row to go deeper in the game.", right: cbI("counted") }
-    ) +
-    dkCard(
-      "The finished chart",
-      cbChartHtml(K) +
-        `<div class="cbkey tiny muted"><span><i class="cbln"></i>The line: what the year costs</span><span><i class="cbsq hatch"></i>Not covered yet</span>${K.layers
-          .filter(l => !l.off)
-          .map(l => `<span><i class="cbsq" style="background:${l.color}"></i>${esc(l.name)}</span>`)
-          .join("")}</div>` +
-        cbFold(
-          "parts",
-          "Switch a layer, a way or a cost",
-          cbLayerToggles(K) +
-            `<div class="stack" style="gap:6px;margin-top:8px"><div class="row between" style="gap:8px"><b class="small">The ways to shrink the number: tap one to count it or take it out</b>${cbI("switches")}</div><div class="row cbgapbtn" data-fid="cb:revways">${ways || `<span class="tiny muted">None applies to your numbers yet.</span>`}</div><b class="small">The costs the 25 times rule leaves out</b><div class="row cbgapbtn" data-fid="cb:revcosts">${costs}</div></div>`
-        ) +
-        `<button class="ghost wide" data-a="cbgo" data-v="chart">Open the full chart</button>`,
-      { cap: "From " + K.p.age + " to " + LY_END + ", 5 years a bar. Every switch is here.", right: cbI("chart") }
-    ) +
-    cbFold(
-      "words",
-      "What the chart says, in words",
-      `<div class="row between" style="gap:8px"><span class="tiny muted">The chart, in words.</span>${cbI("words")}</div>` +
-        cbGapLine(K) +
-        cbNeedsLine(K) +
-        `<div class="tile small" data-fid="cb:cushion"><div class="row between" style="gap:8px"><b>${esc(cbCushionWords(K.p))}</b>${cbI("cushion")}</div><div class="tiny muted">${K.leftEnd > 0 && !K.gaps.length ? "On this chart about " + lkK(K.leftEnd) + " is still invested at " + LY_END + ". It is there in case the market goes down." : "The number is 25 times a year of spending for that reason: you take less than the growth."}</div></div>`
-    ) +
+    head("The reveal", "Your number, and what it could be") +
+    `<div class="cbrevg" data-fid="cb:revgrid">${block(1, b1)}${block(2, b2)}${block(3, b3)}${block(4, b4)}</div>` +
+    `<button data-fid="cb:revnext" class="primary wide go cbnext" data-a="cbgo" data-v="end">Next: my result</button>` +
+    cbNav({ back: `data-a="cbgo" data-v="stack"` }) /* cbguide.js: Back (the stack) and Forward */ +
     mathBox(
       [
         "What it is: " + cbM(K.p.spend) + " a year x 25 = " + cbM(N.is.target) + ".",
@@ -507,10 +532,6 @@ function cbRevealView() {
         )
       )
     ) +
-    `<button class="primary wide go cbnext" data-a="cbgo" data-v="end">Next: my result</button>` +
-    cbNav({ back: `data-a="cbgo" data-v="stack"` }) /* cbguide.js: Back (the stack) and Forward */ +
-    /* run 16, A1: the three buttons of the old last screen live here now, quiet, under the way on */
-    `<details class="math cbkeep" data-fid="cb:end3"${W && W.msg ? " open" : ""}><summary>Keep it, share it, or tell Eli</summary><div class="inner stack cbend3" style="gap:8px"><div class="row between" style="gap:8px"><span class="tiny muted">${esc(cbSaveState().words)}</span>${cbI("keep")}</div><button class="ghost wide" data-a="cbsave">${cbSaveState().signed ? "Keep my plan" : "Keep my plan: make a free account"}</button><button class="ghost wide" data-a="cbshare">Share my card</button><button class="ghost wide" data-a="flag">Tell Eli what broke</button>${W && W.msg ? `<div class="small" data-fid="cb:endmsg" role="status">${esc(W.msg)}</div>` : ""}<div class="tiny muted">The card is an image: the two ages, what you counted, and the time between them. It has no dollar amount. Nothing leaves this device until you send it.</div></div></details>` +
     cbFoot()
   );
 }
@@ -557,7 +578,7 @@ function homeFirstCard(c, d) {
   try {
     const F = cbHomeFirst(c, d);
     if (!F) return "";
-    return `<div class="card dkcard rsq rswin hqfirst pulse" data-fid="cb:homefirst"><div class="row between dkhead"><span class="dklabel">Your first move</span></div><div class="hqfirstin"><div class="hqfirstt"><b class="rswint" data-fid="cb:homefirstname">${esc(F.name)}</b><div class="small" data-fid="cb:homefirstwhy">${esc(F.why)}</div><div class="tiny muted">${esc(F.words)}.</div></div><button class="primary wide" data-a="cbfirstgo">Start this move</button></div></div>`;
+    return `<div class="card dkcard rsq rswin hqfirst pulse" data-fid="cb:homefirst"><div class="row between dkhead"><span class="dklabel">Your first move</span></div><div class="hqfirstin"><div class="hqfirstt"><b class="rswint" data-fid="cb:homefirstname">${esc(F.name)}</b><div class="small" data-fid="cb:homefirstwhy">${esc(F.why)}</div><div class="tiny muted">${esc(F.words)}.</div><div class="tiny muted" data-fid="cb:homefirstdoes">${F.canAdd ? "The button puts its steps on Next Steps. Then it opens the move." : "The button opens the move."}</div></div><button class="primary wide" data-a="cbfirstgo">Start this move</button></div></div>`;
   } catch (e) {
     report(e, "cbreveal.js: homeFirstCard");
     return "";
