@@ -5,15 +5,16 @@
                page, its name, and its group. No logic.
    INPUT       Nothing.
    OUTPUT      Constants: TOOL_LIB_GROUPS (id, name), TOOL_LIB (page, name, group id), TOOL_LIB_SKIP (the
-               pages that are not a tool for a player, each with the reason).
+               pages that are not a tool for a player, each with the reason), TOOL_LIB_HELD (how many
+               pages are held out because they belong to an add-on: a count, no names).
    DEPENDS ON  Nothing. features/firstweek.js draws the group.
    RULES       GENERATED FILE. Do not edit it. The groups and names are those of the web app's front door
                (js/solo/hub.js) and of SOLO in js/solo.js. tools/game_toollib_build.mjs makes it. Add a
                page to the front door, then run the tool. game/tests/first-week.js fails when a page at
                the top of the repository is in neither list.
-   SOURCE-HASH  1dda37035f4980c1
+   SOURCE-HASH  d9e63303620e91c5
    ========================================================================= */
-const TOOL_LIB_GROUPS = [["path","The path, one thing at a time"],["explore","Bigger tools"],["small","Small calculators"],["quick","Quick calculators"],["frameworks","Frameworks"],["gig","Working for yourself"],["own","LGBTQ+ money tools, private"],["family","Family money"],["estate","Estate and marriage"],["hard","Hard moments"]];
+const TOOL_LIB_GROUPS = [["path","The path, one thing at a time"],["explore","Bigger tools"],["small","Small calculators"],["quick","Quick calculators"],["frameworks","Frameworks"],["gig","Working for yourself"],["family","Family money"],["estate","Estate and marriage"],["hard","Hard moments"]];
 const TOOL_LIB = [
   ["first.html","What is my first move?","path"],
   ["end.html","Start at the finish line","path"],
@@ -74,16 +75,6 @@ const TOOL_LIB = [
   ["gigretire.html","Solo 401(k), SEP or IRA","gig"],
   ["gigapps.html","Do my apps add up?","gig"],
   ["profitfirst.html","Profit First for side income","gig"],
-  ["carecost.html","What my care would cost me","own"],
-  ["idpapers.html","Changing my name and marker","own"],
-  ["plancheck.html","Does this plan cover transition care?","own"],
-  ["package.html","My whole package, two jobs","own"],
-  ["twosides.html","What each side costs me","own"],
-  ["ownway.html","How long I could stand on my own","own"],
-  ["searchfund.html","An emergency fund for a longer search","own"],
-  ["kin.html","Chosen family: who decides, who gets what","own"],
-  ["family.html","Growing our family","own"],
-  ["agecare.html","Care later in life","own"],
   ["sandwich.html","Money to my parents and kids at once","family"],
   ["boomerang.html","Living at home: what it saves","family"],
   ["tuition.html","Kids and tuition: childcare, school, a 529","family"],
@@ -95,8 +86,8 @@ const TOOL_LIB = [
   ["sayno.html","Saying no to lending money","hard"],
   ["crisis.html","After a fire, a flood or an eviction","hard"],
   ["safety.html","A money plan, kept private","hard"],
-  ["one.html","Every tool on one page","path"],
   ["heirs.html","What would my people receive?","estate"],
   ["married.html","Married or partners?","estate"],
 ];
 const TOOL_LIB_SKIP = {"index.html":"the web app itself, not one tool","start.html":"the whole plan of the web app: a second home for the same numbers the game keeps","pro.html":"for coaches and planners; a player never sees a coach feature","staples.html":"a page of example numbers for the owner, not a tool"};
+const TOOL_LIB_HELD = 11;

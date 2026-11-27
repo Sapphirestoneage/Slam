@@ -319,7 +319,13 @@
       );
       chk("the older entries are one tap away", /data-a="pnall"[^>]*>Show older updates \(\d+\)/.test(ov()));
       X("pnall");
-      chk("Show older updates shows each entry", (ov().match(/class="tile stack"/g) || []).length === L.length);
+      /* an entry about an add-on (ao: true) is not shown in the game: add-ons are off for standard players */
+      chk(
+        "Show older updates shows each entry, but none about an add-on",
+        (ov().match(/class="tile stack"/g) || []).length === L.filter(e => !e.ao).length &&
+          L.some(e => e.ao) &&
+          L.filter(e => e.ao).every(e => !ov().includes(esc(e.t)))
+      );
       X("close");
       /* the web app reads the same file as a module: the list must be on the global object */
       const box = {};

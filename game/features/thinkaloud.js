@@ -4,7 +4,7 @@
                what they think. A panel stays pinned at the bottom of every screen: the task to try, a
                tap counter for that task, and "Report this", open, with the name of the screen filled in.
                A report goes where Report a bug or idea goes (features/fbreport.js). At the end, the
-               results show each task with its taps and its time, and the tester can copy them as text.
+               results show each task with its taps, its time and the screen where the tester stopped, and the tester can copy them as text.
                "Test with a friend" (features/testkit.js) is the other way: a coach watches and notes.
    INPUT       The game: G.ta (the test that runs), G.taRuns (past tests). The address: ?think=1 turns the
                mode on, ?think=0 turns it off. The admin menu row "Tester drives". The taps of the player.
@@ -16,10 +16,10 @@
    RULES       A player never sees the panel unless the mode is on. The panel counts taps by the name of
                the button only, never a value. A report carries no money number (fbreport.js rules).
                No new table: a report waits on the device until the report inbox is ready.
-   STATE       G.ta = { tasks: [{ t, taps, secs, st }], i, t0, sent }, G.taRuns (the last 20).
+   STATE       G.ta = { tasks: [{ t, taps, secs, st, at }], i, t0, sent }, G.taRuns (the last 20).
    ========================================================================= */
-/* The three tasks from Eli's Results-first Home run. */
-const TA_TASKS = ["Find out how close you are to FI", "Do your next win", "Get back Home"];
+/* The three tasks of Batch B, phase 7, in Eli's words: the same list as Test with a friend (testkit.js). */
+const TA_TASKS = TK_TASKS.map(x => x.t);
 const TA_RUNS_MAX = 20;
 
 /* ---------- the pure part: no screen, no storage ---------- */
@@ -48,10 +48,11 @@ function taStart(s, now) {
   return s;
 }
 /* Ends the task that runs: "done" or "skip". The next task waits. */
-function taEnd(s, how, now) {
+function taEnd(s, how, now, at) {
   const x = s && s.tasks[s.i];
   if (!x) return s;
   x.st = how === "skip" ? "skip" : "done";
+  if (at) x.at = String(at);
   x.secs = s.t0 != null && now != null ? Math.max(1, Math.round((now - s.t0) / 1000)) : null;
   s.t0 = null;
   s.i++;
@@ -90,7 +91,8 @@ function taText(r) {
         " · " +
         x.taps +
         (x.taps === 1 ? " tap" : " taps") +
-        (x.secs != null ? " · " + taSecs(x.secs) : "")
+        (x.secs != null ? " · " + taSecs(x.secs) : "") +
+        (x.at ? " · stopped on: " + x.at : "")
     );
   });
   L.push("");
@@ -125,6 +127,10 @@ function taHasDoc() {
 }
 function taScreen() {
   return typeof fbScreen === "function" ? fbScreen() : typeof tab === "string" ? tab : "home";
+}
+/* The screen where the tester stopped a task: the plain name from testkit.js. */
+function taAt() {
+  return typeof tkAt === "function" ? tkAt() : taScreen();
 }
 /* The top part of the panel: the task, the counter and the task buttons. Drawn again on each change. */
 function taTop(s) {
@@ -262,7 +268,7 @@ function taResults(r, w) {
       .map(x =>
         dkCard(
           "",
-          `<div class="small"><b>${esc(x.t)}</b></div><div class="row" style="gap:6px;flex-wrap:wrap">${dkPill(taStLabel(x.st), x.st === "done" ? "okp" : "")}${dkPill(x.taps + (x.taps === 1 ? " tap" : " taps"))}${x.secs != null ? dkPill(taSecs(x.secs)) : ""}</div>`
+          `<div class="small"><b>${esc(x.t)}</b></div><div class="row" style="gap:6px;flex-wrap:wrap">${dkPill(taStLabel(x.st), x.st === "done" ? "okp" : "")}${dkPill(x.taps + (x.taps === 1 ? " tap" : " taps"))}${x.secs != null ? dkPill(taSecs(x.secs)) : ""}</div>${x.at ? `<div class="tiny muted">Stopped on: ${esc(x.at)}</div>` : ""}`
         )
       )
       .join("") +
@@ -306,13 +312,13 @@ Object.assign(ACT, {
   },
   tadone: () => {
     if (!G.ta) return;
-    taEnd(G.ta, "done", Date.now());
+    taEnd(G.ta, "done", Date.now(), taAt());
     save();
     taDock();
   },
   taskip: () => {
     if (!G.ta) return;
-    taEnd(G.ta, "skip", Date.now());
+    taEnd(G.ta, "skip", Date.now(), taAt());
     save();
     taDock();
   },

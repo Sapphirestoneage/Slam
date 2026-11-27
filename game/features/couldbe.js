@@ -1454,6 +1454,24 @@ function openSetupCb(base, mode) {
     report(e, "couldbe.js: openSetupCb");
   }
 }
+/* A player who left "Finish setup" in the middle of a round comes back to the same page, with the answers so far
+   (Batch B, phase 7). The copy is the one questlog.js keeps when a round is left (c.x.spot), for 7 days. Only a copy
+   of the rest of setup is used. Returns true when it put the page back. */
+function cbRestSpot() {
+  try {
+    const c = C(),
+      S = c && c.x && c.x.spot;
+    if (!S || S.kind !== "setup" || !S.w || !S.w.cbRest || S.w.mode !== "new") return false;
+    if (!S.d || daysBetween(S.d, todayISO()) > 7 || !W || W.kind !== "setup") return false;
+    const w = typeof questSnap === "function" ? questSnap(S.w) : null;
+    if (!w) return false;
+    Object.assign(W, w);
+    return true;
+  } catch (e) {
+    report(e, "couldbe.js: cbRestSpot");
+    return false;
+  }
+}
 /* Part of planTab() in planner.js. Next Steps has the way back to the two numbers, and to the rest of setup while
    it is not done. */
 function planTabCb(h) {
@@ -1621,6 +1639,7 @@ Object.assign(ACT, {
     if (W && W.kind === "setup") {
       W.cbRest = true;
       if (typeof doorGuest === "function" && doorGuest()) W.door = true;
+      cbRestSpot(); /* the page the player left, with the answers so far */
       drawSheet();
     }
     CB.rest = false;

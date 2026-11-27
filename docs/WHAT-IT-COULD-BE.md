@@ -411,3 +411,25 @@ File: `game/features/firstweek.js`. Data: `game/data/toollib.js`. Test: `game/te
   in the bar.
 - A new page at the top of the repository: add it to the web app's front door, then run
   `node tools/game_toollib_build.mjs` and the game steps.
+
+## Batch B, the end of the run (Nov 27 2026)
+
+- **Done:** phases 1, 2a to 2f, 3, 4, 5 and 7. **Skipped, not built:** phase 6, the in-debt version (Eli: "skip and
+  report if the run is already long").
+- **Taps from the landing:** 5 to the first number, 8 to the reveal, 11 with three ways counted.
+- **Phase 7a.** Test with a friend (admin menu, `features/testkit.js`) has three tasks: find out what your number
+  could be; switch Social Security off and say what changed; get back Home and find your next move. While a task runs
+  the game counts the taps and keeps the names of the screens (`tkTapAdd`, `tkAt`); "done or stuck" notes the screen
+  where the person stopped (`tkStop`). No sound, no picture, no field value. The record is in the saved game
+  (`G.tests`, the last 20). Tester drives (`features/thinkaloud.js`) reads the same three tasks.
+- **Phase 7b.** The list "Waiting on Eli: yes or no" is at the top of QUESTIONS.md.
+- **Finish setup** comes back to the page the player left (`cbRestSpot` in `features/couldbe.js`, from the copy that
+  `questlog.js` keeps, for 7 days).
+- **The add-on rule (Eli, Nov 27 2026).** The LGBTQ+ money tools are an add-on: off for standard players. The tool
+  that makes the Tool library holds the fold and the page one.html out of the game (`HELD_FOLDS`, `HELD_DOORS`;
+  `--held` prints them). The library has 72 pages in 9 groups. A What's new entry with `ao: true` does not show in the
+  game. Excluded, not yet switchable.
+- **Not wired:** counted moves and the Yes, but card do not move the two numbers on top (two calculations, QUESTIONS
+  649); a new player sees "No drop yet" on the tax way; state rules for retirement income; a pension's own start age;
+  a last day for the calmer bar; Where am I does not point back to an unfinished "Finish setup"; the add-on switch for
+  the held pages; the web app still shows those pages to everyone.

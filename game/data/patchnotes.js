@@ -5,7 +5,8 @@
                shows the same list in its More menu (js/ui/whatsnew-ui.js).
    INPUT       None. Data only.
    OUTPUT      PATCH_NOTES: a list of entries. d is the date (YYYY-MM-DD). t is the title. l is a few
-               short lines.
+               short lines. ao: true marks an entry about an add-on: the game does not show it (add-ons
+               are off for standard players).
    DEPENDS ON  Nothing.
    RULES       Each run adds ONE entry at the END of the list, from its summary (CONTRIBUTING.md). The
                screen sorts by date, and for one date it shows the later entry first.
@@ -366,6 +367,7 @@ const PATCH_NOTES = [
   },
   {
     d: "2026-11-26",
+    ao: true,
     t: "LGBTQ+ money tools, private by default",
     l: [
       "What care would cost you after your plan pays, and a check of what a health plan covers.",
@@ -617,6 +619,17 @@ const PATCH_NOTES = [
       "Social Security: count all of it, part of it or none of it. The estimate is marked Guess.",
       "The last screen has both numbers and the chart. If a year is not covered yet, it says why and what to tap.",
       "On the chart your investments grow 7% a year the whole way, and you take 4%. The rest is a cushion for years the market goes down.",
+    ],
+  },
+  {
+    d: "2026-11-27",
+    t: "Every way to shrink your number, on one list",
+    l: [
+      "After the chart comes All the ways: every way to shrink your number, the biggest for you first. New: pay less tax on the way out, bend your spending when markets fall, money that shows up later.",
+      "Yes, but: pick one thing to cut and one thing to keep, and see the price of each in months.",
+      "The reveal puts both numbers side by side with the time between them. Share my card makes a picture with ages and names, no dollars.",
+      "Home now starts with Your two numbers. On a later day it says what changed since last time.",
+      "In your first week the bar has four places: Home, Next Steps, My Money and My number. Everything else is in the menu, with a new Tool library, and the other tabs come back after.",
     ],
   },
 ];

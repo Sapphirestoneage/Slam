@@ -277,8 +277,8 @@ const NV_INFO = {
   ],
   testkit: [
     "Test with a friend",
-    "A script for watching someone try the game.",
-    "It is for finding what confuses people.",
+    "A script for watching someone try three tasks.",
+    "It counts the taps and notes where the person stopped. No sound is recorded.",
   ],
   tier: [
     "Tier list",

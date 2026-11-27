@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-27. Files: 216. Lines: 125,267. Top-level functions: 3071. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-27. Files: 216. Lines: 125,373. Top-level functions: 3077. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -117,8 +117,8 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 103 | `features/ideasz.js` | 338 | 7 | 3 | 0 | The last file of the famous money ideas: the glossary of each idea, which ideas fit the player now, and the block on Next Steps |
 | 104 | `features/dep.js` | 254 | 11 | 2 | 0 | What depends on what. Some short chains show how one number feeds the next number |
 | 105 | `features/eras.js` | 1,071 | 25 | 6 | 0 | Steps for the later eras, and the account recommendation |
-| 106 | `features/testkit.js` | 324 | 9 | 7 | 0 | Test with a friend. A think-aloud usability test: one person tries five tasks, and the coach records how each task went with one tap |
-| 107 | `features/thinkaloud.js` | 404 | 20 | 2 | 0 | Think-aloud test mode, the tester drives |
+| 106 | `features/testkit.js` | 393 | 13 | 8 | 0 | Test with a friend. A think-aloud usability test: one person tries three tasks, and the coach records how each task went with one tap |
+| 107 | `features/thinkaloud.js` | 410 | 21 | 3 | 0 | Think-aloud test mode, the tester drives |
 | 108 | `features/kit.js` | 284 | 24 | 7 | 0 | The shared parts of the plan screens (the two paths, the odds, the simulators and the other screens of the Plan batch) |
 | 109 | `features/retire.js` | 574 | 24 | 0 | 0 | The one adapter to the retirement engine of Zack Williams (vendor/retire-engine.js, MIT license) |
 | 110 | `features/taxview.js` | 328 | 6 | 2 | 0 | The tax view. From pay before taxes, the filing status, the state and the pre-tax contributions: the top federal bracket, the average rate (federal pl... |
@@ -183,9 +183,9 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 169 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 170 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 171 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 172 | `data/patchnotes.js` | 626 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
-| 173 | `data/toollib.js` | 103 | 0 | 2 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
-| 174 | `features/founding.js` | 380 | 20 | 1 | 0 | Three small things for the soft launch |
+| 172 | `data/patchnotes.js` | 639 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 173 | `data/toollib.js` | 94 | 0 | 1 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
+| 174 | `features/founding.js` | 381 | 20 | 1 | 0 | Three small things for the soft launch |
 | 175 | `features/mycards.js` | 788 | 30 | 4 | 0 | Credit cards as a list of cards, not one balance |
 | 176 | `features/tally.js` | 175 | 8 | 1 | 0 | The dashboard of My Money in the Tally look (UX pass, items 24 to 27): the four key tiles at the top, the big three and where the money goes as the tw... |
 | 177 | `features/look.js` | 578 | 26 | 2 | 0 | The showcase screens of the dashboard look (DESIGN.md, "Reference: Tally"), built from the kit in screens/dash.js: the stat row of Home; the stat row,... |
@@ -212,7 +212,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 198 | `features/hhold.js` | 822 | 27 | 7 | 0 | Households together (run Finish everything partly built, Part 12) |
 | 199 | `features/lockset.js` | 153 | 1 | 2 | 0 | The settings sheet of App lock and passkeys (run Not built, groups 1 to 5, Part 10b): set a PIN by taps (twice, to be sure), add this device's own loc... |
 | 200 | `features/results.js` | 569 | 22 | 5 | 0 | Results first (run Results-first Home, items 1 and 2, from Eli's playtest: "I'm giving a ton of data but getting nothing back") |
-| 201 | `features/couldbe.js` | 1,682 | 63 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
+| 201 | `features/couldbe.js` | 1,701 | 64 | 11 | 0 | What it is / What it could be (run A, Nov 27 2026): the one opening of a new player |
 | 202 | `features/cbtax.js` | 456 | 10 | 8 | 0 | What it is / What it could be, Batch B phase 2a (Nov 27 2026): the way "Pay less tax on the way out" |
 | 203 | `features/cbflex.js` | 321 | 9 | 5 | 0 | What it is / What it could be, Batch B phase 2b (Nov 27 2026): the way "Bend your spending when markets fall" |
 | 204 | `features/cblater.js` | 244 | 7 | 3 | 0 | What it is / What it could be, Batch B phase 2c (Nov 27 2026): the way "Money that shows up later" |
@@ -227,7 +227,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 213 | `features/book.js` | 630 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
 | 214 | `features/questlog.js` | 547 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
 | 215 | `features/fbreport.js` | 262 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 216 | `features/built.js` | 2,011 | 4 | 34 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 216 | `features/built.js` | 2,018 | 4 | 35 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
