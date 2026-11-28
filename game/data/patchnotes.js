@@ -665,6 +665,17 @@ const PATCH_NOTES = [
       "The reveal shows your two numbers first and biggest, then the chart, your top 3 moves, and Keep it, share it, or tell Eli. Anything you count says how to undo it.",
     ],
   },
+  {
+    d: "2026-11-28",
+    t: "A faster start, a shorter menu, and a monthly check",
+    l: [
+      "Start faster: four doors under Start (FIRE, In debt, Couple or household, Self-employed) and ten starting points with typical numbers you confirm.",
+      "The menu starts short and grows as you use things. Show everything is one tap. Take the tour, in the menu, walks you around Home in about 90 seconds.",
+      "New on Home: two taps, 1 to 10, once a month. How sure you feel about your money, and how much joy your spending brings. You see where you started and where you are now.",
+      "Your year now has your money wins, your confidence and joy, and the time ledger. Your reveal has a card you can share or save as an image.",
+      "Also new: Graduate, a page on when you need a CPA, an estate attorney or a fee-only planner. Bank and card bonus moves show early when you have no costly debt.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */

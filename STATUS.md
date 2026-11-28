@@ -423,7 +423,7 @@ Tests: `game/tests/flow-one-pulse-forward-keep.js` (items 1, 3, 5), `game/tests/
 
 ## RUN 15: CC-1 "Five strategies" (Nov 27 2026)
 
-Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A, B and C are done. Parts D and E are open.
+Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A to E are done; what waits for Eli is in QUESTIONS 664.
 
 | Item | Status | What | Where |
 |---|---|---|---|
@@ -443,8 +443,12 @@ Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A, B and C are
 | C15. Start here doors | Done | Four outlined buttons under Start: FIRE (Near FI), In debt (Card debt), Couple or household (Getting married), Self-employed. Start stays the one filled button, and all are in the first window at 390 by 640. | `DOOR_SITS`, `doorSitGo` in `account/door.js` |
 | C16. Done-for-you setup | Partly: CSV built, PDF waits for Eli | A coach opens a client's game and reads a CSV file there. The totals go to the client as a list. Home says "Your coach filled this in. Please confirm." Each line: Confirm or Change, and Undo. No number changes without the client's tap. No database change. Not tried with a real coach account. | `features/cofill.js`; `imPut` in `features/import.js`; `account/coachpage.js` |
 | C17. Guided tour | Done | Nine stops on Home, one line each: Next, Back, Skip the tour. The place of the stop pulses, and it is the only pulse while the tour runs. Home offers it one time; the menu has "Take the tour". | `features/tour.js`; `tools/e2e/tour_walk.cjs` |
-| D. Better (18 to 20) | Open | | |
-| E. Cheaper (21 to 23) | Open | | |
-| The finish (publish, the summary, What's new entry) | Open | | |
+| D18. Confidence and Joy check | Done | One slim line on Home after the first result, and again after 30 days: Answer or Later. Two scales by taps, 1 to 10, each with an "i" and I'm not sure. The sheet shows the start and now in plain numbers; a lower number gets no color and no word. The same value as the rating on Ratios. The admin page: counts and averages, nothing under 5 players, no name. No database change. The opening is not longer. | `core/cjcore.js`, `features/cjcheck.js`, `amCjHTML` in `account/adminmore.js` |
+| D19. Your year | Done | Your year had net worth and debt paid off. New: the money wins of the year, the change of the two scales, the time ledger. A part with nothing to show says what it needs; no $0 where a change needs two check-ins. | `wrappedMore` in `features/cjcheck.js`; `wrappedSheetBase` in `screens/ui.js` |
+| D20. Graduate page | Partly: the names wait for Eli | Menu, Graduate: who to call next. A CPA, an estate attorney, a fee-only CFP: what each is, one line on when you need one, and one tap away what to ask and the names. Each name slot says Placeholder. No one pays to be listed. | `features/graduate.js` |
+| E21. Pays for itself | Partly: the fee waits for Eli | Only a coach sees it, in the game of a client: fees found, bonuses available and interest saved, added up next to the coach's fee. A part that was not found says Not found yet and is not counted. No fee set: no headline number. | `features/paysitself.js`, `js/math/coachfee.js`, `data/offer.js` |
+| E22. Coaching page | Partly: six placeholders wait for Eli | `/coaching/`: the offer, the price, the payment-plan line, the guarantee, the founding-cohort note and the booking button, each a marked Placeholder until filled. The chart: one portfolio over 30 years with a 1% yearly fee next to no yearly fee (and the flat fee once the price is set), example values by tap, Show the math. Marked noindex while a draft. | `coaching/index.html`, `tools/e2e/coaching_walk.cjs` |
+| E23. Bonus moves early | Done | A player with no debt at 8% or more sees the Bank bonus loop and the Card welcome bonus on the first screen of the ways to get there sooner. A player with such debt sees them under the ways that do not fit yet, with the reason. | `CBM_BONUS`, `cbMovesFirst` in `features/cbmoves.js`; `data/strategies.js` |
+| The finish | Done | One What's new entry for CC-1. Both suites, the walks and the layout check ran. Published with the two-stage script. | `game/data/patchnotes.js`, `tools/promote.sh` |
 
-Questions and the placeholders of part A: 661. Of part B: 662. Of part C: 663.
+Questions and the placeholders of part A: 661. Of part B: 662. Of part C: 663. Of parts D and E, and one list of all placeholders of CC-1: 664.

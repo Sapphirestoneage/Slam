@@ -38,6 +38,6 @@ test('the words: no promise of a result, no named firm, no verdict word, no em d
   assert.doesNotMatch(words, /\b(you will (earn|make|save)|guaranteed returns?|get rich|double your|beat the market)\b/i);
   assert.doesNotMatch(page, /\b(Vanguard|Fidelity|Schwab|Betterment|Wealthfront|Edward Jones|Merrill|Morgan Stanley|Empower|Facet)\b/i, 'a 1% AUM advisor is generic');
   assert.doesNotMatch(words, /\b(mistake|failed|behind|off track)\b/i);
-  assert.doesNotMatch(page, /—/);
+  assert.ok(!page.includes(String.fromCharCode(8212)));
   assert.doesNotMatch(page, /#(f00|ff0000|e5484d|d32f2f)\b|\bred\b/i, 'no red');
 });
