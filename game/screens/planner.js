@@ -878,7 +878,7 @@ const MENU_GROUPS = [
       "nxa",
     ],
   ],
-  ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
+  ["learn", "📚", "Learn", ["glossary", "tour", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
   ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode", "lsopen", "crg", "hunt"]],
   ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag", "lock"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],

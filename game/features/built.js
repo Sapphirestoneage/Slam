@@ -174,7 +174,21 @@ const WB = [
     "Not built. When it is, a photo goes to Claude only after a clear yes each time, and only the numbers are kept.",
     null,
   ],
-  ["in", "A three-tap tour of the tabs", "b", () => WB_HAS("tour") && WB_FN("tourSheet"), "", "tour"],
+  [
+    "in",
+    "A guided tour of about 90 seconds: nine stops on Home, one line each, Next and Skip",
+    "b",
+    () =>
+      WB_HAS("tour") &&
+      WB_HAS("tournext") &&
+      WB_HAS("tourback") &&
+      WB_HAS("tourdone") &&
+      WB_FN("tourPaint") &&
+      typeof TOUR !== "undefined" &&
+      TOUR.length <= 10,
+    "Run CC-1, item 17. A small card names one place of Home in one line, and that place pulses. While the tour runs it is the only pulse. Home offers it one time, and the menu row Take the tour starts it again.",
+    "tour",
+  ],
   ["in", "60-second find-your-era demo", "n", null, "Not built.", null],
   [
     "in",

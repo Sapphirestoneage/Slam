@@ -682,7 +682,7 @@ function home() {
   const back = typeof homeBackSync === "function" ? homeBackSync() : null;
   let h = homeTop();
   if (typeof homeRevealRow === "function") h = homeRevealRow(h); /* reveal.js: the row "Meet your character" */
-  if (typeof homeTourRow === "function") h = homeTourRow(h); /* drills.js: the row for the 3-tap tour */
+  if (typeof homeTourRow === "function") h = homeTourRow(h); /* tour.js: the row for the guided tour */
   if (typeof homeKnowStrip === "function") h = homeKnowStrip(h); /* know.js: the strip "What you already know" */
   if (typeof homeConnectRow === "function") h = homeConnectRow(h); /* connect.js: the row "Just opened" */
   if (back) h = homeBackRow(h, back.c, back.w); /* back.js: the welcome-back row */
@@ -1395,6 +1395,7 @@ function sheet(fn) {
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
   if (typeof sheetQuest === "function") sheetQuest(fn); /* questlog.js: the trail of the last screens */
   if (typeof sheetRippleStart === "function") sheetRippleStart(was); /* feel.js: the profile before the answers */
+  if (typeof tourPause === "function") tourPause(); /* tour.js: the card of the tour waits while a sheet is open */
 }
 function sheetBase(fn) {
   SH = fn;
@@ -1429,6 +1430,7 @@ function closeSheet() {
   if (typeof closeSheetUx === "function") closeSheetUx(was);
   if (typeof closeSheetAddon === "function") closeSheetAddon(); /* addon.js: go back to the look of the player */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+  if (typeof tourKeep === "function") tourKeep(); /* tour.js: the card of the tour is back */
 }
 function closeSheetQuiet() {
   closeSheetBase();

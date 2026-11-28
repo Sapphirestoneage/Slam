@@ -684,6 +684,8 @@ function renderUxEnd(wel) {
     if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
     if (typeof fwKeep === "function") fwKeep(); /* firstweek.js: note once that this game had the calmer week */
     if (typeof homeNumsMove === "function") homeNumsMove(); /* look.js: a top number of Home that changed moves */
+    if (typeof tourKeep === "function")
+      tourKeep(); /* tour.js: the pulse of the tour, on the screen that was drawn again */
   } catch (e) {
     report(e, "ux.js: renderUxEnd");
   }

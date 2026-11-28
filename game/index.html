@@ -604,6 +604,14 @@ button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.
 .sheet:has(.cbfoot) .cbnext button,.sheet:has(.cbfoot) button:not(.cbnext):focus-visible{opacity:1}
 .sheet:has(.cbfoot) button:not(.cbnext):disabled{opacity:.55}
 .chips.cbnext{border-radius:14px;padding:8px;margin:-8px}
+/* run CC-1, item 17: the guided tour (features/tour.js). ONE PULSE: while the tour runs every other pulse stops, and only the place of the stop pulses. */
+body.touring .go,body.touring .pulse,body.touring .cbnext{animation:none!important}
+body.touring .tourpulse{animation:pulse 1.6s ease-in-out infinite!important;outline:3px solid var(--sap);outline-offset:3px;border-radius:12px}
+#tourcard{position:fixed;left:0;right:0;z-index:9000;display:flex;justify-content:center;padding:8px 12px;pointer-events:none}
+#tourcard[hidden]{display:none}#tourcard.up{top:0}#tourcard.down{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+#tourcard .tourin{pointer-events:auto;box-sizing:border-box;width:100%;max-width:520px;background:var(--panel2);border:2px solid var(--sap);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#tourcard .tourbtns{justify-content:flex-end;flex-wrap:wrap}#tourcard button{min-height:44px}#tourcard .tournext{min-width:96px;animation:none}
+@media (prefers-reduced-motion:reduce){body.touring .tourpulse{animation:none!important}}
 /* the row Back and Forward, the same on each screen of the flow */
 .cbnav{gap:8px;align-items:center;flex-wrap:nowrap}.cbnav .cbbk,.cbnav .cbfw{flex:1;min-height:44px}
 /* the "i" of a part of the flow: the circle stays small, the place to tap is 44 by 44 */
@@ -724,7 +732,7 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="core/canonmath.js?v=ab4e0b0d"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=91745b7f"></script>
+<script src="screens/ui.js?v=7be79cc8"></script>
 <script src="screens/dash.js?v=10b0fec1"></script>
 <script src="features/games.js?v=18d5c6d2"></script>
 <script src="features/games2.js?v=fde225a0"></script>
@@ -733,9 +741,9 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/chart.js?v=4cba9439"></script>
 <script src="screens/profiles.js?v=f30b2d3a"></script>
 <script src="screens/smart.js?v=bb2d9fd3"></script>
-<script src="screens/planner.js?v=ad168a0e"></script>
+<script src="screens/planner.js?v=3dca8c91"></script>
 <script src="account/cloud.js?v=575526c7"></script>
-<script src="screens/ux.js?v=78d7df5a"></script>
+<script src="screens/ux.js?v=c831be16"></script>
 <script src="core/metrics.js?v=a3031b4b"></script>
 <script src="features/debts.js?v=03c85bb0"></script>
 <script src="features/import.js?v=1e499e73"></script>
@@ -743,7 +751,8 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/quick.js?v=8123454d"></script>
 <script src="features/reveal.js?v=d566dc5f"></script>
 <script src="features/moneylog.js?v=8ce666a3"></script>
-<script src="features/drills.js?v=5fdcf9cd"></script>
+<script src="features/drills.js?v=23e72816"></script>
+<script src="features/tour.js?v=6ead36a0"></script>
 <script src="features/gig.js?v=6598de10"></script>
 <script src="features/know.js?v=a3812f85"></script>
 <script src="features/fair.js?v=fe4d6db4"></script>
@@ -895,6 +904,6 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/book.js?v=cf713f1a"></script>
 <script src="features/questlog.js?v=1f871118"></script>
 <script src="features/fbreport.js?v=e6fc3454"></script>
-<script src="features/built.js?v=2dee3d62"></script>
+<script src="features/built.js?v=31108f2f"></script>
 </body>
 </html>
