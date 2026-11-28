@@ -306,8 +306,8 @@
   };
   const h1 = amHTML();
   chk(
-    "the five sections are collapsed, and a failed save shows in amber",
-    (h1.match(/<details class="card"/g) || []).length === 5 &&
+    "the six sections are collapsed, and a failed save shows in amber",
+    (h1.match(/<details class="card"/g) || []).length === 6 &&
       !/<details[^>]* open/.test(h1) &&
       h1.includes("#ffb648") &&
       h1.includes("permission denied") &&

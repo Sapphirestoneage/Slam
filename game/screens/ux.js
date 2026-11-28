@@ -142,7 +142,9 @@ function homeQuadTop(h) {
   const fw =
     (typeof homeFwNote === "function" ? homeFwNote() : "") +
     /* cofill.js: one line while a list of the coach waits for the player to confirm */
-    (typeof homeCoachFill === "function" ? homeCoachFill() : "");
+    (typeof homeCoachFill === "function" ? homeCoachFill() : "") +
+    /* cjcheck.js: one line when the Confidence and Joy check is due (at the start, then each month) */
+    (typeof homeCjNote === "function" ? homeCjNote() : "");
   /* look.js: the four top numbers, one row */
   const stat = typeof homeStatRow === "function" ? homeStatRow(C(), D) : "";
   const top =

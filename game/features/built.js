@@ -2122,6 +2122,29 @@ const WB = [
     "Run CC-1, item 16. A coach opens the game of a client, reads a CSV file of a bank or card in the browser, and sends the monthly totals as a list. Home then says: Your coach filled this in. Please confirm. Each line has Confirm and Change, and each tap can be undone. Nothing becomes your number without your tap. Not built: statement files that are not CSV (PDF). They wait for Eli.",
     null,
   ],
+  [
+    "in",
+    "Confidence and Joy check: two taps, 1 to 10, at the start and then each month",
+    "b",
+    () =>
+      WB_HAS("cj") &&
+      WB_HAS("cjset") &&
+      WB_HAS("cjlater") &&
+      WB_FN("homeCjNote") &&
+      WB_FN("cjChange") &&
+      WB_FN("cjDue") &&
+      WB_FN("cjStats"),
+    "Run CC-1, item 18. One slim line on Home asks after your first result, never before it, and again each month: Answer or Later. Two scales by taps, each with I'm not sure. The sheet shows the start and now in plain numbers, with no word on a lower number. The confidence tap is the same value as the rating of Financial confidence on Ratios. The admin page shows counts and averages only, and nothing under five players.",
+    "cj",
+  ],
+  [
+    "in",
+    "Your year: the money wins, confidence and joy, and the time ledger",
+    "b",
+    () => WB_HAS("wrapped") && WB_FN("wrappedMore") && WB_FN("cjYearRead") && WB_FN("cjYear"),
+    "Run CC-1, item 19. Your year had the change of net worth and the debt paid off. New: the money wins of the year, the change of the two scales inside the year, and the time ledger. A part with nothing to show says what it needs, and a change that needs two saved check-ins says Not yet in place of $0.",
+    "wrapped",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

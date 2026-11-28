@@ -289,6 +289,7 @@ Object.assign(ACT, {
     if (!Number.isInteger(v) || v < 1 || v > RA_CONF_MAX) return;
     c.x = c.x || {};
     c.x.conf = c.x.conf && c.x.conf.v === v ? null : { v, d: todayISO() }; /* a second tap clears it */
+    if (typeof cjFromRating === "function") cjFromRating(c); /* cjcheck.js: the same tap is today's confidence check */
     save();
     drawSheet();
   },

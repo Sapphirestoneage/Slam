@@ -8,7 +8,8 @@
                admin_health and admin_backup (supabase/migrations/20261124170000_roles_audit_coach.sql).
                The table reports (supabase/migrations/20261125190000_reports.sql).
    OUTPUT      Functions: amAction, amAuditRows, amHealthRows, amLoad, amHTML, amClick, amReportsHTML,
-               amReportWho, amReportClick, amFirstHTML (the time to the first number, core/firstnum.js).
+               amReportWho, amReportClick, amFirstHTML (the time to the first number, core/firstnum.js),
+               amCjHTML (the Confidence and Joy check, core/cjcore.js).
    DEPENDS ON  core/report.js, core/reportcore.js (the rows of the inbox). admin.html gives sb, esc, day
                and S (the accounts), and calls amLoad, amHTML and amClick.
                Only admin.html loads this file.
@@ -99,6 +100,7 @@ function amHTML() {
   return (
     amReportsHTML() +
     amFirstHTML() +
+    amCjHTML() +
     `<details class="card" style="padding:0 14px"><summary>Health${H && H.fails7 ? ` <span class="pill" style="border-color:#ffb648;color:#ffb648">${H.fails7} failed ${H.fails7 === 1 ? "save" : "saves"}</span>` : ""}</summary><div class="tools">${
       H
         ? `<div class="nums">${amHealthRows(H)
@@ -136,6 +138,25 @@ function amFirstHTML(games) {
       ? `<div class="nums">${row("Median", T.medS, T.medT)}${row("Longest", T.maxS, T.maxT)}<span>Players counted <b>${T.n}</b></span><span>Took over 2 minutes <b>${T.over}</b></span></div><p${T.late ? ' style="color:#ffb648"' : ""}>Target: under 2 minutes.${T.late ? " The median is over it now." : ""}</p>`
       : `<p class="muted">No new player has reached the first number yet. Target: under 2 minutes.</p>`
   }${AM.first ? "" : `<p class="muted">Visitors with no account are not counted yet: that part waits for the database file ${esc(typeof FN_FILE === "string" ? FN_FILE : "")} (supabase/migrations). Players with an account are counted from their saved game.</p>`}</div></details>`;
+}
+/* THE CONFIDENCE AND JOY CHECK (run CC-1, item 18): counts and averages across players. The math is cjStats() in
+   core/cjcore.js. games: the saved games of the admin page (S.games). No name, no account, and no number at all
+   while fewer than CJ_PLAYERS players answered, so no one person can be picked out. No color: a lower average is
+   shown plainly. */
+function amCjHTML(games) {
+  if (typeof cjStats !== "function") return "";
+  const G1 = games || (typeof S !== "undefined" && S && S.games) || {},
+    T = cjStats(cjRows(G1)),
+    one = v => String(Math.round(v * 10) / 10),
+    part = (n, P) =>
+      P.first === null
+        ? `<span>${esc(n)} <b>fewer than ${CJ_PLAYERS} answers</b></span>`
+        : `<span>${esc(n)} at the first check <b>${one(P.first)}</b></span><span>${esc(n)} at the latest check <b>${one(P.last)}</b></span><span>${esc(n)}, players with two checks <b>${P.n2}</b></span>${P.change === null ? "" : `<span>${esc(n)}, their average change <b>${P.change > 0 ? "+" : ""}${one(P.change)}</b></span>`}`;
+  return `<details class="card" style="padding:0 14px"><summary>Confidence and joy${T.show ? ` <span class="pill">${T.n} players</span>` : ""}</summary><div class="tools"><p class="muted">Two tap scales, 1 to 10, at the start and then each month. Averages across players only: no name and no account is shown here.</p>${
+    T.show
+      ? `<div class="nums"><span>Players who answered <b>${T.n}</b></span>${part("Confidence", T.conf)}${part("Joy", T.joy)}</div>`
+      : `<p class="muted">Fewer than ${CJ_PLAYERS} players answered so far. Nothing shows until ${CJ_PLAYERS} did, so that no one person can be picked out.</p>`
+  }</div></details>`;
 }
 /* Who made a report: the email of the account, from the list of the admin page. */
 function amReportWho(r, users) {

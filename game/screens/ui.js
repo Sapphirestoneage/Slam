@@ -2463,15 +2463,17 @@ function wrappedSheetBase() {
     yr = todayISO().slice(0, 4),
     ms = c.moves.filter(m => m.d.slice(0, 4) === yr),
     paid = ms.filter(m => m.t === "paid").reduce((a, m) => a + m.amt, 0),
-    extra = ms.filter(m => m.t === "extra").reduce((a, m) => a + m.amt, 0);
+    extra = ms.filter(m => m.t === "extra").reduce((a, m) => a + m.amt, 0),
+    two = w.sessions >= 2; /* a change needs two saved check-ins: with fewer, the tile says so and shows no $0 */
   sheet(
     () =>
       head("Your year so far", w.year) +
       `<div class="grid2">
- <div class="tile"><div class="tiny muted">Own minus owe</div><div class="big">${signed(w.nwChange)}</div></div><div class="tile"><div class="tiny muted">Debt paid off</div><div class="big">${money(Math.max(w.debtPaid, paid))}</div></div>
+ <div class="tile"><div class="tiny muted">Own minus owe</div><div class="big">${two ? signed(w.nwChange) : "Not yet"}</div>${two ? "" : `<div class="tiny muted">Needs two saved check-ins this year.</div>`}</div><div class="tile"><div class="tiny muted">Debt paid off</div><div class="big">${two || paid > 0 ? money(Math.max(w.debtPaid, paid)) : "Not yet"}</div>${two || paid > 0 ? "" : `<div class="tiny muted">Needs two saved check-ins this year.</div>`}</div>
  <div class="tile"><div class="tiny muted">Extra money brought in</div><div class="big">${money(extra)}</div></div><div class="tile"><div class="tiny muted">Eras climbed</div><div class="big">${w.eras}</div></div>
  <div class="tile"><div class="tiny muted">Days you showed up</div><div class="big">${w.days}</div></div><div class="tile"><div class="tiny muted">Payday rounds</div><div class="big">${w.paydays}</div></div>
  <div class="tile"><div class="tiny muted">Skills learned</div><div class="big">${w.skills}</div></div><div class="tile"><div class="tiny muted">Badges earned</div><div class="big">${w.badges}</div></div></div>
+ ${typeof wrappedMore === "function" ? wrappedMore(c, w) : "" /* cjcheck.js: the money wins, confidence and joy, the time ledger */}
  <button class="ghost wide" data-a="sharewrap">Make a share card · no dollar amounts</button>
  ${w.feeling ? `<div class="banner small">Most days, money felt: <b>${esc(w.feeling)}</b>.</div>` : ""}<div class="tiny muted">${c.demo ? "Sample history, so you can see how this fills in." : "This fills in as you play."}</div><button class="primary wide" data-a="close">Close</button>`
   );
