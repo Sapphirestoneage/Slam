@@ -2153,6 +2153,27 @@ const WB = [
     "Run CC-1, item 20. Menu, Graduate: who to call next. One card for each kind: what it is, when you need one, and behind one tap what to ask and the names. Not built: the names. Each slot says Placeholder until Eli adds a name. No one pays to be on the page.",
     "gradpage",
   ],
+  [
+    "in",
+    "For a coach: Pays for itself, one number for the first call",
+    "p",
+    () =>
+      WB_HAS("pfi") &&
+      WB_FN("pfiRead") &&
+      WB_FN("coPaysForItself") &&
+      WB_FN("homePfiRow") &&
+      typeof COACH_OFFER !== "undefined",
+    "Run CC-1, item 21. Only a coach sees it, in the game of a client. The fees the fee X-ray found, the bank and card bonus moves that fit, and the interest the Debt plan saves, added up next to the coach's one fee. A part that was not found says Not found yet and is not counted. Not built: the fee itself. It is one setting that Eli fills, and until then the screen shows no headline number.",
+    null,
+  ],
+  [
+    "in",
+    "Bank and card bonus moves show early for a player who fits",
+    "b",
+    () => WB_FN("cbMovesFirst") && typeof CBM_BONUS !== "undefined" && CBM_BONUS.length === 2,
+    "Run CC-1, item 23. In the opening, the list of ways to get there sooner shows the first three moves and, for a player with no debt at 8% or more, the Bank bonus loop and the Card welcome bonus, before Show all. A player with such debt gets neither: each one is under the ways that do not fit you yet, with the reason. No bank and no card is named.",
+    null,
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
