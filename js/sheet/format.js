@@ -119,6 +119,7 @@ export const FORMATS = [
   { version: 76, shape: '6ca1000e' }, // Nov 26 2026 (run Finish everything partly built, Part 20): M8J game feel (the finish line, past you, the bottleneck, made-up stories), app-only math
   { version: 77, shape: '30e9b1f9' }, // Nov 26 2026 (run Finish everything partly built, Part 21): M8X the canon rows finished (F-You money, the nine, the hand-off check, the noodle budget, pay yourself first, the M72 loop, YMOYL 1b and 3)
   { version: 78, shape: '75763c80' }, // Nov 27 2026 (run A, What it is / What it could be): M91 the two numbers and the layer chart year by year, app-only math
+  { version: 79, shape: 'de17e7be' }, // Nov 28 2026 (run CC-1, items 21 and 22): M8M the coaching fee (pays for itself, a flat fee next to a yearly fee on assets), app-only math; three rules for the coaching page's chart
 ];
 export const FORMAT_VERSION = FORMATS.at(-1).version;
 export const formatOf = shape => FORMATS.findLast(f => f.shape === shape)?.version ?? null; // the newest version with that shape (batch 55: a type change keeps the shape)

@@ -1783,6 +1783,41 @@ def play_check(fn, x, o, ck):
         ck('the date', o['d'] == cur.isoformat(), True)
 
 
+# The coaching fee (run CC-1, items 21 and 22): written out a second time, from the definitions. A part that was not
+# found has no amount and is not a zero. The yearly fee on assets is taken at the end of each year, after the growth
+# and the amount put in; the flat fee leaves the portfolio on day one.
+def coach_check(fn, x, o, ck):
+    def num(v):
+        return v is not None and v != ''
+    if fn == 'coFeesAbove':
+        want = None if not (num(x.get('year')) and num(x.get('total'))) else max(0.0, x['year'] - x['total'] * (x.get('low') or 0))
+        ck('fees above the line', o['v'], want, 0.005)
+    elif fn == 'coPaysForItself':
+        got = [p['amount'] for p in x['parts'] if num(p.get('amount'))]
+        total = sum(max(0, a) for a in got) if got else None
+        fee = x.get('fee') if num(x.get('fee')) and x['fee'] > 0 else None
+        ready = total is not None and fee is not None
+        ck('total', o['total'], total, 0.005); ck('missing', o['missing'], len(x['parts']) - len(got), 0)
+        ck('ready', o['ready'], ready); ck('complete', o['complete'], bool(got) and len(got) == len(x['parts']))
+        ck('net', o['net'], total - fee if ready else None, 0.005); ck('times', o['times'], total / fee if ready else None, 1e-9)
+        ck('covers', o['covers'], (total >= fee) if ready else None)
+    elif fn == 'coFlatVsAum':
+        n, g, a, put = x['years'], x['growth'], x['aum'], x.get('add') or 0
+        flat = x.get('flat') if num(x.get('flat')) and x['flat'] > 0 else None
+        none, au, fees, mid = x['start'], x['start'], 0.0, None
+        fl = None if flat is None else max(0.0, x['start'] - flat)
+        for y in range(1, n + 1):
+            none = none * (1 + g) + put
+            if fl is not None: fl = fl * (1 + g) + put
+            grown = au * (1 + g) + put
+            fees += grown * a; au = grown * (1 - a)
+            if y == -(-n // 2): mid = au
+        ck('no fee', o['none'], none, 0.01); ck('yearly fee on assets', o['aum'], au, 0.01); ck('flat', o['flat'], fl, 0.01)
+        ck('fee dollars paid', o['aumFees'], fees, 0.01); ck('what the yearly fee cost', o['aumCost'], none - au, 0.01)
+        ck('what the flat fee cost', o['flatCost'], None if fl is None else none - fl, 0.01); ck('gap', o['gap'], None if fl is None else fl - au, 0.01)
+        ck('half way', o['mid'], mid, 0.01)
+
+
 # Households together, Same question (run Finish everything partly built, Part 12): each question's id, its number of
 # options and whether they have an order ('scale') or not ('pick'), written out here a second time.
 HH_Q = [('ask', 5, 'scale'), ('cushion', 4, 'scale'), ('split', 4, 'pick'), ('accounts', 3, 'scale'), ('stop', 5, 'scale'),
@@ -2221,6 +2256,8 @@ def run(cases, ref, il=None):
             own_check(fn, x, o, ck, law.ref)
         elif fn in ('plBonus', 'plHunt', 'plChallenge', 'plFicoRound', 'plNextMonthly'):
             play_check(fn, x, o, ck)
+        elif fn in ('coFeesAbove', 'coPaysForItself', 'coFlatVsAum'):
+            coach_check(fn, x, o, ck)
         elif fn == 'ratios':
             ratio_check(x, o, ck)
         elif fn in ('hmRoommateExit', 'hmUntangle'):

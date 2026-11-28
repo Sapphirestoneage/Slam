@@ -17,6 +17,7 @@ import { QC_CUT_RULE, QC_CUT_SOURCE } from '../math/quick.js';
 import { CR_VEST, CR_VEST_SOURCE, CR_RULES } from '../math/career.js';
 import { TP_RULES, TP_RULES_SOURCE } from '../math/trip.js';
 import { IV_RULES, IV_SOURCES, IV_GUIDE_SOURCE, ivGuide } from '../math/invest.js';
+import { CO_RULES, CO_SOURCES } from '../math/coachfee.js';
 const ivGuideAt = age => ivGuide(age, 65).stock;
 import { GIG_OWNER_RATE, GIG_PF_SAMPLE } from '../math/gig.js';
 import { THRESHOLDS, PAYOFF, AREAS as SCORE_AREAS } from './scorecard.js';
@@ -307,6 +308,10 @@ export const ASSUMPTIONS = [
   { id: 'rules.careerVestGraded', name: 'CareerVestGraded', label: 'Vesting: a 6-year graded schedule, the share vested after 2 years (then 20% more each year, all after 6)', unit: 'pct', get: () => CR_VEST.find(v => v.id === 'graded6').steps[1][1] / 100, source: `${CR_VEST_SOURCE}; js/math/career.js`, date: '2026-11-25' },
   { id: 'rules.careerDaysPerMonth', name: 'CareerDaysPerMonth', label: 'Career and education: days in a month, to say a change of the FI date in days (365.25 / 12)', unit: 'number', get: () => CR_RULES.daysPerMonth, source: RULE('js/math/career.js: a year of 365.25 days over 12 months'), date: '2026-11-25' },
   // Run Finish everything partly built, Part 13 (M8I): investing. The one-stock line was read on finra.org Nov 26 2026.
+  // Run CC-1, item 22 (M8M): the coaching page's chart. Example rates from the owner's brief, not market figures.
+  { id: 'rules.coachYears', name: 'CoachYears', label: 'Coaching page: the years the flat fee and the yearly fee on assets are compared over', unit: 'number', get: () => CO_RULES.years, source: `${CO_SOURCES.years}; js/math/coachfee.js`, date: '2026-11-28' },
+  { id: 'rules.coachGrowth', name: 'CoachGrowth', label: 'Coaching page: the yearly growth of the example portfolio, before inflation', unit: 'pct', get: () => CO_RULES.growth, source: `${CO_SOURCES.growth}; js/math/coachfee.js`, date: '2026-11-28' },
+  { id: 'rules.coachAumRate', name: 'CoachAumRate', label: 'Coaching page: the example yearly fee on assets (a 1% AUM advisor)', unit: 'pct', get: () => CO_RULES.aum, source: `${CO_SOURCES.aum}; js/math/coachfee.js`, date: '2026-11-28' },
   { id: 'rules.investOneStock', name: 'InvestOneStock', label: 'Investing: one company\'s stock (the employer\'s included) over this share of all investments gets a line', unit: 'pct', get: () => IV_RULES.oneStock, source: IV_SOURCES.oneStock, date: '2026-11-26' },
   { id: 'rules.investDrift', name: 'InvestDrift', label: 'Investing: the household stock share this far from the target gets a line', unit: 'pct', get: () => IV_RULES.drift, source: IV_SOURCES.drift, date: '2026-11-26' },
   { id: 'rules.investHeatYears', name: 'InvestHeatYears', label: 'Invest or pay debt: the years each square of the grid compares', unit: 'number', get: () => IV_RULES.heatYears, source: IV_SOURCES.heat, date: '2026-11-26' },

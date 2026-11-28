@@ -145,6 +145,12 @@ grown month by month, the gap and the two ways to close it, and the month at tod
 balance); the race against your past self on random snapshots (the two stretches picked by their definition, the pace
 of each, who leads); and the bottleneck finder on random facts, taps and picks (the points written out a second time).
 
+Since Nov 28 2026 (run CC-1, items 21 and 22) it also covers the coaching fee (`js/math/coachfee.js`, the one engine
+of the coach's "Pays for itself" in the game and of the chart on the page /coaching/): the fees above a low-cost
+line; the parts a first call found, with some parts missing and the fee sometimes not set (the total of the parts
+that were found, how many are missing, and the net and the times only when both are there); and one portfolio grown
+year by year with a flat fee taken on day one, sometimes not set, next to a yearly fee on the assets.
+
 Since Nov 26 2026 (run Finish everything partly built, Part 21) it also covers the canon rows (`js/math/canonmath.js`,
 M8X, the one engine of the web app and the game): F-You money with the work costs and the health cover each left out at
 times (the months, the noodle months, the next mark and what reaches it); the hand-off check (your hour, the help's hour);
