@@ -155,7 +155,7 @@ function cjSheet() {
   return (
     head("Me", "Confidence and joy") +
     dkCaption("Two taps, once a month. Your own record of how money feels.") +
-    `<div class="card stack" style="gap:14px" data-fid="cj:ask">${CJ_Q.map(Q => cjScale(Q, t[Q.k] || null)).join("")}${
+    `<div class="card dkcard stack" style="gap:14px" data-fid="cj:ask">${CJ_Q.map(Q => cjScale(Q, t[Q.k] || null)).join("")}${
       R.today
         ? `<div class="banner small" role="status" data-fid="cj:saved"><b>Saved for today.</b> Tap a number again to change it. The next check is on or after ${esc(cjDate(cjDue(R.log, todayISO()).next))}.</div>`
         : `<div class="tiny muted">Each tap saves by itself. You can skip one: "${esc(typeof NOT_SURE === "string" ? NOT_SURE : "I'm not sure")}" leaves it open.</div>`
