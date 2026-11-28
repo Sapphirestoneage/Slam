@@ -11,6 +11,8 @@
                guessed in code. No add-on is named here.
    ========================================================================= */
 const COACH_OFFER = {
+  /* What the one offer is, in the owner's words (one or two sentences). null: not set yet. */
+  what: null,
   /* The one price, in dollars, as a number (3000, not "$3,000"). null: not set yet. */
   fee: null,
   /* The payment-plan line, in the owner's words. null: not set yet. */
