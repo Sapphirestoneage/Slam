@@ -6,8 +6,10 @@
                player (the actions in OUTPUT).
    OUTPUT      9 functions, with imAppCat and imAppCols (Rocket Money's own export: its columns and its
                categories, run Finish everything partly built, Part 18). Parts of functions in other files:
-               lootTextImport, moneyTabImport, imAppCols (csvRows in games2.js). Actions (ACT): import2, imtog,
-               imcat, imapply, imundo.
+               lootTextImport, moneyTabImport, imAppCols (csvRows in games2.js). imPut: the one function
+               that writes a total of a file to the profile. Actions (ACT): import2, imtog, imcat, imapply,
+               imundo. features/cofill.js adds the way of a coach by three named parts: cfImportWords and
+               cfSentView (imSheet), cfSend (ACT.imapply).
    DEPENDS ON  core/engine.js, screens/ui.js, features/games2.js.
    RULES       The game asks each time before it reads a file (a rule from the owner). The rows of the
                file are dropped when the sheet closes.
@@ -201,6 +203,17 @@ function imRead(rows, over) {
       .map(u => Object.assign(u, { mo: Math.round(u.a / months) })),
   };
 }
+/* WRITE ONE TOTAL OF A FILE to the profile, at the level Close. k: a name of c.spends, or "_inc" for the one line
+   of money coming in. The one place that does it: the player's own file (ACT.imapply) and a line of the coach
+   that the player confirms (cofill.js). Returns true when a row was written. */
+function imPut(c, k, amt) {
+  const r = k === "_inc" ? ((c.incs || []).length === 1 ? c.incs[0] : null) : (c.spends || []).find(s => s.k === k);
+  if (!r) return false;
+  r.amt = amt;
+  r.s = true;
+  r.cf = 2;
+  return true;
+}
 function imMonthName(m) {
   return (
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m % 12] +
@@ -211,9 +224,13 @@ function imMonthName(m) {
 function imSheet() {
   const c = C(),
     w = W,
-    consent = `<div class="tiny muted">The file is read on this phone and never sent anywhere. Only the monthly totals you say yes to are kept.</div>`,
+    CW = typeof cfImportWords === "function" ? cfImportWords(c) : null /* cofill.js: the words for a coach */,
+    consent = CW
+      ? CW.consent
+      : `<div class="tiny muted">The file is read on this phone and never sent anywhere. Only the monthly totals you say yes to are kept.</div>`,
     pick = lab =>
       `<label class="filebtn">${lab}<input type="file" accept=".csv,text/csv,text/plain" data-loot="1"></label>`;
+  if (w.sent) return cfSentView(w); /* cofill.js: a coach sent the totals to the client to confirm */
   if (w.done)
     return (
       head("My Money", "Filled in") +
@@ -253,7 +270,7 @@ function imSheet() {
     (!R.card && oneInc
       ? `<button class="rowbtn imrow ${use._inc ? "on" : ""}" data-a="imtog" data-v="_inc"><span class="pn"><b>Also update what comes in</b><div class="tiny muted">${esc(c.incs[0].k)}: ${money(c.incs[0].amt)} → ${money(R.income)}</div></span><span class="pill ${use._inc ? "okp" : ""}">${use._inc ? "Yes" : "No"}</span></button>`
       : "") +
-    `<button class="primary wide" data-a="imapply">Use these numbers</button>${pick("Add another file (a second card or account)")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
+    `<button class="primary wide" data-a="imapply">${CW ? esc(CW.go) : "Use these numbers"}</button>${pick("Add another file (a second card or account)")}${consent}${w.err ? `<div class="banner small">${esc(w.err)}</div>` : ""}`
   );
 }
 Object.assign(ACT, {
@@ -277,8 +294,15 @@ Object.assign(ACT, {
     const c = C(),
       w = W;
     if (!w || w.kind !== "import" || !w.rows.length) return;
-    const R = imRead(w.rows, w.over),
-      pr = D.realm,
+    const R = imRead(w.rows, w.over);
+    /* cofill.js: a coach in the game of a client changes no number. The totals go to the client as a list. */
+    if (typeof cfCoach === "function" && cfCoach()) {
+      const sent = cfSend(c, R, w.use);
+      if (!sent.length) return closeSheet();
+      W = { kind: "import", rows: [], files: 0, over: {}, use: {}, sent };
+      return drawSheet();
+    }
+    const pr = D.realm,
       prev = { spends: JSON.parse(JSON.stringify(c.spends)), incs: JSON.parse(JSON.stringify(c.incs)) },
       done = [];
     IM_CATS.forEach(x => {
@@ -286,15 +310,11 @@ Object.assign(ACT, {
       const r = (c.spends || []).find(s => s.k === x[0]);
       if (!r) return;
       done.push([x[0], r.amt, R.avg[x[0]]]);
-      r.amt = R.avg[x[0]];
-      r.s = true;
-      r.cf = 2;
+      imPut(c, x[0], R.avg[x[0]]);
     });
     if (w.use._inc && !R.card && c.incs.length === 1) {
       done.push([c.incs[0].k, c.incs[0].amt, R.income]);
-      c.incs[0].amt = R.income;
-      c.incs[0].s = true;
-      c.incs[0].cf = 2;
+      imPut(c, "_inc", R.income);
     }
     if (!done.length) {
       closeSheet();

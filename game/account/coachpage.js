@@ -373,7 +373,7 @@ function cpClientCard(cl) {
     .join("")}</ul><button data-a="seen" data-o="${cl.owner}">Mark as seen</button></div>
   ${typeof cpxCard === "function" ? cpxCard(cl) : "" /* coachplus.js: the stage, the milestones, before and after */}
   ${typeof lcClientRow === "function" ? lcClientRow(cl) : "" /* livecoach.js: Start session */}
-  <button class="primary wide" data-a="open" data-o="${cl.owner}" data-k="${cpEsc(cl.names)}">Open game</button><p class="muted">What you change there saves to their game, and they see a note that their coach made a change.</p>
+  <button class="primary wide" data-a="open" data-o="${cl.owner}" data-k="${cpEsc(cl.names)}">Open game</button><p class="muted">What you change there saves to their game, and they see a note that their coach made a change.</p><p class="muted" data-fid="cp:fill"><b>Done-for-you setup.</b> To fill in their spending from a CSV file of their bank or card: Open game, then the row "Fill in from a CSV file" on Home. The totals go to them as a list, "Your coach filled this in. Please confirm." No number changes until they tap. Other statement files (PDF) are not read yet.</p>
   <div class="who"><b>Assign a quest</b><p class="muted">One tap puts it in their Next Steps, marked "From your coach".</p>${
     cl.people.length > 1
       ? `<div class="chips">${cl.people.map(p => `<button class="chip ${who === p.i ? "on" : ""}" data-a="who" data-o="${cl.owner}" data-v="${p.i}">${cpEsc(p.name)}</button>`).join("")}</div>`

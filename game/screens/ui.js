@@ -683,6 +683,8 @@ function home() {
   let h = homeTop();
   if (typeof homeRevealRow === "function") h = homeRevealRow(h); /* reveal.js: the row "Meet your character" */
   if (typeof homeTourRow === "function") h = homeTourRow(h); /* tour.js: the row for the guided tour */
+  if (typeof homeCoachFillRow === "function")
+    h = homeCoachFillRow(h); /* cofill.js: a coach reads a CSV file for the client */
   if (typeof homeKnowStrip === "function") h = homeKnowStrip(h); /* know.js: the strip "What you already know" */
   if (typeof homeConnectRow === "function") h = homeConnectRow(h); /* connect.js: the row "Just opened" */
   if (back) h = homeBackRow(h, back.c, back.w); /* back.js: the welcome-back row */

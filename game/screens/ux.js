@@ -139,7 +139,10 @@ function homeQuadTop(h) {
   /* cbreveal.js: the two numbers and the small layer chart of a player of What it could be */
   const cb = rs !== null && typeof homeCbTile === "function" ? homeCbTile(C(), D) : "";
   /* firstweek.js: one line, "New for you", when the other tabs are back */
-  const fw = typeof homeFwNote === "function" ? homeFwNote() : "";
+  const fw =
+    (typeof homeFwNote === "function" ? homeFwNote() : "") +
+    /* cofill.js: one line while a list of the coach waits for the player to confirm */
+    (typeof homeCoachFill === "function" ? homeCoachFill() : "");
   /* look.js: the four top numbers, one row */
   const stat = typeof homeStatRow === "function" ? homeStatRow(C(), D) : "";
   const top =

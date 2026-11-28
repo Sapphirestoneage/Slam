@@ -2106,6 +2106,22 @@ const WB = [
     "Run CC-1, item 14. Each Show the math ends with the two rates and the button Assumptions. The sheet lists each one with Usual or Yours. By a tap you change the age work is optional, the age your money lasts to, and how much Social Security your plan counts, each with Back to the usual value. The growth rate (7%), the take-out rate (4%) and the last age of the chart are shown and cannot be changed yet.",
     "assume",
   ],
+  [
+    "in",
+    "Done-for-you setup: your coach fills in from a CSV file, and you confirm each line",
+    "p",
+    () =>
+      WB_FN("cfSend") &&
+      WB_FN("cfPending") &&
+      WB_FN("cfTake") &&
+      WB_FN("homeCoachFill") &&
+      WB_FN("imPut") &&
+      WB_HAS("cfopen") &&
+      WB_HAS("cfyes") &&
+      WB_HAS("cfchg"),
+    "Run CC-1, item 16. A coach opens the game of a client, reads a CSV file of a bank or card in the browser, and sends the monthly totals as a list. Home then says: Your coach filled this in. Please confirm. Each line has Confirm and Change, and each tap can be undone. Nothing becomes your number without your tap. Not built: statement files that are not CSV (PDF). They wait for Eli.",
+    null,
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
