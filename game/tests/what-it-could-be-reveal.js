@@ -221,10 +221,10 @@
   /* run 14, item 9: the main button follows the row, so the start of its tag is cut off */
   const three = fid(h, "cb:end3").replace(/<button $/, "");
   chk(
-    "the reveal has the three buttons of the old last screen, in the owner's words and order, all quiet",
-    /* three buttons, and the small "i" of the group (run 14, item 7) */
-    (three.match(/<button(?! class="i )/g) || []).length === 3 &&
-      /data-a="cbsave">Keep my plan: make a free account<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="flag">Tell Eli what broke</.test(
+    "the reveal has the three buttons of the old last screen, in the owner's words and order, all quiet, and the image button of the results card",
+    /* three buttons, the image button of run CC-1 item 12, and the small "i" of the group (run 14, item 7) */
+    (three.match(/<button(?! class="i )/g) || []).length === 4 &&
+      /data-a="cbsave">Keep my plan: make a free account<[\s\S]*data-a="cbshare">Share my card<[\s\S]*data-a="cbcardimg">Get this card as an image<[\s\S]*data-a="flag">Tell Eli what broke</.test(
         three
       ) &&
       !/class="primary/.test(three) &&
@@ -277,20 +277,38 @@
       [card.yes, card.but].every(x => x.label && Array.isArray(x.lines) && x.lines.length && x.words) &&
       /\.png$/.test(card.file)
   );
-  chk("the card has no dollar amount", !/\$/.test(all) && !/\d{4,}/.test(all.replace(card.file, "")), all);
+  /* run CC-1, item 12: the results card. The era, the headline number with its age, the top 3 moves. */
   chk(
-    "the card says what the player sees: the two ages, the time between them, the names of what is counted",
-    card.yes.words === "FI at age " + V.N.is.age &&
+    "the results card has one figure in dollars, the FI number, and no other money figure",
+    (all.match(/\$/g) || []).length === 1 && card.net === cbM(V.N.could.shown) && card.mid === "My FI number",
+    all
+  );
+  chk(
+    "the results card says the era, the age of the FI number and the names of the top moves",
+    card.yes.label === "My era" &&
+      card.yes.words === eraName(derive(c)) &&
       card.but.words === "FI at age " + V.N.could.age &&
-      card.net.toLowerCase() === V.diff.time &&
-      card.but.lines.includes(cbWays().find(w => w.id === "ss").title) &&
+      card.but.lines.length <= 3 &&
+      card.but.lines.join("|") ===
+        cbTopMoves(c)
+          .map(r => r.name)
+          .join("|") &&
       card.foot.includes(TRUST_LINE)
   );
   chk(
-    "with more than three counted the card names three and counts the rest",
-    card.but.lines.length <= 4 &&
-      (V.items.filter(x => x.kind !== "card").length <= 3 || /^and \d+ more$/.test(card.but.lines[3]))
+    "the reveal shows the card small before the buttons, with the same words, and says what is on it",
+    (h2 =>
+      /class="tile small cbpeek"/.test(h2) &&
+      h2.includes(esc(card.net)) &&
+      h2.includes(esc(card.yes.words)) &&
+      /No other figure is on it/.test(h2) &&
+      !/Save/.test(fid(h2, "cb:end3")))((go("reveal"), ov()))
   );
+  chk(
+    "the image button makes the same card (with no canvas it says so and does not throw)",
+    ((W.msg = ""), X("cbcardimg"), /screenshot/.test(W.msg || ""))
+  );
+  chk("the painter ends a line that does not fit with three points", /\.\.\./.test(String(cbYbPaint)));
   chk(
     "the Yes, but card still paints with its own middle (the painter is shared, not copied)",
     cbYbCard(cbYbPick(c)).mid === undefined && /card\.mid \|\| "The net"/.test(String(cbYbPaint))

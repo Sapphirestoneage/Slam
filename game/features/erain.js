@@ -25,6 +25,9 @@
                math. The demo sends nothing: the answers stay on the device under one key, ER_KEY.
                erIn() reads what it knows and passes over the rest. It runs for a new player only
                (G.demo), one time: it removes the key.
+   LEAD        Run CC-1, item 11: the form before a call (intake/index.html) asks the same questions and
+               writes the same text with one more part, lead: 1 (erPack, erLead). erIn() then keeps
+               c.x.lead { d (the day), from: "intake" } on the new profile and opens the sign-up screen.
    COMPAT      One optional key on a profile (run 16): c.x.cb.era, the names of the setup answers that came
                from the demo (cush, debts, tax). An old saved game has none: the rest of setup then asks
                them, as before. One new key in the device storage: ER_KEY, a JSON text
@@ -215,8 +218,19 @@ function erAsked(A) {
   return ER_QS.filter(q => !q.when || q.when(A || {}));
 }
 /* The text that the demo keeps on the device for the game. */
-function erPack(A, day) {
-  return JSON.stringify({ v: ER_V, at: day || todayISO(), a: erClean(A) });
+function erPack(A, day, lead) {
+  return JSON.stringify(Object.assign({ v: ER_V, at: day || todayISO(), a: erClean(A) }, lead ? { lead: 1 } : {}));
+}
+/* True when that text is from the form before a call (intake/index.html, run CC-1, item 11): the person is a lead
+   of a coach. The same rules as erUnpack: a text of this version, not older than ER_DAYS days. */
+function erLead(text, day) {
+  if (!erUnpack(text, day)) return false;
+  try {
+    return JSON.parse(text).lead === 1;
+  } catch (e) {
+    if (typeof report === "function") report(e, "erain.js: erLead");
+    return false;
+  }
 }
 /* The answers from that text, or null: a text that is not JSON, a different version, or an old day. */
 function erUnpack(text, day) {
@@ -258,6 +272,14 @@ function erRead() {
     return null;
   }
 }
+function erReadLead() {
+  try {
+    return erLead(localStorage.getItem(ER_KEY));
+  } catch (e) {
+    report(e, "erain.js: erReadLead");
+    return false;
+  }
+}
 function erDrop() {
   try {
     localStorage.removeItem(ER_KEY);
@@ -276,7 +298,8 @@ function erIn() {
     if (!G.demo || !W || W.kind !== "cb") return false;
     const A = erRead();
     if (!A) return false;
-    const base = erBase(A);
+    const base = erBase(A),
+      lead = erReadLead(); /* the form before a call: the person is a lead of a coach */
     if (!base && W.step !== "entry") return false;
     erDrop();
     const a = erCb(A);
@@ -294,8 +317,12 @@ function erIn() {
     /* the picks become goals, as cbMake() in couldbe.js makes them */
     if (wants && wants.length && typeof wnGoals === "function")
       base.goals = wnGoals(Object.assign({}, base, { spend: Math.max(1, Math.round(a.spend.v)) }), wants);
+    /* run CC-1, item 11: the mark "new lead" stays on the profile, so the coach page can show it. The sign-up screen
+       opens next (door.js): the account is what lets the coach see the answers. */
+    if (lead) base.x.lead = { d: todayISO(), from: "intake" };
     W = { kind: "setup", mode: "new", step: 0, o: base, cbMade: true, erHome: true };
     finishSetup();
+    if (lead && typeof doorSignIn === "function" && !(typeof SUPA !== "undefined" && SUPA.uid)) doorSignIn("new");
     return true;
   } catch (e) {
     report(e, "erain.js: erIn");

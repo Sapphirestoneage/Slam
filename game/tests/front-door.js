@@ -428,6 +428,69 @@
     WB.some(r => /front door/i.test(r[1]) && r[2] === "b" && r[3]() === true)
   );
 
+  /* run CC-1, item 15: the four doors "Start here" */
+  reset();
+  G = fresh();
+  doorGate(done);
+  const LD = kids[0].innerHTML;
+  chk(
+    "the landing has four doors, outlined, after Start and before Sign in, and Start stays the one filled button",
+    DOOR_SITS.length === 4 &&
+      DOOR_SITS.every(D => LD.includes('class="door-sit" data-door="sit" data-sit="' + D.id + '">' + D.l + "<")) &&
+      LD.indexOf('data-door="start"') < LD.indexOf('data-door="sit"') &&
+      LD.indexOf('data-door="sit"') < LD.indexOf('data-door="in"') &&
+      (LD.match(/class="door-go"/g) || []).length === 1 &&
+      /\.door-sit\{[^}]*min-height:44px[^}]*border:2px solid[^}]*background:transparent/.test(LD)
+  );
+  chk(
+    "the doors are FIRE, In debt, Couple or household and Self-employed, each with a starting point of the table",
+    DOOR_SITS.map(D => D.l).join("|") === "FIRE|In debt|Couple or household|Self-employed" &&
+      DOOR_SITS.map(D => D.sit).join("|") === "nearfi|carddebt|married|selfemp" &&
+      DOOR_SITS.every(D => !!sitGet(D.sit))
+  );
+  DOOR_SITS.forEach(D => {
+    reset();
+    G = fresh();
+    W = null;
+    SH = null;
+    doorGate(done);
+    kids[0].onclick({ target: { closest: () => ({ dataset: { door: "sit", sit: D.id } }) } });
+    chk(
+      "the door " + D.l + ": the landing is gone, the opening is open on the first open question of " + D.sit,
+      kids.length === 0 &&
+        doorGuest() &&
+        W &&
+        W.kind === "cb" &&
+        W.o.st === D.sit &&
+        W.step === "entry" &&
+        DOOR.sit === "" &&
+        (ov().match(/class="[^"]*\bcbnext\b[^"]*"/g) || []).length === 1,
+      W && W.step
+    );
+  });
+  /* the door In debt, to the end: a player with costly debt */
+  reset();
+  G = fresh();
+  W = null;
+  SH = null;
+  doorGate(done);
+  doorSitGo("debt");
+  X("cbset", "", "", { q: "age", i: 1 });
+  chk("the door In debt: after the age, one screen to confirm", W.step === "stok", W.step);
+  X("sitok");
+  chk(
+    "the door In debt makes a player with a credit card balance, and the first number shows",
+    !G.demo && C().debtKinds.includes("Credit card balance") && W.step === "is"
+  );
+  /* a door for an id that is not on the list is a plain Start */
+  reset();
+  G = fresh();
+  W = null;
+  SH = null;
+  doorGate(done);
+  doorSitGo("nothing");
+  chk("a door that is not on the list is a plain Start", W && W.kind === "cb" && W.step === "wants" && !W.o.st);
+
   suGate = suGate0;
   document.createElement = doc0.ce;
   document.body = doc0.body;

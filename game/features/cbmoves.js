@@ -34,6 +34,18 @@ const CBM_MORE = [
   ["mu", "ahead", "take"],
   ["mu", "acct", "take"],
 ];
+/* The bank and card bonus moves (run CC-1, item 23). Who may get one is the rule the Strategy Engine already has: no
+   debt at 8% or more (STG_CK.mask in data/strategies.js). A player with such debt sees each one under "ways that do
+   not fit you yet, and why", with that reason. A player who fits sees them on the first screen of the stack. */
+const CBM_BONUS = ["bank", "welcome"];
+/* The moves the stack shows before "Show all": the first n, and each bonus move that fits this player today. */
+function cbMovesFirst(moves, n) {
+  return moves
+    .slice(0, n)
+    .concat(
+      moves.slice(n).filter(r => r.src === "stg" && CBM_BONUS.includes(r.key) && r.applies && !r.notyet && !r.already)
+    );
+}
 /* The words of months sooner, from the impact of stgImpact(): { fi (months), fiNew }. */
 function cbMoveWords(imp) {
   if (!imp) return "No number yet";
@@ -56,17 +68,20 @@ function cbMoves(c) {
     F0 = (k, v) => ({ save: k === "save" ? v : 0, take: k === "take" ? v : 0, equity: 0, once: 0, hours: 0, value: v });
   stgRank(c).forEach(r => {
     const S = r.S,
-      V = r.V;
+      V = r.V,
+      /* a bonus move that costly debt blocks is not offered: it goes to the list of ways that do not fit yet */
+      masked = V.v === "notyet" && V.masked && CBM_BONUS.includes(S.id);
     rows.push({
       id: "stg:" + S.id,
       src: "stg",
       key: S.id,
       name: S.name,
       one: S.one,
-      applies: V.v !== "no",
-      why: V.v === "no" ? V.why : "",
+      applies: V.v !== "no" && !masked,
+      why: V.v === "no" || masked ? V.why : "",
       already: V.v === "already",
-      notyet: V.v === "notyet" ? { block: STG_BLOCK[V.block] ? STG_BLOCK[V.block][0] : "", why: V.why } : null,
+      notyet:
+        V.v === "notyet" && !masked ? { block: STG_BLOCK[V.block] ? STG_BLOCK[V.block][0] : "", why: V.why } : null,
       F: r.F,
       imp: r.imp,
       month: r.F.value + r.F.equity,

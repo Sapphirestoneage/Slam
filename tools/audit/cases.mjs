@@ -47,6 +47,7 @@ import { peNetWorth, peIncome, peSaving } from '../../js/math/peers.js'; // comp
 import * as RA from '../../js/math/ratios.js';
 import { NT_TAPS, ntEvent, ntRun, ntTrips, ntDegrade, ntPlanB } from '../../js/math/safetynet.js'; // safety nets (run Finish everything partly built, Part 15, M8U)
 import { plBonus, plHunt, plChallenge, plFicoRound, plNextMonthly } from '../../js/math/play.js';
+import { coFeesAbove, coPaysForItself, coFlatVsAum } from '../../js/math/coachfee.js'; // the coaching fee (run CC-1, items 21 and 22)
 import { arYearOn, arSwing, arRank, arStop, AR_RULES } from '../../js/math/askrank.js'; // asking fewer questions (run Finish everything partly built, Part 17, M8Y)
 import { gfBackwards, gfPastSelf, gfBottleneck, GF_KINDS } from '../../js/math/feel.js'; // game feel (run Finish everything partly built, Part 20, M8J)
 
@@ -692,6 +693,19 @@ for (let i = 0; i < N; i++) {
     const Tp = lyTaxPlan(p, cnt, lines);
     add('lyTaxPlan', { ...x, counted: cnt, lines }, Tp.ok ? { ok: true, plain: [Tp.plain.could.target, Tp.plain.could.age], with: [Tp.with.could.target, Tp.with.could.age], at: Tp.at, tried: Tp.tried.map(t => t.target), receipt: [Tp.receipt.off, Tp.receipt.months], cost: [Tp.cost.off, Tp.cost.months], best: Tp.best ? Tp.best.id : null } : { ok: false });
   }
+}
+// The coaching fee (run CC-1, items 21 and 22): the parts a first call found, some of them missing, next to a fee that
+// is sometimes not set; and one portfolio with a flat fee (sometimes not set) next to a yearly fee on the assets.
+for (let i = 0; i < N; i++) {
+  const maybe = (v, p = 0.25) => (rnd() < p ? null : v);
+  const fx = { year: maybe(money(20, 9000), 0.15), total: maybe(money(1000, 2000000), 0.1), low: pick([0, 0.0005, 0.001]) };
+  add('coFeesAbove', fx, { v: coFeesAbove(fx) });
+  const px = { parts: [{ id: 'fees', name: 'Fees', amount: coFeesAbove(fx) }, { id: 'bonus', name: 'Bonuses', amount: maybe(pick([0, 200, 300, 900, 1500])) }, { id: 'interest', name: 'Interest', amount: maybe(money(10, 20000)) }], fee: maybe(pick([500, 1500, 3000, 6000]), 0.2) };
+  const P = coPaysForItself(px);
+  add('coPaysForItself', px, { total: P.total, missing: P.missing.length, ready: P.ready, net: P.net, times: P.times, covers: P.covers, complete: P.complete });
+  const ax = { start: money(1000, 3000000), add: pick([0, 3000, 6000, 12000, 24000]), years: pick([1, 10, 20, 30]), growth: pick([0.04, 0.07, 0.1]), aum: pick([0.0025, 0.01, 0.015]), flat: maybe(pick([500, 1500, 3000, 6000, 5000000]), 0.3) };
+  const A = coFlatVsAum(ax);
+  add('coFlatVsAum', ax, { none: A.end.none, flat: A.end.flat, aum: A.end.aum, aumFees: A.aumFees, aumCost: A.aumCost, flatCost: A.flatCost, gap: A.gap, mid: A.rows[Math.ceil(ax.years / 2)].aum });
 }
 writeFileSync(out, JSON.stringify({ seed: Number(seedArg), perFunction: N, made: new Date().toISOString().slice(0, 10), cases }));
 const count = {}; for (const c of cases) count[c.fn] = (count[c.fn] || 0) + 1;

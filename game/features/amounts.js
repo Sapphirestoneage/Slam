@@ -955,7 +955,10 @@ function amHouseQs(w, base) {
   if (o.kidQ == null && o.kidCount != null) o.kidQ = o.kidCount >= 4 ? "4+" : String(o.kidCount);
   const asked = smState(w).md.live;
   if (!live.includes("Roommates")) delete o.roommateQ;
-  else if (asked)
+  /* waitq.js (run CC-1, item 9): how many roommates waits for a quest of Next Steps */ else if (
+    asked &&
+    !(typeof wqWaits === "function" && wqWaits(w, "roommateQ"))
+  )
     out.push({
       k: "roommateQ",
       l: "How many roommates live with you?",

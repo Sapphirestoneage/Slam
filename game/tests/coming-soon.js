@@ -229,7 +229,7 @@
   const src = require("fs").readFileSync(GAME_DIR + "screens/ui.js", "utf8");
   chk(
     "the click handler sends each tap through soonTap",
-    /closest\("\[data-a\]"\);\s*if \(!t \|\| t\.disabled\) return;[\s\S]{0,400}?\/\*[^*]*\*\/\s*soonTap\(t\.dataset\.a, t\);/.test(
+    /closest\("\[data-a\]"\);\s*if \(!t \|\| t\.disabled\) return;[\s\S]{0,700}?\/\*[^*]*\*\/\s*soonTap\(t\.dataset\.a, t\);/.test(
       src
     )
   );

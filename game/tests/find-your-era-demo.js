@@ -171,6 +171,8 @@
       /* run 16: a profile from the demo also says which setup answers the demo gave, and that its first move waits */
       .replace(',"era":[]', "")
       .replace(',"first":"era"', "")
+      /* run CC-1, item 8: only the entry shows What it is, so only its profile has the time to the first number */
+      .replace(/,"fn":\{[^}]*\}/, "")
       /* the trail of the open sheets (questlog.js): the taps went through the flow, the demo player is on Home */
       .replace(/,"quest":\{"st":\{\},"off":\{\}\},"trail":\[[^\]]*\]/, "");
   chk(
@@ -355,7 +357,10 @@
     /<script src="\.\.\/core\/engine\.js"><\/script>/.test(page) &&
       /<script src="\.\.\/features\/erain\.js"><\/script>/.test(page)
   );
-  chk("the button goes to the game by a relative address", /location\.href = "\.\.\/"/.test(view));
+  chk(
+    "the button goes to the game by a relative address",
+    /location\.href = ERA_P\.to \? ERA_P\.to\(\) : "\.\.\/"/.test(view)
+  );
   chk(
     "the line Education, not advice is the one line of trust.js",
     /TRUST_LINE/.test(view) && !/not financial advice/i.test(view + page)

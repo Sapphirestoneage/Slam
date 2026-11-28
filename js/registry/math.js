@@ -927,6 +927,10 @@ export const MATH = [
       'holidays.shabbatDays', 'holidays.weekdayDays', 'holidays.holidaysInMonth', 'holidays.WEEKDAYS', 'holidays.SHABBAT_SPEND_DAY'],
     fromApp: 'computed from the Hebrew calendar, the tabular Islamic calendar and the Easter formulas (day-level, no table to refresh); holiday blocks re-date themselves each year',
     app: c => holidaysOf(c.doc.profile?.calendars || {}, c.now.getUTCFullYear()).map(d => `${d.name} ${d.start}`).join('; ') || null },
+  // Run CC-1, items 21 and 22 (Nov 28 2026): the coaching fee math, for the coach's first call and the page /coaching/.
+  { id: 'M8M', name: 'The coaching fee: what a first call found (fees above a low-cost line, bonuses, interest saved) added up next to the coach\'s one fee; and one portfolio over 30 years with one flat fee next to a yearly fee on the assets', inputs: 'game, for a coach only: the fee X-ray (mixCalc: the fees a year and the dollars invested), the two bonus moves of the Strategy Engine (stgRank), the debt plan with and without the extra a month (dbPlan), the coach\'s fee (COACH_OFFER.fee of game/data/offer.js, empty until the owner sets it); the page /coaching/: a starting portfolio and a yearly amount picked by a tap (example values), the rules coachYears, coachGrowth and coachAumRate',
+    fns: ['coachfee.CO_RULES', 'coachfee.CO_SOURCES', 'coachfee.coFeesAbove', 'coachfee.coPaysForItself', 'coachfee.coFlatVsAum'],
+    fromApp: 'a coach-only game sheet and a public page on example values, not on the rows of a household; a sum of parts that were found next to one fee, and a balance grown year by year with a fee taken each year; the second engine (tools/audit) works each case out again', app: () => null },
 ];
 
 // js/math exports that are not an M formula of their own: how records become formula inputs, account details, and

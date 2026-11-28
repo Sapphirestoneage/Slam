@@ -327,7 +327,10 @@
         top.includes('data-a="keynums">See all metrics')
     );
     chk(k + ": the text calendar is off Home", !top.includes("Today's plan") && !top.includes("plhomeline"));
+    /* the line of the Confidence and Joy check (run CC-1, item 18) is a tile of its own under the first card, not a
+       part of a card: it is taken out before the words of each card are counted */
     const words = top
+      .replace(/<div class="tile small row between cjnote"[\s\S]*?<\/div>/, "")
       .split(/class="card dkcard rsq/)
       .slice(1)
       .map(x => text('<div class="' + x).split(" ").length);

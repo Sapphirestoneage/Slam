@@ -49,8 +49,8 @@
   X("set", "I rent", "homeQ");
   X("tog", "Roommates", "live");
   X("smdone", null, "live");
-  chk("roommates: how many (amounts.js)", ov().includes("How many roommates live with you?"));
-  X("set", "2", "roommateQ");
+  /* run CC-1, item 9: how many roommates waits for a quest of Next Steps (waitq.js) */
+  chk("roommates: how many is not asked in setup", !ov().includes("How many roommates live with you?"));
   chk("then your people", W.step === 3, W.step);
   X("set", "Single by choice", "rel");
   X("set", "None", "deps");

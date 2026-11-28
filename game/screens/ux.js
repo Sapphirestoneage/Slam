@@ -139,7 +139,13 @@ function homeQuadTop(h) {
   /* cbreveal.js: the two numbers and the small layer chart of a player of What it could be */
   const cb = rs !== null && typeof homeCbTile === "function" ? homeCbTile(C(), D) : "";
   /* firstweek.js: one line, "New for you", when the other tabs are back */
-  const fw = typeof homeFwNote === "function" ? homeFwNote() : "";
+  const fw =
+    (typeof homeFwNote === "function" ? homeFwNote() : "") +
+    /* cofill.js: one line while a list of the coach waits for the player to confirm */
+    (typeof homeCoachFill === "function" ? homeCoachFill() : "");
+  /* cjcheck.js: one line when the Confidence and Joy check is due (at the start, then each month). It sits under
+     the one next-step card, so that card and its button keep their place on the first screen. */
+  const cj = typeof homeCjNote === "function" ? homeCjNote() : "";
   /* look.js: the four top numbers, one row */
   const stat = typeof homeStatRow === "function" ? homeStatRow(C(), D) : "";
   const top =
@@ -151,6 +157,7 @@ function homeQuadTop(h) {
         fw +
         stat +
         (first || rs) +
+        cj +
         '<div class="rsmore">' +
         cb +
         (typeof homeResultsMore === "function" ? homeResultsMore(C(), D) : "") +
@@ -220,7 +227,7 @@ function meTabHead(h) {
   const c = C();
   h = withHead(h).replace(
     /(<h1>[^<]*<\/h1>)/,
-    `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span><i class=chev aria-hidden=true></i></span></button>`
+    `$1<div class="card row between"><span><b>Beginner or Expert</b><div class="tiny muted">Expert hides the helper lines and hints, and shows the whole menu.</div></span><div class="seg" style="flex:none"><button class="${G.expert ? "" : "on"}" data-a="expert" data-v="0">Beginner</button><button class="${G.expert ? "on" : ""}" data-a="expert" data-v="1">Expert</button></div></div><div class="card stack" style="gap:6px"><div class="row between"><b>Color</b><span class="tiny muted">Changes the look only. Your theme's words stay.</span></div><div class="swatches">${UX_COLORS.map(x => `<button class="sw sw-${x[0]} ${(G.color == null ? "midnight" : G.color) === x[0] ? "on" : ""}" data-a="color" data-v="${x[0]}"><i></i><span>${x[1]}</span></button>`).join("")}</div></div><button class="card rowbtn" data-a="glossary"><span><b>Glossary</b><div class="tiny muted">Every word the game uses, in plain English</div></span><span><i class=chev aria-hidden=true></i></span></button>`
   );
   return uxLess(h, ME_MORE, 9, "memore");
 }
@@ -684,6 +691,8 @@ function renderUxEnd(wel) {
     if (tb) tb.innerHTML = uxTabs(!G.demo && (c.lastDaily !== t || (c.payKnown && t >= c.payNext)));
     if (typeof fwKeep === "function") fwKeep(); /* firstweek.js: note once that this game had the calmer week */
     if (typeof homeNumsMove === "function") homeNumsMove(); /* look.js: a top number of Home that changed moves */
+    if (typeof tourKeep === "function")
+      tourKeep(); /* tour.js: the pulse of the tour, on the screen that was drawn again */
   } catch (e) {
     report(e, "ux.js: renderUxEnd");
   }

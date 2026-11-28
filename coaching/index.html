@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!-- ELI: DRAFT. Each line marked "Placeholder" on this page waits for a value in ONE file: game/data/offer.js
+     (what the offer is, the price, the payment-plan line, the guarantee, the booking link, the founding-cohort
+     note). Nothing here is made up for you. The line below keeps search engines away while the page is a draft:
+     take it out when the placeholders are filled. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM: coaching</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--a3:#8fb0ff;--amber:#f0c060;--good:#6fd6a8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:26px;line-height:1.2;margin:0}h2{font-size:18px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.note{border:2px solid var(--amber);border-radius:12px;padding:10px 14px;font-size:14px}
+.ph{display:inline-block;border:1px dashed var(--amber);color:var(--amber);border-radius:8px;padding:1px 8px;font-size:14px}
+.big{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+a{color:var(--a3);text-decoration:underline}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+button.primary,a.btn.primary{background:var(--a1);border-color:var(--a1);color:#fff;width:100%}
+button.chip{min-width:44px;padding:8px 12px;font-weight:600}
+button.chip[aria-pressed="true"]{background:var(--a1);border-color:var(--a3);color:#fff}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--a3);outline-offset:2px}
+button[disabled]{opacity:.6;cursor:default}
+button.i{min-width:44px;min-height:44px;padding:0;border-radius:50%;font-style:italic;font-family:Georgia,serif}
+details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}details>div{padding-bottom:12px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.pick{display:flex;flex-direction:column;gap:6px}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile b{font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+svg{display:block;width:100%;height:auto}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.key span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:18px;height:0;border-top:3px solid var(--a3)}.sw.b{border-top:3px dashed var(--muted)}.sw.c{border-top:3px solid var(--good)}
+.tip{font-size:14px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel2)}
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
+@media (min-width:700px){.nums{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<div class="row"><a class="btn" href="../game/"><i class=chevl aria-hidden=true></i>&nbsp;Back to the game</a></div>
+<div class="note" id="draft" hidden><b>Draft page.</b> Each line marked <span class="ph">Placeholder</span> waits for Eli. Nothing on those lines is final.</div>
+
+<h1>Coaching with Eli</h1>
+<p class="muted">One offer. One flat price. You keep your accounts, and you keep the game.</p>
+
+<div class="card" id="offer">
+<span class="label">The offer</span>
+<p id="what"></p>
+<div><span class="label">The price</span><div class="big" id="price"></div></div>
+<p id="plan"></p>
+</div>
+
+<div class="card" id="guar">
+<span class="label">The guarantee</span>
+<p id="guarantee"></p>
+</div>
+
+<div class="card" id="chartcard">
+<div class="row" style="justify-content:space-between"><h2>A flat fee next to a 1% yearly fee</h2><button class="i" id="ibtn" aria-expanded="false" aria-controls="itip" aria-label="What is a 1% AUM advisor?">i</button></div>
+<div class="tip" id="itip" hidden><b>AUM</b> means assets under management. A 1% AUM advisor charges 1% of your portfolio each year, for as long as they manage it. <b>A flat fee</b> is one price that does not grow when your portfolio grows.</div>
+<p class="muted">An example with round numbers, not a promise. Tap to change it.</p>
+<div class="pick"><span class="label" id="lstart">The portfolio today</span><div class="row" role="group" aria-labelledby="lstart" id="pstart"></div></div>
+<div class="pick"><span class="label" id="ladd">Added each year</span><div class="row" role="group" aria-labelledby="ladd" id="padd"></div></div>
+<div id="chart" role="img" aria-label="A line chart of the same portfolio over 30 years, with two ways to pay for advice"></div>
+<div class="key" id="key"></div>
+<div class="nums" id="nums"></div>
+<p id="say"></p>
+<details><summary>Show the math</summary><div id="math"></div></details>
+</div>
+
+<div class="card" id="cohortcard">
+<span class="label">The founding cohort</span>
+<p id="cohort"></p>
+</div>
+
+<div id="bookwrap"></div>
+<p class="muted" id="bookwhy" hidden></p>
+<p class="muted">The chart is an example. It is not a forecast and it is not advice about your own money. Markets do not grow by the same amount each year.</p>
+<noscript><p class="note">This page needs JavaScript for the chart and the price.</p></noscript>
+</main>
+<script src="../game/data/offer.js"></script>
+<script type="module">
+import { coFlatVsAum } from '../js/math/coachfee.js';
+
+const O = typeof COACH_OFFER === 'object' && COACH_OFFER ? COACH_OFFER : {};
+const $ = id => document.getElementById(id);
+const usd = v => '$' + Math.round(v).toLocaleString('en-US');
+const pct = v => (Math.round(v * 1000) / 10) + '%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ph = what => `<span class="ph">Placeholder: ${esc(what)}</span>`;
+const text = (v, what) => (typeof v === 'string' && v.trim() ? esc(v.trim()) : ph(what));
+const fee = Number.isFinite(O.fee) && O.fee > 0 ? O.fee : null;
+const book = typeof O.bookUrl === 'string' && /^https:\/\//.test(O.bookUrl) ? O.bookUrl : null;
+
+// The offer, in the owner's words, or a marked placeholder. No text is made up.
+$('what').innerHTML = text(O.what, 'what the offer is');
+$('price').innerHTML = fee === null ? ph('the price') : usd(fee);
+$('plan').innerHTML = '<b>Payment plan:</b> ' + text(O.plan, 'the payment-plan line');
+$('guarantee').innerHTML = text(O.guarantee, 'the guarantee, in Eli\'s words');
+$('cohort').innerHTML = text(O.cohort, 'the founding-cohort note');
+$('draft').hidden = !(fee === null || !book || [O.what, O.plan, O.guarantee, O.cohort].some(v => !(typeof v === 'string' && v.trim())));
+// The one primary button. With no link yet it is off, and the line under it says why.
+$('bookwrap').innerHTML = book
+  ? `<a class="btn primary" id="book" href="${esc(book)}" rel="noopener">Book a first call</a>`
+  : '<button class="primary" id="book" disabled aria-describedby="bookwhy">Book a first call</button>';
+if (!book) { $('bookwhy').hidden = false; $('bookwhy').innerHTML = 'This button is off for now. ' + ph('the booking link'); }
+
+// The example: two picks by tap. The values are examples, stated on the page.
+const STARTS = [50000, 100000, 250000, 500000, 1000000], ADDS = [0, 6000, 12000, 24000];
+const S = { start: 250000, add: 12000 };
+const short = v => (v >= 1000000 ? '$' + v / 1000000 + 'M' : v >= 1000 ? '$' + v / 1000 + 'k' : '$' + v);
+const chips = (id, list, key) => {
+  $(id).innerHTML = list.map(v => `<button class="chip" data-k="${key}" data-v="${v}" aria-pressed="${S[key] === v}">${short(v)}</button>`).join('');
+};
+function chart(R) {
+  const W = 640, H = 310, L = 8, Rt = 8, T = 14, B = 34, top = R.end.none, n = R.years;
+  const x = y => L + (W - L - Rt) * y / n, yy = v => T + (H - T - B) * (1 - v / top);
+  const path = k => R.rows.map((r, i) => (i ? 'L' : 'M') + x(r.year).toFixed(1) + ' ' + yy(r[k]).toFixed(1)).join(' ');
+  const upper = R.hasFlat ? 'flat' : 'none';
+  const grid = [0, 10, 20, 30].filter(y => y <= n).map(y => `<line x1="${x(y)}" x2="${x(y)}" y1="${T}" y2="${H - B}" stroke="#3a55a0" stroke-width="1" opacity=".5"/><text x="${Math.min(W - 34, Math.max(26, x(y)))}" y="${H - 10}" fill="#9fb0dd" font-size="17" text-anchor="middle">${y === 0 ? 'Today' : 'Year ' + y}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${grid}<line x1="${L}" x2="${W - Rt}" y1="${H - B}" y2="${H - B}" stroke="#3a55a0"/><path d="${path(upper)}" fill="none" stroke="${R.hasFlat ? '#6fd6a8' : '#8fb0ff'}" stroke-width="3"/><path d="${path('aum')}" fill="none" stroke="#9fb0dd" stroke-width="3" stroke-dasharray="7 5"/></svg>`;
+}
+function draw() {
+  chips('pstart', STARTS, 'start'); chips('padd', ADDS, 'add');
+  const R = coFlatVsAum({ start: S.start, add: S.add, flat: fee });
+  if (!R.ready) { $('chart').innerHTML = ''; $('say').textContent = 'The example needs ' + R.needs.join(' and ') + '.'; return; }
+  $('chart').innerHTML = chart(R);
+  $('key').innerHTML = (R.hasFlat ? '<span><i class="sw c"></i>One flat fee of ' + usd(R.flatFee) + ', paid on day one</span>' : '<span><i class="sw"></i>The same portfolio with no yearly fee</span>') + '<span><i class="sw b"></i>A 1% AUM advisor</span>';
+  const tile = (l, v, id) => `<div class="tile"><span class="label">${l}</span><b id="${id}">${v}</b></div>`;
+  $('nums').innerHTML =
+    (R.hasFlat ? tile('Flat fee, year ' + R.years, usd(R.end.flat), 'nflat') : tile('No yearly fee, year ' + R.years, usd(R.end.none), 'nnone')) +
+    tile('1% a year, year ' + R.years, usd(R.end.aum), 'naum') +
+    tile('Fee dollars paid at 1%', usd(R.aumFees), 'nfees') +
+    (R.hasFlat ? tile('The difference', usd(R.gap), 'ngap') : tile('What the 1% took', usd(R.aumCost), 'ncost'));
+  $('say').innerHTML = `In this example, 1% a year adds up to <b>${usd(R.aumFees)}</b> in fees over ${R.years} years. With the growth those dollars would have had, the portfolio ends <b>${usd(R.aumCost)}</b> smaller than with no yearly fee.` +
+    (R.hasFlat ? ` One flat fee of ${usd(R.flatFee)}, taken out on day one, ends ${usd(R.flatCost)} smaller.` : ` The flat-fee line shows here once the price is set. ${ph('the price')}`);
+  $('math').innerHTML = [
+    `Each year: the portfolio grows by ${pct(R.growth)}, then ${usd(S.add)} is added. This is the growth rate the game uses, before inflation. Real years differ.`,
+    `The 1% AUM advisor: at the end of each year, ${pct(R.aumRate)} of the portfolio comes out as the fee. This is an example rate, not a quote from any firm.`,
+    R.hasFlat ? `The flat fee: ${usd(R.flatFee)} comes out of the portfolio on day one, one time, so it also gives up its own growth.` : 'The flat fee: one price, taken out on day one, one time. It is not on the chart until the price is set.',
+    `Fee dollars paid = the sum of the ${R.years} yearly fees. What the 1% took = the portfolio with no yearly fee, minus the portfolio with the 1% fee, in year ${R.years}.`,
+    `Assumptions: ${R.years} years, ${pct(R.growth)} growth a year, a ${pct(R.aumRate)} yearly fee, the same portfolio and the same amount added on both lines. No taxes and no fund fees on either line.`,
+    `The portfolio (${usd(S.start)}) and the amount added each year (${usd(S.add)}) are example values. Tap a different one to change them.`,
+  ].map(l => '<div>' + l + '</div>').join('');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.id === 'ibtn') { const t = $('itip'); t.hidden = !t.hidden; b.setAttribute('aria-expanded', String(!t.hidden)); return; }
+  if (b.dataset.k) { S[b.dataset.k] = Number(b.dataset.v); draw(); }
+});
+draw();
+</script>
+</body>
+</html>

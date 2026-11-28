@@ -413,6 +413,12 @@ function cbYbPaint(card) {
         } else cur = t;
       });
       if (cur) out.push(cur);
+      /* a line that does not fit ends with three points, so that no word is cut in half without a sign */
+      if (max && out.length > max) {
+        let last = out[max - 1] + "...";
+        while (last.length > 4 && x.measureText(last).width > w) last = last.slice(0, -4) + "...";
+        out[max - 1] = last;
+      }
       out.slice(0, max || 9).forEach(t => {
         x.fillText(t, l, y);
         y += lh;
@@ -427,8 +433,9 @@ function cbYbPaint(card) {
       x.fillStyle = text;
       font(40, false);
       let yy = y + 128;
+      /* the results card (cbPlanCard in cbreveal.js) asks for two lines a row: the name of a move is long */
       H.lines.forEach(l => {
-        yy = wrap(l, pad + 40, yy, Wd - 2 * pad - 80, 50, 1);
+        yy = wrap(l, pad + 40, yy, Wd - 2 * pad - 80, 50, H.lines.length > 2 ? 1 : card.wrap || 1);
       });
       if (H.words) {
         x.fillStyle = text;

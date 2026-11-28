@@ -682,7 +682,10 @@ function home() {
   const back = typeof homeBackSync === "function" ? homeBackSync() : null;
   let h = homeTop();
   if (typeof homeRevealRow === "function") h = homeRevealRow(h); /* reveal.js: the row "Meet your character" */
-  if (typeof homeTourRow === "function") h = homeTourRow(h); /* drills.js: the row for the 3-tap tour */
+  if (typeof homeTourRow === "function") h = homeTourRow(h); /* tour.js: the row for the guided tour */
+  if (typeof homeCoachFillRow === "function")
+    h = homeCoachFillRow(h); /* cofill.js: a coach reads a CSV file for the client */
+  if (typeof homePfiRow === "function") h = homePfiRow(h); /* paysitself.js: for a coach, Pays for itself */
   if (typeof homeKnowStrip === "function") h = homeKnowStrip(h); /* know.js: the strip "What you already know" */
   if (typeof homeConnectRow === "function") h = homeConnectRow(h); /* connect.js: the row "Just opened" */
   if (back) h = homeBackRow(h, back.c, back.w); /* back.js: the welcome-back row */
@@ -693,6 +696,7 @@ function home() {
     h = homeNextDollar(h); /* canon.js: the one line of the next dollar, at the top */
   if (typeof homeCoachNote === "function") h = homeCoachNote(h); /* supa.js: the note "the coach made a change" */
   if (typeof homeReportFixed === "function") h = homeReportFixed(h); /* fbreport.js: "You reported this. It's fixed." */
+  if (typeof homeWhatsNew === "function") h = homeWhatsNew(h); /* founding.js: one note when SLAM changed */
   if (typeof homeSleptRow === "function")
     h = homeSleptRow(h); /* slept.js: the line "Your money earned $X while you slept" */
   if (typeof homeCoastCard === "function") h = homeCoastCard(h); /* coast.js: the card "You can stop sprinting" */
@@ -1394,6 +1398,7 @@ function sheet(fn) {
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
   if (typeof sheetQuest === "function") sheetQuest(fn); /* questlog.js: the trail of the last screens */
   if (typeof sheetRippleStart === "function") sheetRippleStart(was); /* feel.js: the profile before the answers */
+  if (typeof tourPause === "function") tourPause(); /* tour.js: the card of the tour waits while a sheet is open */
 }
 function sheetBase(fn) {
   SH = fn;
@@ -1428,6 +1433,7 @@ function closeSheet() {
   if (typeof closeSheetUx === "function") closeSheetUx(was);
   if (typeof closeSheetAddon === "function") closeSheetAddon(); /* addon.js: go back to the look of the player */
   if (typeof tkChipSafe === "function") tkChipSafe(); /* testkit.js: the chip of a test task */
+  if (typeof tourKeep === "function") tourKeep(); /* tour.js: the card of the tour is back */
 }
 function closeSheetQuiet() {
   closeSheetBase();
@@ -2458,15 +2464,17 @@ function wrappedSheetBase() {
     yr = todayISO().slice(0, 4),
     ms = c.moves.filter(m => m.d.slice(0, 4) === yr),
     paid = ms.filter(m => m.t === "paid").reduce((a, m) => a + m.amt, 0),
-    extra = ms.filter(m => m.t === "extra").reduce((a, m) => a + m.amt, 0);
+    extra = ms.filter(m => m.t === "extra").reduce((a, m) => a + m.amt, 0),
+    two = w.sessions >= 2; /* a change needs two saved check-ins: with fewer, the tile says so and shows no $0 */
   sheet(
     () =>
       head("Your year so far", w.year) +
       `<div class="grid2">
- <div class="tile"><div class="tiny muted">Own minus owe</div><div class="big">${signed(w.nwChange)}</div></div><div class="tile"><div class="tiny muted">Debt paid off</div><div class="big">${money(Math.max(w.debtPaid, paid))}</div></div>
+ <div class="tile"><div class="tiny muted">Own minus owe</div><div class="big">${two ? signed(w.nwChange) : "Not yet"}</div>${two ? "" : `<div class="tiny muted">Needs two saved check-ins this year.</div>`}</div><div class="tile"><div class="tiny muted">Debt paid off</div><div class="big">${two || paid > 0 ? money(Math.max(w.debtPaid, paid)) : "Not yet"}</div>${two || paid > 0 ? "" : `<div class="tiny muted">Needs two saved check-ins this year.</div>`}</div>
  <div class="tile"><div class="tiny muted">Extra money brought in</div><div class="big">${money(extra)}</div></div><div class="tile"><div class="tiny muted">Eras climbed</div><div class="big">${w.eras}</div></div>
  <div class="tile"><div class="tiny muted">Days you showed up</div><div class="big">${w.days}</div></div><div class="tile"><div class="tiny muted">Payday rounds</div><div class="big">${w.paydays}</div></div>
  <div class="tile"><div class="tiny muted">Skills learned</div><div class="big">${w.skills}</div></div><div class="tile"><div class="tiny muted">Badges earned</div><div class="big">${w.badges}</div></div></div>
+ ${typeof wrappedMore === "function" ? wrappedMore(c, w) : "" /* cjcheck.js: the money wins, confidence and joy, the time ledger */}
  <button class="ghost wide" data-a="sharewrap">Make a share card · no dollar amounts</button>
  ${w.feeling ? `<div class="banner small">Most days, money felt: <b>${esc(w.feeling)}</b>.</div>` : ""}<div class="tiny muted">${c.demo ? "Sample history, so you can see how this fills in." : "This fills in as you play."}</div><button class="primary wide" data-a="close">Close</button>`
   );
@@ -5324,11 +5332,12 @@ const EDU =
   LASTCHECK +
   ".";
 const cents = n => (n > 0 && n < 0.005 ? "under 1¢" : (n < 0 ? "-" : "") + "$" + Math.abs(n).toFixed(2));
+/* The last line of the box is a part of assume.js: the two rates of the engine, and the button Assumptions. */
 const mathBox = lines =>
   `<details class="math"><summary>Show the math</summary><div class="inner tiny stack" style="gap:4px">${lines
     .filter(Boolean)
     .map(l => `<div>${esc(l)}</div>`)
-    .join("")}</div></details>`;
+    .join("")}${typeof asMathRow === "function" ? asMathRow() : ""}</div></details>`;
 const onoff = (a, on) =>
   `<div class="seg"><button class="${on ? "" : "on"}" data-a="${a}" data-v="0">Off</button><button class="${on ? "on" : ""}" data-a="${a}" data-v="1">On</button></div>`;
 Object.assign(GLOSS, {
@@ -6692,6 +6701,8 @@ if (typeof document !== "undefined") {
     if (typeof uxTapDrop === "function" && uxTapDrop()) return;
     const tp = typeof uxTapStart === "function" ? uxTapStart(t.dataset.a) : null;
     if (typeof rcpTapStart === "function") rcpTapStart(); /* receipt.js: the numbers before a move, for its receipt */
+    if (typeof fwUsed === "function")
+      fwUsed(t.dataset.a, t); /* firstweek.js: a menu row that was used stays in the short menu */
     /* soon.js: runs ACT[name]. A tap with no action, or an action that throws, shows "Coming soon". */
     soonTap(t.dataset.a, t);
     if (tp) uxTapEnd(tp); /* ux.js: Undo after a change of the money */

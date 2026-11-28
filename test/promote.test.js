@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// tools/promote.sh: the decision logic, with no network. Each test makes a small repository in a temporary
+// tools/promote.sh: the decision logic, with no network. release is a branch the script builds: the files of main,
+// plus game-next/ (the test build: game/ of main, staged before the suites run). Each test makes a small repository in a temporary
 // folder, with a local bare repository as its remote, and runs a copy of the real script there. The small
 // repository has its own `node --test` file and its own `npm run test:game`, so the two suites are real and fast.
 import { test } from 'node:test';
@@ -47,34 +48,46 @@ function sandbox(t) {
     return { code: r.status, last: lines[lines.length - 1], out: r.stdout + r.stderr };
   };
   const release = () => { const r = spawnSync('git', ['rev-parse', '--verify', '--quiet', 'refs/heads/release'], { cwd: remote, env: ENV, encoding: 'utf8' }); return r.status === 0 ? r.stdout.trim() : null; };
-  return { root, remote, work, git, commit, promote, release, first };
+  // What the public site holds: one file of release (null when it is not there), and the names of all its files.
+  const on = path => { const r = spawnSync('git', ['show', `refs/heads/release:${path}`], { cwd: remote, env: ENV, encoding: 'utf8' }); return r.status === 0 ? r.stdout : null; };
+  const files = ref => git(remote, 'ls-tree', '-r', '--name-only', ref).split('\n').sort();
+  const has = (old, tip) => spawnSync('git', ['merge-base', '--is-ancestor', old, tip], { cwd: remote, env: ENV }).status === 0;
+  return { root, remote, work, git, commit, promote, release, first, on, files, has };
 }
 
-test('promote: the first run makes release at main when both suites pass; a second run says it is already there', { skip }, t => {
+const OK_GAME = 'process.exit(0);\n';
+test('promote: the first run makes release with the files of main and the test build; a second run says it is already there', { skip }, t => {
   const s = sandbox(t);
   assert.equal(s.release(), null);
   const a = s.promote();
   assert.equal(a.code, 0, a.out);
   assert.equal(a.last, `release is now ${s.first}`);
-  assert.equal(s.release(), s.first);
+  assert.deepEqual(s.files('release'), s.files('main').concat(['game-next/check.cjs']).sort());
+  assert.equal(s.on('game/check.cjs'), OK_GAME);
+  assert.equal(s.on('game-next/check.cjs'), OK_GAME);
+  assert.ok(s.has(s.first, 'release'));
+  const tip = s.release();
   const b = s.promote();
   assert.equal(b.code, 0, b.out);
   assert.equal(b.last, `release is already at main (${s.first}): nothing to promote`);
-  assert.equal(s.release(), s.first);
+  assert.equal(s.release(), tip);
 });
 
-test('promote: new commits on main that pass move release forward to that exact commit', { skip }, t => {
+test('promote: new commits on main that pass put the files of that exact commit on release', { skip }, t => {
   const s = sandbox(t);
   s.promote();
+  const before = s.release();
   writeFileSync(join(s.work, 'note.txt'), 'one\n'); s.commit('second');
   writeFileSync(join(s.work, 'note.txt'), 'two\n'); const third = s.commit('third');
   const r = s.promote();
   assert.equal(r.code, 0, r.out);
   assert.equal(r.last, `release is now ${third}`);
-  assert.equal(s.release(), third);
+  assert.equal(s.on('note.txt'), 'two\n');
+  assert.ok(s.has(third, 'release'));
+  assert.ok(s.has(before, 'release')); // on top of the old release: nothing was forced
 });
 
-test('promote: a failure of node --test on main stops it; release stays where it was', { skip }, t => {
+test('promote: a failure of node --test on main stops it; the public files stay as they were', { skip }, t => {
   const s = sandbox(t);
   s.promote();
   writeFileSync(join(s.work, 'test', 'small.test.js'), FAIL); const bad = s.commit('a defect');
@@ -82,33 +95,60 @@ test('promote: a failure of node --test on main stops it; release stays where it
   assert.notEqual(r.code, 0);
   assert.match(r.last, /^not promoted: node --test did not pass/);
   assert.ok(r.last.includes(bad));
-  assert.equal(s.release(), s.first);
+  assert.equal(s.on('test/small.test.js'), PASS);
 });
 
-test('promote: a failure of npm run test:game on main stops it; release stays where it was', { skip }, t => {
+test('promote: a failure of npm run test:game stops it; /game/ stays as it was and the test build is at /game-next/', { skip }, t => {
   const s = sandbox(t);
   s.promote();
-  writeFileSync(join(s.work, 'game', 'check.cjs'), 'console.log("1 failed"); process.exit(1);\n'); s.commit('a game defect');
+  const broken = 'console.log("1 failed"); process.exit(1);\n';
+  writeFileSync(join(s.work, 'game', 'check.cjs'), broken); s.commit('a game defect');
   const r = s.promote();
   assert.notEqual(r.code, 0);
   assert.match(r.last, /^not promoted: npm run test:game did not pass/);
-  assert.equal(s.release(), s.first);
+  assert.equal(s.on('game/check.cjs'), OK_GAME);
+  assert.equal(s.on('game-next/check.cjs'), broken);
+  // The repair on main, then a promote: both folders hold the repaired game.
+  writeFileSync(join(s.work, 'game', 'check.cjs'), 'process.exit(0); // repaired\n'); const fixed = s.commit('repaired');
+  const again = s.promote();
+  assert.equal(again.last, `release is now ${fixed}`, again.out);
+  assert.equal(s.on('game/check.cjs'), s.on('game-next/check.cjs'));
 });
 
-test('promote: release with a commit that main does not have is never forced or merged', { skip }, t => {
+test('promote --next: the test build only. /game/ and the rest stay; a promote after it publishes', { skip }, t => {
   const s = sandbox(t);
   s.promote();
+  writeFileSync(join(s.work, 'game', 'check.cjs'), 'process.exit(0); // new\n');
+  writeFileSync(join(s.work, 'note.txt'), 'new\n'); const next = s.commit('a new build');
+  const r = s.promote('--next');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.last, `game-next is now ${next}: the test build only, /game/ is as it was`);
+  assert.equal(s.on('game/check.cjs'), OK_GAME);
+  assert.equal(s.on('note.txt'), null);
+  assert.equal(s.on('game-next/check.cjs'), 'process.exit(0); // new\n');
+  const p = s.promote();
+  assert.equal(p.last, `release is now ${next}`, p.out);
+  assert.equal(s.on('game/check.cjs'), 'process.exit(0); // new\n');
+  assert.equal(s.on('note.txt'), 'new\n');
+});
+
+test('promote: a commit made on release directly is never forced away; its files give way to the files of main', { skip }, t => {
+  const s = sandbox(t);
+  s.promote();
+  const tip = s.release();
   // Somebody commits on release directly. Main moves on too.
-  s.git(s.work, 'checkout', '--quiet', '-b', 'side');
+  s.git(s.work, 'fetch', '--quiet', 'origin', 'release');
+  s.git(s.work, 'checkout', '--quiet', '-b', 'side', tip);
   writeFileSync(join(s.work, 'hotfix.txt'), 'x\n'); s.git(s.work, 'add', '-A'); s.git(s.work, 'commit', '--quiet', '-m', 'on release only');
   s.git(s.work, 'push', '--quiet', 'origin', 'HEAD:release');
   const onRelease = s.git(s.work, 'rev-parse', 'HEAD');
   s.git(s.work, 'checkout', '--quiet', 'main');
-  writeFileSync(join(s.work, 'note.txt'), 'main moves\n'); s.commit('main moves');
+  writeFileSync(join(s.work, 'note.txt'), 'main moves\n'); const moved = s.commit('main moves');
   const r = s.promote();
-  assert.notEqual(r.code, 0);
-  assert.match(r.last, /^not promoted: release .* cannot be fast-forwarded/);
-  assert.equal(s.release(), onRelease);
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.last, `release is now ${moved}`);
+  assert.ok(s.has(onRelease, 'release')); // still in the history
+  assert.equal(s.on('hotfix.txt'), null); // the public site is main, nothing else
 });
 
 test('promote: it tests the commit on the remote, not the folder it is started from, and leaves that folder alone', { skip }, t => {
@@ -119,7 +159,9 @@ test('promote: it tests the commit on the remote, not the folder it is started f
   const before = s.git(s.work, 'status', '--porcelain');
   const r = s.promote();
   assert.equal(r.code, 0, r.out);
-  assert.equal(s.release(), s.first);
+  assert.equal(r.last, `release is now ${s.first}`);
+  assert.equal(s.on('game/check.cjs'), OK_GAME);
+  assert.equal(s.on('test/draft.test.js'), null);
   assert.equal(s.git(s.work, 'status', '--porcelain'), before);
   assert.equal(readFileSync(join(s.work, 'game', 'check.cjs'), 'utf8'), 'process.exit(1);\n');
   assert.equal(s.git(s.work, 'rev-parse', '--abbrev-ref', 'HEAD'), 'main');
@@ -138,9 +180,10 @@ test('promote: a remote that cannot be reached, or one with no main, says so and
   assert.equal(existsSync(join(empty, 'refs', 'heads')) ? readdirSync(join(empty, 'refs', 'heads')).length : 0, 0);
 });
 
-test('promote: the script never forces, merges or rewrites (its text has no such command)', () => {
+test('promote: the script never forces, merges or rewrites, and never touches a working folder (its text has no such command)', () => {
   const code = readFileSync(SCRIPT, 'utf8').split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
-  for (const word of ['--force-with-lease', 'push -f', 'push --force', '+refs/', 'git merge ', 'rebase', 'reset --hard', 'git commit'])
+  for (const word of ['--force-with-lease', 'push -f', 'push --force', '+refs/', 'git merge ', 'rebase', 'reset --hard', 'git commit ', 'git checkout', 'git add '])
     assert.ok(!code.includes(word), `tools/promote.sh must not use "${word}"`);
-  assert.match(code, /git push --quiet "\$REMOTE" "\$MAIN_SHA:refs\/heads\/\$DST"/);
+  assert.match(code, /git push --quiet "\$REMOTE" "\$c:refs\/heads\/\$DST"/);
+  assert.equal(code.split('git push').length - 1, 1, 'one push command, and it is the plain one');
 });

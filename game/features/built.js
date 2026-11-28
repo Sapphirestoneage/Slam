@@ -90,6 +90,22 @@ const WB = [
     "Menu, then What's new. What changed, the newest first, in plain words. Each run adds one entry.",
     "whatsnew",
   ],
+  [
+    "feel",
+    "What's new on Home: one note when SLAM changed, with Don't show again",
+    "b",
+    () => WB_FN("homeWhatsNew") && WB_FN("pnFresh") && WB_HAS("pngot") && WB_HAS("pnoff") && WB_HAS("pnnote"),
+    "Home shows one quiet note when there is an update since your last look. Got it puts it away. Don't show again keeps Home quiet. What's new, in the Menu, turns it back on.",
+    "whatsnew",
+  ],
+  [
+    "feel",
+    "The test build: the strip TEST BUILD at /game-next/",
+    "b",
+    () => WB_FN("tbIsNext") && WB_FN("tbStrip") && !tbIsNext("/game/") && tbIsNext("/game-next/"),
+    "The next version is tried at the address /game-next/ before it goes to /game/. Each page there has an amber strip at the top.",
+    null,
+  ],
   ["in", "Setup by taps, no typing", "b", () => WB_HAS("start") && WB_FN("finishSetup"), "", null],
   [
     "in",
@@ -158,8 +174,54 @@ const WB = [
     "Not built. When it is, a photo goes to Claude only after a clear yes each time, and only the numbers are kept.",
     null,
   ],
-  ["in", "A three-tap tour of the tabs", "b", () => WB_HAS("tour") && WB_FN("tourSheet"), "", "tour"],
+  [
+    "in",
+    "A guided tour of about 90 seconds: nine stops on Home, one line each, Next and Skip",
+    "b",
+    () =>
+      WB_HAS("tour") &&
+      WB_HAS("tournext") &&
+      WB_HAS("tourback") &&
+      WB_HAS("tourdone") &&
+      WB_FN("tourPaint") &&
+      typeof TOUR !== "undefined" &&
+      TOUR.length <= 10,
+    "Run CC-1, item 17. A small card names one place of Home in one line, and that place pulses. While the tour runs it is the only pulse. Home offers it one time, and the menu row Take the tour starts it again.",
+    "tour",
+  ],
   ["in", "60-second find-your-era demo", "n", null, "Not built.", null],
+  [
+    "in",
+    "Time to the first number, for the admin",
+    "b",
+    () => WB_FN("fnDone") && WB_FN("fnStats"),
+    "The seconds and the taps from the first screen to What it is, for each new player. The admin page shows the median and the longest one next to the target of 2 minutes. Visitors with no account are counted after the database file first_numbers is run.",
+    null,
+  ],
+  [
+    "in",
+    "Questions that can wait are quests, not setup",
+    "b",
+    () => WB_FN("wqSeed") && WB_HAS("wqset"),
+    "Who you share money with and how many roommates you have are one-tap quests on Next Steps. The split of shared bills and subscriptions is a quest that opens Sharing costs fairly.",
+    null,
+  ],
+  [
+    "in",
+    "Ten starting points with typical numbers",
+    "b",
+    () => WB_FN("sitApply") && WB_HAS("sitpick"),
+    "Just laid off, new job, getting married, card debt, living with parents, self-employed, student, first apartment, new baby, near FI. Each fills typical amounts for your age as guesses, and you confirm them. A value with no typical figure stays empty and is asked.",
+    null,
+  ],
+  [
+    "in",
+    "A form before a first call",
+    "b",
+    () => WB_FN("erLead") && WB_FN("erReadLead"),
+    "The page intake/ asks the questions of Find your era by taps, then the game opens its sign-up screen. The coach page shows the flag New lead until the coach marks the client as seen.",
+    null,
+  ],
   [
     "see",
     "What you already know: D.A.I.T.E., with what is done and what is next",
@@ -1997,6 +2059,119 @@ const WB = [
       WB_FN("mePeopleFair") &&
       WB_HAS("ppmore"),
     "Audit fixes, batch 1, sections C and D. Every question of the opening, the demo and setup is in plainer words, has the choice I'm not sure (a Guess: a typical value where the game has one, else nothing is kept) and the line Tap one to keep going. The sheet Who are you looking at? has Back and Close only and only switches people. Our household, Sharing costs fairly, Kids mode, Your guild and People settings are on Me, under Your people. Arrows are one drawn icon.",
+    null,
+  ],
+  [
+    "see",
+    "The results card: your era, your FI number and your top 3 moves, to share or to get as an image",
+    "b",
+    () => WB_FN("cbPlanCard") && WB_FN("cbCardPeek") && WB_FN("cbYbPaint") && WB_HAS("cbshare") && WB_HAS("cbcardimg"),
+    "Run CC-1, item 12. On the reveal, under Keep it, share it, or tell Eli: the card shows small, then Share my card and Get this card as an image. On the card: the era, the FI number with its age, and the names of the top moves. No other figure. The same painter draws the Yes, but card.",
+    "cbback",
+  ],
+  [
+    "in",
+    "Four doors on the front page: FIRE, In debt, Couple or household, Self-employed",
+    "b",
+    () =>
+      WB_FN("doorSitRow") &&
+      WB_FN("doorSitGo") &&
+      typeof DOOR_SITS !== "undefined" &&
+      DOOR_SITS.length === 4 &&
+      DOOR_SITS.every(D => !!sitGet(D.sit)),
+    "Run CC-1, item 15. Under Start, four outlined buttons. Each one is Start and then a starting point with typical numbers as guesses: Near FI, Card debt, Getting married, Self-employed. Start stays the one filled button.",
+    null,
+  ],
+  [
+    "feel",
+    "The progressive menu: a short menu to start, rows show as they are used or unlocked, Show everything",
+    "b",
+    () => WB_FN("fwRowRule") && WB_FN("fwMenuState") && WB_FN("fwMenuPick") && WB_FN("fwUsed") && WB_HAS("fwall"),
+    "Run CC-1, item 13. A new player sees the core rows and Settings and account. A tool shows in the menu once it is opened, from any screen. The reveal and the end of the first week unlock more. Show everything gives the whole menu, and Find a tool reaches every tool. Expert on Me has the whole menu. One function decides each row.",
+    "menu",
+  ],
+  [
+    "see",
+    "Assumptions, inside Show the math: the rates and ages your numbers use, three of them yours to change",
+    "b",
+    () =>
+      WB_FN("asRows") &&
+      WB_FN("asSet") &&
+      WB_FN("asMathRow") &&
+      WB_HAS("assume") &&
+      WB_HAS("asset") &&
+      WB_HAS("asusual") &&
+      asVal({}, "grow") === R &&
+      asVal({}, "take") === SWR,
+    "Run CC-1, item 14. Each Show the math ends with the two rates and the button Assumptions. The sheet lists each one with Usual or Yours. By a tap you change the age work is optional, the age your money lasts to, and how much Social Security your plan counts, each with Back to the usual value. The growth rate (7%), the take-out rate (4%) and the last age of the chart are shown and cannot be changed yet.",
+    "assume",
+  ],
+  [
+    "in",
+    "Done-for-you setup: your coach fills in from a CSV file, and you confirm each line",
+    "p",
+    () =>
+      WB_FN("cfSend") &&
+      WB_FN("cfPending") &&
+      WB_FN("cfTake") &&
+      WB_FN("homeCoachFill") &&
+      WB_FN("imPut") &&
+      WB_HAS("cfopen") &&
+      WB_HAS("cfyes") &&
+      WB_HAS("cfchg"),
+    "Run CC-1, item 16. A coach opens the game of a client, reads a CSV file of a bank or card in the browser, and sends the monthly totals as a list. Home then says: Your coach filled this in. Please confirm. Each line has Confirm and Change, and each tap can be undone. Nothing becomes your number without your tap. Not built: statement files that are not CSV (PDF). They wait for Eli.",
+    null,
+  ],
+  [
+    "in",
+    "Confidence and Joy check: two taps, 1 to 10, at the start and then each month",
+    "b",
+    () =>
+      WB_HAS("cj") &&
+      WB_HAS("cjset") &&
+      WB_HAS("cjlater") &&
+      WB_FN("homeCjNote") &&
+      WB_FN("cjChange") &&
+      WB_FN("cjDue") &&
+      WB_FN("cjStats"),
+    "Run CC-1, item 18. One slim line on Home asks after your first result, never before it, and again each month: Answer or Later. Two scales by taps, each with I'm not sure. The sheet shows the start and now in plain numbers, with no word on a lower number. The confidence tap is the same value as the rating of Financial confidence on Ratios. The admin page shows counts and averages only, and nothing under five players.",
+    "cj",
+  ],
+  [
+    "in",
+    "Your year: the money wins, confidence and joy, and the time ledger",
+    "b",
+    () => WB_HAS("wrapped") && WB_FN("wrappedMore") && WB_FN("cjYearRead") && WB_FN("cjYear"),
+    "Run CC-1, item 19. Your year had the change of net worth and the debt paid off. New: the money wins of the year, the change of the two scales inside the year, and the time ledger. A part with nothing to show says what it needs, and a change that needs two saved check-ins says Not yet in place of $0.",
+    "wrapped",
+  ],
+  [
+    "in",
+    "Graduate: a CPA, an estate attorney, a fee-only CFP, and when you need each one",
+    "p",
+    () => WB_HAS("gradpage") && WB_FN("gradSheet") && typeof GRAD_TYPES !== "undefined" && GRAD_TYPES.length === 3,
+    "Run CC-1, item 20. Menu, Graduate: who to call next. One card for each kind: what it is, when you need one, and one tap away what to ask and the names. Not built: the names. Each slot says Placeholder until Eli adds a name. No one pays to be on the page.",
+    "gradpage",
+  ],
+  [
+    "in",
+    "For a coach: Pays for itself, one number for the first call",
+    "p",
+    () =>
+      WB_HAS("pfi") &&
+      WB_FN("pfiRead") &&
+      WB_FN("coPaysForItself") &&
+      WB_FN("homePfiRow") &&
+      typeof COACH_OFFER !== "undefined",
+    "Run CC-1, item 21. Only a coach sees it, in the game of a client. The fees the fee X-ray found, the bank and card bonus moves that fit, and the interest the Debt plan saves, added up next to the coach's one fee. A part that was not found says Not found yet and is not counted. Not built: the fee itself. It is one setting that Eli fills, and until then the screen shows no headline number.",
+    null,
+  ],
+  [
+    "in",
+    "Bank and card bonus moves show early for a player who fits",
+    "b",
+    () => WB_FN("cbMovesFirst") && typeof CBM_BONUS !== "undefined" && CBM_BONUS.length === 2,
+    "Run CC-1, item 23. In the opening, the list of ways to get there sooner shows the first three moves and, for a player with no debt at 8% or more, the Bank bonus loop and the Card welcome bonus, before Show all. A player with such debt gets neither: each one is under the ways that do not fit you yet, with the reason. No bank and no card is named.",
     null,
   ],
 ];

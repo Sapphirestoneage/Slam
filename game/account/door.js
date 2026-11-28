@@ -2,8 +2,9 @@
    SLAM the Game: account/door.js
    PURPOSE     The front door. A person who arrives from the QR code or a link, with no account on this
                device, sees one landing screen: one promise (your FI number, then how much smaller it
-               could be), one big Start button, Sign in, one trust line (who built it), and "What is
-               this?" (closed by default). Start needs no account and no typing: it opens the one opening
+               could be), one big Start button, four outlined doors "Start here" (run CC-1, item 15:
+               Start and then one starting point of features/starter.js), Sign in, one trust line (who
+               built it), and "What is this?" (closed by default). Start needs no account and no typing: it opens the one opening
                of a new player, What it is / What it could be (features/couldbe.js). The setup by taps
                with the question "Am I okay?" (features/okay.js) comes after it. The game of such a
                visitor stays on this device until the visitor makes an account.
@@ -12,23 +13,23 @@
                Supabase. The address of the page (a sign-in link that comes back from an email).
    OUTPUT      Functions: doorGuest, doorHasGame, doorHtml, doorFireBtn, doorShow, doorHide,
                doorGate, doorFromDemo, doorStart, doorBegin, doorSignIn, doorBack, doorGateBack, doorSigned, doorKept,
-               doorEarly, doorJustSaved, doorRedraw. The constant DOOR_LINK (the link for the slide and the QR code).
+               doorEarly, doorJustSaved, doorRedraw, doorSitRow, doorSitGo. The table DOOR_SITS. The constant DOOR_LINK (the link for the slide and the QR code).
    DEPENDS ON  core/report.js, features/firelink.js (fireBlankButton), account/trust.js (TRUST_LINE,
                TRUST_PAGE: the advice line and the privacy page). index.html loads both before this
                file.
    USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
                page loads: account/supa.js (suGate), screens/ui.js (ACT, G, KEY, W, fresh, openSetup,
-               drawSheet, render), features/couldbe.js (cbStart: the one opening of a new player).
+               drawSheet, render), features/couldbe.js (cbStart: the one opening of a new player), features/starter.js (sitApply).
    RULES       The button Report is the button of features/fbreport.js (the same class and the same
                action "flag"); fbScreen() there names this screen "front door". One primary button (Start). The landing never shows to a person who is signed in, and
                never to a visitor who already has a game on this device. The address of the page is not
                changed, so link marks such as ?ref= and ?as= stay for the files that read them.
                tools/qr_slam.py makes docs/qr-slam.png from DOOR_LINK; test/launch-link.test.js compares
                the link here, in the tool and in docs/LAUNCH-LINK.md.
-   STATE       DOOR (done, want, el, guest, shown, saved).
+   STATE       DOOR (done, want, el, guest, shown, saved, sit).
    ========================================================================= */
 const DOOR_LINK = "https://play.stresslessaboutmoney.com/game/";
-const DOOR = { done: null, want: "", el: null, guest: false, shown: false };
+const DOOR = { done: null, want: "", el: null, guest: false, shown: false, sit: "" };
 
 function doorGet(k) {
   try {
@@ -58,6 +59,25 @@ function doorHasGame() {
 function doorFireBtn() {
   return typeof fireBlankButton === "function" ? fireBlankButton({ button: "door-sheet", line: "door-tiny" }) : "";
 }
+/* THE DOORS "START HERE" (run CC-1, item 15). Four outlined buttons under Start. Each one is Start and then one
+   starting point of features/starter.js (sitApply). l: the words of the button. sit: the id in SIT_LIST. */
+const DOOR_SITS = [
+  { id: "fire", l: "FIRE", sit: "nearfi" },
+  { id: "debt", l: "In debt", sit: "carddebt" },
+  { id: "two", l: "Couple or household", sit: "married" },
+  { id: "self", l: "Self-employed", sit: "selfemp" },
+];
+/* The row of the four doors, as HTML. Part of doorHtml(). */
+function doorSitRow() {
+  return `<div class="door-sits" data-fid="door:sits"><p class="door-tiny">Or start here. One tap fills in typical numbers as guesses.</p><div class="door-sitg">${DOOR_SITS.map(D => `<button type="button" class="door-sit" data-door="sit" data-sit="${D.id}">${D.l}</button>`).join("")}</div></div>`;
+}
+/* The tap on one door: Start, and then the starting point. The starting point waits in DOOR.sit until the opening
+   is open (doorBegin). */
+function doorSitGo(id) {
+  const D = DOOR_SITS.find(x => x.id === id);
+  DOOR.sit = D ? D.sit : "";
+  doorStart();
+}
 /* The landing screen, as HTML. "wait" is true while the sign-in screen is not ready yet. */
 function doorHtml(wait) {
   const css = `#door{position:fixed;inset:0;z-index:99998;background:var(--bg,#0b1630);color:var(--text,#e8eeff);overflow:auto;font-family:inherit}
@@ -67,6 +87,11 @@ function doorHtml(wait) {
  #door .door-q{font-size:16px;line-height:1.4;margin:0;color:var(--muted,#9fb0dd)}
  #door .door-go{width:100%;min-height:64px;padding:14px;border:2px solid var(--a1,#5b8cff);border-radius:14px;background:var(--a1,#5b8cff);color:#fff;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.35)}
  #door .door-in2{width:100%;min-height:48px;padding:10px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:16px;font-weight:600;cursor:pointer}
+ #door .door-sits{display:flex;flex-direction:column;gap:6px}#door .door-sits p{margin:0}
+ #door .door-sitg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ #door .door-sit{min-height:44px;padding:8px 10px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+ #door .door-sit:focus-visible{outline:3px solid var(--a3,#8fb0ff);outline-offset:2px}#door .door-sit:active{transform:translateY(1px)}
+ @media (max-height:700px){#door .door-in{padding-top:10px;gap:8px}#door h1{font-size:25px}#door .door-sits{gap:4px}}
  #door .door-go:focus-visible,#door .door-in2:focus-visible,#door summary:focus-visible,#door a:focus-visible{outline:3px solid var(--a3,#8fb0ff);outline-offset:2px}
  #door .door-go:active,#door .door-in2:active{transform:translateY(1px)}
  #door details{border:2px solid var(--line,#3a55a0);border-radius:12px;background:var(--panel,#13224a)}
@@ -83,6 +108,7 @@ function doorHtml(wait) {
  <h1>See your FI number, then see how much smaller it could be.</h1>
  <p class="door-q">About 2 minutes. All taps. Free.</p>
  <button type="button" class="door-go" data-door="start">Start</button>
+ ${doorSitRow()}
  <button type="button" class="door-in2" data-door="in">I have an account. Sign in</button>
  <p class="door-tiny door-by">Built by Eli Saperstein, money coach. 250+ people coached.</p>
  <div class="door-msg" role="status">${wait ? "One moment. The sign-in screen is on its way." : ""}</div>
@@ -107,6 +133,7 @@ function doorShow() {
     const b = ev.target && ev.target.closest ? ev.target.closest("[data-door]") : null;
     if (!b) return;
     if (b.dataset.door === "start") doorStart();
+    else if (b.dataset.door === "sit") doorSitGo(b.dataset.sit);
     else doorSignIn("in");
   };
   document.body.appendChild(el);
@@ -179,7 +206,9 @@ function doorBegin() {
         openSetup("new");
         W.door = true;
         drawSheet();
-      }
+      } else if (DOOR.sit && typeof sitApply === "function")
+        sitApply(DOOR.sit); /* starter.js: the door's starting point */
+      DOOR.sit = "";
     } else render();
   } catch (e) {
     report(e, "door.js: doorBegin");

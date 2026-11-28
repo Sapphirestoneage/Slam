@@ -515,8 +515,19 @@
             .match(/create table if not exists (?:public\.)?(\w+)/g) || []
       )
       .map(x => x.split(/[ .]/).pop())
-      .filter(t => !["content_packs", "app_admins", "card_library", "admin_audit"].includes(t))
+      /* first_numbers (run CC-1, item 8) has no owner column: seconds, taps, the version, signed in or not */
+      .filter(t => !["content_packs", "app_admins", "card_library", "admin_audit", "first_numbers"].includes(t))
       .every(t => new RegExp("delete from (public\\.)?" + t + " where").test(body))
+  );
+  chk(
+    "the privacy page names the time to the first number, and the table has no owner",
+    /The first time you see your number:/.test(page) &&
+      !/owner|user_id|email/.test(
+        fs
+          .readFileSync(GAME_DIR + "../supabase/migrations/20261127150000_first_numbers.sql", "utf8")
+          .split("-- ---------- 2.")[0]
+          .split("create table")[1]
+      )
   );
   chk("the privacy page says what a report holds", /If you tap Report:/.test(page) && /No money number/.test(page));
   chk("a report that waits on the device goes with the copy on the device", TU_GAME_KEYS.test(RP_STORE));

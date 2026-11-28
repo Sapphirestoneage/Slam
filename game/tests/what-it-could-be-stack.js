@@ -196,8 +196,11 @@
       text(hidden[1]).includes(M.hidden[0].why)
   );
   chk(
-    "the list shows the first moves, and one tap shows all",
-    (h.match(/data-fid="cb:stkmove"/g) || []).length === 3 && /data-a="cbstkall"/.test(h)
+    "the list shows the first three moves and each bonus move that fits (run CC-1, item 23), and one tap shows all",
+    (h.match(/data-fid="cb:stkmove"/g) || []).length === cbMovesFirst(M.shown, 3).length &&
+      cbMovesFirst(M.shown, 3).length >= 3 &&
+      cbMovesFirst(M.shown, 3).length <= 5 &&
+      /data-a="cbstkall"/.test(h)
   );
   X("cbstkall");
   chk(

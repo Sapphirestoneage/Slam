@@ -16,6 +16,11 @@
                address of the game.
    ========================================================================= */
 const ERA = { A: {}, at: 0, info: "", kept: true, un: {}, stay: "" };
+/* A second page can ask the same questions with its own words (run CC-1, item 11: intake/index.html sets
+   window.ERA_PAGE before this file loads). name: the name at the top. hero: [the title, the line under it]. foot:
+   the line about where the answers are kept. result(list): the HTML of the last screen. lead: true when the answers
+   carry the mark of a lead. to(): the address that the last button opens. With no ERA_PAGE, this is the demo. */
+const ERA_P = (typeof window !== "undefined" && window.ERA_PAGE) || {};
 const eraEl = () => document.getElementById("era");
 
 /* The words and the choices of one question. */
@@ -37,11 +42,11 @@ function eraNote(id, text) {
 }
 /* Where the answers are kept (run 16, A4): the words about no account only for a visitor who is signed out. */
 function eraFoot() {
-  return `<p class="foot"><span id="kept">${esc(erSigned() ? ER_WORDS.signed : ER_WORDS.out)}</span><br>${esc(TRUST_LINE)}</p>`;
+  return `<p class="foot"><span id="kept">${esc(ERA_P.foot || (erSigned() ? ER_WORDS.signed : ER_WORDS.out))}</span><br>${esc(TRUST_LINE)}</p>`;
 }
 /* The top row of each screen (run 16, A5): the name of the page, and the way out to the game's first screen. */
 function eraTop() {
-  return `<header class="row top"><div class="eyebrow">Find your era</div><a class="linkbtn" id="exit" href="../" aria-label="Home: leave this page and open the game">⌂ Home</a></header>`;
+  return `<header class="row top"><div class="eyebrow">${esc(ERA_P.name || "Find your era")}</div><a class="linkbtn" id="exit" href="../" aria-label="Home: leave this page and open the game">⌂ Home</a></header>`;
 }
 function eraQuestion(list, i) {
   const q = list[i],
@@ -53,7 +58,7 @@ function eraQuestion(list, i) {
   return (
     eraTop() +
     (i === 0
-      ? `<div class="hero"><h1>Find your era</h1><p class="muted">60 seconds. Taps only. No typing.</p></div>`
+      ? `<div class="hero"><h1>${esc(ERA_P.hero ? ERA_P.hero[0] : "Find your era")}</h1><p class="muted">${esc(ERA_P.hero ? ERA_P.hero[1] : "60 seconds. Taps only. No typing.")}</p></div>`
       : "") +
     `<div class="dots" aria-hidden="true">${list.map((x, k) => `<i class="${k < i ? "done" : k === i ? "on" : ""}"></i>`).join("")}</div>` +
     `<section class="card"><div class="small muted">Question ${i + 1} of ${list.length}</div>` +
@@ -98,7 +103,8 @@ function eraResult(list) {
 function eraDraw() {
   const list = erAsked(ERA.A);
   ERA.at = Math.max(0, Math.min(list.length, ERA.at));
-  eraEl().innerHTML = ERA.at < list.length ? eraQuestion(list, ERA.at) : eraResult(list);
+  eraEl().innerHTML =
+    ERA.at < list.length ? eraQuestion(list, ERA.at) : ERA_P.result ? ERA_P.result(list) : eraResult(list);
   window.scrollTo(0, 0);
 }
 /* One tap. */
@@ -144,14 +150,14 @@ function eraTap(t) {
     } else if (a === "back") ERA.at--;
     else if (a === "go") {
       try {
-        localStorage.setItem(ER_KEY, erPack(ERA.A));
+        localStorage.setItem(ER_KEY, erPack(ERA.A, undefined, !!ERA_P.lead));
       } catch (e) {
         /* a browser in private mode can refuse to keep it: the page says so, and offers the game all the same */
         ERA.kept = false;
         console.warn("Find your era: the answers were not kept.", e);
       }
       if (ERA.kept) {
-        location.href = "../";
+        location.href = ERA_P.to ? ERA_P.to() : "../";
         return;
       }
     }

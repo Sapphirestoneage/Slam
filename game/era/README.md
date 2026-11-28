@@ -50,3 +50,7 @@ The button writes one text to the device storage, under the key `slam.era`:
 | The address of the demo | Change `LINK` in `tools/qr_era.py` and the address in words in `print.html`, then `python3 tools/qr_era.py`, then `python3 tools/qr_era.py --check` |
 
 `test/era-demo.test.js` fails when the copy or the QR picture is old.
+
+## The form before a first call uses these questions
+
+`../intake/index.html` (run CC-1, item 11) loads `era.js` and `../features/erain.js` of this folder. It sets `window.ERA_PAGE` first (`../intake/intake.js`): its own name, its own last screen, the mark of a lead in the text under `slam.era` (`lead: 1`), and the address of the last button (the game, with `?coach=1` when the page had it). With no `ERA_PAGE`, `era.js` is the demo, as before. A change of a question here changes the form too.

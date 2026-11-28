@@ -35,3 +35,4 @@ game/core/canonmath.js
 game/core/statuses.js
 game/core/paylayers.js
 game/era/gamecopy.js
+game/core/coachfee.js

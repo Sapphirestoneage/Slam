@@ -88,6 +88,7 @@ function wnView() {
     `<button class="primary wide go cbnext" data-a="wnnext">Next: four quick taps</button>` +
     `<button class="ghost wide" data-a="wnskip">${NOT_SURE}</button>` +
     `<div class="tiny muted" data-fid="wn:tapone">${TAP_ONE}</div>` +
+    (typeof sitRow === "function" ? sitRow() : "") /* starter.js: the way to the ten starting points */ +
     cbNav({ back: null }) /* cbguide.js: Back and Forward. This is the first screen, so Back says why it is off */ +
     `<div class="tiny muted" data-fid="wn:count" role="status">${n ? (n === 1 ? "1 picked." : n + " picked.") + " They stay on your list of goals." : "Nothing picked yet. Not sure is fine: you can pick later."}</div>` +
     cbFoot()

@@ -216,6 +216,7 @@ async function fbStart() {
     if (typeof SUPA !== "undefined" && SUPA.ready) await SUPA.ready;
     const cfg = await fbCfg();
     await fbFlushNow(cfg);
+    if (typeof fnFlush === "function") fnFlush(); /* firstnum.js: a time to the first number that waits */
     if (cfg.token && !(typeof SUPA !== "undefined" && SUPA.as)) {
       FB.fixed = await rpFixedFetch(cfg);
       if (rpFixedNew(FB.fixed, G.rpTold).length && typeof render === "function" && !SH) render();

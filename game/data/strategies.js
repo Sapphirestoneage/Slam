@@ -826,6 +826,8 @@ const STRATEGIES = [
     effort: 2,
     credit: "Doctor of Credit",
     fitChecks: [
+      /* run CC-1, item 23: the rule the card welcome bonus and the skill tree already use (treeGate in engine.js) */
+      Object.assign({}, STG_CK.mask, { no: "Debt at 8% or more costs more each month than a bank bonus pays. Clear it first." }),
       { id: "dd", q: "I can send part of my paycheck to a new account", block: "rules", no: "Most bonuses need a direct deposit. Ask payroll if your pay can be split." },
       { id: "cash", q: "The cash to park, on top of my bills", block: "money", auto: (c, I, F, d) => d.cash >= I.park, no: "The cash to park is more than you have free now. Pick bonuses that need a direct deposit only." },
       { id: "track", q: "I am fine tracking a few dates", block: "energy", no: "Each bonus has a date to meet and a date when the account can close with no fee." },

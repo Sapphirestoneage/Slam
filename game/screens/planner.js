@@ -248,7 +248,7 @@ function plSeedWeek(c) {
     );
   (x.later || []).forEach(k =>
     put(
-      {
+      (typeof wqTask === "function" && wqTask(k)) /* waitq.js: a question of setup that waits */ || {
         t: k === "accts" ? "Tell the game where your money lives" : "Three gut checks about your money",
         s:
           k === "accts"
@@ -694,6 +694,7 @@ function plRun(p) {
   if (f) f({ dataset: { v: p.v || "", k: "" } });
 }
 function plLater(k) {
+  if (typeof wqOpen === "function" && wqOpen(k)) return; /* waitq.js: one question that setup left for later */
   openSetup("edit");
   W.step = k === "accts" ? 5 : 6;
   W.later = k;
@@ -877,7 +878,7 @@ const MENU_GROUPS = [
       "nxa",
     ],
   ],
-  ["learn", "📚", "Learn", ["glossary", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
+  ["learn", "📚", "Learn", ["glossary", "tour", "roof", "dep", "connect", "rcaudit", "whatsnew", "books"]],
   ["games", "🎲", "Games and quizzes", ["qz", "galaxy", "qmode", "lsopen", "crg", "hunt"]],
   ["settings", "⚙️", "Settings and account", ["themes", "dash", "backup", "tuprivacy", "fdshare", "flag", "lock"]],
   ["coach", "🧑‍🏫", "Coach", ["session"], "coach"],
@@ -1044,7 +1045,10 @@ function finishSetupPlanStart() {
     speed = w && w.speed;
   if (w && w.o && w.mode === "edit" && later) {
     w.o.x = w.o.x || {};
-    w.o.x.later = (w.o.x.later || []).filter(k => (later === "accts" ? false : k !== later));
+    /* accts ends the two waits of the fast finish (accts, gut). A wait of waitq.js ends by its own answer. */
+    w.o.x.later = (w.o.x.later || []).filter(k =>
+      later === "accts" ? typeof wqTask === "function" && !!wqTask(k) : k !== later
+    );
   }
   if (isNew && taps)
     CEL_NOTE =
@@ -1060,6 +1064,7 @@ function finishSetupPlanEnd(w, isNew) {
   if (isNew && !w.add) {
     const c = C();
     plSeedWeek(c);
+    if (typeof wqSeed === "function") wqSeed(c); /* waitq.js: the quests of the questions that setup left for later */
     render();
   } else if (isNew && w.add) {
     plSeedWeek(C());

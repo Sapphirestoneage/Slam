@@ -1,0 +1,45 @@
+# Publish on demand: the same script as `bash tools/promote.sh`, started from the Actions tab (docs/RELEASE.md).
+# Stage 1 puts the game of main at /game-next/ (the test build). Stage 2 runs both suites, the math checks
+# among them, and puts main at /game/ and the rest of the public site only when they pass.
+name: publish
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: What to publish
+        type: choice
+        default: Test build only (/game-next/)
+        options:
+          - Test build only (/game-next/)
+          - Test build, then /game/ when the checks pass
+permissions:
+  contents: write
+concurrency:
+  group: publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install ExcelJS for the spreadsheet tests (no build step)
+        run: npm install --no-save --no-audit --no-fund exceljs@4.4.0
+      - name: Install LibreOffice so the spreadsheet recalculation checks run
+        run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends libreoffice-calc-nogui
+      - name: Name the author of the publish commits
+        run: |
+          git config user.name "SLAM publish"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Test build only
+        if: ${{ startsWith(inputs.what, 'Test build only') }}
+        run: bash tools/promote.sh --next
+      - name: Test build, then publish when the checks pass
+        if: ${{ !startsWith(inputs.what, 'Test build only') }}
+        run: bash tools/promote.sh

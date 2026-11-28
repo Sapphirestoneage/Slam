@@ -604,6 +604,14 @@ button.rsroute{text-align:left;font-weight:400;cursor:pointer;width:100%}button.
 .sheet:has(.cbfoot) .cbnext button,.sheet:has(.cbfoot) button:not(.cbnext):focus-visible{opacity:1}
 .sheet:has(.cbfoot) button:not(.cbnext):disabled{opacity:.55}
 .chips.cbnext{border-radius:14px;padding:8px;margin:-8px}
+/* run CC-1, item 17: the guided tour (features/tour.js). ONE PULSE: while the tour runs every other pulse stops, and only the place of the stop pulses. */
+body.touring .go,body.touring .pulse,body.touring .cbnext{animation:none!important}
+body.touring .tourpulse{animation:pulse 1.6s ease-in-out infinite!important;outline:3px solid var(--sap);outline-offset:3px;border-radius:12px}
+#tourcard{position:fixed;left:0;right:0;z-index:9000;display:flex;justify-content:center;padding:8px 12px;pointer-events:none}
+#tourcard[hidden]{display:none}#tourcard.up{top:0}#tourcard.down{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+#tourcard .tourin{pointer-events:auto;box-sizing:border-box;width:100%;max-width:520px;background:var(--panel2);border:2px solid var(--sap);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#tourcard .tourbtns{justify-content:flex-end;flex-wrap:wrap}#tourcard button{min-height:44px}#tourcard .tournext{min-width:96px;animation:none}
+@media (prefers-reduced-motion:reduce){body.touring .tourpulse{animation:none!important}}
 /* the row Back and Forward, the same on each screen of the flow */
 .cbnav{gap:8px;align-items:center;flex-wrap:nowrap}.cbnav .cbbk,.cbnav .cbfw{flex:1;min-height:44px}
 /* the "i" of a part of the flow: the circle stays small, the place to tap is 44 by 44 */
@@ -673,11 +681,12 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <div id="ov"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
 <script src="core/soon.js?v=cafe08bf"></script>
 <script src="features/firelink.js?v=fc984112"></script>
 <script src="account/trust.js?v=3d07f04c"></script>
 <script src="account/liveflag.js?v=d591421f"></script>
-<script src="account/door.js?v=1fa78c06"></script>
+<script src="account/door.js?v=8550e9c5"></script>
 <script src="account/lock.js?v=1a52a1d9"></script>
 <script src="account/supa.js?v=cfa58c3f"></script>
 <script src="data/skills.js?v=aa53a193"></script>
@@ -716,13 +725,17 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="core/ratios.js?v=f767fd76"></script>
 <script src="data/roles.js?v=d90d4899"></script>
 <script src="core/reportcore.js?v=6a3377b4"></script>
+<script src="core/firstnum.js?v=798fa9b5"></script>
+<script src="core/cjcore.js?v=a4775b58"></script>
+<script src="core/coachfee.js?v=3c6c5497"></script>
+<script src="data/offer.js?v=a59732d5"></script>
 <script src="core/quizcore.js?v=fbfdf85e"></script>
 <script src="core/sins.js?v=0dea4dab"></script>
 <script src="core/frameworks.js?v=29cc8402"></script>
 <script src="core/canonmath.js?v=ab4e0b0d"></script>
 <script src="data/quizskins.js?v=b8ec1c8e"></script>
 <script src="account/gate.js?v=66e0ebe3"></script>
-<script src="screens/ui.js?v=fe5a03da"></script>
+<script src="screens/ui.js?v=ddda8383"></script>
 <script src="screens/dash.js?v=10b0fec1"></script>
 <script src="features/games.js?v=18d5c6d2"></script>
 <script src="features/games2.js?v=fde225a0"></script>
@@ -730,18 +743,19 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/year.js?v=bf6858ba"></script>
 <script src="features/chart.js?v=4cba9439"></script>
 <script src="screens/profiles.js?v=f30b2d3a"></script>
-<script src="screens/smart.js?v=d39d1d59"></script>
-<script src="screens/planner.js?v=9ef47fd2"></script>
+<script src="screens/smart.js?v=bb2d9fd3"></script>
+<script src="screens/planner.js?v=3dca8c91"></script>
 <script src="account/cloud.js?v=575526c7"></script>
-<script src="screens/ux.js?v=fe4f878b"></script>
+<script src="screens/ux.js?v=5d63771a"></script>
 <script src="core/metrics.js?v=a3031b4b"></script>
 <script src="features/debts.js?v=03c85bb0"></script>
-<script src="features/import.js?v=1e499e73"></script>
+<script src="features/import.js?v=6ff3e1f5"></script>
 <script src="features/compare.js?v=abf08001"></script>
 <script src="features/quick.js?v=8123454d"></script>
 <script src="features/reveal.js?v=d566dc5f"></script>
 <script src="features/moneylog.js?v=8ce666a3"></script>
-<script src="features/drills.js?v=5fdcf9cd"></script>
+<script src="features/drills.js?v=23e72816"></script>
+<script src="features/tour.js?v=6ead36a0"></script>
 <script src="features/gig.js?v=6598de10"></script>
 <script src="features/know.js?v=a3812f85"></script>
 <script src="features/fair.js?v=fe4d6db4"></script>
@@ -781,6 +795,8 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/testkit.js?v=d960b46f"></script>
 <script src="features/thinkaloud.js?v=9e0f770c"></script>
 <script src="features/kit.js?v=7b0b035e"></script>
+<script src="features/assume.js?v=b9fec340"></script>
+<script src="features/cofill.js?v=481c42f3"></script>
 <script src="features/retire.js?v=711b04be"></script>
 <script src="features/taxview.js?v=68d4fe00"></script>
 <script src="features/odds.js?v=4930434c"></script>
@@ -832,7 +848,7 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="data/kidlessons.js?v=bdd65180"></script>
 <script src="features/kids.js?v=6cf5b438"></script>
 <script src="data/metros.js?v=10acde40"></script>
-<script src="data/strategies.js?v=b8975c5b"></script>
+<script src="data/strategies.js?v=f9aba0a6"></script>
 <script src="features/strat.js?v=ceea7238"></script>
 <script src="account/roles.js?v=16f6dd76"></script>
 <script src="features/stars.js?v=b21b86ca"></script>
@@ -844,14 +860,14 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/rings.js?v=ef105278"></script>
 <script src="features/quest.js?v=12215f87"></script>
 <script src="features/peers.js?v=2c804668"></script>
-<script src="data/patchnotes.js?v=8874775c"></script>
+<script src="data/patchnotes.js?v=44b91dfe"></script>
 <script src="data/toollib.js?v=cd9e1119"></script>
-<script src="features/founding.js?v=23920de3"></script>
+<script src="features/founding.js?v=7d9e0dcd"></script>
 <script src="features/mycards.js?v=fb858b6a"></script>
 <script src="features/tally.js?v=f4412d5f"></script>
 <script src="features/look.js?v=39361aac"></script>
 <script src="features/spiral.js?v=a258c428"></script>
-<script src="features/amounts.js?v=0639cf24"></script>
+<script src="features/amounts.js?v=8afeeb3c"></script>
 <script src="features/jobs.js?v=ca7d58fc"></script>
 <script src="features/goalwire.js?v=d0120f35"></script>
 <script src="features/careq.js?v=b1f864d7"></script>
@@ -863,34 +879,39 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/joy.js?v=1ee7adf7"></script>
 <script src="features/giving.js?v=c5077a7b"></script>
 <script src="features/benefits.js?v=c6fea95b"></script>
-<script src="features/ratios.js?v=ab4a5f59"></script>
+<script src="features/ratios.js?v=b6220bca"></script>
+<script src="features/cjcheck.js?v=23d40b16"></script>
+<script src="features/graduate.js?v=c160d527"></script>
+<script src="features/paysitself.js?v=13e1c463"></script>
 <script src="features/hard.js?v=b395fc4d"></script>
 <script src="features/estate.js?v=8e12fc3b"></script>
 <script src="features/life.js?v=95f3fda6"></script>
 <script src="features/hunt.js?v=8116f378"></script>
 <script src="features/feel.js?v=b9ba075d"></script>
-<script src="features/erain.js?v=c836f69e"></script>
+<script src="features/erain.js?v=2d2c20d8"></script>
 <script src="features/guild.js?v=c96b7e81"></script>
 <script src="features/hhold.js?v=c1337c52"></script>
 <script src="features/lockset.js?v=4c29dd6d"></script>
 <script src="features/results.js?v=36e0764a"></script>
-<script src="features/cbguide.js?v=9dfe3aac"></script>
-<script src="features/couldbe.js?v=bb64c8f3"></script>
-<script src="features/wants.js?v=7d867574"></script>
+<script src="features/cbguide.js?v=d6bd9caf"></script>
+<script src="features/couldbe.js?v=f10ad7c4"></script>
+<script src="features/wants.js?v=c82afc55"></script>
 <script src="features/cbtax.js?v=8507a1cb"></script>
 <script src="features/cbflex.js?v=1b5ac4d2"></script>
 <script src="features/cblater.js?v=194294f3"></script>
-<script src="features/cbmoves.js?v=d411fa4f"></script>
-<script src="features/cbyesbut.js?v=f25c069f"></script>
-<script src="features/cbstack.js?v=b2754fd2"></script>
-<script src="features/cbreveal.js?v=38dbc755"></script>
-<script src="features/firstweek.js?v=3d4ab9ed"></script>
+<script src="features/cbmoves.js?v=9dbabd9d"></script>
+<script src="features/cbyesbut.js?v=8b5bf98e"></script>
+<script src="features/cbstack.js?v=ed6230a0"></script>
+<script src="features/cbreveal.js?v=a4cfb970"></script>
+<script src="features/starter.js?v=3ae6cba8"></script>
+<script src="features/waitq.js?v=7c45fdad"></script>
+<script src="features/firstweek.js?v=c82071e8"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
 <script src="features/lifemap.js?v=dba7d468"></script>
-<script src="features/book.js?v=cf713f1a"></script>
+<script src="features/book.js?v=9bfc6fad"></script>
 <script src="features/questlog.js?v=1f871118"></script>
-<script src="features/fbreport.js?v=a8944662"></script>
-<script src="features/built.js?v=f7a268fc"></script>
+<script src="features/fbreport.js?v=e6fc3454"></script>
+<script src="features/built.js?v=4d7164df"></script>
 </body>
 </html>

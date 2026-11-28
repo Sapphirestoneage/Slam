@@ -1,7 +1,7 @@
 /* ============================================================================
    SLAM the Game, test: tests/fire-drills.js
-   PURPOSE     Examine the money fire drills, the ladder (if the pay stopped), the one-way doors, and
-               the tour.
+   PURPOSE     Examine the money fire drills, the ladder (if the pay stopped) and the one-way doors. Home
+               offers the tour first (the tour has its own file, tests/guided-tour.js).
    INPUT       The game scripts, loaded by harness.cjs in the order of index.html.
    OUTPUT      One result for each chk() call. The harness prints each failed check.
    DEPENDS ON  tests/harness.cjs. Examines: features/drills.js.
@@ -44,27 +44,17 @@
   const c = C();
   chk(
     "Home offers the tour first, alone, under the four cards (results.js)",
-    app().includes("Take the 3-tap tour") &&
+    app().includes("Take the 90-second tour") &&
       !app().includes("Meet your character") &&
       app().indexOf("<!--homerows-->") > 0 &&
       app().indexOf("<!--homerows-->") < app().indexOf('data-a="tour"') &&
       app().includes('class="rowbtn homerow" data-a="tour"')
   );
   X("tour");
-  chk(
-    "tour card 1 of 3 with a skip",
-    W.kind === "tour" && ov().includes("1 of 3") && ov().includes("Skip the tour") && clean(ov())
-  );
-  X("tournext");
-  X("tournext");
-  chk(
-    "three taps reach the end",
-    ov().includes("3 of 3") && ov().includes("Got it") && !ov().includes("Skip the tour")
-  );
   X("tourdone");
   chk(
     "done: remembered, and Home stops offering it",
-    !!G.tourSeen && !app().includes("Take the 3-tap tour") && app().includes("Meet your character")
+    !!G.tourSeen && !app().includes("Take the 90-second tour") && app().includes("Meet your character")
   );
   const L = fdList(c, D),
     by = id => L.find(x => x.id === id);
@@ -231,7 +221,7 @@
       .filter(r =>
         [
           "Money fire drills",
-          "A three-tap tour of the tabs",
+          "A guided tour of about 90 seconds: nine stops on Home, one line each, Next and Skip",
           "One-way door notes on moves that are hard to undo",
         ].includes(r.n)
       )

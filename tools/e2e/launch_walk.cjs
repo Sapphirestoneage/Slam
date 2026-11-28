@@ -137,6 +137,16 @@ async function setup(page, tap, step) {
     chk(`${tag}: a new visitor sees the landing screen`, await page.locator('#door').isVisible());
     await step('landing');
     chk(`${tag}: one filled button on the landing (Start)`, (await page.locator('#door .door-go').count()) === 1);
+    // Run CC-1, item 15: the four doors "Start here" are under Start, and Start and all four are in the first window.
+    const doors = await page.evaluate(() => {
+      const r = el => el.getBoundingClientRect();
+      const go = r(document.querySelector('#door .door-go'));
+      const sits = [...document.querySelectorAll('#door .door-sit')].map(r);
+      return { n: sits.length, goIn: go.top >= 0 && go.bottom <= innerHeight, allIn: sits.every(b => b.bottom <= innerHeight),
+        under: sits.every(b => b.top >= go.bottom), tall: sits.every(b => b.height >= 44 && b.width >= 44) };
+    });
+    chk(`${tag}: four doors under Start, 44 pixels or more, and Start with the four doors in the first window`,
+      doors.n === 4 && doors.goIn && doors.allIn && doors.under && doors.tall, JSON.stringify(doors));
     await tap('#door summary');
     const what = await step('what is this open');
     chk(`${tag}: What is this? has the advice line, the privacy link and the blank FIRE sheet button`,
