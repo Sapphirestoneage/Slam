@@ -2145,6 +2145,14 @@ const WB = [
     "Run CC-1, item 19. Your year had the change of net worth and the debt paid off. New: the money wins of the year, the change of the two scales inside the year, and the time ledger. A part with nothing to show says what it needs, and a change that needs two saved check-ins says Not yet in place of $0.",
     "wrapped",
   ],
+  [
+    "in",
+    "Graduate: a CPA, an estate attorney, a fee-only CFP, and when you need each one",
+    "p",
+    () => WB_HAS("gradpage") && WB_FN("gradSheet") && typeof GRAD_TYPES !== "undefined" && GRAD_TYPES.length === 3,
+    "Run CC-1, item 20. Menu, Graduate: who to call next. One card for each kind: what it is, when you need one, and behind one tap what to ask and the names. Not built: the names. Each slot says Placeholder until Eli adds a name. No one pays to be on the page.",
+    "gradpage",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
