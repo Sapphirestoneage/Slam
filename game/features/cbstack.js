@@ -108,7 +108,9 @@ function cbStackView() {
       list.length
         ? `<details class="math cbhid" data-fid="cb:hidden"><summary><span class="i" aria-hidden="true">i</span> ${list.length} ${list.length === 1 ? "way" : "ways"} that do not fit you yet, and why</summary><div class="inner stack" style="gap:6px">${list.map(x => `<button class="rowbtn" data-a="cbgo" ${open(x)}><span><b>${esc(name(x))}</b><div class="tiny muted">${esc(x.why)}</div></span><span class="caret"><i class=chev aria-hidden=true></i></span></button>`).join("")}</div></details>`
         : "",
-    first = W.all ? S.moves : S.moves.slice(0, CBS_FIRST);
+    /* cbmoves.js: the first three, and a bank or card bonus move that fits this player (run CC-1, item 23) */
+    first0 = typeof cbMovesFirst === "function" ? cbMovesFirst(S.moves, CBS_FIRST) : S.moves.slice(0, CBS_FIRST),
+    first = W.all ? S.moves : first0;
   return (
     head("The stack", "Every way to move your number") +
     cbTop(c) +
@@ -134,8 +136,8 @@ function cbStackView() {
     dkCard(
       "Before FI: ways to get there sooner",
       `<div class="stack" style="gap:8px;margin-top:6px" data-fid="cb:moves">${first.map(moveRow).join("")}</div>` +
-        (S.moves.length > CBS_FIRST
-          ? `<button class="ghost wide" data-a="cbstkall" aria-expanded="${W.all ? "true" : "false"}">${W.all ? "Show the first " + CBS_FIRST : "Show all " + S.moves.length}</button>`
+        (S.moves.length > first0.length
+          ? `<button class="ghost wide" data-a="cbstkall" aria-expanded="${W.all ? "true" : "false"}">${W.all ? "Show the first " + first0.length : "Show all " + S.moves.length}</button>`
           : "") +
         (S.movesSum.n
           ? `<div class="banner small" data-fid="cb:movesum"><b>${S.movesSum.n === 1 ? "The move you counted" : "The " + S.movesSum.n + " moves you counted, together"}: ${esc(S.movesSum.words.replace(/^./, m => m.toLowerCase()))}.</b> These move the date, not the target, so the two numbers on top stay.</div>`
