@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-28. Files: 232. Lines: 130,456. Top-level functions: 3263. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-28. Files: 233. Lines: 131,315. Top-level functions: 3281. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -134,7 +134,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 120 | `features/cover.js` | 448 | 7 | 1 | 0 | Insurance needs. In place of the yes / no checks, each kind of cover gets a needs calculation, the gap in dollars, and one next step: disability (abou... |
 | 121 | `features/mix.js` | 657 | 10 | 0 | 0 | Investment mix and fees, by taps for each investment account: what is inside, and a fee preset, plus an advisor fee |
 | 122 | `features/slept.js` | 117 | 5 | 1 | 0 | While you slept. What the invested money of the player earned per hour, per day, per month and per year, at the return of the plan, next to the real h... |
-| 123 | `features/coast.js` | 397 | 12 | 5 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
+| 123 | `features/coast.js` | 399 | 12 | 5 | 0 | Two things about freedom. (1) The FI ratio on Key numbers: what the investments can pay each month, next to what the player spends each month |
 | 124 | `features/sim.js` | 447 | 20 | 0 | 0 | The simulator engine. One decision with 2 to 4 options |
 | 125 | `features/sims/rentbuy.js` | 398 | 5 | 0 | 0 | Simulator 1: rent or buy. The bank's payment first (principal and interest) |
 | 126 | `features/sims/mortgage.js` | 143 | 2 | 0 | 0 | Simulator 2: pay off the mortgage early, or invest the same money |
@@ -239,11 +239,12 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 225 | `features/firstweek.js` | 327 | 17 | 2 | 0 | A calmer first week (Batch B, phase 5, Nov 27 2026) |
 | 226 | `features/receipt.js` | 277 | 13 | 2 | 0 | Action receipts and cliffhangers (run Results-first Home, item 3) |
 | 227 | `features/fewer.js` | 335 | 20 | 3 | 0 | Asking fewer questions (run Finish everything partly built, Part 17) |
-| 228 | `features/lifemap.js` | 278 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
-| 229 | `features/book.js` | 631 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
-| 230 | `features/questlog.js` | 549 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
-| 231 | `features/fbreport.js` | 263 | 18 | 1 | 0 | Report a bug or idea, from each screen |
-| 232 | `features/built.js` | 2,286 | 4 | 48 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
+| 228 | `features/lifemap.js` | 279 | 11 | 7 | 0 | The life tech tree (run Results-first Home, item 4) |
+| 229 | `features/lifeline.js` | 848 | 18 | 5 | 0 | Your life timeline (run FIRE statuses and the life timeline, Part 2, Eli, 2026-11-27): "a life simulator timeline with different important milestones" |
+| 230 | `features/book.js` | 631 | 20 | 4 | 0 | The spreadsheet of the plan. Each number of the Plan batch, with its formula, in one table that the player can copy into Google Sheets or Excel, or sa... |
+| 231 | `features/questlog.js` | 549 | 30 | 7 | 0 | The Quest Log ("Where am I"). One button, on every tab and on every sheet, opens one sheet that shows where the player is: a Continue card (back to wh... |
+| 232 | `features/fbreport.js` | 263 | 18 | 1 | 0 | Report a bug or idea, from each screen |
+| 233 | `features/built.js` | 2,294 | 4 | 49 | 0 | What's built. One list of all features of this game: built, partly built, or not built |
 
 "Hidden errors" is the number of `catch` blocks that are empty. An empty block drops the error with no record.
 
@@ -261,7 +262,7 @@ No rows.
 
 ### Actions (ACT) that are set in more than one place
 
-`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1115 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
+`ACT[name]` runs when the player taps a button with `data-a="name"`. 36 of 1130 actions are set in more than one place. The last place wins. Most later places keep the earlier action, call it, and add to it. To read one action, read all places in its row, in order.
 
 | Action | Set in (load order) | Places |
 |--------|---------------------|-------:|
