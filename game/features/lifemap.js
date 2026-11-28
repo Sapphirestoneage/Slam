@@ -230,6 +230,7 @@ function ltMapHtml(c, d) {
     (H
       ? `<div class="tile ltgrow" data-fid="lt:head"><div class="row between"><span class="dklabel">Head start</span>${kitPill(H.st)}</div><b class="${H.st === "Guess" ? "guess" : ""}">${money(H.inv)} becomes ${money(H.fv)} by age ${H.age}</b><div class="tiny muted">With nothing more added. Starting early does that.</div>${mathBox(H.math)}</div>`
       : "") +
+    (typeof ltLineLink === "function" ? ltLineLink() : "") /* lifeline.js: the way to the life timeline */ +
     `<button class="ghost wide slim" data-a="fline">Start at the finish line: work back from the end</button>` +
     `</div>`
   );

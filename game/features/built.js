@@ -2174,6 +2174,14 @@ const WB = [
     "Run CC-1, item 23. In the opening, the list of ways to get there sooner shows the first three moves and, for a player with no debt at 8% or more, the Bank bonus loop and the Card welcome bonus, before Show all. A player with such debt gets neither: each one is under the ways that do not fit you yet, with the reason. No bank and no card is named.",
     null,
   ],
+  [
+    "in",
+    "Your life timeline",
+    "b",
+    () => WB_FN("llCalc") && WB_FN("llSheet") && WB_FN("llOwnEffect") && WB_HAS("lifeline"),
+    "Run FIRE statuses and the life timeline, Part 2. One line of your life by age and year, with the dates the game already works out: the end of the debt plan, the cushion, each goal, the FIRE statuses, the age you chose, Medicare, Social Security, the ages spending eases, the age your plan pays to. You add your own milestones by taps and move one to try a what-if. Only Keep it changes the plan, and only the age you chose; Undo puts it back. A milestone of your own moves a date only from your own answers in its simulator. Menu, Plans and what-ifs; also from Your life map.",
+    "lifeline",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {
