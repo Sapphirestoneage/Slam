@@ -2,7 +2,7 @@
 
 This file is generated. Do not edit it. Run `python3 tools/game_codemap.py`.
 
-Date: 2026-11-28. Files: 232. Lines: 130,443. Top-level functions: 3263. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
+Date: 2026-11-28. Files: 232. Lines: 130,456. Top-level functions: 3263. Replaced functions: 0, in 0 places. Functions with two declarations: 0. Hidden errors: 0.
 
 ## 1. Files in load order
 
@@ -77,7 +77,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 63 | `screens/smart.js` | 959 | 27 | 5 | 0 | The setup questions change with each answer |
 | 64 | `screens/planner.js` | 1,462 | 62 | 19 | 0 | The navigation (a tab bar at the bottom, and a menu for all other screens), the plan (a calendar of money tasks, the tab "Next Steps"), the check-in b... |
 | 65 | `account/cloud.js` | 570 | 23 | 0 | 0 | The game saves itself to the account of the player |
-| 66 | `screens/ux.js` | 943 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
+| 66 | `screens/ux.js` | 945 | 42 | 7 | 0 | The interface rules for a new player: five plain tabs, one clear title on each screen, Guess / Close / Exact, a Back button that works, and Undo in th... |
 | 67 | `core/metrics.js` | 1,860 | 27 | 8 | 0 | Key numbers. Each ratio that this game can calculate, in plain words: the value, the rule of thumb and its source, what moves the value, and if the pl... |
 | 68 | `features/debts.js` | 449 | 18 | 3 | 0 | The debt picture by taps (rate, monthly payment, card limit, how much the debt troubles the player), then three payoff plans side by side |
 | 69 | `features/import.js` | 377 | 10 | 9 | 0 | Fill in the spending from a bank or card statement file |
@@ -191,7 +191,7 @@ Bundles from outside the game, loaded first and not examined here: `vendor/retir
 | 177 | `features/rings.js` | 130 | 8 | 1 | 0 | The Rings theme (run "Money sins", Part 3): dark comedy in a cheeky hell with seven rings, one original ruler for each money sin |
 | 178 | `features/quest.js` | 788 | 29 | 8 | 0 | Quest mode (run Not built, groups 1 to 5, Part 10a) |
 | 179 | `features/peers.js` | 206 | 6 | 0 | 0 | You and people like you (run Finish everything partly built, Part 9) |
-| 180 | `data/patchnotes.js` | 672 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
+| 180 | `data/patchnotes.js` | 683 | 0 | 0 | 0 | The patch notes: what changed, in plain words, for the person who plays |
 | 181 | `data/toollib.js` | 94 | 0 | 1 | 0 | Data only. The standalone tool pages of the web app (the pages at the top of the repository), for the menu group "Tool library" (Batch B, phase 5): th... |
 | 182 | `features/founding.js` | 450 | 25 | 3 | 0 | Three small things for the soft launch |
 | 183 | `features/mycards.js` | 788 | 30 | 5 | 0 | Credit cards as a list of cards, not one balance |
