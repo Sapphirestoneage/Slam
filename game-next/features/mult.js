@@ -1,0 +1,425 @@
+/* ============================================================================
+   SLAM the Game: features/mult.js
+   PURPOSE     The multipliers board. Each multiplier (a match at work, card rewards, bank bonuses,
+               buying ahead, a tax-favored account, a health savings account) has a price in dollars a
+               year on the numbers of the player. Two more views: the crossover (the spending limits the
+               deal multipliers, and the tax multipliers grow with the money), and the finish line with
+               and without tax planning.
+   INPUT       The game: G.demo. The profile: c.x.mu, c.x.taxPct. The open sheet (W.kind): mult. The
+               taps of the player (the actions in OUTPUT).
+   OUTPUT      13 functions. Actions (ACT): mult, muopen, mutog, muset. Menu: "The multipliers board".
+   DEPENDS ON  core/engine.js, screens/ui.js, screens/planner.js, core/metrics.js, features/compare.js.
+   RULES       A multiplier adds dollars. It does not increase the growth rate. Nothing is random.
+               Borrowing to invest is on the board as the multiplier that can pay nothing, and it is
+               never added to the total. Taps only.
+   STATE       c.x.mu = {on: {}, bank, ahead, any, hsa}.
+   ========================================================================= */
+const MU_TAX_GAIN = 0.15,
+  MU_OUT_TAX = 0.12;
+const MU = [
+  {
+    k: "match",
+    fam: "deal",
+    n: "Match at work",
+    one: "Free money your job adds when you put money in the plan",
+    peaks: "Day one of any job with a match",
+    x: 160,
+    y: 62,
+  },
+  {
+    k: "card",
+    fam: "deal",
+    n: "Card rewards",
+    one: "About 2% back on what you already spend, paid in full every month",
+    peaks: "Your 20s and 30s",
+    x: 70,
+    y: 122,
+  },
+  {
+    k: "bank",
+    fam: "deal",
+    n: "Bank bonuses",
+    one: "A bank pays you to open an account and meet its rules",
+    peaks: "Your 20s and 30s",
+    x: 160,
+    y: 122,
+  },
+  {
+    k: "ahead",
+    fam: "deal",
+    n: "Buying ahead",
+    one: "Stocking up at 20% off on things you would buy anyway",
+    peaks: "Any age, small",
+    x: 250,
+    y: 122,
+  },
+  {
+    k: "acct",
+    fam: "tax",
+    n: "Tax-favored account",
+    one: "Saving through an account the tax law favors, before a plain one",
+    peaks: "Small now, the biggest later",
+    x: 100,
+    y: 182,
+  },
+  {
+    k: "hsa",
+    fam: "tax",
+    n: "Health savings account",
+    one: "Only with a health plan that allows one. Money in, growth and medical spending can all skip tax",
+    peaks: "Grows for decades",
+    x: 220,
+    y: 182,
+  },
+  {
+    k: "lev",
+    fam: "risk",
+    n: "Borrowing to invest",
+    one: "It multiplies both ways. This peg can pay double, and it can pay nothing",
+    peaks: "Never a first step",
+    x: 290,
+    y: 62,
+  },
+];
+function muGet(c) {
+  const m = (c.x && c.x.mu) || {};
+  return {
+    on: Object.assign({}, m.on || {}),
+    bank: m.bank == null ? 2 : m.bank,
+    ahead: m.ahead == null ? 100 : m.ahead,
+    any: !!m.any,
+    hsa: m.hsa || 0,
+    set: !!m.set,
+  };
+}
+function muPut(c, m) {
+  c.x = c.x || {};
+  m.set = true;
+  c.x.mu = m;
+  save();
+}
+function muStart(c) {
+  const m = muGet(c);
+  if (!m.set) {
+    if (c.match === "yes") m.on.match = 1;
+    if (c.tax === "yes") m.on.acct = 1;
+  }
+  return m;
+}
+function muRate(c) {
+  return { r: c.x && c.x.taxPct ? c.x.taxPct / 100 : 0.2, known: !!(c.x && c.x.taxPct) };
+}
+function muVal(c, d, k, m) {
+  const S = (c.spend || 0) * 12,
+    gross = (typeof knNet === "function" ? knNet(c).gross : (c.take || 0) / 0.8) * 12,
+    t = muRate(c),
+    emp = typeof isEmployee === "function" ? isEmployee(c) : true;
+  if (k === "match") {
+    if (!emp || c.match === "no match offered") return { yr: 0, lock: "Your work has no match right now." };
+    return {
+      yr: gross * 0.03,
+      cf: 0,
+      math: [
+        "A common match is 3% of pay before taxes: 3% of " + money(Math.round(gross)) + ".",
+        "Your plan's real match may be more or less. The plan's own paperwork has it.",
+      ],
+    };
+  }
+  if (k === "card") {
+    if (c.high && c.high !== "no")
+      return { yr: 0, lock: "Not yet. Card interest is bigger than any reward, so the card gets paid off first." };
+    return {
+      yr: S * 0.6 * 0.02,
+      cf: 0,
+      math: [
+        "2% back on 60% of " + money(Math.round(S)) + " a year of spending.",
+        "Only counts when the card is paid in full every month.",
+      ],
+    };
+  }
+  if (k === "bank")
+    return {
+      yr: m.bank * 300,
+      cf: 0,
+      math: [
+        m.bank + " bonus" + (m.bank === 1 ? "" : "es") + " a year at about $300 each.",
+        "Bank bonuses count as taxable income, and each has rules to meet.",
+      ],
+    };
+  if (k === "ahead")
+    return {
+      yr: m.any ? m.ahead * 12 * 0.2 : 0,
+      cf: 0,
+      note: m.any
+        ? null
+        : "Counts only for things you would buy anyway. A deal on something you did not need is not a saving.",
+      math: [
+        money(m.ahead) +
+          " a month of things you already buy, at 20% off: " +
+          money(Math.round(m.ahead * 12 * 0.2)) +
+          " a year.",
+      ],
+    };
+  if (k === "acct") {
+    const room = Math.min(d.save || 0, typeof ROTH === "number" ? ROTH : 7000);
+    return {
+      yr: room * t.r,
+      cf: t.known ? 2 : 0,
+      math: [
+        "Up to " +
+          money(room) +
+          " of what you save in a year, times a tax rate of " +
+          Math.round(t.r * 100) +
+          "%" +
+          (t.known ? "." : " (a guess until your tax rate is in Key numbers)."),
+        "Some accounts skip the tax now, some skip it later. Either way that slice works for you.",
+      ],
+    };
+  }
+  if (k === "hsa")
+    return {
+      yr: m.hsa * t.r,
+      cf: t.known && m.hsa ? 2 : 0,
+      note: m.hsa ? null : "Pick an amount if your health plan allows one.",
+      math: [
+        money(m.hsa) + " a year put in, times a tax rate of " + Math.round(t.r * 100) + "%.",
+        "Only open to people on a health plan that qualifies.",
+      ],
+    };
+  return {
+    yr: 0,
+    risk: true,
+    math: [
+      "Borrowed money grows your wins and your losses by the same amount.",
+      "A bad year can take more than you put in. It is never counted in your total here.",
+    ],
+  };
+}
+function muAll(c, d, m) {
+  m = m || muStart(c);
+  const P = MU.map(p => Object.assign({}, p, muVal(c, d, p.k, m), { on: !!m.on[p.k] })),
+    live = P.filter(p => p.on && !p.lock && !p.risk),
+    extra = live.reduce((s, p) => s + p.yr, 0),
+    T = (c.take || 0) * 12,
+    save = d.save || 0;
+  return {
+    P,
+    live,
+    extra,
+    save,
+    floor: save * R,
+    raise: T > 0 ? extra / T : 0,
+    guess: live.some(p => (p.cf || 0) < 2),
+    m,
+  };
+}
+function muCross(c, d, m) {
+  const A = muAll(c, d, Object.assign({}, m, { on: { match: 1, card: 1, bank: 1, ahead: 1, acct: 1, hsa: 1 } })),
+    deal = A.P.filter(p => p.fam === "deal" && p.k !== "match" && !p.lock).reduce(
+      (s, p) => s + (p.k === "ahead" ? m.ahead * 12 * 0.2 : p.yr),
+      0
+    ),
+    age = c.age || 30,
+    end = Math.max(age + 5, 65),
+    pts = [];
+  let bal = c.inv || 0,
+    cross = null;
+  for (let a = age; a <= end; a++) {
+    const tax = bal * R * MU_TAX_GAIN;
+    pts.push({ a, deal, tax, bal });
+    if (cross == null && tax > deal) cross = { a, bal };
+    bal = bal * (1 + R) + (d.save || 0);
+  }
+  return { pts, deal, cross, past: !!cross && cross.a === age };
+}
+function muTop(c, d) {
+  const fi = d.fiBase || ((c.spend || 0) * 12) / SWR,
+    more = fi * (MU_OUT_TAX / (1 - MU_OUT_TAX));
+  return { fi, more, taxed: fi + more };
+}
+function muBoard(A) {
+  const on = A.P.filter(p => p.on && !p.lock),
+    pathPts = [[160, 14]]
+      .concat(
+        on
+          .filter(p => !p.risk)
+          .sort((a, b) => a.y - b.y || a.x - b.x)
+          .map(p => [p.x, p.y])
+      )
+      .concat([[226, 262]]),
+    path = "M" + pathPts.map(p => p.join(",")).join(" L");
+  return `<svg class="musvg" viewBox="0 0 320 300" role="img" aria-label="The multipliers board: ${on.length} pegs switched on"><path d="M94,14 L94,262" class="mufloor"/><path d="${path}" class="mupath"/>
+ ${A.P.map(p => `<g class="mupeg ${p.on ? "on" : ""} ${p.lock ? "lock" : ""} ${p.risk ? "risk" : ""}" data-a="mutog" data-v="${p.k}" role="button" aria-label="${p.n}, ${p.lock ? "not yet" : p.on ? "on" : "off"}"><circle cx="${p.x}" cy="${p.y}" r="17"/><text x="${p.x}" y="${p.y + 4}">${p.risk ? "0x" : p.lock ? "·" : p.on ? "+" : "○"}</text><text class="mulab" x="${p.x}" y="${p.y + 31}">${p.n.replace("Tax-favored account", "Tax account").replace("Health savings account", "Health account").replace("Match at work", "Match").replace("Borrowing to invest", "Borrowing")}</text></g>`).join("")}
+ <circle r="6" class="mucoin"><animateMotion dur="${Math.max(2, pathPts.length * 0.6)}s" repeatCount="indefinite" path="${path}"/></circle>
+ <rect x="52" y="262" width="84" height="30" rx="6" class="muslot"/><text x="94" y="275" class="muslt">Market only</text><text x="94" y="287" class="musln">${money(Math.round(A.floor))}</text>
+ <rect x="170" y="262" width="112" height="30" rx="6" class="muslot win"/><text x="226" y="275" class="muslt">Your path</text><text x="226" y="287" class="musln">${money(Math.round(A.floor + A.extra))}</text></svg>`;
+}
+function muChart(X) {
+  const W0 = 300,
+    H = 110,
+    mx =
+      Math.max.apply(
+        null,
+        X.pts.map(p => Math.max(p.deal, p.tax))
+      ) || 1,
+    a0 = X.pts[0].a,
+    a1 = X.pts[X.pts.length - 1].a,
+    px = a => 10 + ((a - a0) / Math.max(1, a1 - a0)) * (W0 - 20),
+    py = v => H - 14 - (v / mx) * (H - 30),
+    line = k => X.pts.map(p => px(p.a).toFixed(1) + "," + py(p[k]).toFixed(1)).join(" ");
+  return `<svg class="musvg" viewBox="0 0 ${W0} ${H}" role="img" aria-label="Deals stay flat while the tax side grows with your money"><polyline points="${line("deal")}" class="mudeal"/><polyline points="${line("tax")}" class="mutax"/>${X.cross ? `<line x1="${px(X.cross.a)}" x2="${px(X.cross.a)}" y1="8" y2="${H - 14}" class="mux"/><text x="${Math.min(W0 - 40, px(X.cross.a) + 4)}" y="16" class="mulab s">age ${X.cross.a}</text>` : ""}<text x="10" y="${H - 2}" class="mulab s">age ${a0}</text><text x="${W0 - 10}" y="${H - 2}" class="mulab e">age ${a1}</text><text x="12" y="${Math.max(12, py(X.deal) - 4)}" class="mulab s">Deals (flat, dashed)</text><text x="${W0 - 10}" y="${Math.max(24, py(X.pts[X.pts.length - 1].tax) + 14)}" class="mulab e">Taxes (rising)</text></svg>`;
+}
+function muPill(p) {
+  return p.lock
+    ? `<span class="pill">Not yet</span>`
+    : p.risk
+      ? `<span class="pill warn">Both ways</span>`
+      : (p.cf || 0) >= 2
+        ? `<span class="pill">Close</span>`
+        : `<span class="pill">Guess</span>`;
+}
+function muChips(k, opts, cur, f) {
+  return `<div class="chips">${opts.map(v => `<button class="chip sm ${cur === v ? "on" : ""}" data-a="muset" data-k="${k}" data-v="${v}">${f(v)}</button>`).join("")}</div>`;
+}
+function muSheet() {
+  const c = C(),
+    d = D || derive(c),
+    w = W,
+    m = muStart(c),
+    A = muAll(c, d, m);
+  if (w.v === "cross") {
+    const X = muCross(c, d, m),
+      T = muTop(c, d);
+    return (
+      head("Multipliers", "Young pegs and old pegs") +
+      `<div class="small muted">Deal pegs are capped by what you spend, so they stay about the same size. Tax pegs are a slice of your money's growth, so they grow as your money does.</div>` +
+      muChart(X) +
+      `<div class="tile small">${X.past ? "You are already past the crossover. The tax side is the bigger board for you now." : X.cross ? "Around age " + X.cross.a + ", with about " + money(Math.round(X.cross.bal / 1000) * 1000) + " invested, the tax side passes the deals side." : "On today's numbers the deals side stays bigger through age " + X.pts[X.pts.length - 1].a + "."} Start the deal pegs now. Set up the tax pegs now too, because they need years to grow.</div>` +
+      `<div class="tile stack" style="gap:4px"><b class="small">A smaller finish line</b><div class="cpgrid" style="grid-template-columns:1fr 1fr">${cpCell(money(Math.round(T.fi / 1000) * 1000), "if it comes out tax-free")}${cpCell(money(Math.round(T.taxed / 1000) * 1000), "if it comes out taxed")}</div><div class="small">Which accounts you fill now decides which line is yours. The gap is about ${money(Math.round(T.more / 1000) * 1000)}.</div></div>` +
+      mathBox([
+        "Deals: card rewards, bank bonuses and buying ahead, at the sizes on your board: about " +
+          money(Math.round(X.deal)) +
+          " a year.",
+        "Taxes: each year's growth (7% of what is invested) times 15%, the tax rate most people pay on long-held gains. A rough stand-in for what tax-favored accounts keep for you.",
+        "Your invested money grows at 7% a year after inflation, plus what you save now.",
+        "Finish line: 25 times a year of spending. Taxed version assumes about 12% comes off the top on the way out. Real tax depends on your accounts and the law that year.",
+      ]) +
+      `<button class="ghost wide slim" data-a="mult">Back to the board</button>`
+    );
+  }
+  if (w.v) {
+    const p = A.P.find(o => o.k === w.v);
+    if (p)
+      return (
+        head("Multipliers", p.n) +
+        `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">${p.one}</div><div class="bignum">${p.lock ? "Not yet" : p.risk ? "2x, or 0x" : money(Math.round(p.yr)) + " a year"}</div><div>${muPill(p)}</div></div>` +
+        (p.lock ? `<div class="tile small">${p.lock}</div>` : "") +
+        (p.note ? `<div class="tile small">${p.note}</div>` : "") +
+        (p.k === "bank"
+          ? q(
+              "Bonuses a year",
+              muChips("bank", [0, 1, 2, 3, 4], m.bank, v => v)
+            )
+          : "") +
+        (p.k === "ahead"
+          ? q(
+              "Things you already buy, a month",
+              muChips("ahead", [50, 100, 200, 400], m.ahead, v => money(v))
+            ) +
+            q(
+              "Would you buy these anyway?",
+              `<div class="seg" style="align-self:flex-start"><button class="${m.any ? "on" : ""}" data-a="muset" data-k="any" data-v="1">Yes, I would</button><button class="${m.any ? "" : "on"}" data-a="muset" data-k="any" data-v="0">Not sure</button></div>`
+            )
+          : "") +
+        (p.k === "hsa"
+          ? q(
+              "Put in a year",
+              muChips("hsa", [0, 1000, 2000, 3000], m.hsa, v => (v ? money(v) : "None"))
+            )
+          : "") +
+        `<div class="tile small"><b>When it matters most:</b> ${p.peaks}.</div>` +
+        (p.math ? mathBox(p.math) : "") +
+        `<div class="row" style="gap:8px">${p.lock ? "" : `<button class="primary" style="flex:1" data-a="mutog" data-v="${p.k}" data-k="stay">${p.on ? "Take it off my board" : p.risk ? "Show it on my board" : "Add it to my board"}</button>`}<button class="ghost" style="flex:1" data-a="mult">Back to the board</button></div>`
+      );
+  }
+  const lev = A.P.find(p => p.k === "lev");
+  return (
+    head("Menu", "The multipliers board") +
+    `<div class="small muted">The market's 7% is the floor. Each peg your dollar touches on the way down adds coins. Tap a peg to switch it on.</div>` +
+    muBoard(A) +
+    `<div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Extra coins this year from your pegs</div><div class="bignum" data-fid="mu:big">${money(Math.round(A.extra))}</div><div class="small">${A.extra > 0 ? "Next to " + money(Math.round(A.floor)) + " from the market on a year of your saving. Like a " + (A.raise * 100 < 0.1 ? "0.1" : (A.raise * 100).toFixed(1)) + "% raise." : "No pegs on yet. The market alone gives about " + money(Math.round(A.floor)) + " on a year of your saving."}${A.guess ? " Some pegs are still guesses." : ""}</div></div>` +
+    (lev.on
+      ? `<div class="tile small"><b>Borrowing is on your board.</b> It is not in the total. It can double a good year and erase a bad one.</div>`
+      : "") +
+    `<div class="stack" style="gap:6px">${A.P.map(p => `<button class="rowbtn" data-a="muopen" data-v="${p.k}"><span style="min-width:0;flex:1"><span class="row between" style="gap:8px"><b>${p.n}</b><b style="white-space:nowrap">${p.lock || p.risk || !(p.yr > 0) ? "" : money(Math.round(p.yr)) + " a year"}</b></span><div class="tiny muted">${p.lock || p.one}</div></span><span class="stack" style="gap:4px;align-items:flex-end">${p.lock ? `<span class="pill">Not yet</span>` : p.on ? `<span class="pill okp">On</span>` : `<span class="pill">Off</span>`}<span class="caret"><i class=chev aria-hidden=true></i></span></span></button>`).join("")}</div>` +
+    `<div class="row" style="gap:8px"><button class="ghost" style="flex:1" data-a="muopen" data-v="cross">Young pegs and old pegs</button><button class="ghost" style="flex:1" data-a="lever">Which lever matters most</button></div><button class="term" data-a="info" data-k="gloss:multiplier">What is a multiplier?</button>`
+  );
+}
+Object.assign(ACT, {
+  mult: () => {
+    W = { kind: "mult", v: null };
+    sheet(muSheet);
+  },
+  muopen: t => {
+    W = { kind: "mult", v: t.dataset.v };
+    sheet(muSheet);
+  },
+  mutog: t => {
+    const c = C(),
+      d = D || derive(c),
+      k = t.dataset.v,
+      m = muStart(c),
+      p = MU.find(o => o.k === k);
+    if (!p) return;
+    const v = muVal(c, d, k, m);
+    if (v.lock) {
+      W = { kind: "mult", v: k };
+      sheet(muSheet);
+      return;
+    }
+    if (m.on[k]) delete m.on[k];
+    else m.on[k] = 1;
+    if (!G.demo) muPut(c, m);
+    else {
+      c.x = c.x || {};
+      m.set = true;
+      c.x.mu = m;
+    }
+    if (t.dataset.k === "stay" || !W || W.kind !== "mult") W = { kind: "mult", v: null };
+    sheet(muSheet);
+  },
+  muset: t => {
+    const c = C(),
+      m = muStart(c),
+      k = t.dataset.k,
+      v = +t.dataset.v;
+    if (k === "any") m.any = !!v;
+    else if (["bank", "ahead", "hsa"].includes(k)) m[k] = v;
+    else return;
+    if (k === "hsa" && v > 0) m.on.hsa = 1;
+    if (k === "any" && v) m.on.ahead = 1;
+    if (!G.demo) muPut(c, m);
+    else {
+      c.x = c.x || {};
+      m.set = true;
+      c.x.mu = m;
+    }
+    drawSheet();
+  },
+});
+Object.assign(GLOSS, {
+  multiplier: [
+    "Multiplier",
+    "Anything that adds to what a dollar does for you beyond plain market growth: a match at work, rewards on spending you already do, a bank bonus, a tax break. They are extra coins, not a higher growth rate. Some are biggest when you are young, and the tax ones grow as your money grows.",
+  ],
+});
+if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "mult")) {
+  const i = MENU.findIndex(m => m[1] === "lever");
+  MENU.splice(i >= 0 ? i + 1 : MENU.length, 0, [
+    "The multipliers board",
+    "mult",
+    "act",
+    "Match, rewards, bonuses, tax breaks: the pegs your dollar can touch",
+  ]);
+}
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

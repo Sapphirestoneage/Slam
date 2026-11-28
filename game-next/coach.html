@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: coach</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--good:#7fd6b0;--amber:#ffb648}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}.ok{color:var(--good)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;font-size:16px}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
+a.back{color:var(--text)}
+.hats{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.hatlbl{font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex:none}
+.seg a.hat{padding:10px 16px;min-height:44px;display:inline-flex;align-items:center;font-weight:700;color:var(--muted);background:var(--panel2);text-decoration:none}.seg a.hat.on{background:var(--a1);color:#fff}
+details.card{padding:0 14px}summary{cursor:pointer;font-weight:700;padding:14px 0;min-height:44px}.inner{display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
+.clsum{display:inline-flex;flex-direction:column;gap:2px;vertical-align:top;font-weight:400}.clsum b{font-weight:700}
+.who{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;font-size:14px;color:var(--muted)}.nums b{color:var(--text)}
+ul{margin:0;padding-left:20px}li{margin:2px 0}
+.pill{font-size:12px;margin-left:4px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted);white-space:nowrap;align-self:flex-start}.clsum .pill{margin-left:0}
+.pill.amber{border-color:var(--amber);color:var(--amber)}.flag{border-left:4px solid var(--amber);padding:6px 10px;color:var(--amber);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{min-height:40px;padding:8px 12px;border-radius:99px;font-weight:600;font-size:14px;text-align:left}.chip.on{background:var(--a1);border-color:var(--a1);color:#fff}
+table.ba{width:100%;border-collapse:collapse;font-size:14px}table.ba th,table.ba td{text-align:left;padding:4px 6px;border-top:1px solid var(--line)}table.ba th{color:var(--muted);font-weight:600}table.ba td{white-space:nowrap}
+.flag.demo{font-size:15px}.flag.demo button{margin-top:8px}
+.lclink{border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:14px;overflow-wrap:anywhere;user-select:all}.lcrow{border-top:1px solid var(--line);padding-top:8px}button[disabled]{opacity:.55;cursor:default}.soonpart{border:1px dashed var(--line);border-radius:10px;padding:10px}.tiny{font-size:13px}
+#cpxprint{display:none}
+@media print{body{background:#fff;color:#000}main{display:none}#cpxprint{display:block;padding:24px;font:14px/1.5 system-ui,sans-serif}#cpxprint pre{white-space:pre-wrap;font:inherit}}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
+<script src="core/soon.js?v=cafe08bf"></script>
+<script src="account/trust.js?v=3d07f04c"></script>
+<script src="account/supa.js?v=cfa58c3f"></script>
+<script src="core/engine.js?v=41fdc22f"></script>
+<script src="account/roles.js?v=16f6dd76"></script>
+<script src="account/coachpage.js?v=498fcba8"></script>
+<script src="account/coachplus.js?v=cb375456"></script>
+<script src="account/liveflag.js?v=d591421f"></script>
+<script src="account/live.js?v=3db94988"></script>
+<script src="account/liveio.js?v=7e40296e"></script>
+<script src="account/livecoach.js?v=da60ec39"></script>
+<script>
+/* The coach page. The database checks everything again: an account with no coach role gets no client back, whatever this page shows. */
+CP.sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await CP.sb.auth.signInWithPassword({email:e,password:p});if(r.error){CP.msg="That email and password do not match.";cpDraw();return}CP.session=r.data.session;CP.msg="";cpLoad()});
+document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||CP.busy)return;CP.busy=true;try{await cpClick(t)}catch(e){report(e,"coach.html: click");CP.msg="That did not work. Try again.";cpDraw()}finally{CP.busy=false}});
+document.addEventListener("input",ev=>{if(typeof cpxInput==="function")cpxInput(ev.target)}); /* coachplus.js: the search box and the order */
+document.addEventListener("toggle",ev=>{const d=ev.target;if(d&&d.classList&&d.classList.contains("cl"))CP.open=d.open?d.dataset.o:CP.open===d.dataset.o?null:CP.open},true);
+CP.sb.auth.getSession().then(({data})=>{CP.session=data&&data.session;if(CP.session)cpLoad();else cpDraw()});
+</script>
+</body>
+</html>

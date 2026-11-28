@@ -1,0 +1,833 @@
+/* ============================================================================
+   SLAM the Game: features/gig.js
+   PURPOSE     Work for yourself. For income with no tax taken out. (1) Tax comes off first: a tax
+               bucket and the next quarterly date. (2) Your unit: the thing that the player sells, and
+               what one unit leaves. (3) Your floor: the lowest price that pays for the life of the
+               player.
+   INPUT       The game: G.demo. The profile: c.x.gig, c.x.tax, c.x.unit, c.x.invoices, c.x.pf. The open sheet (W.kind): gig,
+               gxcatch. The taps of the player (the actions in OUTPUT).
+   OUTPUT      34 functions. Parts of functions in other files: monthsAheadTax, moneyTabTaxRow. Actions
+               (ACT): gig, gxtab, gxsrc, gxset, gxuse, gxmove, gxpaid, gxcatch, fsave, gxmore, gxinv,
+               gxinvadd, gxinvpaid, gxinvdel, gxinvundo, gxpf. Menu: "Working
+               for yourself".
+   DEPENDS ON  core/engine.js, core/gigcore.js (the floor, invoices, Profit First), screens/dash.js, screens/ui.js, screens/planner.js, screens/ux.js, features/compare.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/sim.js (gxSheetSim).
+   RULES       The three parts feed each other: the tax rate prices the unit, the unit prices the floor,
+               and the same unit shows in the fire drills, the ladder and Quick math. These tools do not
+               change the totals of the engine. The tax money is a label on cash that the player already
+               has.
+   ========================================================================= */
+const GX_DEF = ["Side gigs", "My own business"],
+  GX_PCTS = [15, 20, 25, 30, 35],
+  GX_DUE = [
+    [0, 15],
+    [3, 15],
+    [5, 15],
+    [8, 15],
+  ],
+  GX_NAMES = ["session", "shift", "gig", "client", "job", "sale"];
+function gxGet(c) {
+  const t = (c.x && c.x.tax) || {};
+  return {
+    pct: t.pct == null ? null : t.pct,
+    src: t.src || {},
+    set: t.set || 0,
+    due: t.due || 0,
+    paid: t.paid || [],
+    sh: t.sh || null,
+  };
+}
+function gxPut(c, patch) {
+  c.x = c.x || {};
+  c.x.tax = Object.assign(gxGet(c), patch);
+  save();
+}
+function gxIsUntaxed(c, k) {
+  const s = gxGet(c).src;
+  return s[k] === true || (s[k] === undefined && GX_DEF.includes(k));
+}
+function gxRows(c) {
+  return (c.incs || []).filter(r => (r.amt || 0) > 0);
+}
+function gxUntaxedMo(c) {
+  return gxRows(c)
+    .filter(r => gxIsUntaxed(c, r.k))
+    .reduce((a, r) => a + r.amt, 0);
+}
+function gxOn(c) {
+  return !!c.led && gxUntaxedMo(c) > 0;
+}
+function gxPct(c) {
+  const p = gxGet(c).pct;
+  return p == null ? 25 : p;
+}
+function gxNext(today) {
+  const a = parseISO(today || todayISO()),
+    y = a.getFullYear(),
+    c = [];
+  [y, y + 1].forEach(yy => GX_DUE.forEach(d => c.push(new Date(yy, d[0], d[1]))));
+  const n = c.find(d => d >= new Date(a.getFullYear(), a.getMonth(), a.getDate()));
+  return {
+    date: n,
+    days: Math.round((n - a) / 864e5),
+    txt: n.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+  };
+}
+function gxState(c) {
+  const T = gxGet(c),
+    mo = gxUntaxedMo(c),
+    pct = gxPct(c),
+    nx = gxNext(),
+    behind = Math.max(0, Math.round(T.due - T.set));
+  return {
+    T,
+    mo,
+    pct,
+    nx,
+    behind,
+    perMo: Math.round((mo * pct) / 100),
+    perQ: Math.round((mo * 3 * pct) / 100),
+    known: T.pct != null,
+  };
+}
+/* your unit */
+function gxUnit(c) {
+  const u = c.x && c.x.unit;
+  return u && u.v > 0 ? u : null;
+}
+function gxPlural(n, k) {
+  return k === 1 ? n : n + "s";
+}
+function unitTxt(c, amt) {
+  const u = gxUnit(c);
+  if (!u || !(amt > 0)) return "";
+  const k = Math.max(1, Math.ceil(amt / u.v));
+  return "about " + k + " " + gxPlural(u.n, k);
+}
+function gxGig(c) {
+  const g = (c.x && c.x.gig) || {};
+  return {
+    n: g.n || "session",
+    charge: g.charge == null ? 150 : g.charge,
+    cost: g.cost == null ? 20 : g.cost,
+    paid: g.paid == null ? 1 : g.paid,
+    unpaid: g.unpaid == null ? 1 : g.unpaid,
+    per: g.per == null ? 12 : g.per,
+    off: g.off == null ? 0 : g.off,
+    gpay: g.gpay == null ? null : g.gpay,
+  };
+}
+function gxPays(g, pct) {
+  const afterCost = Math.max(0, g.charge - g.cost),
+    tax = (afterCost * pct) / 100,
+    keep = afterCost - tax,
+    hrs = g.paid + g.unpaid;
+  return { afterCost, tax, keep, hrs, perHr: hrs > 0 ? keep / hrs : 0, paper: g.paid > 0 ? g.charge / g.paid : 0 };
+}
+function gxFloor(c, g, pct) {
+  const taxed = gxRows(c)
+      .filter(r => !gxIsUntaxed(c, r.k))
+      .reduce((a, r) => a + r.amt, 0),
+    need = Math.max(0, (c.spend || 0) - taxed),
+    P = gxPays(g, pct),
+    unitHrs = g.paid > 0 ? g.paid : 1,
+    weeks = (52 - Math.min(51, g.off || 0)) / 52,
+    /* one formula with the web app's price floor (core/gigcore.js): the profit before tax over the paid hours, the costs on top */
+    hours = gigHoursOf({ hoursWeek: (g.per * unitHrs * 12) / 52, billable: 1, weeksOff: g.off || 0 }),
+    F =
+      g.per > 0
+        ? gigFloorFrom({
+            profit: gigProfitFlat(need * 12, pct / 100),
+            costs: g.cost * g.per * weeks,
+            hours,
+            unitHours: unitHrs,
+          })
+        : null,
+    floor = F && F.ready ? F.unit : 0,
+    units = P.keep > 0 ? Math.ceil(need / P.keep) : null;
+  return {
+    taxed,
+    need,
+    floor: Math.ceil((floor - 1e-6) / 5) * 5,
+    units,
+    weeks: Math.round(weeks * 52),
+    hourly: F && F.ready ? F.hourly : null,
+    month: F && F.ready ? F.month : null,
+  };
+}
+function gxChips(k, opts, cur, f) {
+  return `<div class="chips">${opts.map(v => `<button class="chip sm ${cur === v ? "on" : ""}" data-a="gxset" data-k="${k}" data-v="${v}">${f(v)}</button>`).join("")}</div>`;
+}
+/* ---------- Safe harbor (run Finish everything partly built, Part 14, the Tax Command Center) ----------
+   The math is gigSafeHarborOf in core/gigcore.js (a copy of js/math/gig.js), with the IRS rules of
+   GIG_SAFE_HARBOR and the dates of GIG_DUE (data/reference-2026.json). This year's tax is a Guess: the
+   share the player sets aside, on a year of the untaxed money of now, plus what a job withholds. Stored:
+   c.x.tax.sh = { last (last year's total tax, or null), agi ("yes", "no" or null), job (a job's
+   withholding a year) }. Old saves have none of it. */
+const GX_SH_LAST = [0, 2500, 5000, 10000, 20000],
+  GX_SH_JOB = [0, 2500, 5000, 10000, 20000];
+function gxShGet(c) {
+  const t = (c.x && c.x.tax && c.x.tax.sh) || {};
+  return { last: t.last == null ? null : t.last, agi: t.agi || null, job: t.job || 0 };
+}
+function gxHarbor(c, today) {
+  const S = gxState(c),
+    sh = gxShGet(c),
+    day = today || todayISO(),
+    y = +day.slice(0, 4),
+    gigYear = S.perMo * 12,
+    paid = S.T.paid.filter(p => String(p.d || "").slice(0, 4) === String(y)).reduce((a, p) => a + (p.amt || 0), 0);
+  const H = gigSafeHarborOf({
+    thisYear: gigYear + sh.job,
+    lastYear: sh.last,
+    lastAgiOver: sh.agi === "yes" ? true : sh.agi === "no" ? false : null,
+    withheld: sh.job,
+    paid,
+    due: GIG_DUE.map((md, i) => (i === 3 ? y + 1 : y) + "-" + md),
+    today: day,
+    rule: GIG_SAFE_HARBOR,
+  });
+  return Object.assign(H, { gigYear, sh });
+}
+function gxShDate(iso) {
+  return parseISO(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+function gxHarborBody(c) {
+  const H = gxHarbor(c),
+    sh = gxShGet(c);
+  if (!H.ready) return "";
+  const why =
+      H.none === "zero"
+        ? "Last year had no tax, so no estimates are needed this year."
+        : H.none === "small"
+          ? "Less than " + money(GIG_SAFE_HARBOR.owe) + " is due after withholding, so no estimates are needed."
+          : H.which === "prior"
+            ? "The least is " +
+              Math.round(H.priorShare * 100) +
+              "% of last year's tax" +
+              (H.agiSure ? "." : " (the higher share, to be safe).")
+            : "The least is " + Math.round(GIG_SAFE_HARBOR.current * 100) + "% of this year's tax.",
+    tiles = [
+      dkTile("Safe harbor", money(Math.round(H.need)), { sub: "the least in estimates this year", guess: true }),
+      dkTile("Each date", money(Math.round(H.each)), { sub: "a quarter of it", guess: true }),
+      dkTile(
+        H.next ? "By " + gxShDate(H.next.date) : "This year",
+        H.toNext >= 1 ? money(Math.round(H.toNext)) : "Covered",
+        {
+          sub: "still to send by then",
+          guess: true,
+        }
+      ),
+    ];
+  return dkCard(
+    "Safe harbor",
+    dkStatRow(tiles) +
+      `<div class="small">${esc(why)}${H.need > 0 && H.catchUp >= 1 ? " Recalculating: the next date carries the dates already passed, so it asks for " + money(Math.round(H.toNext)) + "." : ""}</div>` +
+      q(
+        "Last year's total tax (Form 1040, line 24)",
+        `<div class="chips">${GX_SH_LAST.map(v => `<button class="chip sm ${sh.last === v ? "on" : ""}" data-a="gxsh" data-k="last" data-v="${v}">${v ? money(v) : "$0"}</button>`).join("")}<button class="chip sm ${sh.last == null ? "on" : ""}" data-a="gxsh" data-k="last" data-v="">Not sure</button></div>`
+      ) +
+      (sh.last != null
+        ? q(
+            "Was last year's AGI over " + money(GIG_SAFE_HARBOR.highAgi) + "?",
+            `<div class="chips">${[
+              ["no", "No"],
+              ["yes", "Yes"],
+              ["", "Not sure"],
+            ]
+              .map(
+                o =>
+                  `<button class="chip sm ${(sh.agi || "") === o[0] ? "on" : ""}" data-a="gxsh" data-k="agi" data-v="${o[0]}">${o[1]}</button>`
+              )
+              .join("")}</div>`,
+            "Adjusted gross income, line 11. Not sure uses the higher share, to be safe."
+          )
+        : "") +
+      q(
+        "A job's tax withheld this year",
+        `<div class="chips">${GX_SH_JOB.map(v => `<button class="chip sm ${sh.job === v ? "on" : ""}" data-a="gxsh" data-k="job" data-v="${v}">${v ? money(v) : "None"}</button>`).join("")}</div>`,
+        "From your pay stubs: federal income tax withheld, for the year."
+      ) +
+      mathBox([
+        "This year's tax, a Guess: " +
+          money(Math.round(H.gigYear)) +
+          " from your set-aside share on a year like now, plus " +
+          money(H.withheld) +
+          " a job withholds = " +
+          money(Math.round(H.thisYear)) +
+          ". The share may hold state tax too; the safe harbor is the federal one.",
+        "90% of this year's tax: " +
+          money(Math.round(H.current)) +
+          "." +
+          (H.prior != null
+            ? " " +
+              Math.round(H.priorShare * 100) +
+              "% of last year's " +
+              money(H.lastYear) +
+              ": " +
+              money(Math.round(H.prior)) +
+              "."
+            : " Add last year's tax for the other test."),
+        "The smaller, less what a job withholds, is the least to send in estimates: " +
+          money(Math.round(H.need)) +
+          ". A quarter at each date, so by each date the total reaches 25%, 50%, 75% and 100%.",
+        "Paid this year with the tax money: " + money(Math.round(H.paid)) + ".",
+        "Rules: IRS 2026 Form 1040-ES and Publication 505 (2026), read Nov 26 2026. Under " +
+          money(GIG_SAFE_HARBOR.owe) +
+          " due after withholding, or no tax last year, means no estimates are needed.",
+      ]),
+    { cap: "The least to send so no underpayment penalty applies", right: kitPill("Guess") }
+  );
+}
+/* The plan's spreadsheet: the safe harbor (Part 14). */
+function gxBook(c) {
+  const H = gxHarbor(c);
+  if (!gxOn(c) || !H.ready) return { title: "Working for yourself", rows: [] };
+  const rows = [
+    {
+      id: "gx_gig",
+      label: "Tax on the work this year (your share on a year like now)",
+      v: Math.round(H.gigYear),
+      note: "Guess",
+    },
+    { id: "gx_job", label: "A job's tax withheld this year", v: H.withheld },
+    {
+      id: "gx_cur",
+      label: "Safe harbor: 90% of this year's tax",
+      v: H.current,
+      f: "=" + GIG_SAFE_HARBOR.current + "*({gx_gig}+{gx_job})",
+    },
+  ];
+  if (H.prior != null) {
+    rows.push({ id: "gx_last", label: "Last year's total tax", v: H.lastYear });
+    rows.push({
+      id: "gx_prior",
+      label: "Safe harbor: the share of last year's tax",
+      v: H.prior,
+      f: "=" + H.priorShare + "*{gx_last}",
+    });
+  }
+  rows.push(
+    H.none
+      ? {
+          id: "gx_need",
+          label: "Least to send in estimates this year",
+          v: 0,
+          note: H.none === "zero" ? "No tax last year" : "Under " + GIG_SAFE_HARBOR.owe + " due after withholding",
+        }
+      : {
+          id: "gx_need",
+          label: "Least to send in estimates this year",
+          v: H.need,
+          f: H.prior != null ? "=MAX(0,MIN({gx_cur},{gx_prior})-{gx_job})" : "=MAX(0,{gx_cur}-{gx_job})",
+        }
+  );
+  return { title: "Working for yourself", rows };
+}
+function gxTaxBody(c) {
+  const S = gxState(c),
+    rows = gxRows(c);
+  return `<div class="small muted">A paycheck has taxes taken out before you see it. Money you earn on your own does not, so part of every payment is not yours. This keeps that part in view.</div>
+ ${q("Which of these arrive with no taxes taken out?", rows.length ? `<div class="chips">${rows.map(r => `<button class="chip sm ${gxIsUntaxed(c, r.k) ? "on" : ""}" data-a="gxsrc" data-v="${esc(r.k)}">${esc(r.k)} · ${money(r.amt)}</button>`).join("")}</div>` : `<div class="tiny muted">Add your income in My Money first.</div>`)}
+ ${q(
+   "How much to set aside from each payment",
+   gxChips("pct", GX_PCTS, S.T.pct, v => v + "%"),
+   S.known
+     ? ""
+     : 'Not sure? 25% is a common starting point. In a high-tax city like New York, 30% is safer. <button class="term" data-a="info" data-k="gloss:setaside">Why so much</button>'
+ )}
+ ${
+   S.mo > 0
+     ? `<div class="cpgrid" style="grid-template-columns:1fr 1fr">${cpCell(money(Math.round(S.T.set)), "set aside so far")}${cpCell(money(Math.round(S.T.due)), "from what you logged")}</div>
+ <div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">Next date: around ${S.nx.txt}${S.known ? "" : " · <b>Guess</b>"}</div><div class="bignum" data-fid="gx:q">${money(S.perQ)}</div><div class="small">is about what three months like now would owe. That is ${money(S.perMo)} a month${unitTxt(c, S.perMo) ? ", " + unitTxt(c, S.perMo) + " a month just for taxes" : ""}.</div></div>
+ ${S.behind > 0 ? `<div class="banner small">You have logged ${money(S.behind)} more in tax money than you have set aside. No panic: it is a number to catch up on, not a bill today.</div><button class="primary wide" data-a="gxmove" data-v="${S.behind}">I moved ${money(S.behind)} aside</button>` : S.T.due > 0 ? `<div class="tile small" style="text-align:center">Everything you logged has its tax money set aside. ✓</div>` : `<div class="tile small">Next time you log money in from one of these, the game asks one question: set some aside?</div>`}
+ ${S.T.set > 0 ? `<button class="ghost wide slim" data-a="gxpaid">I paid a tax bill with it (${money(Math.round(S.T.set))})</button>` : ""}`
+     : ""
+ }
+ ${S.mo > 0 ? gxHarborBody(c) : ""}
+ ${mathBox(["Money with no taxes taken out: " + money(S.mo) + " a month.", "Times " + S.pct + "% is " + money(S.perMo) + " a month, " + money(S.perQ) + " a quarter.", "Each time you log untaxed money, " + S.pct + "% of it is added to what should be set aside.", "The dates are around Apr 15, Jun 15, Sep 15 and Jan 15. This is a planning number, not a tax return. Your real bill depends on your costs and the rest of your year.", "Tax money is still in your accounts, so your totals do not change. It is just spoken for."])}`;
+}
+function gxPayBody(c) {
+  const g = gxGig(c),
+    pct = gxPct(c),
+    P = gxPays(g, pct),
+    u = gxUnit(c),
+    same = u && u.n === g.n && Math.round(u.v) === Math.round(P.keep);
+  return `<div class="small muted">What one ${esc(g.n)} really leaves you, after what it costs, the tax on it, and the hours nobody pays for.</div>
+ ${q("What do you call one unit of your work?", `<div class="chips">${GX_NAMES.map(n => `<button class="chip sm ${g.n === n ? "on" : ""}" data-a="gxset" data-k="n" data-v="${n}">${n}</button>`).join("")}</div>`)}
+ ${q(
+   "What you charge for one",
+   gxChips("charge", [50, 100, 150, 200, 300, 500], g.charge, v => money(v))
+ )}
+ ${q(
+   "What one costs you",
+   gxChips("cost", [0, 10, 20, 50, 100], g.cost, v => (v ? money(v) : "Nothing")),
+   "Supplies, a room, travel, the platform's cut."
+ )}
+ ${q(
+   "Paid hours in one",
+   gxChips("paid", [0.5, 1, 2, 3, 4], g.paid, v => v)
+ )}
+ ${q(
+   "Unpaid hours around it",
+   gxChips("unpaid", [0, 0.5, 1, 2, 4], g.unpaid, v => v),
+   "Messages, prep, getting there, cleanup."
+ )}
+ <div class="tile stack" style="gap:4px;text-align:center"><div class="tiny muted">One ${esc(g.n)} leaves you</div><div class="bignum" data-fid="gx:keep">${money(Math.round(P.keep))}</div><div class="small">That is <b>$${P.perHr.toFixed(2)}</b> for each hour it really takes. On paper it looked like $${P.paper.toFixed(2)} an hour.</div></div>
+ ${mathBox([money(g.charge) + " charged, minus " + money(g.cost) + " in costs, is " + money(Math.round(P.afterCost)) + ".", "Minus " + pct + "% set aside for taxes (" + money(Math.round(P.tax)) + ") leaves " + money(Math.round(P.keep)) + ".", "Divided by " + P.hrs + " hours: " + g.paid + " paid and " + g.unpaid + " unpaid.", "Pricing things in hours of your life is from Your Money or Your Life (Vicki Robin and Joe Dominguez)."])}
+ ${same ? `<div class="tile small" style="text-align:center">This is your unit. Gaps across the game also show in ${esc(gxPlural(g.n, 2))}. ✓</div>` : `<button class="primary wide" data-a="gxuse">Use 1 ${esc(g.n)} = ${money(Math.round(P.keep))} across the game</button>`}`;
+}
+function gxFloorBody(c) {
+  const g = gxGig(c),
+    pct = gxPct(c),
+    F = gxFloor(c, g, pct),
+    P = gxPays(g, pct);
+  return `<div class="small muted">Your floor is the lowest price that still pays for your life. Below it you are busy and going backwards.</div>
+ ${q(
+   "How many " + esc(gxPlural(g.n, 2)) + " can you really do in a month?",
+   gxChips("per", [4, 8, 12, 16, 20, 30], g.per, v => v)
+ )}
+ ${q(
+   "Weeks a year with no work",
+   gxChips("off", [0, 2, 4, 6, 8], g.off, v => (v ? v + " weeks" : "None")),
+   "Time off, holidays, sick days and slow weeks. A job pays for these. Here the other weeks carry them."
+ )}
+ <div class="cpgrid" style="grid-template-columns:1fr 1fr">${cpCell(money(F.floor), "your floor for one " + esc(g.n))}${cpCell(money(g.charge), "what you charge now")}</div>
+ ${gxVsBody(c, F)}
+ <div class="tile small" style="text-align:center">${F.need <= 0 ? "Your other income already covers your spending, so every " + esc(g.n) + " is extra." : F.units == null ? "At this price nothing is left after costs and tax." : "At " + money(g.charge) + ", it takes <b>" + F.units + " " + esc(gxPlural(g.n, F.units)) + " a month</b> to cover what your other income does not."}</div>
+ ${mathBox(["You spend " + money(c.spend || 0) + " a month." + (F.taxed > 0 ? " Income that is already taxed covers " + money(F.taxed) + " of it." : ""), "That leaves " + money(Math.round(F.need)) + " for this work to cover, across " + g.per + " a month" + (g.off ? ", done in " + F.weeks + " weeks of the year" : "") + ".", "Each one has to clear that share after " + pct + "% tax and " + money(g.cost) + " in costs. Rounded up to the next $5.", "A floor is not a price. It is the line you price above."])}
+ <button class="ghost wide slim" data-a="gxtab" data-v="pay">Change what one ${esc(g.n)} costs or takes</button>`;
+}
+/* Pricing your power (Part 14): what an app or a gig pays an hour, next to the floor an hour. The math is
+   gigVsFloorOf in core/gigcore.js. Part of gxFloorBody(). */
+function gxVsBody(c, F) {
+  const g = gxGig(c),
+    V = gigVsFloorOf({ floor: F.hourly, pay: g.gpay, month: F.month });
+  const ask = q(
+    "What an app or a gig pays an hour, after its cut",
+    gxChips("gpay", [15, 20, 25, 35, 50, 75], g.gpay, v => money(v)),
+    "For an offer you are weighing. It shows next to your floor."
+  );
+  if (!V.ready) return ask;
+  return (
+    ask +
+    dkCard(
+      "The gig next to your floor",
+      dkStatRow([
+        dkTile("Your floor", money(V.floor), { sub: "an hour someone pays for" }),
+        dkTile("The gig", money(V.pay), { sub: Math.round(V.share * 100) + "% of your floor" }),
+      ]) +
+        `<div class="small">${V.atOrAbove ? "The gig pays about " + money(V.gap) + " an hour over your floor." : "The gig pays about " + money(-V.gap) + " an hour under your floor."} At its pay, covering your month takes about ${Math.round(V.hoursMonth)} paid hours, next to ${Math.round(V.floorHoursMonth)} at your floor.</div>` +
+        mathBox([
+          "Your floor an hour: what the work has to bring in (" +
+            money(Math.round(F.month)) +
+            " a month, tax and costs in) over the paid hours.",
+          money(Math.round(F.month)) +
+            " ÷ " +
+            money(V.pay) +
+            " = " +
+            Math.round(V.hoursMonth) +
+            " paid hours a month at the gig's pay.",
+          "A gig's pay is often before what the work costs you (miles, gear, the phone). Take those off its pay for a fair side by side.",
+        ])
+    )
+  );
+}
+/* gxSheet() makes the full sheet "Working for yourself". gxSheetBase() is the part from this file. */
+function gxSheet() {
+  let h = gxSheetBase();
+  if (typeof gxSheetSim === "function") h = gxSheetSim(h); /* sim.js: the simulator "Side income" */
+  return h;
+}
+function gxSheetBase() {
+  const c = C(),
+    w = W,
+    t = w.tab || "tax";
+  return (
+    head("Menu", "Working for yourself") +
+    `<div class="seg" style="align-self:flex-start">${[
+      ["tax", "Taxes first"],
+      ["pay", "What one pays"],
+      ["floor", "My floor"],
+      ["more", "More"],
+    ]
+      .map(x => `<button class="${t === x[0] ? "on" : ""}" data-a="gxtab" data-v="${x[0]}">${x[1]}</button>`)
+      .join("")}</div>` +
+    (t === "pay" ? gxPayBody(c) : t === "floor" ? gxFloorBody(c) : t === "more" ? gxMoreBody(c) : gxTaxBody(c))
+  );
+}
+function gxCatchSheet() {
+  const c = C(),
+    w = W,
+    pct = gxPct(c),
+    amt = Math.round((w.amt * pct) / 100);
+  return (
+    head("Logged", money(w.amt) + " from " + esc(w.src)) +
+    `<div class="small">Nobody took taxes out of this one. About <b>${money(amt)}</b> of it (${pct}%) is not yours to spend.</div>
+ <button class="primary wide go" data-a="gxcatch" data-v="moved">I moved ${money(amt)} aside</button><button class="ghost wide" data-a="gxcatch" data-v="later">Not yet. Keep count for me</button><button class="ghost wide slim" data-a="gxcatch" data-v="taxed">This one already had taxes out</button>
+ <div class="tiny muted">A separate savings account just for taxes makes this one tap at your bank. <button class="term" data-a="gig">Change the ${pct}%</button></div>`
+  );
+}
+Object.assign(ACT, {
+  gig: t => {
+    W = {
+      kind: "gig",
+      o: {},
+      tab: t && t.dataset && ["pay", "floor", "more"].includes(t.dataset.v) ? t.dataset.v : "tax",
+    };
+    sheet(gxSheet);
+  },
+  gxtab: t => {
+    W.tab = t.dataset.v;
+    drawSheet();
+  },
+  gxsrc: t => {
+    const c = C(),
+      k = t.dataset.v,
+      s = Object.assign({}, gxGet(c).src);
+    s[k] = !gxIsUntaxed(c, k);
+    gxPut(c, { src: s });
+    render();
+    drawSheet();
+  },
+  gxset: t => {
+    const c = C(),
+      k = t.dataset.k,
+      v = t.dataset.v;
+    if (k === "pct") {
+      gxPut(c, { pct: +v });
+      const u = gxUnit(c);
+      if (u && u.auto) {
+        const g = gxGig(c);
+        c.x.unit = Object.assign({}, u, { v: Math.round(gxPays(g, +v).keep) });
+        save();
+      }
+    } else {
+      c.x = c.x || {};
+      c.x.gig = Object.assign(gxGig(c), { [k]: k === "n" ? v : +v });
+      save();
+    }
+    render();
+    drawSheet();
+  },
+  gxsh: t => {
+    const c = C(),
+      k = t.dataset.k,
+      v = t.dataset.v,
+      cur = gxShGet(c);
+    cur[k] = k === "agi" ? v || null : v === "" ? null : +v;
+    if (k === "job" && cur.job == null) cur.job = 0;
+    gxPut(c, { sh: cur });
+    drawSheet();
+  },
+  gxuse: () => {
+    const c = C(),
+      g = gxGig(c),
+      P = gxPays(g, gxPct(c));
+    if (!(P.keep > 0)) return drawSheet();
+    c.x = c.x || {};
+    c.x.gig = g;
+    c.x.unit = { n: g.n, v: Math.round(P.keep), cf: 2, auto: true, d: todayISO() };
+    save();
+    render();
+    drawSheet();
+  },
+  gxmove: t => {
+    const c = C(),
+      T = gxGet(c);
+    gxPut(c, { set: T.set + (+t.dataset.v || 0) });
+    render();
+    drawSheet();
+  },
+  gxpaid: () => {
+    const c = C(),
+      T = gxGet(c);
+    if (!(T.set > 0)) return;
+    gxPut(c, {
+      paid: T.paid.concat([{ d: todayISO(), amt: Math.round(T.set) }]).slice(-12),
+      due: Math.max(0, T.due - T.set),
+      set: 0,
+    });
+    render();
+    drawSheet();
+  },
+  gxcatch: t => {
+    const c = C(),
+      w = W,
+      T = gxGet(c),
+      amt = Math.round((w.amt * gxPct(c)) / 100),
+      how = t.dataset.v;
+    if (how === "moved") gxPut(c, { set: T.set + amt, due: T.due + amt });
+    else if (how === "later") gxPut(c, { due: T.due + amt });
+    closeSheet();
+    render();
+  },
+});
+(() => {
+  /* logging untaxed money asks the one question */
+  const _fs = ACT.fsave;
+  ACT.fsave = function (t) {
+    const c = C(),
+      n0 = (c.moves || []).length;
+    _fs(t);
+    const m = (c.moves || [])[n0];
+    if (
+      G.demo ||
+      !m ||
+      (c.moves || []).length !== n0 + 1 ||
+      m.t !== "in" ||
+      !m.src ||
+      !gxIsUntaxed(c, m.src) ||
+      !(m.amt > 0)
+    )
+      return;
+    W = { kind: "gxcatch", amt: m.amt, src: m.src };
+    sheet(gxCatchSheet);
+  };
+  /* the quarterly date shows up in the next few months */
+})();
+/* Part of monthsAhead() in ux.js. For a player with income that has no tax taken out, adds the quarterly tax dates to the months. */
+function monthsAheadTax(out, c, today) {
+  if (!gxOn(c)) return out;
+  const S = gxState(c),
+    a = parseISO(today || todayISO());
+  [a.getFullYear(), a.getFullYear() + 1].forEach(y =>
+    GX_DUE.forEach(x => {
+      const dt = new Date(y, x[0], x[1]),
+        ym = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0"),
+        mo = out.find(o => o.ym === ym);
+      if (mo && dt >= new Date(a.getFullYear(), a.getMonth(), a.getDate()))
+        mo.items.push({
+          t:
+            "Tax date around the 15th: about " +
+            money(S.perQ) +
+            " for three months like now" +
+            (S.known ? "" : " (guess)"),
+          k: "cost",
+        });
+    })
+  );
+  return out;
+}
+
+/* Part of moneyTab() in ui.js. Adds a slim row "Tax money". Only a player with income that has no tax taken out sees it. */
+function moneyTabTaxRow(h) {
+  const c = C();
+  if (!gxOn(c)) return h;
+  const S = gxState(c),
+    u = gxUnit(c),
+    row = `<button class="rowbtn" data-a="gig"><span style="min-width:0"><b>Tax money</b><div class="tiny muted">${money(Math.round(S.T.set))} set aside · next date around ${S.nx.txt}${u ? " · 1 " + esc(u.n) + " = " + money(u.v) : ""}</div></span>${S.behind > 0 ? `<span class="pill warn" style="flex:none">${money(S.behind)} to catch up</span>` : `<span class="caret"><i class=chev aria-hidden=true></i></span>`}</button>`,
+    th = typeof tabHead === "function" ? tabHead() : "";
+  return th && h.indexOf(th) >= 0
+    ? h.replace(th, () => th + row)
+    : h.replace('<div class="stack">', () => '<div class="stack">' + row);
+}
+
+/* ---------- More: invoices and Profit First (run Not built, groups 1 to 5, Part 5) ----------
+   The math is core/gigcore.js (a copy of js/math/gig.js of the web app). The invoices live in c.x.invoices:
+   [{ id, client, amount, sent, terms, paid }] (dates YYYY-MM-DD). The Profit First shares live in c.x.pf:
+   { mode: "sample" or "mine", profit, owner, tax, opex } (shares from 0 to 1). Old saves have neither, and
+   nothing else reads them. */
+const GX_PF_WORDS = { profit: "Profit", owner: "Pay to you", tax: "Tax", opex: "Running costs" },
+  GX_PF_PICKS = {
+    profit: [0.01, 0.03, 0.05, 0.1],
+    owner: [0.3, 0.4, 0.5, 0.6],
+    tax: [0.1, 0.15, 0.2, 0.25, 0.3],
+    opex: [0.1, 0.2, 0.3, 0.4],
+  },
+  GX_NUDGE_WORDS = {
+    note: "A friendly note: the invoice again, in case it got buried.",
+    second: "A second note, with the invoice attached, asking when it is scheduled.",
+    call: "A short call or message to the person who pays, to ask what is holding it up.",
+    pause: "A plain word that new work waits until it is settled, and a payment plan if that helps.",
+  };
+function gxInvList(c) {
+  return (c.x && c.x.invoices) || [];
+}
+function gxInvState(c, today) {
+  return gigInvoicesOf(gxInvList(c), today || todayISO());
+}
+function gxDays(n) {
+  return n + (n === 1 ? " day" : " days");
+}
+function gxInvBody(c) {
+  const R = gxInvState(c),
+    d = W.inv || { amt: null, terms: 30 },
+    oldest = R.ready ? R.rows.find(r => r.status === "past") : null,
+    nudge = oldest ? gigNudgeOf(oldest.daysPast) : null,
+    row = r =>
+      `<div class="row between" style="gap:8px;flex-wrap:wrap"><span style="min-width:0"><b>${esc(r.client || "No name")} · ${money(r.amount)}</b><div class="tiny muted">${r.status === "paid" ? "Paid, " + gxDays(r.daysToPay) + " after it was sent" : r.status === "past" ? "Was due " + r.dueDate + ", " + gxDays(r.daysPast) + " ago" : "Due " + r.dueDate + ", in " + gxDays(r.daysToDue)}</div></span><span class="row" style="gap:6px">${dkPill(r.status === "paid" ? "Paid" : r.status === "past" ? "Past its date" : "Not due yet", r.status === "past" ? "warn" : r.status === "paid" ? "good" : "")}${r.status === "paid" ? "" : `<button class="ghost slim" data-a="gxinvpaid" data-v="${esc(r.id)}">Mark paid</button>`}<button class="ghost slim" data-a="gxinvdel" data-v="${esc(r.id)}">Remove</button></span></div>`;
+  return `${dkCaption("Who still owes you, and a calm next step")}
+ ${
+   R.ready
+     ? dkStatRow([
+         dkTile("Still coming", money(Math.round(R.waiting))),
+         dkTile("Past its date", money(Math.round(R.past)), {
+           sub: R.pastCount + (R.pastCount === 1 ? " invoice" : " invoices"),
+         }),
+         dkTile("Paid", money(Math.round(R.got)), { sub: R.paidCount + " so far" }),
+         dkTile("Days to get paid", R.avgDaysToPay == null ? "Not yet" : String(Math.round(R.avgDaysToPay)), {
+           sub: "on average",
+         }),
+       ]) + dkCard("Your invoices", `<div class="stack" style="gap:10px">${R.rows.map(row).join("")}</div>`)
+     : ""
+ }
+ ${W.invUndo ? `<button class="ghost wide slim" data-a="gxinvundo">Undo: put back ${esc(W.invUndo.client || "the invoice")} (${money(W.invUndo.amount)})</button>` : ""}
+ ${nudge ? dkCard("A calm next step", `<div class="small">${esc(oldest.client || "The oldest one")} is ${gxDays(oldest.daysPast)} past its date. ${esc(GX_NUDGE_WORDS[nudge.id])} Most late payments are a busy inbox, not a refusal.</div>`) : ""}
+ ${dkCard(
+   "Add an invoice",
+   `<div class="field"><label class="small" for="gxinvn">Who it is for</label><input type="text" id="gxinvn" data-k="gxinvn" maxlength="24" placeholder="A short name" value="${esc((W.o && W.o.gxinvn) || "")}"></div>
+ ${q(
+   "The amount",
+   `<div class="chips">${[100, 250, 500, 1000, 2500].map(v => `<button class="chip sm ${d.amt === v ? "on" : ""}" data-a="gxinv" data-k="amt" data-v="${v}">${money(v)}</button>`).join("")}</div>`
+ )}
+ ${q(
+   "When it is due",
+   `<div class="chips">${GIG_TERMS.map(v => `<button class="chip sm ${d.terms === v ? "on" : ""}" data-a="gxinv" data-k="terms" data-v="${v}">${v ? v + " days" : "On receipt"}</button>`).join("")}</div>`,
+   "Counted from today, the day you send it."
+ )}
+ <button class="primary wide" data-a="gxinvadd"${d.amt > 0 ? "" : " disabled"}>${d.amt > 0 ? "Add " + money(d.amt) : "Tap an amount first"}</button>`
+ )}
+ ${mathBox(["Each invoice is due its days after the day you sent it.", "Past its date: today is after the due date. The rhythm: a friendly note from day 1, a second from day 14, a call from day 30, a pause on new work from day 60. It is a habit many people use, not a rule.", "The list stays in your game on this device."])}`;
+}
+function gxPfShares(c) {
+  const p = (c.x && c.x.pf) || {};
+  if (p.mode !== "mine") return { mode: "sample", s: GIG_PF_SAMPLE };
+  return { mode: "mine", s: Object.fromEntries(GIG_PF_KEYS.map(k => [k, p[k] == null ? GIG_PF_SAMPLE[k] : p[k]])) };
+}
+function gxPfBody(c) {
+  const mo = gxUntaxedMo(c),
+    P = gxPfShares(c),
+    R = gigProfitFirstOf({ income: mo, pcts: P.s }),
+    mine = pct => Math.round(pct * 100) + "%";
+  return `${dkCaption("Take your share first, run the work on the rest")}
+ <div class="chips"><button class="chip sm ${P.mode === "sample" ? "on" : ""}" data-a="gxpf" data-k="mode" data-v="sample">The book's sample</button><button class="chip sm ${P.mode === "mine" ? "on" : ""}" data-a="gxpf" data-k="mode" data-v="mine">My own split</button></div>
+ ${P.mode === "mine" ? GIG_PF_KEYS.map(k => q(GX_PF_WORDS[k], `<div class="chips">${GX_PF_PICKS[k].map(v => `<button class="chip sm ${P.s[k] === v ? "on" : ""}" data-a="gxpf" data-k="${k}" data-v="${v}">${mine(v)}</button>`).join("")}${k === "tax" ? `<button class="chip sm ${P.s.tax === gxPct(c) / 100 ? "on" : ""}" data-a="gxpf" data-k="tax" data-v="${gxPct(c) / 100}">My set-aside, ${gxPct(c)}%</button>` : ""}</div>`)).join("") : ""}
+ ${
+   R.ready
+     ? dkStatRow(
+         R.parts.map(x => dkTile(GX_PF_WORDS[x.key], money(Math.round(x.amount)), { sub: mine(x.pct) + " a month" }))
+       ) +
+       dkCard(
+         "Where each dollar goes",
+         dkDonut(
+           R.parts.map(x => ({ l: GX_PF_WORDS[x.key], v: x.amount })),
+           { label: "The split" }
+         ) +
+           (R.left >= 1
+             ? `<div class="small">Your shares add to ${mine(R.total)}, so ${money(Math.round(R.left))} has no place yet.</div>`
+             : "")
+       )
+     : R.over
+       ? `<div class="tile small">Your shares add to ${mine(R.over)}. Lower one of them to 100% in all.</div>`
+       : `<div class="tile small">Add your side income in My Money first. This splits it the day it lands.</div>`
+ }
+ ${mathBox(["Each month's side income (" + money(mo) + ", the income that arrives with no tax taken out) times each share.", P.mode === "sample" ? "The shares are the sample in the book Profit First by Mike Michalowicz for a business under $250,000: 5% profit, 50% pay to you, 15% tax, 30% running costs." : "The shares are your own taps.", "Profit First: each payment lands in one account, and on a set rhythm it is moved out by shares into separate accounts. The work runs on what is in the running-costs account."])}`;
+}
+function gxMoreBody(c) {
+  const m = W.more || "inv";
+  return `<div class="chips"><button class="chip ${m === "inv" ? "on" : ""}" data-a="gxmore" data-v="inv">Invoices</button><button class="chip ${m === "pf" ? "on" : ""}" data-a="gxmore" data-v="pf">Profit First</button></div>
+ ${m === "pf" ? gxPfBody(c) : gxInvBody(c)}
+ <div class="tiny muted">Retirement for the self-employed (Solo 401(k), SEP or IRA), the tax share worked out by the tax engine, and adding up your apps and tips are on the web app's small pages.</div>`;
+}
+function gxInvPut(c, list) {
+  c.x = c.x || {};
+  c.x.invoices = list;
+  save();
+}
+Object.assign(ACT, {
+  gxmore: t => {
+    W.more = t.dataset.v;
+    drawSheet();
+  },
+  gxinv: t => {
+    W.inv = Object.assign({ amt: null, terms: 30 }, W.inv, { [t.dataset.k]: +t.dataset.v });
+    drawSheet();
+  },
+  gxinvadd: () => {
+    const c = C(),
+      d = W.inv || {};
+    if (!(d.amt > 0)) return drawSheet();
+    const name = String((W.o && W.o.gxinvn) || "")
+      .trim()
+      .slice(0, 24);
+    gxInvPut(
+      c,
+      gxInvList(c).concat([
+        {
+          id: "i" + Date.now().toString(36) + gxInvList(c).length,
+          client: name,
+          amount: d.amt,
+          sent: todayISO(),
+          terms: d.terms == null ? 30 : d.terms,
+          paid: null,
+        },
+      ])
+    );
+    W.inv = { amt: null, terms: d.terms };
+    W.o = Object.assign({}, W.o, { gxinvn: "" });
+    W.invUndo = null;
+    drawSheet();
+  },
+  gxinvpaid: t => {
+    const c = C();
+    gxInvPut(
+      c,
+      gxInvList(c).map(i => (i.id === t.dataset.v ? Object.assign({}, i, { paid: todayISO() }) : i))
+    );
+    drawSheet();
+  },
+  gxinvdel: t => {
+    const c = C(),
+      L = gxInvList(c);
+    W.invUndo = L.find(i => i.id === t.dataset.v) || null;
+    gxInvPut(
+      c,
+      L.filter(i => i.id !== t.dataset.v)
+    );
+    drawSheet();
+  },
+  gxinvundo: () => {
+    const c = C();
+    if (W.invUndo) gxInvPut(c, gxInvList(c).concat([W.invUndo]));
+    W.invUndo = null;
+    drawSheet();
+  },
+  gxpf: t => {
+    const c = C(),
+      k = t.dataset.k;
+    c.x = c.x || {};
+    const cur = Object.assign({ mode: "sample" }, c.x.pf);
+    if (k === "mode") cur.mode = t.dataset.v;
+    else cur[k] = +t.dataset.v;
+    c.x.pf = cur;
+    save();
+    drawSheet();
+  },
+});
+
+Object.assign(GLOSS, {
+  setaside: [
+    "Why set aside so much",
+    "When you work for yourself you pay both halves of Social Security and Medicare, about 15% of what you keep after costs, and then regular income tax on top. A job hides most of this from you. Your costs lower the bill, so track them.",
+  ],
+  unit: [
+    "Your unit",
+    "The thing you sell: a session, a shift, a gig. Once the game knows what one really leaves you, it can turn any dollar gap into how many more of them it would take.",
+  ],
+  floor: [
+    "Your floor",
+    "The lowest price for your work that still pays for your life after costs and taxes. It is a line to price above, not a price.",
+  ],
+});
+if (typeof MENU !== "undefined" && Array.isArray(MENU) && !MENU.some(m => m[1] === "gig")) {
+  const i = MENU.findIndex(m => m[1] === "quick");
+  MENU.splice(i >= 0 ? i : MENU.length, 0, [
+    "Working for yourself",
+    "gig",
+    "act",
+    "Taxes set aside, what one gig really pays, your floor",
+  ]);
+}
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

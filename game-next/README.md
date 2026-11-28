@@ -1,0 +1,232 @@
+# SLAM the Game: start here
+
+SLAM the Game is a money game for one household. It runs in a browser. It has no build step.
+
+Live site: https://play.stresslessaboutmoney.com/game/
+
+Retirement engine by Zack, MIT license (section 11).
+
+This page tells a new developer how the game is made, how to run it, and where its weak points are.
+
+This folder is the only copy of the game. An older copy inside Claude is retired.
+
+| Document | Contents |
+|----------|----------|
+| `README.md` | This page. |
+| `CODE-MAP.md` | A generated map: each file with its purpose and size, and the counts of the weak patterns. |
+| `KNOWN-WEAK.md` | Each known weak point, with the recommended repair. |
+| `tests/README.md` | How the tests work, and the list of test files. |
+| `unused/README.md` | The code that nothing calls. |
+
+## 1. The six facts you must know first
+
+1. **The game uses classic scripts.** `index.html` loads 233 script files in a fixed order (232 of the game and one bundle from outside, in `vendor/`). All functions and constants are in one global scope. There are no modules.
+2. **Each file starts with a header.** The header gives PURPOSE, INPUT, OUTPUT and DEPENDS ON. Read the header before you read the code.
+3. **The screens are HTML text.** Each screen function returns one HTML string. `render()` puts the string in the page. One click handler reads the `data-a` attribute and calls `ACT[name]`.
+4. **A screen function calls its parts by name.** A feature file can add a row to a screen of a different file, for example to Home. It does this with a named function (a part), and the screen function calls that part. No file replaces a function of a different file. Section 6 shows the pattern.
+5. **All data is one object, `G`.** `G.chars` is the list of player profiles. `save()` writes `G` to the browser storage. On the website, `account/supa.js` and `account/cloud.js` also write `G` to the Supabase database for the account.
+6. **`derive(c)` does the math.** It takes one profile and returns all computed numbers (net worth, savings rate, era, and more). The screens show these numbers. They do not calculate.
+
+## 2. Run it
+
+```
+python3 -m http.server 8000
+```
+
+Open http://localhost:8000/game/. Without an internet connection the game runs in demo mode, and the data stays in the browser.
+
+## 3. Test it
+
+```
+npm run test:game
+```
+
+The command runs 166 test files (6,956 checks) in Node.js. It needs no browser. Each test file has the name of its feature. `tests/README.md` has the list and tells how a test file works.
+
+All checks pass, and the command ends with exit code 0. One file (`addon-sealed-files.js`) has a part that needs the private add-on source. In this repository that part prints `SKIP`.
+
+The last line of the output shows if the version stamps are correct (section 10).
+
+GitHub runs `node --test` and `npm run test:game` on each push (`.github/workflows/test.yml`). A failure shows as a red X next to the commit.
+
+`node --test` runs the tests of the main SLAM app (about 1,800 checks). It does not run the game tests.
+
+## 4. Where things are
+
+The scripts are in five folders. The folder shows the role of a file. It does not change the load order: `index.html` is the only place that sets the load order.
+
+| Folder | Role | Files |
+|--------|------|-------|
+| `core/` | The math, the data model, the error record and the card "Coming soon". Each screen depends on these files. | `report.js`, `soon.js`, `engine.js`, `engine2.js`, `homebuy.js` (home buying and renting, a copy of `js/math/homebuy.js`), `career.js` (career and education, a copy of `js/math/career.js`, made by `tools/game_career_build.mjs`; do not edit it), `trip.js` (travel and the FIRE journey, a copy of `js/math/household.js` and `js/math/trip.js`, made by `tools/game_trip_build.mjs`; do not edit it), `statuses.js` (the FIRE statuses: a copy of `js/math/statuses.js` of the main app with the draft option words, made by `tools/game_statuses_build.mjs`; do not edit it), `recalc.js` (the math of Recalculating: a copy of `js/math/recalc.js` of the main app, made by `tools/game_recalc_build.mjs`; do not edit it), `reportcore.js` (Report a bug or idea: a copy of `js/report/core.js` of the main app, made by `tools/game_report_build.mjs`; do not edit it), `quizcore.js` (the one quiz engine: a copy of `js/math/quizcore.js` of the main app, made by `tools/game_quiz_build.mjs`; do not edit it), `metrics.js`, `jobs.js` (the math of the six unpaid jobs: a copy of `js/math/jobs.js` of the main app, made by `tools/game_jobs_build.mjs`; do not edit it), `enough.js` (the math of Lifestyle creep and enough, and the ranges of Rough numbers: a copy of `js/math/enough.js` of the main app with the CPI row as `EN_CPI`, made by `tools/game_enough_build.mjs`; do not edit it), `withdraw.js` (the ways to take money out: a generated copy of `js/math/withdraw.js` of the main app; do not edit it, run `node tools/game_withdraw_build.mjs`), `askrank.js` (asking fewer questions: the cost of not knowing, the one ranking of the open questions and the stopping rule, a copy of `js/math/askrank.js` of the main app made by `tools/game_askrank_build.mjs`; do not edit it) |
+| `data/` | Data only. No functions. | `skills.js`, `skillthemes.js` (the skill tree), `quizskins.js` (the quiz skins and the skills they route to; `tools/game_quiz_build.mjs` makes it from `js/quiz/skins/` of the main app; do not edit it), `qr.js` (one QR code picture), `market.js` (US market history by year, from Shiller), `limits2026.js` (the 2026 account limits, from the IRS), `takeout2026.js` (the early-access rules and the health-plan credit table), `cardtemplate.js` (the template of one card: fields, switches, categories; the admin page loads it too), `cards2026.js` (93 cards as full template records; `tools/game_cards_build.mjs` makes it), `health2026.js` (average 2026 health premiums, from KFF), `roles.js` (the six unpaid jobs and their recurring tasks), `patchnotes.js` (the patch notes of "What's new"; each run adds one entry at the end; the web app reads it too), `retire-*.json` (the tax tables of the retirement engine, changed from YAML) |
+| `account/` | Sign-in, the database, the save to the cloud, the roles, and the add-on system. | `door.js` (the front door: the landing screen of a new visitor, before `supa.js`), `supa.js`, `trust.js` (the line "Education and tools, not financial advice.", calm words for the sign-in emails, Delete my account; `privacy.html` loads it too), `cloud.js`, `gate.js`, `addon.js`, `coachplus.js` (the demo with made-up clients, results, the pipeline; only `coach.html` loads it), `liveflag.js` (the one switch of Live Session Mode, off; the game loads this file only), `live.js`, `liveio.js`, `livesim.js`, `liveroom.js`, `livecoach.js`, `livefill.js`, `liveland.js` (Live Session Mode: the rules, the adapters, the stand-ins, the session page, the coach's card, what a line of the call means, and how it lands on the profile; only `session.html` and `coach.html` load them), `roles.js` (the hats Player, Coach and Admin, and the audit lines; all three pages load it), `cardadmin.js`, `adminmore.js` and `foundadmin.js` (only `admin.html` loads them), `coachpage.js` (only `coach.html` loads it) |
+| `screens/` | The main screens, the click actions, the navigation and the setup questions. | `ui.js`, `ux.js`, `planner.js`, `nav.js`, `tidy.js`, `smart.js`, `profiles.js`, `dash.js` (the kit of the dashboard look: stat tiles, charts, the Time-Money dial; DESIGN.md "Reference: Tally") |
+| `features/` | One file for each feature. Each file adds its sheets and its actions. | 142 files, and 12 simulators in `features/sims/`. `CODE-MAP.md` gives the purpose of each one. |
+| `vendor/` | Code from outside the game. Do not edit it. The game loads `retire-engine.js` before `core/engine.js`. | `retire-engine.js` (the retirement engine, one bundle), `retire-worker.js` (its Web Worker), `RETIRE-ENGINE-LICENSE.txt` |
+| `unused/` | Code that nothing calls. The game does not load it. | `no-caller.js` |
+| `tests/` | The tests. | `run.cjs`, `harness.cjs`, one file for each feature |
+
+These files stay in `game/` because the browser or the tools look for them there: `index.html`, `admin.html` (the administrator page), `coach.html` (the coach page), `session.html` (the session page of Live Session Mode; it shows "Coming soon" while the switch is off), `privacy.html` (the privacy page, with Delete my account), `sw.js` (the service worker), `manifest.json`, the two icons, and `x1.json` and `x2.json` (the add-ons, see section 7).
+
+| Subject | Files |
+|---------|-------|
+| Famous money ideas | `features/roof.js`, `features/ideas.js` to `features/ideas5.js`, `features/ideasz.js` |
+| Later eras and the account recommendation | `features/eras.js`, `features/dep.js` |
+| Fork Theory, spending plan, audit score | `features/fork.js`, `features/csp.js` |
+| The Plan batch: shared parts (chips, Guess / Close / Exact, columns, the flip chart) | `features/kit.js` |
+| The two paths, retirement odds, the tax view | `features/paths.js`, `features/odds.js`, `features/taxview.js` |
+| Insurance needs, investment mix and fees, while you slept | `features/cover.js`, `features/mix.js`, `features/slept.js` |
+| The FI ratio on Key numbers, and the card "You can stop sprinting" on Home | `features/coast.js` |
+| The simulators: the engine, and one file for each | `features/sim.js`, `features/sims/*.js` |
+| The front door (the landing screen, Start with no account) and the answer to "Am I okay?" | `account/door.js`, `features/okay.js`, `docs/LAUNCH-LINK.md`, `tools/qr_slam.py`, `tools/e2e/door_walk.cjs` |
+| My plan on one page, the Ask front door, quotas and the savings rate by month | `features/plan.js`, `features/ask3.js`, `features/quota.js` |
+| The spreadsheet of the plan (each number with its formula), and Export: the .xlsx file, written by `js/sheet/` of the web app | `features/book.js`, `features/firelink.js` |
+| Where am I (the Quest Log): Continue, the trail, Journey, Areas, Questions, Time | `features/questlog.js` |
+| The Galaxy: the 625 skills as stars on one canvas, with lanes and gateway stars | `features/stars.js` |
+| Port batch 1, taking money out and the two ages | `features/takeout.js`, `features/ages.js` |
+| Compare the ways: the same plan through each way to take money out | `features/ways.js`, `core/withdraw.js` (the rules), `features/odds.js` (the run) |
+| Port batch 1, the stress test, the life event blocks, the windfall | `features/stress.js`, `features/blocks.js`, `features/windfall.js` |
+| Port batch 1, countdowns on My Goals, two job offers, which account next | `features/countdown.js`, `features/offers.js`, `features/nextacct.js` |
+| Port batch 1, the ledger with three statements, the card vault | `features/ledger.js`, `features/vault.js` |
+| Recalculating (the new date and the next turn, the short month, the cushion refill, the safe-to-fail line), the letter exercise, the optional Mistake audit | `features/recalc.js`, `features/exletter.js`, `features/audit.js`, `core/recalc.js` |
+| Quizzes: one engine, one sheet, a skin for each quiz (to add one: `docs/QUIZ-ENGINE.md`); the Money Chart is scored by the same engine | `features/quizzes.js`, `core/quizcore.js`, `data/quizskins.js`, `features/chart.js` |
+| The money sins read (Menu > "Your money read") and the Rings theme (a theme in THEMES; the ruler of the main pull in the boss fights) | `features/sins.js`, `features/rings.js`, `core/sins.js` (a copy of `js/math/sins.js` of the main app, made by `tools/game_sins_build.mjs`; do not edit it), the words in `js/quiz/skins/sins.js` (copied to `data/quizskins.js`) |
+| Report a bug or idea: the button on each screen, the list on the device, the note "It's fixed"; the admin Reports inbox | `features/fbreport.js`, `core/reportcore.js`, `account/adminmore.js` |
+| Founding Testers (the first 50 accounts that finish setup), Share SLAM (the personal link `?ref=code`), What's new (the patch notes) | `features/founding.js`, `data/patchnotes.js`, `account/foundadmin.js`, `supabase/migrations/20261125190000_founding_and_referrals.sql` (not applied) |
+| Live Session Mode (behind the switch `LIVE_SESSION_READY` in `account/liveflag.js`): the invite link that is the sign-up, the session room, the live fill with the spoken confirmation and the what-ifs (rules, not joined to a saved game yet) | `account/liveflag.js`, `account/live.js` (rules, values only), `account/livefill.js` (what one line means), `account/liveland.js` (how it lands on the profile; `docs/LIVE-SESSION-BUILD.md`), `account/liveio.js` (adapters and the room controller), `account/livesim.js` (stand-ins), `account/liveroom.js` and `session.html` (the session page), `account/livecoach.js` (the coach's card), `supabase/migrations/20261125210000_live_sessions.sql` (not applied) |
+| Career and education: a course or degree, side by side, the credential stack, the match that stays with the job, the launch window | `features/career.js`, `core/career.js` (the one engine with `career.html` of the web app) |
+| A goal wired to an account and its automatic deposit, in three taps; the health and insurance quests (run JOE-1, features 4 and 5) | `features/goalwire.js`, `features/careq.js`, `data/roles.js` (`WIRE_OPTIONS`, `CARE_QUESTS`) |
+| Trips and the journey: a trip line by line, points or cash, a group split by share or by item, the FIRE journey map | `features/trip.js`, `core/trip.js` (the one engine with `trip.html` of the web app) |
+| Eli's frameworks and the canon: eight famous money ideas (SWAN, Second Mouse, Trust, the Advice translator, the Baby Steps, the wealth stages, Die With Zero, the net worth peak), Your Money or Your Life as nine steps, the quick wins, the next dollar on Home | `features/canon.js`, `core/frameworks.js` (a copy of `js/math/frameworks.js` of the main app, made by `tools/game_frameworks_build.mjs`; do not edit it) |
+| Your unpaid jobs (the six jobs of running your money), admin hours (Running it and Living it), the four ways out of each task (run JOE-1) | `features/jobs.js`, `data/roles.js`, `core/jobs.js` (a copy of `js/math/jobs.js` of the main app, made by `tools/game_jobs_build.mjs`; do not edit it), `docs/JOB-OF-EXISTING.md` |
+| Lifestyle creep (each category year over year next to income, the lines faster than prices, the quiet card), the few lines (Pareto), Enough and room for error, Rough numbers (run Not built, groups 1 to 5, Part 3) | `features/enough.js`, `core/enough.js` (the one engine with the Budget and Goals of the web app) |
+| Joy and enough (run Finish everything partly built, Part 8): joy per dollar (a joy tap on each spending line, share of joy, joy per $100, joy per hour of work), the fulfillment curve and the Enough meter, the rich-life list (memory dividends, the regret view), every subscription as days on the free date; `joyHomeLine(c)` waits for Home | `features/joy.js`, `core/enough.js` (the same engine as Lifestyle creep and enough) |
+| Households together (run Finish everything partly built, Part 12): Same question on one phone or two (an answer code), the talk points (also on the guild's money date), FI together with the gap, a shared home's equity for any number of people, the tax gap when only two can marry, Share by email (a draft the person sends) | `features/hhold.js`, `core/hhold.js` (a copy of `js/math/hhold.js` of the main app, made by `tools/game_hhold_build.mjs`; do not edit it) |
+| Giving (run Finish everything partly built, Part 16): the giving rate on the base the player picks and the share it comes to (maaser), one gift in hours and days, bunching on the 2026 federal rules, envelopes inside one account, the maaser credit for giving ahead | `features/giving.js`, `core/giving.js` (a copy of `js/math/giving.js` of the main app with the 2026 federal rows, made by `tools/game_giving_build.mjs`; do not edit it) |
+| Hard moments (untangling, a roommate leaving, a death, a partner who died, medical bills, saying no, a fire, a flood or an eviction, a private money plan; Leave this page; nothing kept unless the player turns it on; run Not built, groups 1 to 5, Part 7) | `features/hard.js`, `core/hardcore.js` (a copy of `js/math/hard.js` and `data/sources/hard-2026.json`, made by `tools/game_hard_build.mjs`; do not edit it) |
+| Setup as a spiral: five rounds in the order D, A, I, T, E, one number for each round with its chain and route strip, the level change, and "Your first plan" written as a route (UX pass, phase 3) | `features/spiral.js`, `screens/smart.js` (the order of the pages, the taxes round) |
+| My Money as a dashboard (the four tiles, the big three, where it goes, the closed sections, the money machine net first), "Is my money going where I want?" (values ranked, then linked one place at a time), goals kept and ranked with the top 3 "Working on now" (UX pass, phase 5) | `features/tally.js`, `screens/dash.js` (dkSlices, dkSec), `features/values.js`, `features/goalrank.js`, `tools/e2e/ux_pass_walk.cjs` (the walk of three fresh profiles) |
+| The questions inside the rounds: count first, then one at a time (cards, other debts, accounts with a breadcrumb, each source of money, spending group by group), "I know it" in the same spot, how many roommates and kids (UX pass, phase 4) | `features/amounts.js`, `screens/smart.js` (the order of the pages), `core/engine.js` (`hhSize`, `typSpend`) |
+| Quest mode (run Not built, groups 1 to 5, Part 10a): the character sheet with health, armor and six stats, capacity, how this plan fails, hidden costs, where you rank, opponents, the judge, ask the game, path packs, graduating and your story | `features/quest.js`, `core/quest.js` (a copy of `js/math/quest.js` with the SCF rows, made by `tools/game_quest_build.mjs`; do not edit it) |
+| You and people like you (run Finish everything partly built, Part 9): net worth, savings rate and pay next to published numbers for people your age, the next milestone, people like you lines, each with its source; private | `features/peers.js`, `core/peers.js` (a copy of `js/math/peers.js` with the rows of `data/priors-2026.json`, made by `tools/game_peers_build.mjs`; do not edit it; `core/quest.js` reads its `peNetWorth`) |
+| Investing (run Finish everything partly built, Part 13): the household mix of every account (the stock share next to a target or the age guide, the three-fund check, employer stock and one company), every fund and fee (funds one by one, sales charges, account and advisor fees), invest or pay debt as one grid, Roth or traditional by account | `features/mix.js`, `features/invest.js`, `core/invest.js` (a copy of `js/math/invest.js`, made by `tools/game_invest_build.mjs`; do not edit it; it uses `crRothTrad` of `core/career.js`) |
+| Results first (run Results-first Home, items 1 and 2): the payoff reveal "Here's where you stand" at the end of setup (the lead number, five result cards, Start my first win), Home as four cards in a priority grid (Your next win, By the end of this month, You are here, the metric tiles), the Home button on every screen | `features/results.js`, `features/spiral.js` (`spPlanSheet`), `screens/ux.js` (`homeQuadTop`), `core/frameworks.js` (`fwLead`, `fwDtiMonths`, `fwMonthEnd`) |
+| Receipts and the life map (run Results-first Home, items 3 and 4): one receipt after each finished move and logged transaction (what moved, the next unlock, the next action with its tap count; "Recalculating route" for a later date), and the life map of the ten eras from age 15 on the big picture (launch in at your age, starting bonuses, the head start, a sheet for each era) | `features/receipt.js`, `features/lifemap.js`, `screens/ui.js` (`celebrateBase`, `mapTab`, the click handler) |
+| The 60-second demo Find your era (run CC-1, item 7): one small page outside the game, taps only, that shows an era, one next move and Start my full game; its answers come into the game; a printable page with a QR code | `era/index.html`, `era/era.js`, `era/print.html`, `era/gamecopy.js` (a copy of the range chips and the money words of the game, made by `tools/game_era_build.mjs`; do not edit it), `features/erain.js` (the questions, the math, and `erIn`, a part of `cbStart` in `couldbe.js`), `tools/qr_era.py`, `era/README.md` |
+| Game feel (run Finish everything partly built, Part 20): Start at the finish line (the web page end.html's walk, on the same engine), What's in the way (the bottleneck finder: eight kinds, Is this really it?, the judge keeps each answer), past you and a typical path in the rival race, made-up composite stories, the strip of what an answer moved, the before and after bars of a receipt | `features/feel.js`, `core/feel.js` (a copy of `js/math/feel.js`, made by `tools/game_feel_build.mjs`; do not edit it), `features/receipt.js` (`rcpBar`, `rcpBarHtml`) |
+| The FIRE statuses (run FIRE statuses and the life timeline, Part 1): Coast, Lean and FI as markers on the life map, the journey and the card You are here; the one-time card of a status that was just reached with Options this opens ("You can stop sprinting" is the Coast case); the quiet line under a status | `features/coast.js` (`stGame`, `homeCoastCard`, `rsRouteStatus`, `stSheet`), `core/statuses.js` (a copy of `js/math/statuses.js` with the draft words of `data/library/status-options.json`, made by `tools/game_statuses_build.mjs`; do not edit it), `features/lifemap.js`, `features/trip.js` |
+| A calmer first week (Batch B, phase 5): four places in the bar for 7 days or until the reveal, whichever is later; everything else in the menu in groups inside groups; the Tool library (the standalone pages of the web app); the line "New for you" | `features/firstweek.js`, `data/toollib.js` (made by `tools/game_toollib_build.mjs`; do not edit it), `screens/planner.js` (`menuGroupHtml`), `tools/e2e/firstweek_walk.cjs` |
+| The new order of the opening (run SLAM-ONBOARD-1): What you want as the first screen (the picks are goals), the chip "No idea, use typical" with sourced values for the age, the slim strip of the two numbers, the first move on the last screen | `features/wants.js`, `features/couldbe.js` (`cbTypical`, `cbSlim`, `cbTop`), `features/cbreveal.js` (`cbFirstMove`), `core/paylayers.js` (`LY_TYP_REF`, made by `tools/game_paylayers_build.mjs`), `tests/what-you-want.js` |
+| One result, then Home (run 16, audit fixes batch 1, A and B): the last screen of the opening and of the demo is one result (the era, why, the first move, Start my first move, a small Back); the button lands on Home with the first move as the top card; Home is one row of the four top numbers, then ONE next-step card, the rest below; a number that changed moves for a moment; answers of the opening are not asked again | `features/couldbe.js` (`cbEndView`, `cbNumsMove`, `openSetupCb`), `features/cbreveal.js` (`cbResult`, `cbFirstPick`, `homeFirstCard`), `features/erain.js` (`erIn`, `erSigned`), `features/look.js` (`homeStatRow`, `homeNumsMove`), `features/results.js` (`homeResults`, `homeResultsMore`), `screens/ux.js` (`homeQuadTop`), `features/amounts.js` (`amCarryInv`, `amGroupGuess`), `account/door.js` (`doorFromDemo`), `era/gamelook.css` (made by `tools/game_era_build.mjs`), `tests/onboarding-handoff-and-home.js` |
+| The usability pass on the opening (run 14, items 1 to 7): one pulse on each screen (the class `cbnext`), folds, the row Back and Forward, a screen that keeps its place, the most likely answer first, the "i" with two lines; items 8 to 13: no count that reads "0 of", the reveal as four blocks side by side, a tap outside an open "i" closes it, the countdown, one line of why for each question, the way to undo on each receipt, one line before a button that leaves the flow | `features/cbguide.js` (`cbOne`, `cbFold`, `cbNav`, `cbI`, `CB_GUIDE`, `cbLeft`, `cbLeaves`, `cbOutTap`), `features/couldbe.js` (`cbChips`, `cbLikely`, `cbOptWords`, `cbWhyAsk`, `CB_UNDO`), `features/cbstack.js` (`cbStackLine`), `features/cbreveal.js` (`cbRevealView`), `tests/flow-no-zeros-outside-tap.js`, `tools/e2e/flow_walk.cjs` (the layout walk) |
+| Easier (run CC-1, part C, items 12 to 17): the results card (the era, the FI number, the top 3 moves) on the one painter of an image; the progressive menu (a short menu to start, one rule for each row, Show everything); Assumptions inside Show the math; four doors "Start here" on the landing; done-for-you setup (a coach reads a CSV file, the client confirms each line); the guided tour of nine stops with the one pulse | `features/cbreveal.js` (`cbPlanCard`, `cbCardPeek`), `features/cbyesbut.js` (`cbYbPaint`), `features/firstweek.js` (`fwRowRule`, `fwMenuState`, `fwUsed`), `features/assume.js`, `account/door.js` (`DOOR_SITS`), `features/cofill.js`, `features/import.js` (`imPut`), `features/tour.js` |
+| Better and Cheaper (run CC-1, parts D and E, items 18 to 23): the Confidence and Joy check (two tap scales, one line on Home at the start and each month, the before and after, the averages of the admin page) and the three lines it adds to Your year; the Graduate page (placeholder names); Pays for itself, for a coach only; the one file of the coaching offer, read by the game and by the page `/coaching/`; the bank and card bonus moves early in the stack | `core/cjcore.js`, `features/cjcheck.js`, `features/graduate.js`, `features/paysitself.js`, `core/coachfee.js` (generated from `js/math/coachfee.js`), `data/offer.js`, `CBM_BONUS` and `cbMovesFirst` in `features/cbmoves.js`, `../coaching/index.html` |
+| List of built features, shown in the game | `features/built.js` |
+| Generated map of all files | `CODE-MAP.md` |
+| Known weak code | `KNOWN-WEAK.md` |
+
+## 5. How one screen is drawn
+
+1. The player taps a button that has `data-a="roof"`.
+2. The click handler calls `ACT.roof(button)`.
+3. `ACT.roof` sets `W` (the state of the open sheet) and calls `sheet(rfSheet)`.
+4. `rfSheet()` returns the HTML for the sheet.
+5. A tap inside the sheet calls a second action. That action changes `W` or the profile, calls `save()`, and draws the sheet again.
+
+## 6. How a feature adds to a screen of a different file
+
+Example: Fork Theory adds one row to Home.
+
+`features/fork.js` has the part. The comment above it names the function that calls it:
+
+```js
+/* Part of home() in ui.js. Adds the row for the fork check. */
+function homeForkRow(h) {
+  ...
+  return h; // the HTML of Home, with the new row
+}
+```
+
+`screens/ui.js` has the screen function. It calls each part by name, in the load order of the files:
+
+```js
+function home() {
+  let h = homeTop();
+  ...
+  if (typeof homeForkRow === "function") h = homeForkRow(h); /* fork.js: the row for the fork check */
+  ...
+  return h;
+}
+```
+
+The rules of this pattern:
+
+- The screen function is the only place that decides the order of the parts.
+- The call has the test `typeof part === "function"`, because the page draws the first time before all files are loaded. Do not remove the test (`KNOWN-WEAK.md`, A10).
+- Do not write `const old = home; home = function () { ... old() ... };`. Before 2026-11-22 the game had 61 functions with such layers, in 113 places. `CODE-MAP.md`, section 2, counts them. The count must stay 0.
+- The actions (`ACT`) still have layers in 36 places (`KNOWN-WEAK.md`, A9). Do not add more.
+
+## 7. Add-ons (locked content)
+
+Two add-ons contain content for specific players. Only the administrator can turn them on, for each player. Their source code is not in this repository. The files `x1.json` and `x2.json` contain the content in encrypted form. The keys are in the database, and the database rules release a key only to a player with permission. `docs/game-addons.sql` contains the database tables and rules.
+
+The code of an add-on runs in the same global scope as the game, and it can call each function of the game. Thus:
+
+- Do not change the name or the arguments of a function until you know that no add-on uses it.
+- This repository cannot run the add-ons. After a change of the structure, run the private add-on tests (`tests/README.md`, "Private tests").
+- Put no add-on words in this repository.
+
+## 8. Errors
+
+A `catch` block must not drop its error. It calls `report(e, "file.js: function")` (`core/report.js`). `report()` shows nothing to the player. It keeps the last 100 records.
+
+A part that is not ready must not show as a broken screen. Each tap goes through `soonTap(name, button)` (`core/soon.js`), each sheet through `soonDraw`, and each full draw through `soonRun`. A tap with no action, an action that throws, and a screen that throws while it draws all show one card, "Coming soon". The error is recorded with `report()` first, and it is thrown again after the card is on the screen, so the console still shows it. In the tests the card is off (`SOON_AFTER = "now"` in `tests/harness.cjs`): the error is thrown at once, so a test fails on a real defect. `docs/RELEASE.md` tells how the public site is promoted.
+
+- To read the records, type `ERRLOG` in the browser console.
+- To print each record when it occurs, type `SLAM_DEBUG = true` in the browser console.
+
+## 9. Rules for the code
+
+For the player:
+
+- No red in the interface. Amber means "needs attention".
+- A number that comes from a guess gets no verdict. Each number has one of three states: Guess, Close, Exact.
+- The player taps. The player does not type sentences.
+- Each technical term on a screen has an "i" button with an explanation.
+- No em dashes in text.
+- The words never blame the player. When real numbers move the plan, the game says "Recalculating" and shows the new date and the next turn. It does not say mistake, failed, behind or off track. The one exception is the optional Mistake audit (`features/audit.js`). `test/tone.test.js` of the main app examines the game too.
+
+For the code:
+
+- The math is in the math functions of a feature, or in `derive()`. A screen function only shows what they return (`KNOWN-WEAK.md`, A7).
+- Each new number and each new formula also goes into the spreadsheet of the plan: a `...Book(c)` function in the feature file, listed in `BOOK_PARTS` in `features/book.js`. `tests/plan-spreadsheet.js` works out each formula and compares it with the game.
+- No file replaces a function of a different file (section 6).
+- Two functions must not have the same name. `CODE-MAP.md`, section 2, shows each name with two declarations.
+- A new file goes in the folder for its role (section 4), gets a script tag in `index.html`, and starts with the header.
+- A function with no caller needs a comment with the reason, or it goes to `unused/` (`CODE-MAP.md`, section 3).
+- Write new comments and documents in Simplified Technical English: short sentences, active voice, one meaning for each word.
+- Never commit real client data.
+
+## 10. After each change of a script
+
+```
+npx prettier --write "game/**/*.{js,cjs}"
+node tools/game_stamp.cjs
+python3 tools/game_codemap.py
+npm run test:game
+```
+
+1. Prettier formats the scripts and the tests. The settings are in `.prettierrc.json`.
+2. `game_stamp.cjs` writes the version stamps. Each script address in `index.html` and `admin.html` ends with a stamp, for example `core/engine.js?v=1a2b3c4d`. The stamp comes from the content of the file. When a script changes, its address changes, and the browser gets the new file. `npm run test:game` fails when a stamp is old.
+3. `game_codemap.py` writes `CODE-MAP.md` again. Make sure that these counts did not go up: replaced functions (0), functions with two declarations (0), hidden errors (0), functions with no caller and no reason (0).
+4. `npm run test:game` runs the tests.
+
+For a change of the structure that must not change what the player sees, also compare the old and the new code in a browser: `tools/game_walk/README.md`.
+
+## 11. The retirement engine
+
+Retirement engine by Zack, MIT license. The random markets of the retirement odds, the solver ("When can I stop at 90 out of 100?"), the spending smile, the Social Security claiming ages, the withdrawal methods, the glide path and the 2026 tax tables come from Zack Williams' RetirementPlanner (https://github.com/boatbomber/RetirementPlanner). Only its `src/engine/` folder is in the bundle. Its license and copyright line are at the top of `vendor/retire-engine.js` and in `vendor/RETIRE-ENGINE-LICENSE.txt`.
+
+- `features/retire.js` is the one adapter. It turns a profile into his Scenario type and his results into SLAM numbers in today's dollars. No other file calls `RetireEngine`. `tests/retirement-engine.js` checks this.
+- On the website the engine runs in a Web Worker (`vendor/retire-worker.js`), so the screen does not stop. With no Worker (Node.js, or a page opened from a file) it runs on the page.
+- To get a new version of his engine: `node tools/retire_engine_build.mjs` (or give it the path of a clone). Then run the steps of section 10.

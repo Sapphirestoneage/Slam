@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!-- ELI: DRAFT, NOT LEGAL ADVICE. This page says in plain words what the code and the database do today
+     (checked on November 27, 2026). No lawyer has read it. Have one read it before a paid launch. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SLAM: privacy in plain words</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--a3:#8fb0ff;--amber:#f0c060}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:24px;margin:0}h2{font-size:18px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.note{border:2px solid var(--amber)}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+a{color:var(--a3);text-decoration:underline}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}
+button.amber{border-color:var(--amber);color:var(--amber);background:transparent}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--a3);outline-offset:2px}
+button[disabled]{opacity:.6;cursor:default}
+details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}details>div{padding-bottom:12px;display:flex;flex-direction:column;gap:8px}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
+</style>
+</head>
+<body>
+<main>
+<div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a></div>
+<h1>Privacy, in plain words</h1>
+<p class="muted">Last checked against the code and the database on November 27, 2026. <span id="edu"></span></p>
+
+<div class="card" id="short">
+<h2>The short version</h2>
+<ul>
+<li><b>What is stored:</b> your email address and your saved game (what you tap or type).</li>
+<li><b>Where:</b> in a database at Supabase, the company that hosts the accounts of the game, and in a copy in this browser.</li>
+<li><b>Who sees it:</b> you, your coach only while "Share with my coach" is on, and Eli, the admin.</li>
+<li><b>Delete:</b> you can delete your account on this page, at <a href="#delete">Delete my account</a>.</li>
+<li><b>Your information is not sold</b>, rented or traded. Not to anyone.</li>
+<li><b>No affiliates.</b> SLAM gets no money when you pick a card, a bank or any product that the game names.</li>
+</ul>
+<p class="muted">The rest of this page says the same with all the details.</p>
+</div>
+
+<div class="card" id="who">
+<h2>Who can see your game</h2>
+<ul>
+<li><b>You.</b></li>
+<li><b>The person who runs SLAM (Eli, the admin).</b> Eli can open any game and change it, for safety and support. This does not depend on any switch.</li>
+<li><b>A coach, only while "Share with my coach" is on.</b> While it is on, each account that Eli gave the coach role can open your game and change it.</li>
+</ul>
+<p><b>How the switch starts.</b> A new account from a public link starts with "Share with my coach" <b>off</b>. A new account from a coach's invite link starts with it <b>on</b>, and the sign-up screen says so. An account that already has a saved game keeps what it has.</p>
+<p><b>Where the switch is.</b> In the game: Menu, then My account, then Share with my coach. You can change it at any time.</p>
+<p class="muted">When a coach or the admin opens your game to work in it, the game writes a line in a log that only the admin can read, and your Home screen tells you when they changed something from inside your game. A list that shows your name and your numbers to a coach or to the admin is not logged line by line.</p>
+</div>
+
+<div class="card">
+<h2>SLAM the Game: what is stored, and where</h2>
+<p><b>In the database (Supabase, the company that hosts the accounts of the game):</b></p>
+<ul>
+<li>Your email address, your password in a scrambled form that nobody can read, and the times you signed up and last signed in.</li>
+<li>Your saved game: everything you tap or type in the game. The names of the people in it, income, spending, debts, savings, goals, your answers and your progress. It is saved as one game, cut in pieces.</li>
+<li>Whether "Share with my coach" is on.</li>
+<li>When you finish setup: the time, a share code made from your account (it is not your email), the share code of the link you arrived through, and your Founding Tester number if you are one of the first 50. You can read your own line. The admin sees who joined through whom.</li>
+<li>In a guild (once Eli turns on guilds between accounts): the guild's name and day, who is in it, and only the things you switched on for the others to see (never a money number). Today a guild lives only inside one game on one device.</li>
+<li>If you tap Report: what you chose (bug, idea or confusing), your note, the name of the screen and of the last 3 buttons you tapped, your device, browser and screen width, the app version, and a picture if you add one. No money number. You can read your own reports. The admin reads all of them. A report waits on your device until the database can take it.</li>
+<li>The first time you see your number: how many seconds and how many taps it took, the app version, and whether you were signed in. No name, no email, no money number. It tells the admin whether the start of the game is fast enough.</li>
+<li>If a save does not go through: one line with the time, your account and the technical reason, so the admin can repair it.</li>
+<li>If you work with a coach: the notes and tasks your coach writes about your sessions. They are the coach's notes. You cannot read them in the app. The admin can.</li>
+<li>If the admin turned on extra content for your account: which content, and when.</li>
+<li>The admin log: who opened or changed which account, and when.</li>
+</ul>
+<p>The admin can download one backup file with all accounts and games.</p>
+<p id="backup"><b>The weekly backup.</b> When Eli switches it on, a copy of the database is made one time each week. The copy is locked with a passphrase that only Eli has. It is kept for 90 days at GitHub, the company that hosts the code of SLAM, and then GitHub removes it. A copy made before you deleted your account can hold your information until that copy is 90 days old.</p>
+<p><b>On your device:</b> a copy of your game in the storage of this browser, so the game opens fast and works with a weak connection. It also keeps you signed in.</p>
+<p><b>Email:</b> the email to confirm your address or to set a new password goes through an email service, which gets your email address for that.</p>
+</div>
+
+<div class="card" id="live">
+<h2>Live sessions with a coach (Live Session Mode)</h2>
+<p class="muted">This part is built but not switched on yet. This is how it works when it is on.</p>
+<p>In a live session your coach talks with you on a video call, and the session page of SLAM turns what each of you says into text, so your profile fills in while you talk. Both of you tap OK on the screen before anything starts.</p>
+<ul>
+<li><b>Text only. SLAM records no audio and saves no audio.</b> SLAM gets words, never sound.</li>
+<li><b>Your browser turns the sound into words.</b> In Chrome, this speech recognition sends the sound of your microphone to Google while you talk, and Google sends back the words. That is how the browser's speech recognition works; SLAM cannot turn it off. SLAM does not choose or see what Google keeps.</li>
+<li><b>The words are saved</b> in the database (Supabase), one line at a time, with which side said it and when. While the call runs they also travel between the two devices over Supabase's live link, which keeps nothing. The numbers heard, with the short quote each came from, are saved in your game.</li>
+<li><b>After the call, AI may read the words.</b> Only when your coach taps "Run the AI pass" (and only when Eli has switched that step on), the saved words of that call are sent to Anthropic, the company that makes the AI Claude, through a small program on Supabase. If your coach adds the text file of a recording of the call, that text goes too. The AI proposes numbers, and your coach checks each one before it goes in your profile. Anthropic's own terms cover what it receives.</li>
+<li><b>Who can see the words of a session:</b> you, the coach of that session, and the admin (Eli). Not other coaches. The short quotes kept with your numbers are in your game, so whoever can see your game (see "Who can see your game" above) can see those quotes.</li>
+<li><b>Your coach's notes</b> from a session, also the ones the AI pass drafts, are the coach's notes (see above). You cannot read them in the app.</li>
+<li><b>How long the words are kept:</b> until someone deletes them. After the call, you or your coach can tap "Delete this transcript": it removes the lines of that session from the database and the quotes from your game. The numbers stay, with who approved them and when, and the line "Transcript deleted on" the date. Delete my account removes them too, with the database step that also removes the sign-in (see Delete my account below).</li>
+<li>If your coach recorded the call on a phone, that recording is on your coach's phone, not in SLAM. The app reminds your coach to delete it after the AI pass.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>The SLAM web app (the planner and the short tools)</h2>
+<ul>
+<li>Your answers stay in the storage of your browser, on your device. The web app has no accounts on a server today, and it sends your numbers nowhere.</li>
+<li>If you make a link to share, your answers travel inside that link. Whoever has the link can read them.</li>
+<li>Files you save or export (a backup, a spreadsheet) are on your device, in your hands.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>What SLAM does not do</h2>
+<ul>
+<li>No selling. Your information is not sold, rented or traded.</li>
+<li>No affiliates. The links in the game carry no code that pays SLAM, and SLAM gets no money when you pick a card, a bank or a product.</li>
+<li>No ads, and no tracking or analytics scripts.</li>
+<li>No connection to your bank. SLAM never asks for a bank password.</li>
+<li>Nothing in the code sends your information to any company other than the ones named on this page. In a live session that includes Google (the speech recognition of Chrome) and, only after the call when your coach runs the AI pass, Anthropic.</li>
+</ul>
+<p class="muted">Like every website, the companies that deliver the pages see your internet address when the page loads: GitHub (the site), Supabase (the accounts), Google Fonts (the letter shapes), and jsDelivr and cdnjs (two code libraries).</p>
+</div>
+
+<div class="card" id="delete">
+<h2>Delete my account</h2>
+<div id="del"><p class="muted">Looking for your sign-in…</p></div>
+</div>
+
+<div class="card">
+<h2>Remove the web app's answers from this browser</h2>
+<p class="muted">The web app keeps its answers only in this browser. This button clears them here. It does not touch your game account.</p>
+<div id="web"></div>
+</div>
+
+<div class="card">
+<h2>Questions</h2>
+<p>Write to <a href="mailto:stresslessaboutmoney@gmail.com">stresslessaboutmoney@gmail.com</a>. Ask for a copy of what is stored about you, or to have something removed.</p>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
+<script src="account/trust.js?v=3d07f04c"></script>
+<script src="account/supa.js?v=cfa58c3f"></script>
+<script>
+/* The privacy page. The words above are fixed text. This script does two things: the delete button and the
+   button that clears the web app's answers in this browser. The work is in account/trust.js (tuDelete, tuWipe). */
+document.getElementById("edu").textContent = TRUST_LINE;
+const $del = document.getElementById("del"), $web = document.getElementById("web");
+const sb = window.supabase && window.supabase.createClient ? window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth:{persistSession:true,autoRefreshToken:true}}) : null;
+const S = {step:0, uid:null, email:"", res:null, web:0};
+const list = a => a.length ? `<ul>${a.map(x => `<li>${x}</li>`).join("")}</ul>` : "";
+function drawDel(){
+  if (S.res){
+    const w = tuDeleteSays(S.res, S.email);
+    $del.innerHTML = `<p><b>${w.title}</b></p>${w.gone.length ? `<p>Removed:</p>${list(w.gone)}` : ""}${w.stays.length ? `<p>${w.gone.length ? "What stays:" : ""}</p>${list(w.stays)}` : ""}${w.next ? `<p>${w.next}</p>` : ""}${S.res.stop ? `<div class="row"><button data-d="back">OK</button></div>` : `<div class="row"><a class="btn" href="./">Back to the game</a></div>`}`;
+    return;
+  }
+  if (!S.uid){
+    $del.innerHTML = `<p>You are not signed in on this device, so there is no account to delete from here.</p><p class="muted">To delete an account: sign in to the game, tap Menu, then My account, then Delete my account.</p><div class="row"><a class="btn" href="./">Open the game to sign in</a></div>`;
+    return;
+  }
+  const what = `<details><summary>What this removes, and what stays</summary><div><p>Removed: your saved game in the database, and the copy on this device. Then you are signed out.</p><p>Today your sign-in (your email and password) and the reports you sent stay until Eli removes them by hand: write to ${TRUST_MAIL} from that address. When one more step is switched on in the database, this button removes the sign-in too. The page tells you which of the two happened.</p><p>Copies on your other devices stay until you sign in there or clear that browser.</p></div></details>`;
+  if (S.step === 0) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p>This removes your saved game for good. It cannot be undone, so the page asks two times.</p>${what}<div class="row"><button class="amber" data-d="1">Delete my account</button></div>`;
+  else if (S.step === 1) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p><b>First ask.</b> Do you want to delete the saved game of this account? If you only want a rest, you can keep it: nothing is lost by waiting.</p><div class="row"><button class="primary" data-d="back">Keep my account</button><button class="amber" data-d="2">Yes, go on</button></div>`;
+  else if (S.step === 2) $del.innerHTML = `<p>Signed in as <b>${tuEsc(S.email)}</b>.</p><p><b>Second ask.</b> This is the last step. After it, the saved game is gone and nobody can bring it back, not you and not Eli. To keep a copy first: open the game, tap Menu, then Save my game.</p><div class="row"><button class="primary" data-d="back">Keep my account</button><button class="amber" data-d="go">Delete it now</button></div>`;
+  else $del.innerHTML = `<p>Removing…</p>`;
+}
+function drawWeb(){
+  $web.innerHTML = S.web === 2 ? `<p>${S.webN ? `Cleared. ${S.webN} saved ${S.webN === 1 ? "item" : "items"} of the web app removed from this browser.` : "There was nothing of the web app in this browser."}</p>`
+    : S.web === 1 ? `<p>This clears the plans and answers of the web app in this browser. It cannot be undone.</p><div class="row"><button class="primary" data-w="back">Keep them</button><button class="amber" data-w="go">Clear them now</button></div>`
+    : `<div class="row"><button data-w="1">Clear the web app's answers here</button></div>`;
+}
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("[data-d],[data-w]"); if (!t) return;
+  const d = t.dataset.d, w = t.dataset.w;
+  if (w){ if (w === "go"){ S.webN = tuWipe(localStorage, TU_WEB_KEYS) + tuWipe(sessionStorage, TU_WEB_KEYS); S.web = 2; } else S.web = w === "1" ? 1 : 0; return drawWeb(); }
+  if (d === "back"){ S.step = 0; S.res = null; return drawDel(); }
+  if (d === "1" || d === "2"){ S.step = +d; return drawDel(); }
+  if (d === "go"){
+    S.step = 3; drawDel();
+    S.res = await tuDelete(sb, S.uid, [localStorage, sessionStorage]);
+    if (!S.res.stop) S.uid = null;
+    drawDel();
+  }
+});
+(async () => {
+  drawWeb();
+  try {
+    const r = sb ? await sb.auth.getSession() : null, s = r && r.data && r.data.session;
+    if (s){ S.uid = s.user.id; S.email = s.user.email || ""; }
+  } catch (e) { report(e, "privacy.html: page load"); }
+  drawDel();
+  if (location.hash === "#delete") document.getElementById("delete").scrollIntoView();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6233 @@
+{
+ "meta": {
+  "generated": "2026-11-27",
+  "read_only": true,
+  "note": "A map of the game in modules, made from fields.json. No game file reads this file. Nothing here changes what the game does.",
+  "module_count": 50,
+  "field_count": 712,
+  "assigned_fields": 712,
+  "by_status": {
+   "working": 18,
+   "partial": 22,
+   "dead": 1,
+   "unsure": 7,
+   "unfinished": 2
+  },
+  "status_values": [
+   "working",
+   "partial",
+   "broken",
+   "unfinished",
+   "dead",
+   "unsure"
+  ],
+  "status_note": "working: built and has a test file. partial: built, with a named gap in REQUESTS.md or AUDIT.md. unfinished: built, with its switch off or its database file not applied yet. dead: in the code, never shown. unsure: not checked by hand and fields found by scan only. broken: a known failure (none today: game/tests/known-failures.json is empty).",
+  "who_values": [
+   "player",
+   "coach",
+   "admin"
+  ],
+  "screens_with_no_module": []
+ },
+ "modules": [
+  {
+   "id": "opening_quiz",
+   "name": "Opening quiz",
+   "purpose": "A new player says what they want and taps four answers to see their first number.",
+   "sort_order": 10,
+   "status": "working",
+   "evidence": [
+    "R-023",
+    "R-031",
+    "R-032",
+    "R-033",
+    "R-010 (partial: the percent is not on the new Home)",
+    "game/features/couldbe.js",
+    "game/tests/what-you-want.js (test file)",
+    "game/tests/what-it-could-be.js (test file)",
+    "game/tests/front-door.js (test file)"
+   ],
+   "placement": {
+    "tab": "Opening",
+    "area": "What it is / What it could be"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.cb",
+    "page.door",
+    "screen.cb"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.cb",
+     "does": "Tap all the things you want (or add your own)",
+     "field_ids": [
+      "open.wants",
+      "open.wants_own"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.cb",
+     "does": "Tap your age range",
+     "field_ids": [
+      "open.age"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "flow.cb",
+     "does": "Tap about how much you spend a month",
+     "field_ids": [
+      "open.spend"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "flow.cb",
+     "does": "Tap about how much you have invested",
+     "field_ids": [
+      "open.inv"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "flow.cb",
+     "does": "Tap how much you put away",
+     "field_ids": [
+      "open.save"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "flow.cb",
+     "does": "Look at the chart of what it is and what it could be",
+     "field_ids": [
+      "open.layers"
+     ]
+    },
+    {
+     "step": 7,
+     "screen_id": "flow.cb",
+     "does": "Watch the two numbers at the top move as you tap",
+     "field_ids": [
+      "open.top_is",
+      "open.top_could"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "What you want, picks become goals",
+     "status": "working",
+     "field_ids": [
+      "open.wants",
+      "open.wants_own"
+     ]
+    },
+    {
+     "name": "Four range questions",
+     "status": "working",
+     "field_ids": [
+      "open.age",
+      "open.spend",
+      "open.inv",
+      "open.save"
+     ]
+    },
+    {
+     "name": "No idea, use typical chip",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Two numbers pinned at the top",
+     "status": "working",
+     "field_ids": [
+      "open.top_is",
+      "open.top_could"
+     ]
+    },
+    {
+     "name": "Chart with layers",
+     "status": "working",
+     "field_ids": [
+      "open.layers"
+     ]
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [
+    "opening_ways",
+    "my_goals"
+   ],
+   "entry_points": [
+    "Flow: What it is / What it could be",
+    "Page: Front door",
+    "Menu > Tools and calculators > What it is / What it could be",
+    "Front door: Start button (game/account/door.js)"
+   ],
+   "files": [
+    "game/account/door.js",
+    "game/features/couldbe.js",
+    "game/features/goalrank.js",
+    "game/features/wants.js"
+   ],
+   "field_count": 9
+  },
+  {
+   "id": "opening_ways",
+   "name": "Opening: five ways to grow",
+   "purpose": "Five short screens show ways the could-be number grows, then a Yes, but card.",
+   "sort_order": 20,
+   "status": "partial",
+   "evidence": [
+    "R-060 (missing: moves do not move the top numbers)",
+    "R-051 (missing: no question on where invested money is)",
+    "game/features/cbtax.js",
+    "game/tests/what-it-could-be-steps.js (test file)",
+    "game/tests/what-it-could-be-taxes.js (test file)",
+    "game/tests/what-it-could-be-flex-later.js (test file)",
+    "game/tests/what-it-could-be-yes-but.js (test file)"
+   ],
+   "placement": {
+    "tab": "Opening",
+    "area": "What it is / What it could be"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.cb"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.cb",
+     "does": "Way 1: pick the shape of your money",
+     "field_ids": [
+      "open.way_shape"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.cb",
+     "does": "Way 2: pick how to count Social Security",
+     "field_ids": [
+      "open.way_ss"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "flow.cb",
+     "does": "Way 3: pick a tax plan, filing and state",
+     "field_ids": [
+      "open.way_taxplan",
+      "cbtax.taxv.filing",
+      "cbtax.taxv.state"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "flow.cb",
+     "does": "Way 4: pick how flexible you can be",
+     "field_ids": [
+      "open.way_flex"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "flow.cb",
+     "does": "Way 5: pick what comes later (pension, home)",
+     "field_ids": [
+      "open.way_later"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "flow.cb",
+     "does": "Answer the Yes, but card",
+     "field_ids": [
+      "open.yesbut"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Five way screens",
+     "status": "working",
+     "field_ids": [
+      "open.way_shape",
+      "open.way_ss",
+      "open.way_taxplan",
+      "open.way_flex",
+      "open.way_later",
+      "cbtax.taxv.filing",
+      "cbtax.taxv.state"
+     ]
+    },
+    {
+     "name": "Yes, but card",
+     "status": "partial",
+     "field_ids": [
+      "open.yesbut"
+     ]
+    },
+    {
+     "name": "Moves counted before FI move the top numbers",
+     "status": "unfinished",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "opening_quiz"
+   ],
+   "feeds_into": [
+    "opening_reveal"
+   ],
+   "entry_points": [
+    "Flow: What it is / What it could be"
+   ],
+   "files": [
+    "game/features/cbflex.js",
+    "game/features/cblater.js",
+    "game/features/cbstack.js",
+    "game/features/cbtax.js",
+    "game/features/cbyesbut.js",
+    "game/features/couldbe.js"
+   ],
+   "field_count": 8
+  },
+  {
+   "id": "opening_reveal",
+   "name": "Opening reveal and first move",
+   "purpose": "The last screen of the opening shows the answer and one first move, then a tile on Home.",
+   "sort_order": 30,
+   "status": "partial",
+   "evidence": [
+    "R-034",
+    "R-050 (missing: top moves are not added by themselves)",
+    "R-035 (missing: in-debt version)",
+    "game/features/cbreveal.js",
+    "game/tests/what-it-could-be-reveal.js (test file)",
+    "game/tests/onboarding-handoff-and-home.js (test file)"
+   ],
+   "placement": {
+    "tab": "Opening",
+    "area": "What it is / What it could be"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.cb",
+    "tab.home"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.cb",
+     "does": "See the reveal and the first move",
+     "field_ids": [
+      "open.reveal"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.cb",
+     "does": "Tap Add to my steps, or save by making an account",
+     "field_ids": []
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.home",
+     "does": "See the first tile on Home: what changed",
+     "field_ids": [
+      "home.cb_tile"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Reveal",
+     "status": "working",
+     "field_ids": [
+      "open.reveal"
+     ]
+    },
+    {
+     "name": "First move with steps and minutes",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Home first tile",
+     "status": "working",
+     "field_ids": [
+      "home.cb_tile"
+     ]
+    },
+    {
+     "name": "In-debt version (debt-free date first)",
+     "status": "unfinished",
+     "field_ids": []
+    },
+    {
+     "name": "Top 3 moves added with no tap",
+     "status": "unfinished",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "opening_ways"
+   ],
+   "feeds_into": [
+    "account",
+    "next_steps",
+    "setup_about_you"
+   ],
+   "entry_points": [
+    "Flow: What it is / What it could be",
+    "Bottom bar tab: Home"
+   ],
+   "files": [
+    "game/features/cbreveal.js",
+    "game/features/couldbe.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 2
+  },
+  {
+   "id": "setup_about_you",
+   "name": "Setup: About you",
+   "purpose": "The first page of the rest of setup asks your age.",
+   "sort_order": 40,
+   "status": "working",
+   "evidence": [
+    "AUDIT.md Duplicates: Age (also asked in the opening)",
+    "game/screens/smart.js",
+    "game/tests/setup-order-and-account.js (test file)",
+    "game/tests/spiral-onboarding.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "About you"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap your decade, then your exact age",
+     "field_ids": [
+      "setup.age_decade",
+      "setup.age_exact"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Age by decade then year",
+     "status": "working",
+     "field_ids": [
+      "setup.age_decade",
+      "setup.age_exact"
+     ]
+    }
+   ],
+   "depends_on": [
+    "opening_reveal"
+   ],
+   "feeds_into": [
+    "setup_debts"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)",
+    "Opening last screen: Keep going"
+   ],
+   "files": [
+    "game/features/spiral.js",
+    "game/screens/smart.js"
+   ],
+   "field_count": 2
+  },
+  {
+   "id": "setup_debts",
+   "name": "Setup debts round (D)",
+   "purpose": "Round D asks what you owe, card by card and debt by debt.",
+   "sort_order": 50,
+   "status": "partial",
+   "evidence": [
+    "R-011",
+    "AUDIT.md problem 2 (setup.debt_rate offers I don't know)",
+    "AUDIT.md Order breaks (debt_kinds ordered by home, asked later)",
+    "game/tests/credit-cards.js (test file)",
+    "game/tests/setup-order-and-account.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Round D: Debts"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap how many cards and how many carry a balance",
+     "field_ids": [
+      "setup.cards_n",
+      "setup.cards_carry"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.setup",
+     "does": "Tap the kinds of debt you have",
+     "field_ids": [
+      "setup.debt_kinds"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "flow.setup",
+     "does": "For each debt: bank, amount, rate, 0% end date",
+     "field_ids": [
+      "setup.debt_count",
+      "setup.debt_bank",
+      "setup.debt_each",
+      "setup.debt_rate",
+      "setup.debt_promo_end"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Card count and carry",
+     "status": "working",
+     "field_ids": [
+      "setup.cards_n",
+      "setup.cards_carry"
+     ]
+    },
+    {
+     "name": "Kinds of debt",
+     "status": "partial",
+     "field_ids": [
+      "setup.debt_kinds"
+     ]
+    },
+    {
+     "name": "Each debt one at a time",
+     "status": "partial",
+     "field_ids": [
+      "setup.debt_count",
+      "setup.debt_bank",
+      "setup.debt_each",
+      "setup.debt_rate",
+      "setup.debt_promo_end"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_about_you"
+   ],
+   "feeds_into": [
+    "setup_assets",
+    "debt_plan",
+    "key_numbers"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)"
+   ],
+   "files": [
+    "game/features/amounts.js",
+    "game/screens/smart.js"
+   ],
+   "field_count": 8
+  },
+  {
+   "id": "setup_assets",
+   "name": "Setup assets round (A)",
+   "purpose": "Round A asks where your money lives and your cushion.",
+   "sort_order": 60,
+   "status": "partial",
+   "evidence": [
+    "AUDIT.md Order breaks (setup.accts ordered by work, which is asked later)",
+    "AUDIT.md Duplicates (setup.invest already set by open.save)",
+    "game/tests/setup-order-and-account.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Round A: Assets"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap where your money lives",
+     "field_ids": [
+      "setup.accts"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.setup",
+     "does": "For each account: about how much, and any old job plan",
+     "field_ids": [
+      "setup.acct_each",
+      "setup.rollover"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "flow.setup",
+     "does": "Answer three cushion questions",
+     "field_ids": [
+      "setup.can1k",
+      "setup.cover",
+      "setup.invest"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Kinds of account",
+     "status": "partial",
+     "field_ids": [
+      "setup.accts"
+     ]
+    },
+    {
+     "name": "Each account amount",
+     "status": "working",
+     "field_ids": [
+      "setup.acct_each",
+      "setup.rollover"
+     ]
+    },
+    {
+     "name": "Cushion questions",
+     "status": "partial",
+     "field_ids": [
+      "setup.can1k",
+      "setup.cover",
+      "setup.invest"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_debts"
+   ],
+   "feeds_into": [
+    "setup_income",
+    "key_numbers",
+    "money_lists"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)"
+   ],
+   "files": [
+    "game/features/amounts.js",
+    "game/screens/smart.js"
+   ],
+   "field_count": 6
+  },
+  {
+   "id": "setup_income",
+   "name": "Setup income round (I)",
+   "purpose": "Round I asks about your work and each source of money.",
+   "sort_order": 70,
+   "status": "partial",
+   "evidence": [
+    "R-013 (no Daily choice in setup)",
+    "AUDIT.md Order breaks (setup.steady depends on payFreq, no longer asked)",
+    "game/tests/setup-order-and-account.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Round I: Income"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap your work and the kinds of income",
+     "field_ids": [
+      "setup.work",
+      "setup.incKinds",
+      "setup.steady"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.setup",
+     "does": "For each source: how often and about how much",
+     "field_ids": [
+      "setup.income_freq",
+      "setup.income_amt"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Work and income kinds",
+     "status": "partial",
+     "field_ids": [
+      "setup.work",
+      "setup.incKinds",
+      "setup.steady"
+     ]
+    },
+    {
+     "name": "Each source with its own rhythm",
+     "status": "working",
+     "field_ids": [
+      "setup.income_freq",
+      "setup.income_amt"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_assets"
+   ],
+   "feeds_into": [
+    "setup_taxes",
+    "key_numbers"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)"
+   ],
+   "files": [
+    "game/features/amounts.js",
+    "game/screens/smart.js"
+   ],
+   "field_count": 5
+  },
+  {
+   "id": "setup_taxes",
+   "name": "Setup taxes round (T)",
+   "purpose": "Round T asks what comes off the top of your pay.",
+   "sort_order": 80,
+   "status": "partial",
+   "evidence": [
+    "R-001 (taxQ, matchQ, taxAcctQ offer I don't know)",
+    "AUDIT.md Duplicates: Taxes off the top, Job match",
+    "game/tests/taxes-and-self-employed.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Round T: Taxes"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap your tax share, job match and tax-friendly accounts",
+     "field_ids": [
+      "setup.taxQ",
+      "setup.matchQ",
+      "setup.taxAcctQ"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Tax share, match, tax-friendly accounts",
+     "status": "partial",
+     "field_ids": [
+      "setup.taxQ",
+      "setup.matchQ",
+      "setup.taxAcctQ"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_income"
+   ],
+   "feeds_into": [
+    "setup_expenses",
+    "key_numbers",
+    "investing_taxes"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)"
+   ],
+   "files": [
+    "game/screens/smart.js"
+   ],
+   "field_count": 3
+  },
+  {
+   "id": "setup_expenses",
+   "name": "Setup expenses round (E)",
+   "purpose": "Round E asks about home, people, spending, and a last two.",
+   "sort_order": 90,
+   "status": "partial",
+   "evidence": [
+    "R-012 (just me with a roommate is cant_tell)",
+    "R-053 (no subscription split)",
+    "AUDIT.md Duplicates: Kids, Who you combine money with",
+    "game/tests/setup-order-and-account.js (test file)",
+    "game/tests/results-first.js (test file)"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Round E: Expenses"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "flow.setup"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Tap where you live and who lives with you",
+     "field_ids": [
+      "setup.homeQ",
+      "setup.live",
+      "setup.roommate_count",
+      "setup.kid_count"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "flow.setup",
+     "does": "Tap your relationship, who relies on you, and who you share money with",
+     "field_ids": [
+      "setup.rel",
+      "setup.deps",
+      "setup.share"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "flow.setup",
+     "does": "Tap spending, group by group",
+     "field_ids": [
+      "setup.spend_groups"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "flow.setup",
+     "does": "Social Security, a feeling, and a name for your character",
+     "field_ids": [
+      "setup.name",
+      "setup.ssq",
+      "setup.feel0"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Your home",
+     "status": "partial",
+     "field_ids": [
+      "setup.homeQ",
+      "setup.live",
+      "setup.roommate_count",
+      "setup.kid_count"
+     ]
+    },
+    {
+     "name": "Your people",
+     "status": "partial",
+     "field_ids": [
+      "setup.rel",
+      "setup.deps",
+      "setup.share"
+     ]
+    },
+    {
+     "name": "Spending by group",
+     "status": "working",
+     "field_ids": [
+      "setup.spend_groups"
+     ]
+    },
+    {
+     "name": "A last two",
+     "status": "working",
+     "field_ids": [
+      "setup.name",
+      "setup.ssq",
+      "setup.feel0"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_taxes"
+   ],
+   "feeds_into": [
+    "home_cards",
+    "key_numbers",
+    "money_lists",
+    "people_home"
+   ],
+   "entry_points": [
+    "Flow: The rest of setup (five rounds: D, A, I, T, E)"
+   ],
+   "files": [
+    "game/features/amounts.js",
+    "game/features/results.js",
+    "game/screens/smart.js"
+   ],
+   "field_count": 11
+  },
+  {
+   "id": "setup_old",
+   "name": "Old setup list",
+   "purpose": "Nine setup questions from the first version that are still in the code but never shown.",
+   "sort_order": 100,
+   "status": "dead",
+   "evidence": [
+    "AUDIT.md Old code that is never shown (dead.setup_v1.*)",
+    "game/screens/ui.js:1598"
+   ],
+   "placement": {
+    "tab": "Setup",
+    "area": "Old version"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "flow.setup",
+     "does": "Not shown to anyone",
+     "field_ids": [
+      "dead.setup_v1.work",
+      "dead.setup_v1.incKinds",
+      "dead.setup_v1.payFreq",
+      "dead.setup_v1.steady",
+      "dead.setup_v1.homeQ",
+      "dead.setup_v1.live",
+      "dead.setup_v1.rel",
+      "dead.setup_v1.deps",
+      "dead.setup_v1.share"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "First SETUP list",
+     "status": "dead",
+     "field_ids": [
+      "dead.setup_v1.work",
+      "dead.setup_v1.incKinds",
+      "dead.setup_v1.payFreq",
+      "dead.setup_v1.steady",
+      "dead.setup_v1.homeQ",
+      "dead.setup_v1.live",
+      "dead.setup_v1.rel",
+      "dead.setup_v1.deps",
+      "dead.setup_v1.share"
+     ]
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [],
+   "entry_points": [
+    "None (never shown)"
+   ],
+   "files": [
+    "game/screens/ui.js"
+   ],
+   "field_count": 9
+  },
+  {
+   "id": "account",
+   "name": "Account and sign-in",
+   "purpose": "Make an account, sign in, set a new password, see privacy, and sync your game.",
+   "sort_order": 110,
+   "status": "partial",
+   "evidence": [
+    "R-022 (sign-in buttons still say Create my account and I'm new)",
+    "R-019",
+    "game/account/supa.js:369",
+    "game/tests/setup-order-and-account.js (test file)",
+    "game/tests/trust-and-privacy.js (test file)",
+    "game/tests/sync-no-change-lost.js (test file)"
+   ],
+   "placement": {
+    "tab": "Sign-in",
+    "area": "Create your account / Sign in"
+   },
+   "who": [
+    "player",
+    "coach",
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "page.signin",
+    "screen.tuprivacy",
+    "page.privacy"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.signin",
+     "does": "Type email and password, then create or sign in",
+     "field_ids": [
+      "account.email",
+      "account.password"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "page.signin",
+     "does": "Set a new password from the email link",
+     "field_ids": [
+      "supa.input.supw"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.tuprivacy",
+     "does": "Open My account and privacy in the menu",
+     "field_ids": [
+      "account.share_with_coach"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Create account / sign in",
+     "status": "partial",
+     "field_ids": [
+      "account.email",
+      "account.password"
+     ]
+    },
+    {
+     "name": "Set a new password",
+     "status": "working",
+     "field_ids": [
+      "supa.input.supw"
+     ]
+    },
+    {
+     "name": "My account in the menu",
+     "status": "working",
+     "field_ids": [
+      "account.share_with_coach"
+     ]
+    },
+    {
+     "name": "Cloud sync across devices",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [
+    "coach_page",
+    "admin_page",
+    "save_export"
+   ],
+   "entry_points": [
+    "Page: Create your account / Sign in",
+    "Menu > Settings and account > Privacy",
+    "Page: Privacy page",
+    "Opening reveal: save by making an account"
+   ],
+   "files": [
+    "game/account/cloud.js",
+    "game/account/supa.js",
+    "game/account/trust.js",
+    "game/privacy.html"
+   ],
+   "field_count": 4
+  },
+  {
+   "id": "home_cards",
+   "name": "Home cards",
+   "purpose": "Home shows four cards: your next win, the month end, where you are, and your numbers.",
+   "sort_order": 120,
+   "status": "partial",
+   "evidence": [
+    "R-037",
+    "R-009 (the four always-on numbers are hidden for a placed player)",
+    "home.stat.* and home.quad.* are hidden",
+    "game/tests/results-first.js (test file)",
+    "game/tests/look-screens.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "Results cards"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.home"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.home",
+     "does": "Read the four cards and tap one to open it",
+     "field_ids": [
+      "home.next_win",
+      "home.month_end",
+      "home.you_are_here",
+      "home.your_numbers"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.home",
+     "does": "Old top of Home (hidden now)",
+     "field_ids": [
+      "home.stat.free_to_spend",
+      "home.stat.net_worth",
+      "home.stat.next_goal",
+      "home.stat.free_of_costly_debt",
+      "home.quad.do_this",
+      "home.quad.free_to_spend",
+      "home.quad.next_steps",
+      "home.quad.your_picture"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Four Results cards",
+     "status": "working",
+     "field_ids": [
+      "home.next_win",
+      "home.month_end",
+      "home.you_are_here",
+      "home.your_numbers"
+     ]
+    },
+    {
+     "name": "Old stat row",
+     "status": "dead",
+     "field_ids": [
+      "home.stat.free_to_spend",
+      "home.stat.net_worth",
+      "home.stat.next_goal",
+      "home.stat.free_of_costly_debt"
+     ]
+    },
+    {
+     "name": "Old four boxes",
+     "status": "dead",
+     "field_ids": [
+      "home.quad.do_this",
+      "home.quad.free_to_spend",
+      "home.quad.next_steps",
+      "home.quad.your_picture"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_expenses",
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Bottom bar tab: Home",
+    "Bottom bar: Home",
+    "Home button in the top bar"
+   ],
+   "files": [
+    "game/features/look.js",
+    "game/features/results.js",
+    "game/screens/dash.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 12
+  },
+  {
+   "id": "checkin",
+   "name": "Payday and daily check-in",
+   "purpose": "Check in each day, each payday and each month, and see what changed since last time.",
+   "sort_order": 130,
+   "status": "partial",
+   "evidence": [
+    "R-017",
+    "R-018 (no don't show this again)",
+    "R-054 (payday presets cant_tell)",
+    "R-025",
+    "game/tests/welcome-back-card.js (test file)",
+    "game/tests/recalculating.js (test file)",
+    "game/tests/play-and-people.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "Check in"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.play",
+    "screen.play",
+    "screen.since",
+    "screen.rc",
+    "screen.months"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.home",
+     "does": "See Welcome back and what changed since last time",
+     "field_ids": [
+      "home.welcome_back"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.play",
+     "does": "Daily check: how money felt and what happened",
+     "field_ids": [
+      "ui.how_did_money_feel_today",
+      "ui.did_any_of_these_happen_tap_all_that_did",
+      "ui.input.note"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.play",
+     "does": "Payday round: did you move the money",
+     "field_ids": [
+      "ui.did_you_actually_move_the_money"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.play",
+     "does": "Monthly session: did you look at real balances",
+     "field_ids": [
+      "ui.did_you_look_at_your_real_balances_for_these_num"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.rc",
+     "does": "Recalculating: see the new date and the next turn",
+     "field_ids": [
+      "recalc.rct.health",
+      "recalc.rct.care",
+      "recalc.rcs.cap"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "screen.months",
+     "does": "Look at the money calendar",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Welcome back / Since then",
+     "status": "partial",
+     "field_ids": [
+      "home.welcome_back"
+     ]
+    },
+    {
+     "name": "Daily check",
+     "status": "working",
+     "field_ids": [
+      "ui.how_did_money_feel_today",
+      "ui.did_any_of_these_happen_tap_all_that_did",
+      "ui.input.note"
+     ]
+    },
+    {
+     "name": "Payday round",
+     "status": "unsure",
+     "field_ids": [
+      "ui.did_you_actually_move_the_money"
+     ]
+    },
+    {
+     "name": "Monthly session",
+     "status": "working",
+     "field_ids": [
+      "ui.did_you_look_at_your_real_balances_for_these_num"
+     ]
+    },
+    {
+     "name": "Recalculating month check",
+     "status": "working",
+     "field_ids": [
+      "recalc.rct.health",
+      "recalc.rct.care",
+      "recalc.rcs.cap"
+     ]
+    },
+    {
+     "name": "Money calendar",
+     "status": "unsure",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "money_lists",
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "your_path",
+    "next_steps"
+   ],
+   "entry_points": [
+    "Tab button: Check in",
+    "Menu > My money > Check in",
+    "Menu > My money > Since last time",
+    "Menu > My money > Recalculating: month check",
+    "Menu > My money > Money calendar"
+   ],
+   "files": [
+    "game/features/back.js",
+    "game/features/recalc.js",
+    "game/features/results.js",
+    "game/screens/planner.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 9
+  },
+  {
+   "id": "your_path",
+   "name": "Your path and eras",
+   "purpose": "See your path, cross into a new era, log a win, and see where you are.",
+   "sort_order": 140,
+   "status": "working",
+   "evidence": [
+    "R-003",
+    "R-039",
+    "game/features/lifemap.js",
+    "game/features/questlog.js",
+    "game/tests/receipts-lifemap.js (test file)",
+    "game/tests/questlog.js (test file)",
+    "game/tests/later-eras-and-account-line.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "Your path"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.map",
+    "screen.quest"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.home",
+     "does": "Open a step on Your path: already done or not yet",
+     "field_ids": [
+      "plan.already"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.home",
+     "does": "Log a win: did it put money in your pocket",
+     "field_ids": [
+      "ui.did_this_put_money_in_your_pocket"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.home",
+     "does": "Era crossing: are you happy, and your path from here",
+     "field_ids": [
+      "ui.are_you_happy_with_life_right_now",
+      "ui.your_path_from_here"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.map",
+     "does": "Look at the big picture life map",
+     "field_ids": []
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.quest",
+     "does": "Open Where am I",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Your path steps",
+     "status": "working",
+     "field_ids": [
+      "plan.already"
+     ]
+    },
+    {
+     "name": "Log a win",
+     "status": "working",
+     "field_ids": [
+      "ui.did_this_put_money_in_your_pocket"
+     ]
+    },
+    {
+     "name": "Era crossing",
+     "status": "working",
+     "field_ids": [
+      "ui.are_you_happy_with_life_right_now",
+      "ui.your_path_from_here"
+     ]
+    },
+    {
+     "name": "Life map of ten eras",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "checkin",
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Tab button: The big picture",
+    "Menu > My money > Where am I",
+    "Next Steps: See the big picture"
+   ],
+   "files": [
+    "game/features/eras.js",
+    "game/features/lifemap.js",
+    "game/features/questlog.js",
+    "game/screens/planner.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 4
+  },
+  {
+   "id": "ask_buttons",
+   "name": "Ask buttons and Safe to spend",
+   "purpose": "Four Ask buttons on Home answer: is it safe, how much can I spend, what do I do, my goals.",
+   "sort_order": 150,
+   "status": "working",
+   "evidence": [
+    "R-027",
+    "game/features/ask3.js",
+    "game/tests/ask-front-door.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "The four Ask buttons"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.home",
+    "screen.safe"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.home",
+     "does": "Tap one of the four Ask buttons",
+     "field_ids": [
+      "home.ask.safe",
+      "home.ask.spend",
+      "home.ask.do",
+      "home.ask.goals"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.home",
+     "does": "How much can I spend: today, week, month, year",
+     "field_ids": [
+      "ask3.tile.today",
+      "ask3.tile.this_week",
+      "ask3.tile.this_month",
+      "ask3.tile.this_year"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.safe",
+     "does": "Safe to spend: type an amount and see the trade",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Four Ask buttons",
+     "status": "working",
+     "field_ids": [
+      "home.ask.safe",
+      "home.ask.spend",
+      "home.ask.do",
+      "home.ask.goals"
+     ]
+    },
+    {
+     "name": "How much can I spend tiles",
+     "status": "working",
+     "field_ids": [
+      "ask3.tile.today",
+      "ask3.tile.this_week",
+      "ask3.tile.this_month",
+      "ask3.tile.this_year"
+     ]
+    },
+    {
+     "name": "Safe to spend meter",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "key_numbers",
+    "money_lists"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Bottom bar tab: Home",
+    "Menu > My money > Safe to spend?"
+   ],
+   "files": [
+    "game/features/ask3.js",
+    "game/screens/planner.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 8
+  },
+  {
+   "id": "make_it_exact",
+   "name": "Make your dates exact",
+   "purpose": "A list of questions on Home that turn guessed dates into exact ones.",
+   "sort_order": 160,
+   "status": "partial",
+   "evidence": [
+    "AUDIT.md Duplicates (life.taxwhen, life.kids, life.ss, life.pension ask again what setup asked)",
+    "AUDIT.md Missing i (no i on the life.* list)",
+    "game/tests/what-you-already-know.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "Make your dates exact"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.home"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.home",
+     "does": "Answer one question at a time to make a date exact",
+     "field_ids": [
+      "life.limit",
+      "life.forgive",
+      "life.taxwhen",
+      "life.taxheld",
+      "life.dry",
+      "life.partner",
+      "life.kids",
+      "life.care",
+      "life.careyrs",
+      "life.homeval",
+      "life.homebal",
+      "life.homepmt",
+      "life.homeyrs",
+      "life.fixed",
+      "life.pension",
+      "life.col",
+      "life.ss"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Life questions list",
+     "status": "partial",
+     "field_ids": [
+      "life.limit",
+      "life.forgive",
+      "life.taxwhen",
+      "life.taxheld",
+      "life.dry",
+      "life.partner",
+      "life.kids",
+      "life.care",
+      "life.careyrs",
+      "life.homeval",
+      "life.homebal",
+      "life.homepmt",
+      "life.homeyrs",
+      "life.fixed",
+      "life.pension",
+      "life.col",
+      "life.ss"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_expenses"
+   ],
+   "feeds_into": [
+    "key_numbers",
+    "retirement"
+   ],
+   "entry_points": [
+    "Bottom bar tab: Home"
+   ],
+   "files": [
+    "game/core/engine.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 17
+  },
+  {
+   "id": "log_money",
+   "name": "Log money (+ Log)",
+   "purpose": "The + Log button on every tab records money in, money out, a payment or a move.",
+   "sort_order": 170,
+   "status": "unsure",
+   "evidence": [
+    "R-014 (read in code, not run)",
+    "R-038",
+    "8 of 11 fields are cant_tell controls (low confidence)",
+    "game/tests/receipts-lifemap.js (test file)"
+   ],
+   "placement": {
+    "tab": "Every tab",
+    "area": "+ Log (Log money)"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "bar.bottom"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "bar.bottom",
+     "does": "Tap + Log, then pick where it came from, where it landed, what it was for",
+     "field_ids": [
+      "ui.where_did_it_come_from",
+      "ui.where_did_it_land",
+      "ui.what_was_it_for",
+      "ui.how_did_you_pay",
+      "ui.which_debt",
+      "ui.paid_from",
+      "ui.from",
+      "ui.to"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "bar.bottom",
+     "does": "Shifts or gigs: which one, how many, how much each",
+     "field_ids": [
+      "ui.which_one",
+      "ui.how_many_shifts_or_gigs_in_a_typical_month",
+      "ui.about_how_much_do_you_take_home_for_each_one"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "bar.bottom",
+     "does": "See a receipt with what moved and the next action",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Log money in or out",
+     "status": "unsure",
+     "field_ids": [
+      "ui.where_did_it_come_from",
+      "ui.where_did_it_land",
+      "ui.what_was_it_for",
+      "ui.how_did_you_pay",
+      "ui.which_debt",
+      "ui.paid_from",
+      "ui.from",
+      "ui.to"
+     ]
+    },
+    {
+     "name": "Shifts or gigs",
+     "status": "unsure",
+     "field_ids": [
+      "ui.which_one",
+      "ui.how_many_shifts_or_gigs_in_a_typical_month",
+      "ui.about_how_much_do_you_take_home_for_each_one"
+     ]
+    },
+    {
+     "name": "Receipt after logging",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "money_lists"
+   ],
+   "feeds_into": [
+    "money_lists",
+    "key_numbers",
+    "checkin"
+   ],
+   "entry_points": [
+    "Bottom bar",
+    "Bottom bar: + Log"
+   ],
+   "files": [
+    "game/core/engine.js",
+    "game/features/receipt.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 11
+  },
+  {
+   "id": "money_lists",
+   "name": "My Money lists",
+   "purpose": "Lists of your cash, investments, debts, income, spending and schedules, each row editable.",
+   "sort_order": 180,
+   "status": "working",
+   "evidence": [
+    "R-015 (remove not checked everywhere)",
+    "R-026 (schedules)",
+    "game/screens/ui.js:2591",
+    "game/tests/one-question-at-a-time.js (test file)",
+    "game/tests/rocket-money-import.js (test file)",
+    "game/tests/ledger-and-statements.js (test file)"
+   ],
+   "placement": {
+    "tab": "My Money",
+    "area": "Cash"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.money",
+    "screen.ledger"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.money",
+     "does": "Open a list: cash, investments, what you owe, coming in, going out",
+     "field_ids": [
+      "money.rows.cashes",
+      "money.rows.invs",
+      "money.rows.debts",
+      "money.rows.incs",
+      "money.rows.spends"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.money",
+     "does": "Edit a row: name, amount, how often",
+     "field_ids": [
+      "smart.how_often_does_it_come_in",
+      "ui.what_rate_does_it_charge_a_year",
+      "ui.does_it_pay_about_4_interest_a_year_or_more",
+      "mycards.input.rownick"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.money",
+     "does": "Fill in spending from a statement file",
+     "field_ids": [
+      "import.input.choose_a_file"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.money",
+     "does": "Make your numbers real: one small question at a time",
+     "field_ids": [
+      "ui.does_your_job_do_that",
+      "ui.how_full_are_yours_each_year",
+      "ask.take",
+      "ask.spend",
+      "ask.cash",
+      "ask.inv",
+      "ask.debt",
+      "asksh.match",
+      "asksh.tax"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "tab.money",
+     "does": "Add a schedule that repeats",
+     "field_ids": [
+      "ui.what_repeats",
+      "ui.which_debt_2",
+      "ui.paid_from_2",
+      "ui.from_2",
+      "ui.into",
+      "ui.how_often",
+      "ui.when_is_the_next_one",
+      "ui.does_your_bank_do_it_on_its_own"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "screen.ledger",
+     "does": "Ledger and statements",
+     "field_ids": [
+      "ledger.tile.net_worth",
+      "ledger.tile.left_over_each_month",
+      "ledger.tile.invested"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Five money lists",
+     "status": "working",
+     "field_ids": [
+      "money.rows.cashes",
+      "money.rows.invs",
+      "money.rows.debts",
+      "money.rows.incs",
+      "money.rows.spends"
+     ]
+    },
+    {
+     "name": "Row editor",
+     "status": "working",
+     "field_ids": [
+      "smart.how_often_does_it_come_in",
+      "ui.what_rate_does_it_charge_a_year",
+      "ui.does_it_pay_about_4_interest_a_year_or_more",
+      "mycards.input.rownick"
+     ]
+    },
+    {
+     "name": "Statement import",
+     "status": "working",
+     "field_ids": [
+      "import.input.choose_a_file"
+     ]
+    },
+    {
+     "name": "Make your numbers real",
+     "status": "working",
+     "field_ids": [
+      "ui.does_your_job_do_that",
+      "ui.how_full_are_yours_each_year",
+      "ask.take",
+      "ask.spend",
+      "ask.cash",
+      "ask.inv",
+      "ask.debt",
+      "asksh.match",
+      "asksh.tax"
+     ]
+    },
+    {
+     "name": "Schedules",
+     "status": "working",
+     "field_ids": [
+      "ui.what_repeats",
+      "ui.which_debt_2",
+      "ui.paid_from_2",
+      "ui.from_2",
+      "ui.into",
+      "ui.how_often",
+      "ui.when_is_the_next_one",
+      "ui.does_your_bank_do_it_on_its_own"
+     ]
+    },
+    {
+     "name": "Ledger and statements",
+     "status": "working",
+     "field_ids": [
+      "ledger.tile.net_worth",
+      "ledger.tile.left_over_each_month",
+      "ledger.tile.invested"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_assets",
+    "setup_income",
+    "setup_expenses"
+   ],
+   "feeds_into": [
+    "key_numbers",
+    "money_overview",
+    "debt_plan",
+    "checkin"
+   ],
+   "entry_points": [
+    "Bottom bar tab: My Money",
+    "Menu > My money > Ledger and statements",
+    "Bottom bar: My Money"
+   ],
+   "files": [
+    "game/data/askwords.js",
+    "game/features/ask2.js",
+    "game/features/import.js",
+    "game/features/ledger.js",
+    "game/features/mycards.js",
+    "game/screens/smart.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 30
+  },
+  {
+   "id": "money_overview",
+   "name": "My Money overview",
+   "purpose": "Tiles and charts that sum up your money: the big three, where it goes, what it earns, work benefits.",
+   "sort_order": 190,
+   "status": "working",
+   "evidence": [
+    "R-010 (How complete is your picture)",
+    "game/features/tally.js",
+    "game/features/slept.js",
+    "game/tests/while-you-slept.js (test file)",
+    "game/tests/money-chart-group.js (test file)"
+   ],
+   "placement": {
+    "tab": "My Money",
+    "area": "Four tiles at the top"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.money"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.money",
+     "does": "Read the four tiles and how complete your picture is",
+     "field_ids": [
+      "money.tile.net_worth",
+      "money.tile.cash",
+      "money.tile.invested",
+      "money.tile.you_owe",
+      "money.card.how_complete_is_your_picture"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.money",
+     "does": "See the big three, where it goes and your money machine",
+     "field_ids": [
+      "money.card.the_big_three",
+      "money.card.where_it_goes",
+      "money.card.your_money_machine"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.money",
+     "does": "What your money earns: while you slept, make my wage real",
+     "field_ids": [
+      "ui.hours_you_work_in_a_normal_week",
+      "ui.hours_a_week_getting_to_work_and_back",
+      "slept.tile.an_hour",
+      "slept.tile.a_day",
+      "slept.tile.a_month",
+      "slept.tile.a_year"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.money",
+     "does": "Watch a monthly amount grow",
+     "field_ids": [
+      "ui.how_much_goes_in_each_month",
+      "ui.for_how_many_years"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "tab.money",
+     "does": "Work benefits and protection",
+     "field_ids": [
+      "prot.health",
+      "prot.car",
+      "prot.renters",
+      "prot.disab",
+      "prot.life"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Four tiles",
+     "status": "working",
+     "field_ids": [
+      "money.tile.net_worth",
+      "money.tile.cash",
+      "money.tile.invested",
+      "money.tile.you_owe"
+     ]
+    },
+    {
+     "name": "How complete is your picture",
+     "status": "working",
+     "field_ids": [
+      "money.card.how_complete_is_your_picture"
+     ]
+    },
+    {
+     "name": "Big three, where it goes, money machine",
+     "status": "working",
+     "field_ids": [
+      "money.card.the_big_three",
+      "money.card.where_it_goes",
+      "money.card.your_money_machine"
+     ]
+    },
+    {
+     "name": "While you slept and wage real",
+     "status": "working",
+     "field_ids": [
+      "ui.hours_you_work_in_a_normal_week",
+      "ui.hours_a_week_getting_to_work_and_back",
+      "slept.tile.an_hour",
+      "slept.tile.a_day",
+      "slept.tile.a_month",
+      "slept.tile.a_year"
+     ]
+    },
+    {
+     "name": "Watch it grow",
+     "status": "working",
+     "field_ids": [
+      "ui.how_much_goes_in_each_month",
+      "ui.for_how_many_years"
+     ]
+    },
+    {
+     "name": "Work benefits and protection",
+     "status": "unsure",
+     "field_ids": [
+      "prot.health",
+      "prot.car",
+      "prot.renters",
+      "prot.disab",
+      "prot.life"
+     ]
+    }
+   ],
+   "depends_on": [
+    "money_lists",
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "home_cards"
+   ],
+   "entry_points": [
+    "Bottom bar tab: My Money",
+    "Bottom bar: My Money"
+   ],
+   "files": [
+    "game/core/engine.js",
+    "game/core/engine2.js",
+    "game/features/look.js",
+    "game/features/slept.js",
+    "game/features/tally.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 21
+  },
+  {
+   "id": "debt_plan",
+   "name": "Debt plan",
+   "purpose": "Pick an order to pay debts, see the debt-free date, and what each debt costs.",
+   "sort_order": 200,
+   "status": "working",
+   "evidence": [
+    "R-014",
+    "game/features/debts.js",
+    "game/screens/dash.js:449",
+    "game/tests/what-each-debt-costs.js (test file)",
+    "game/tests/one-question-debts-and-key-numbers.js (test file)"
+   ],
+   "placement": {
+    "tab": "My Money",
+    "area": "What you owe"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.money",
+    "screen.owed"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.money",
+     "does": "Open What you owe and the debt plan",
+     "field_ids": [
+      "debts.extra_you_can_add_each_month",
+      "look.tile.total_debt",
+      "look.tile.debt_free",
+      "look.tile.total_interest",
+      "look.tile.extra_a_month"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.money",
+     "does": "Turn the Time-Money dial: done in, extra each month",
+     "field_ids": [
+      "dash.input.done_in",
+      "dash.input.extra_each_month"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.money",
+     "does": "Open one debt and answer its questions",
+     "field_ids": [
+      "debts.what_rate_does_it_charge_a_year",
+      "debts.what_do_you_pay_on_it_each_month",
+      "debts.what_is_this_card_s_limit",
+      "debts.how_much_does_this_one_bug_you",
+      "askdb.apr",
+      "askdb.pay",
+      "askdb.lim",
+      "askdb.hassle"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.owed",
+     "does": "See what each debt costs you",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Debt plan order",
+     "status": "working",
+     "field_ids": [
+      "debts.extra_you_can_add_each_month",
+      "look.tile.total_debt",
+      "look.tile.debt_free",
+      "look.tile.total_interest",
+      "look.tile.extra_a_month"
+     ]
+    },
+    {
+     "name": "Time-Money dial",
+     "status": "working",
+     "field_ids": [
+      "dash.input.done_in",
+      "dash.input.extra_each_month"
+     ]
+    },
+    {
+     "name": "One debt detail",
+     "status": "working",
+     "field_ids": [
+      "debts.what_rate_does_it_charge_a_year",
+      "debts.what_do_you_pay_on_it_each_month",
+      "debts.what_is_this_card_s_limit",
+      "debts.how_much_does_this_one_bug_you",
+      "askdb.apr",
+      "askdb.pay",
+      "askdb.lim",
+      "askdb.hassle"
+     ]
+    },
+    {
+     "name": "What each debt costs",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "setup_debts",
+    "money_lists"
+   ],
+   "feeds_into": [
+    "key_numbers",
+    "next_steps"
+   ],
+   "entry_points": [
+    "Bottom bar tab: My Money",
+    "Menu > Tools and calculators > What each debt costs you"
+   ],
+   "files": [
+    "game/features/ask2.js",
+    "game/features/debts.js",
+    "game/features/look.js",
+    "game/features/owed.js",
+    "game/screens/dash.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 15
+  },
+  {
+   "id": "card_plan",
+   "name": "Card plan and vault",
+   "purpose": "Keep your credit cards in a vault, add a card, and plan which card to use.",
+   "sort_order": 210,
+   "status": "partial",
+   "evidence": [
+    "AUDIT.md problem 1 (credit score kept in three places: c.x.vault.score, c.caught.score, stg.score)",
+    "game/features/vault.js",
+    "game/tests/card-vault.js (test file)",
+    "game/tests/credit-cards.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "My money"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.vault"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.money",
+     "does": "Add a card from What you owe",
+     "field_ids": [
+      "mycards.input.cdnick"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.vault",
+     "does": "Open the card vault and set each card",
+     "field_ids": [
+      "vault.vault.score",
+      "vault.vault.spend",
+      "vault.vault.programs",
+      "vault.vault.cant_tell_label_is_built_in_code_r_label_each_mo",
+      "vault.vault.cant_tell_label_is_built_in_code_ask_m_k",
+      "vault.vault.cant_tell_label_is_built_in_code_m_brand"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Add a card",
+     "status": "working",
+     "field_ids": [
+      "mycards.input.cdnick"
+     ]
+    },
+    {
+     "name": "Card vault",
+     "status": "partial",
+     "field_ids": [
+      "vault.vault.score",
+      "vault.vault.spend",
+      "vault.vault.programs",
+      "vault.vault.cant_tell_label_is_built_in_code_r_label_each_mo",
+      "vault.vault.cant_tell_label_is_built_in_code_ask_m_k",
+      "vault.vault.cant_tell_label_is_built_in_code_m_brand"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_debts"
+   ],
+   "feeds_into": [
+    "debt_plan"
+   ],
+   "entry_points": [
+    "Menu > My money > Card vault"
+   ],
+   "files": [
+    "game/features/mycards.js",
+    "game/features/vault.js"
+   ],
+   "field_count": 7
+  },
+  {
+   "id": "key_numbers",
+   "name": "Key numbers",
+   "purpose": "A sheet of 38 key numbers in groups, each with its math, unlocked one small question at a time.",
+   "sort_order": 220,
+   "status": "partial",
+   "evidence": [
+    "R-028",
+    "R-052 (still says Freedom number)",
+    "AUDIT.md Duplicates (knask.tax, knask.limit, knask.debtPay)",
+    "game/tests/ratios-on-key-numbers.js (test file)",
+    "game/tests/math-audit-core-numbers.js (test file)",
+    "game/tests/fi-ratio-and-coast-card.js (test file)"
+   ],
+   "placement": {
+    "tab": "My Money",
+    "area": "Key numbers"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.keynums",
+    "calc.metrics",
+    "calc.derive"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.keynums",
+     "does": "Open Key numbers and pick a group",
+     "field_ids": [
+      "metric.save",
+      "metric.saveall",
+      "metric.freedom",
+      "metric.home",
+      "metric.food",
+      "metric.move",
+      "metric.big3",
+      "metric.bills",
+      "metric.split",
+      "metric.debtpay",
+      "metric.dti",
+      "metric.carpay",
+      "metric.give",
+      "metric.growth",
+      "metric.match",
+      "metric.cushion",
+      "metric.bige",
+      "metric.highdebt",
+      "metric.debtload",
+      "metric.debtassets",
+      "metric.util",
+      "metric.interest",
+      "metric.nw",
+      "metric.invx",
+      "metric.paw",
+      "metric.invshare",
+      "metric.trap",
+      "metric.fee",
+      "metric.dollar",
+      "metric.fi",
+      "metric.yearsfi",
+      "metric.coast",
+      "metric.wr",
+      "metric.years",
+      "metric.leanfi",
+      "metric.bridge",
+      "metric.stockshare",
+      "metric.firatio"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.keynums",
+     "does": "Tap to unlock: answer one question",
+     "field_ids": [
+      "knask.tax",
+      "knask.debtPay",
+      "knask.limit",
+      "knask.pre",
+      "knask.matchAmt",
+      "knask.pay1",
+      "knask.fee",
+      "knask.carPay",
+      "knask.give",
+      "askkn.tax",
+      "askkn.debtPay",
+      "askkn.limit",
+      "askkn.pre",
+      "askkn.matchAmt",
+      "askkn.pay1",
+      "askkn.fee",
+      "askkn.carPay",
+      "askkn.give"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.keynums",
+     "does": "Tap a number to see the math",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Six groups of numbers",
+     "status": "working",
+     "field_ids": [
+      "metric.save",
+      "metric.saveall",
+      "metric.freedom",
+      "metric.home",
+      "metric.food",
+      "metric.move",
+      "metric.big3",
+      "metric.bills",
+      "metric.split",
+      "metric.debtpay",
+      "metric.dti",
+      "metric.carpay",
+      "metric.give",
+      "metric.growth",
+      "metric.match",
+      "metric.cushion",
+      "metric.bige",
+      "metric.highdebt",
+      "metric.debtload",
+      "metric.debtassets",
+      "metric.util",
+      "metric.interest",
+      "metric.nw",
+      "metric.invx",
+      "metric.paw",
+      "metric.invshare",
+      "metric.trap",
+      "metric.fee",
+      "metric.dollar",
+      "metric.fi",
+      "metric.yearsfi",
+      "metric.coast",
+      "metric.wr",
+      "metric.years",
+      "metric.leanfi",
+      "metric.bridge",
+      "metric.stockshare",
+      "metric.firatio"
+     ]
+    },
+    {
+     "name": "One question to unlock",
+     "status": "partial",
+     "field_ids": [
+      "knask.tax",
+      "knask.debtPay",
+      "knask.limit",
+      "knask.pre",
+      "knask.matchAmt",
+      "knask.pay1",
+      "knask.fee",
+      "knask.carPay",
+      "knask.give",
+      "askkn.tax",
+      "askkn.debtPay",
+      "askkn.limit",
+      "askkn.pre",
+      "askkn.matchAmt",
+      "askkn.pay1",
+      "askkn.fee",
+      "askkn.carPay",
+      "askkn.give"
+     ]
+    },
+    {
+     "name": "Show the math",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "money_lists",
+    "setup_expenses"
+   ],
+   "feeds_into": [
+    "home_cards",
+    "money_overview",
+    "retirement",
+    "next_steps"
+   ],
+   "entry_points": [
+    "Sheet: Key numbers (on My Money)",
+    "My Money: Key numbers row"
+   ],
+   "files": [
+    "game/core/engine.js",
+    "game/core/metrics.js",
+    "game/features/ask2.js",
+    "game/features/coast.js",
+    "game/features/mix.js"
+   ],
+   "field_count": 56
+  },
+  {
+   "id": "next_steps",
+   "name": "Next Steps",
+   "purpose": "Your to-do list in order: today, this week, this month, this year.",
+   "sort_order": 230,
+   "status": "working",
+   "evidence": [
+    "R-026",
+    "R-003",
+    "game/screens/planner.js:482",
+    "game/tests/next-steps-one-list.js (test file)",
+    "game/tests/plan-summary.js (test file)"
+   ],
+   "placement": {
+    "tab": "Next Steps",
+    "area": "View switch"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.plan"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.plan",
+     "does": "Pick a view: today, this week, month, year",
+     "field_ids": [
+      "plan.view"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.plan",
+     "does": "Set minutes for this week and see this pay period",
+     "field_ids": [
+      "plan.week_minutes",
+      "plan.pay_period"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.plan",
+     "does": "Open one task: done, working on it, waiting, doesn't apply",
+     "field_ids": [
+      "planner.who_are_you_waiting_on",
+      "planner.check_back_in",
+      "planner.what_time",
+      "plan.task_state"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Four views",
+     "status": "working",
+     "field_ids": [
+      "plan.view"
+     ]
+    },
+    {
+     "name": "Minutes planned and pay period",
+     "status": "working",
+     "field_ids": [
+      "plan.week_minutes",
+      "plan.pay_period"
+     ]
+    },
+    {
+     "name": "Task states",
+     "status": "working",
+     "field_ids": [
+      "planner.who_are_you_waiting_on",
+      "planner.check_back_in",
+      "planner.what_time",
+      "plan.task_state"
+     ]
+    }
+   ],
+   "depends_on": [
+    "opening_reveal",
+    "moves"
+   ],
+   "feeds_into": [
+    "checkin"
+   ],
+   "entry_points": [
+    "Bottom bar tab: Next Steps",
+    "Bottom bar: Next Steps"
+   ],
+   "files": [
+    "game/features/look.js",
+    "game/features/plan.js",
+    "game/screens/planner.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 7
+  },
+  {
+   "id": "moves",
+   "name": "Moves to try and What if",
+   "purpose": "A library of money moves, each with one question first, and a side by side What if.",
+   "sort_order": 240,
+   "status": "partial",
+   "evidence": [
+    "AUDIT.md problem 2 (stg.score offers I don't know it)",
+    "AUDIT.md Duplicates: Where you live (stg.home)",
+    "game/data/strategies.js",
+    "game/tests/strategy-engine.js (test file)",
+    "game/tests/side-by-side.js (test file)",
+    "game/tests/move-facts.js (test file)"
+   ],
+   "placement": {
+    "tab": "Next Steps",
+    "area": "Moves to try"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.stratlib",
+    "screen.moves"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.plan",
+     "does": "Moves to try: answer one question first",
+     "field_ids": [
+      "stg.score",
+      "stg.home",
+      "stg.spare",
+      "stg.payfull",
+      "stg.hdhp",
+      "stg.debt8"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.stratlib",
+     "does": "Browse the moves library",
+     "field_ids": [
+      "strat.x.cant_tell_label_is_built_in_code_q_l",
+      "strat.tile.fi_date"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.moves",
+     "does": "What if: compare two choices side by side",
+     "field_ids": [
+      "compare.added_each_month_from_here"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "One question first",
+     "status": "partial",
+     "field_ids": [
+      "stg.score",
+      "stg.home",
+      "stg.spare",
+      "stg.payfull",
+      "stg.hdhp",
+      "stg.debt8"
+     ]
+    },
+    {
+     "name": "Moves library",
+     "status": "working",
+     "field_ids": [
+      "strat.x.cant_tell_label_is_built_in_code_q_l",
+      "strat.tile.fi_date"
+     ]
+    },
+    {
+     "name": "What if side by side",
+     "status": "working",
+     "field_ids": [
+      "compare.added_each_month_from_here"
+     ]
+    }
+   ],
+   "depends_on": [
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Plans and what-ifs > Moves library",
+    "Menu > Plans and what-ifs > What if"
+   ],
+   "files": [
+    "game/data/strategies.js",
+    "game/features/compare.js",
+    "game/features/strat.js",
+    "game/screens/planner.js"
+   ],
+   "field_count": 9
+  },
+  {
+   "id": "my_goals",
+   "name": "My Goals",
+   "purpose": "Pick, rank and track your goals; the top 3 are what you work on now.",
+   "sort_order": 250,
+   "status": "working",
+   "evidence": [
+    "R-016",
+    "R-032",
+    "game/features/goalrank.js",
+    "game/features/goalwire.js",
+    "game/tests/goal-wire-and-care-quests.js (test file)",
+    "game/tests/dashboard-values-goals.js (test file)"
+   ],
+   "placement": {
+    "tab": "My Goals",
+    "area": "Add a goal"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.goals"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.goals",
+     "does": "Pick my first goals from the empty list",
+     "field_ids": [
+      "goals.first"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.goals",
+     "does": "Add a goal and give it a name",
+     "field_ids": [
+      "ui.input.gn"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.goals",
+     "does": "Wire a goal to an account and see a month and next check-in",
+     "field_ids": [
+      "goalwire.tile.a_month",
+      "goalwire.tile.next_check_in"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Pick first goals",
+     "status": "working",
+     "field_ids": [
+      "goals.first"
+     ]
+    },
+    {
+     "name": "Add a goal",
+     "status": "working",
+     "field_ids": [
+      "ui.input.gn"
+     ]
+    },
+    {
+     "name": "Goal wired to an account",
+     "status": "working",
+     "field_ids": [
+      "goalwire.tile.a_month",
+      "goalwire.tile.next_check_in"
+     ]
+    },
+    {
+     "name": "Rank and top 3",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "opening_quiz"
+   ],
+   "feeds_into": [
+    "next_steps",
+    "home_cards"
+   ],
+   "entry_points": [
+    "Bottom bar tab: My Goals",
+    "Bottom bar: My Goals",
+    "Home: Ask button My goals"
+   ],
+   "files": [
+    "game/features/goalrank.js",
+    "game/features/goalwire.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 4
+  },
+  {
+   "id": "me_settings",
+   "name": "Me and settings",
+   "purpose": "The Me tab: how the game looks and talks to you, about you, app lock and Rearrange Home.",
+   "sort_order": 260,
+   "status": "partial",
+   "evidence": [
+    "R-029 (muted text is pale blue; other themes can be picked)",
+    "R-059",
+    "game/features/lockset.js",
+    "game/tests/rings-theme.js (test file)",
+    "game/tests/game-feel.js (test file)"
+   ],
+   "placement": {
+    "tab": "Me",
+    "area": "Top of the tab"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "tab.me",
+    "screen.themes",
+    "screen.dash",
+    "screen.lock"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "tab.me",
+     "does": "Top of the tab: expert mode and a color",
+     "field_ids": [
+      "me.expert",
+      "me.color"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.me",
+     "does": "Theme: looks like, talks like",
+     "field_ids": [
+      "ui.looks_like",
+      "ui.talks_like",
+      "me.fire"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "tab.me",
+     "does": "How the game talks to you: gentle or tough",
+     "field_ids": [
+      "me.gentle",
+      "me.tough"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.me",
+     "does": "More about you and a role model or rival",
+     "field_ids": [
+      "ui.which_sounds_most_like_you_with_money",
+      "ui.plans_or_going_with_the_flow",
+      "ui.who_do_you_spend_on_first",
+      "ui.got_an_unfair_advantage",
+      "ui.do_you_chase_card_or_bank_bonuses",
+      "ui.when_would_you_like_work_to_be_optional",
+      "ui.plan_your_money_to_last_until",
+      "me.rival"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.lock",
+     "does": "Turn on App lock",
+     "field_ids": [
+      "lockset.tile.lock",
+      "lockset.tile.ways_in"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Top of the tab",
+     "status": "working",
+     "field_ids": [
+      "me.expert",
+      "me.color"
+     ]
+    },
+    {
+     "name": "Theme",
+     "status": "partial",
+     "field_ids": [
+      "ui.looks_like",
+      "ui.talks_like",
+      "me.fire"
+     ]
+    },
+    {
+     "name": "Tone",
+     "status": "working",
+     "field_ids": [
+      "me.gentle",
+      "me.tough"
+     ]
+    },
+    {
+     "name": "More about you",
+     "status": "working",
+     "field_ids": [
+      "ui.which_sounds_most_like_you_with_money",
+      "ui.plans_or_going_with_the_flow",
+      "ui.who_do_you_spend_on_first",
+      "ui.got_an_unfair_advantage",
+      "ui.do_you_chase_card_or_bank_bonuses",
+      "ui.when_would_you_like_work_to_be_optional",
+      "ui.plan_your_money_to_last_until"
+     ]
+    },
+    {
+     "name": "Role model and rival",
+     "status": "working",
+     "field_ids": [
+      "me.rival"
+     ]
+    },
+    {
+     "name": "App lock and passkeys",
+     "status": "working",
+     "field_ids": [
+      "lockset.tile.lock",
+      "lockset.tile.ways_in"
+     ]
+    },
+    {
+     "name": "Rearrange Home",
+     "status": "unsure",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [
+    "home_cards"
+   ],
+   "entry_points": [
+    "Bottom bar tab: Me",
+    "Menu > Settings and account > Theme",
+    "Menu > Settings and account > Rearrange Home",
+    "Menu > Settings and account > App lock",
+    "Bottom bar: Me"
+   ],
+   "files": [
+    "game/account/lock.js",
+    "game/features/lockset.js",
+    "game/screens/planner.js",
+    "game/screens/ui.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 17
+  },
+  {
+   "id": "save_export",
+   "name": "Save and export",
+   "purpose": "Copy your game as text, bring it back, or export your plan to a spreadsheet.",
+   "sort_order": 270,
+   "status": "partial",
+   "evidence": [
+    "R-055 (a file, not a live Google Sheets link)",
+    "R-019 (Save my game is a backup)",
+    "game/features/book.js",
+    "game/tests/plan-spreadsheet.js (test file)",
+    "game/tests/spreadsheet-round-trip.js (test file)",
+    "game/tests/plan-xlsx.js (test file)",
+    "game/tests/save-status.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Settings and account"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.backup",
+    "screen.book",
+    "screen.summary",
+    "screen.onepage"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.backup",
+     "does": "Copy your game as text or paste it back",
+     "field_ids": [
+      "ui.input.exp",
+      "ui.input.imp"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.book",
+     "does": "Export the plan, or bring a file back",
+     "field_ids": [
+      "book.input.choose_a_file",
+      "book.input.bookpaste"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.summary",
+     "does": "See my plan on one page",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Save my game (text)",
+     "status": "working",
+     "field_ids": [
+      "ui.input.exp",
+      "ui.input.imp"
+     ]
+    },
+    {
+     "name": "Export spreadsheet round trip",
+     "status": "partial",
+     "field_ids": [
+      "book.input.choose_a_file",
+      "book.input.bookpaste"
+     ]
+    },
+    {
+     "name": "Plan on one page",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [],
+   "entry_points": [
+    "Menu > Settings and account > Backup copy",
+    "Menu > My money > Export",
+    "Menu > My money > My plan on one page",
+    "Menu > My money > One page for a planner"
+   ],
+   "files": [
+    "game/features/book.js",
+    "game/features/house.js",
+    "game/features/plan.js",
+    "game/screens/planner.js",
+    "game/screens/ui.js"
+   ],
+   "field_count": 4
+  },
+  {
+   "id": "navigation",
+   "name": "Bars, menu and first week",
+   "purpose": "The bottom bar, top bar, the menu with search and the tool library, and the calmer first week.",
+   "sort_order": 280,
+   "status": "partial",
+   "evidence": [
+    "R-005",
+    "R-006 (My money group still scrolls)",
+    "R-036",
+    "R-047",
+    "R-049 (missing: no last day)",
+    "bar.bottom_old is dead",
+    "game/tests/first-week.js (test file)",
+    "game/tests/sheet-navigation.js (test file)",
+    "game/tests/roles-and-navigation.js (test file)"
+   ],
+   "placement": {
+    "tab": "Every tab",
+    "area": "Bottom bar"
+   },
+   "who": [
+    "player",
+    "coach",
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "bar.bottom",
+    "bar.top",
+    "bar.sheet",
+    "bar.bottom_old",
+    "screen.glossary"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "bar.bottom",
+     "does": "Tap a tab in the bottom bar",
+     "field_ids": []
+    },
+    {
+     "step": 2,
+     "screen_id": "bar.top",
+     "does": "Open the menu and type in Find a tool",
+     "field_ids": [
+      "planner.input.mnfind"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "bar.top",
+     "does": "Open the tool library",
+     "field_ids": [
+      "addon.held_tool_pages"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Bottom bar",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Top bar and sheet row",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Menu search",
+     "status": "working",
+     "field_ids": [
+      "planner.input.mnfind"
+     ]
+    },
+    {
+     "name": "Tool library",
+     "status": "working",
+     "field_ids": [
+      "addon.held_tool_pages"
+     ]
+    },
+    {
+     "name": "Calmer first week",
+     "status": "partial",
+     "field_ids": []
+    },
+    {
+     "name": "Old bottom bar",
+     "status": "dead",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [],
+   "entry_points": [
+    "Bottom bar",
+    "Top bar",
+    "Top row of each sheet",
+    "Menu > Learn > Glossary",
+    "Always visible"
+   ],
+   "files": [
+    "game/data/toollib.js",
+    "game/features/firstweek.js",
+    "game/screens/nav.js",
+    "game/screens/planner.js",
+    "game/screens/ux.js"
+   ],
+   "field_count": 2
+  },
+  {
+   "id": "people_home",
+   "name": "People and household",
+   "purpose": "Switch person, add a person, your household, households together, sharing costs, who carries what, your guild.",
+   "sort_order": 290,
+   "status": "partial",
+   "evidence": [
+    "AUDIT.md Duplicates: Who you combine money with (c.share and G.house.share)",
+    "R-022",
+    "game/screens/profiles.js",
+    "game/tests/our-household.js (test file)",
+    "game/tests/households-together.js (test file)",
+    "game/tests/sharing-costs-fairly.js (test file)",
+    "game/tests/household-role-map.js (test file)",
+    "game/tests/your-unpaid-jobs.js (test file)",
+    "game/tests/money-log-and-give-a-game.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "People and home"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.people",
+    "screen.house",
+    "screen.hhx",
+    "screen.fair",
+    "screen.rolemap",
+    "screen.jobs",
+    "screen.guild"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.people",
+     "does": "Switch person or add one",
+     "field_ids": [
+      "addon.card",
+      "demo_mode",
+      "profiles.who_you_combine_money_with",
+      "ui.who_you_combine_money_with",
+      "moneylog.input.the_code",
+      "moneylog.input.imp"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.house",
+     "does": "Set up our household",
+     "field_ids": [
+      "house.who_decides_the_day_to_day_money",
+      "house.anyone_can_spend_this_much_without_asking",
+      "house.look_at_it_again_every"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.hhx",
+     "does": "Households together: answer the same question",
+     "field_ids": [
+      "hhold.input.hxpastebox",
+      "hhold.input.hxtobox",
+      "hhold.tile.people",
+      "hhold.tile.talk_points",
+      "hhold.tile.fi_gap",
+      "hhold.tile.home_equity",
+      "hh.ask",
+      "hh.cushion",
+      "hh.split",
+      "hh.accounts",
+      "hh.stop",
+      "hh.debt",
+      "hh.family",
+      "hh.invest",
+      "hh.talk",
+      "hh.big"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.fair",
+     "does": "Share costs fairly",
+     "field_ids": [
+      "fair.what_they_bring_in_a_month",
+      "fair.unpaid_work_at_home_hours_a_week",
+      "fair.nights_a_week_here",
+      "fair.what_you_share_each_month",
+      "fair.an_hour_of_home_work_is_worth",
+      "fair.who_pays_the_shared_bills_now"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.rolemap",
+     "does": "Who carries what, and your unpaid jobs",
+     "field_ids": [
+      "jobs.jobmins.id",
+      "jobs.tile.hours_a_month",
+      "jobs.tile.given_back",
+      "jobs.tile.off_your_plate",
+      "jobs.tile.given_back_2",
+      "rolemap.tile.household_admin_time",
+      "rolemap.tile.its_value",
+      "rolemap.tile.its_value_2",
+      "rolemap.tile.people"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "screen.guild",
+     "does": "Name your guild",
+     "field_ids": [
+      "guild.input.gdname"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Profiles and switch person",
+     "status": "working",
+     "field_ids": [
+      "addon.card",
+      "demo_mode",
+      "profiles.who_you_combine_money_with",
+      "ui.who_you_combine_money_with"
+     ]
+    },
+    {
+     "name": "Send or add a person",
+     "status": "working",
+     "field_ids": [
+      "moneylog.input.the_code",
+      "moneylog.input.imp"
+     ]
+    },
+    {
+     "name": "Our household",
+     "status": "working",
+     "field_ids": [
+      "house.who_decides_the_day_to_day_money",
+      "house.anyone_can_spend_this_much_without_asking",
+      "house.look_at_it_again_every"
+     ]
+    },
+    {
+     "name": "Households together",
+     "status": "unsure",
+     "field_ids": [
+      "hhold.input.hxpastebox",
+      "hhold.input.hxtobox",
+      "hhold.tile.people",
+      "hhold.tile.talk_points",
+      "hhold.tile.fi_gap",
+      "hhold.tile.home_equity",
+      "hh.ask",
+      "hh.cushion",
+      "hh.split",
+      "hh.accounts",
+      "hh.stop",
+      "hh.debt",
+      "hh.family",
+      "hh.invest",
+      "hh.talk",
+      "hh.big"
+     ]
+    },
+    {
+     "name": "Sharing costs fairly",
+     "status": "working",
+     "field_ids": [
+      "fair.what_they_bring_in_a_month",
+      "fair.unpaid_work_at_home_hours_a_week",
+      "fair.nights_a_week_here",
+      "fair.what_you_share_each_month",
+      "fair.an_hour_of_home_work_is_worth",
+      "fair.who_pays_the_shared_bills_now"
+     ]
+    },
+    {
+     "name": "Who carries what and unpaid jobs",
+     "status": "working",
+     "field_ids": [
+      "jobs.jobmins.id",
+      "jobs.tile.hours_a_month",
+      "jobs.tile.given_back",
+      "jobs.tile.off_your_plate",
+      "jobs.tile.given_back_2",
+      "rolemap.tile.household_admin_time",
+      "rolemap.tile.its_value",
+      "rolemap.tile.its_value_2",
+      "rolemap.tile.people"
+     ]
+    },
+    {
+     "name": "Guild",
+     "status": "unsure",
+     "field_ids": [
+      "guild.input.gdname"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_expenses"
+   ],
+   "feeds_into": [
+    "key_numbers"
+   ],
+   "entry_points": [
+    "Menu > People and home > Switch person",
+    "Menu > People and home > Our household",
+    "Menu > Tools and calculators > Households together",
+    "Menu > People and home > Sharing costs fairly",
+    "Menu > People and home > Who carries what",
+    "Menu > People and home > Your unpaid jobs",
+    "Menu > People and home > Your guild",
+    "Top bar: the name button"
+   ],
+   "files": [
+    "game/account/addon.js",
+    "game/account/gate.js",
+    "game/core/hhold.js",
+    "game/features/fair.js",
+    "game/features/guild.js",
+    "game/features/hhold.js",
+    "game/features/house.js",
+    "game/features/jobs.js",
+    "game/features/moneylog.js",
+    "game/features/rolemap.js",
+    "game/screens/planner.js",
+    "game/screens/profiles.js",
+    "game/screens/ui.js"
+   ],
+   "field_count": 41
+  },
+  {
+   "id": "kids_mode",
+   "name": "Kids mode",
+   "purpose": "A separate kid profile with short daily lessons.",
+   "sort_order": 300,
+   "status": "partial",
+   "evidence": [
+    "R-041 (open to every player, with no add-on switch)",
+    "game/features/kids.js",
+    "game/tests/kids-mode.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "People and home"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.kids",
+    "screen.lp"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.kids",
+     "does": "Add a kid and open their profile",
+     "field_ids": [
+      "kids.add",
+      "kids.tile.lessons",
+      "kids.tile.days_in_a_row"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.lp",
+     "does": "Do a short daily lesson",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Kid profiles",
+     "status": "working",
+     "field_ids": [
+      "kids.add",
+      "kids.tile.lessons",
+      "kids.tile.days_in_a_row"
+     ]
+    },
+    {
+     "name": "Daily lessons",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [],
+   "entry_points": [
+    "Menu > People and home > Kids mode",
+    "Menu > Tools and calculators > Daily lessons"
+   ],
+   "files": [
+    "game/features/kids.js"
+   ],
+   "field_count": 3
+  },
+  {
+   "id": "health_insurance",
+   "name": "Health, benefits and insurance",
+   "purpose": "Health and insurance quests, work benefits, and how much insurance you need.",
+   "sort_order": 310,
+   "status": "working",
+   "evidence": [
+    "game/tests/benefits-and-health.js",
+    "game/tests/insurance-needs.js",
+    "Not checked by hand in AUDIT.md",
+    "game/tests/benefits-and-health.js (test file)",
+    "game/tests/insurance-needs.js (test file)",
+    "game/tests/goal-wire-and-care-quests.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.care",
+    "screen.benefits",
+    "screen.cover"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.care",
+     "does": "Pick a health or insurance quest",
+     "field_ids": [
+      "careq.tile.due_now",
+      "careq.tile.your_dates"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.benefits",
+     "does": "Answer the benefits and health questions",
+     "field_ids": [
+      "benefits.ben.key",
+      "benefits.tile.benefits_a_year",
+      "benefits.tile.coverage",
+      "benefits.tile.next_line",
+      "benefits.tile.least_in_a_typical_year"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.cover",
+     "does": "See how much insurance you need",
+     "field_ids": [
+      "cover.cover.key"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Care quests",
+     "status": "working",
+     "field_ids": [
+      "careq.tile.due_now",
+      "careq.tile.your_dates"
+     ]
+    },
+    {
+     "name": "Benefits and health",
+     "status": "working",
+     "field_ids": [
+      "benefits.ben.key",
+      "benefits.tile.benefits_a_year",
+      "benefits.tile.coverage",
+      "benefits.tile.next_line",
+      "benefits.tile.least_in_a_typical_year"
+     ]
+    },
+    {
+     "name": "Insurance needs",
+     "status": "working",
+     "field_ids": [
+      "cover.cover.key"
+     ]
+    }
+   ],
+   "depends_on": [
+    "money_overview"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > People and home > Health and insurance quests",
+    "Menu > Tools and calculators > Benefits and health",
+    "Menu > Tools and calculators > Insurance needs"
+   ],
+   "files": [
+    "game/features/benefits.js",
+    "game/features/careq.js",
+    "game/features/cover.js"
+   ],
+   "field_count": 8
+  },
+  {
+   "id": "quest_mode",
+   "name": "Quest mode",
+   "purpose": "Play the money plan as a quest with levels.",
+   "sort_order": 320,
+   "status": "unsure",
+   "evidence": [
+    "game/features/quest.js",
+    "game/tests/the-quest.js",
+    "19 fields found by scan, low confidence",
+    "game/tests/the-quest.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Games and quizzes"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.qmode"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.qmode",
+     "does": "Start a quest and answer its questions",
+     "field_ids": [
+      "quest.qsk.earns",
+      "quest.tile.health",
+      "quest.tile.armor",
+      "quest.tile.strongest",
+      "quest.tile.to_train",
+      "quest.tile.new_steps_now",
+      "quest.tile.free_a_month",
+      "quest.tile.weak_spots",
+      "quest.tile.a_year",
+      "quest.tile.a_month",
+      "quest.tile.days_of_your_life",
+      "quest.tile.your_guess",
+      "quest.tile.where_you_are",
+      "quest.tile.the_middle_at_your_age",
+      "quest.tile.beaten",
+      "quest.tile.your_values",
+      "quest.tile.finish_line",
+      "quest.tile.of_the_way",
+      "quest.tile.to_go"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Quest questions",
+     "status": "unsure",
+     "field_ids": [
+      "quest.qsk.earns",
+      "quest.tile.health",
+      "quest.tile.armor",
+      "quest.tile.strongest",
+      "quest.tile.to_train",
+      "quest.tile.new_steps_now",
+      "quest.tile.free_a_month",
+      "quest.tile.weak_spots",
+      "quest.tile.a_year",
+      "quest.tile.a_month",
+      "quest.tile.days_of_your_life",
+      "quest.tile.your_guess",
+      "quest.tile.where_you_are",
+      "quest.tile.the_middle_at_your_age",
+      "quest.tile.beaten",
+      "quest.tile.your_values",
+      "quest.tile.finish_line",
+      "quest.tile.of_the_way",
+      "quest.tile.to_go"
+     ]
+    }
+   ],
+   "depends_on": [
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "your_path"
+   ],
+   "entry_points": [
+    "Menu > Games and quizzes > Quest mode"
+   ],
+   "files": [
+    "game/features/quest.js"
+   ],
+   "field_count": 19
+  },
+  {
+   "id": "games_challenges",
+   "name": "Quizzes, games and challenges",
+   "purpose": "Quizzes, the daily challenge, the credit score game, the bonus hunt, galaxy and small games on Home.",
+   "sort_order": 330,
+   "status": "unsure",
+   "evidence": [
+    "game/features/hunt.js",
+    "game/features/quizzes.js",
+    "game/features/life.js",
+    "Not checked by hand in AUDIT.md",
+    "game/tests/quizzes.js (test file)",
+    "game/tests/quiz-styles-and-daily-path.js (test file)",
+    "game/tests/stars.js (test file)",
+    "game/tests/your-people.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Games and quizzes"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.qz",
+    "screen.lsopen",
+    "screen.crg",
+    "screen.hunt",
+    "screen.galaxy"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.qz",
+     "does": "Take a quiz",
+     "field_ids": [
+      "quizzes.tile.still_possible",
+      "quizzes.tile.settled"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.lsopen",
+     "does": "Do the daily challenge",
+     "field_ids": [
+      "life.mixes_in_words_from",
+      "life.input.pfnum",
+      "life.tile.check_ins_saved",
+      "life.tile.steps_done",
+      "life.tile.tracks_finished",
+      "life.tile.steps_with_proof"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.crg",
+     "does": "Play the credit score game or the bonus hunt",
+     "field_ids": [
+      "hunt.the_bonus",
+      "hunt.money_that_must_stay_in_the_account",
+      "hunt.for_how_long",
+      "hunt.fees_you_would_pay",
+      "hunt.what_the_bonus_account_pays",
+      "hunt.where_the_money_is_now_earns",
+      "hunt.your_top_tax_rate",
+      "hunt.tile.best_round_1",
+      "hunt.tile.rounds_played",
+      "hunt.tile.kept_so_far",
+      "hunt.tile.lined_up",
+      "hunt.tile.still_to_go"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "tab.home",
+     "does": "Home games: subscriptions and your people",
+     "field_ids": [
+      "games.input.pyn",
+      "games2.input.choose_a_file"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.galaxy",
+     "does": "Look at your galaxy",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Quizzes",
+     "status": "working",
+     "field_ids": [
+      "quizzes.tile.still_possible",
+      "quizzes.tile.settled"
+     ]
+    },
+    {
+     "name": "Daily challenge",
+     "status": "unsure",
+     "field_ids": [
+      "life.mixes_in_words_from",
+      "life.input.pfnum",
+      "life.tile.check_ins_saved",
+      "life.tile.steps_done",
+      "life.tile.tracks_finished",
+      "life.tile.steps_with_proof"
+     ]
+    },
+    {
+     "name": "Credit score game and bonus hunt",
+     "status": "unsure",
+     "field_ids": [
+      "hunt.the_bonus",
+      "hunt.money_that_must_stay_in_the_account",
+      "hunt.for_how_long",
+      "hunt.fees_you_would_pay",
+      "hunt.what_the_bonus_account_pays",
+      "hunt.where_the_money_is_now_earns",
+      "hunt.your_top_tax_rate",
+      "hunt.tile.best_round_1",
+      "hunt.tile.rounds_played",
+      "hunt.tile.kept_so_far",
+      "hunt.tile.lined_up",
+      "hunt.tile.still_to_go"
+     ]
+    },
+    {
+     "name": "Home games",
+     "status": "unsure",
+     "field_ids": [
+      "games.input.pyn",
+      "games2.input.choose_a_file"
+     ]
+    },
+    {
+     "name": "Galaxy",
+     "status": "unsure",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [
+    "your_path"
+   ],
+   "entry_points": [
+    "Menu > Games and quizzes > Quizzes",
+    "Menu > Games and quizzes > Daily challenge",
+    "Menu > Games and quizzes > The credit score game",
+    "Menu > Games and quizzes > The first $1,000 bonus hunt",
+    "Menu > Games and quizzes > Galaxy"
+   ],
+   "files": [
+    "game/features/games.js",
+    "game/features/games2.js",
+    "game/features/hunt.js",
+    "game/features/life.js",
+    "game/features/quizzes.js",
+    "game/features/stars.js"
+   ],
+   "field_count": 22
+  },
+  {
+   "id": "learn_library",
+   "name": "Learn and exercises",
+   "purpose": "Famous money ideas, the glossary, how it connects, books, exercises, and the opt-in Mistake audit.",
+   "sort_order": 340,
+   "status": "partial",
+   "evidence": [
+    "R-004 (most labels have no i)",
+    "R-030",
+    "R-052 (glossary says Freedom number)",
+    "game/tests/canon-meters.js (test file)",
+    "game/tests/famous-money-ideas.js (test file)",
+    "game/tests/frameworks-and-canon.js (test file)",
+    "game/tests/money-exercises.js (test file)",
+    "game/tests/how-it-connects.js (test file)",
+    "game/tests/what-depends-on-what.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Learn"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.roof",
+    "screen.glossary",
+    "screen.connect",
+    "screen.dep",
+    "screen.books",
+    "screen.rcaudit",
+    "screen.ymoyl",
+    "screen.fwwins",
+    "screen.exercises"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.roof",
+     "does": "Read famous money ideas and set the meters",
+     "field_ids": [
+      "meters.tile.months_you_could_walk_away",
+      "meters.tile.on_a_noodle_budget",
+      "meters.tile.you_could_reach",
+      "meters.tile.a_month_without_the_job",
+      "meters.tile.noodle_budget_a_month",
+      "meters.tile.set_aside_for_now",
+      "meters.tile.your_cash_lasts",
+      "meters.tile.paid_to_you_first_a_month",
+      "meters.tile.a_paycheck",
+      "meters.tile.of_what_lands",
+      "meters.tile.left_to_live_on",
+      "meters.tile.your_savings_rate",
+      "meters.tile.from_0_work_is_optional_in",
+      "meters.tile.on_your_own_numbers",
+      "meters.tile.your_hour",
+      "meters.tile.the_help_an_hour",
+      "meters.tile.hours_back_a_year",
+      "meters.tile.you_are_on",
+      "meters.tile.the_game_s_step",
+      "meters.tile.net_worth",
+      "meters.tile.you_own",
+      "meters.tile.you_owe",
+      "meters.tile.with_your_home_and_car",
+      "meters.tile.money_out",
+      "meters.tile.kept"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.ymoyl",
+     "does": "Work through Your Money or Your Life",
+     "field_ids": [
+      "canon.tile.steps_done",
+      "canon.tile.next",
+      "canon.tile.every_dollar_you_have_earned",
+      "canon.tile.hours_of_your_life",
+      "canon.tile.categories_marked",
+      "canon.tile.with_a_minus",
+      "canon.tile.freed_a_month",
+      "canon.tile.hours_of_work_freed",
+      "canon.tile.your_real_hourly_wage",
+      "canon.tile.more_a_month",
+      "canon.tile.capital_pays_a_month",
+      "canon.tile.the_cushion",
+      "canon.tile.cash_for_what_wears_out",
+      "canon.tile.done",
+      "canon.tile.saved_a_month",
+      "canon.tile.a_year",
+      "canon.tile.days_of_freedom_a_year"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.exercises",
+     "does": "Do a money exercise in your own words",
+     "field_ids": [
+      "exercises.input.exstext",
+      "exletter.input.exlown",
+      "exercises.tile.written",
+      "exercises.tile.shared"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.rcaudit",
+     "does": "Opt in to the Mistake audit",
+     "field_ids": [
+      "audit.rca.amt",
+      "audit.rca.ago"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.glossary",
+     "does": "Look up a word",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Famous ideas meters",
+     "status": "working",
+     "field_ids": [
+      "meters.tile.months_you_could_walk_away",
+      "meters.tile.on_a_noodle_budget",
+      "meters.tile.you_could_reach",
+      "meters.tile.a_month_without_the_job",
+      "meters.tile.noodle_budget_a_month",
+      "meters.tile.set_aside_for_now",
+      "meters.tile.your_cash_lasts",
+      "meters.tile.paid_to_you_first_a_month",
+      "meters.tile.a_paycheck",
+      "meters.tile.of_what_lands",
+      "meters.tile.left_to_live_on",
+      "meters.tile.your_savings_rate",
+      "meters.tile.from_0_work_is_optional_in",
+      "meters.tile.on_your_own_numbers",
+      "meters.tile.your_hour",
+      "meters.tile.the_help_an_hour",
+      "meters.tile.hours_back_a_year",
+      "meters.tile.you_are_on",
+      "meters.tile.the_game_s_step",
+      "meters.tile.net_worth",
+      "meters.tile.you_own",
+      "meters.tile.you_owe",
+      "meters.tile.with_your_home_and_car",
+      "meters.tile.money_out",
+      "meters.tile.kept"
+     ]
+    },
+    {
+     "name": "Your Money or Your Life",
+     "status": "working",
+     "field_ids": [
+      "canon.tile.steps_done",
+      "canon.tile.next",
+      "canon.tile.every_dollar_you_have_earned",
+      "canon.tile.hours_of_your_life",
+      "canon.tile.categories_marked",
+      "canon.tile.with_a_minus",
+      "canon.tile.freed_a_month",
+      "canon.tile.hours_of_work_freed",
+      "canon.tile.your_real_hourly_wage",
+      "canon.tile.more_a_month",
+      "canon.tile.capital_pays_a_month",
+      "canon.tile.the_cushion",
+      "canon.tile.cash_for_what_wears_out",
+      "canon.tile.done",
+      "canon.tile.saved_a_month",
+      "canon.tile.a_year",
+      "canon.tile.days_of_freedom_a_year"
+     ]
+    },
+    {
+     "name": "Money exercises",
+     "status": "working",
+     "field_ids": [
+      "exercises.input.exstext",
+      "exletter.input.exlown",
+      "exercises.tile.written",
+      "exercises.tile.shared"
+     ]
+    },
+    {
+     "name": "Mistake audit",
+     "status": "working",
+     "field_ids": [
+      "audit.rca.amt",
+      "audit.rca.ago"
+     ]
+    },
+    {
+     "name": "Glossary",
+     "status": "partial",
+     "field_ids": []
+    },
+    {
+     "name": "How it connects, what depends on what, books",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [],
+   "entry_points": [
+    "Menu > Learn > Famous money ideas",
+    "Menu > Learn > Glossary",
+    "Menu > Learn > How it all connects",
+    "Menu > Learn > What depends on what",
+    "Menu > Learn > Books for your next step",
+    "Menu > Learn > Mistake audit (opt-in)",
+    "Menu > Tools and calculators > Your Money or Your Life",
+    "Menu > Tools and calculators > Quick wins",
+    "Menu > Tools and calculators > Money exercises",
+    "Tab head: Glossary button"
+   ],
+   "files": [
+    "game/features/audit.js",
+    "game/features/canon.js",
+    "game/features/connect.js",
+    "game/features/dep.js",
+    "game/features/exercises.js",
+    "game/features/exletter.js",
+    "game/features/life.js",
+    "game/features/meters.js",
+    "game/features/roof.js",
+    "game/screens/planner.js"
+   ],
+   "field_count": 48
+  },
+  {
+   "id": "retirement",
+   "name": "Retirement tools",
+   "purpose": "Retirement odds, taking money out, stress test, your two ages, simulators and fire drills.",
+   "sort_order": 350,
+   "status": "partial",
+   "evidence": [
+    "R-024 (FI kinds are markers, not a switch)",
+    "R-040 (missing: Barista, Chubby, Fat have no number)",
+    "game/features/takeout.js",
+    "game/tests/retirement-odds.js (test file)",
+    "game/tests/taking-money-out.js (test file)",
+    "game/tests/compare-the-ways.js (test file)",
+    "game/tests/simulators.js (test file)",
+    "game/tests/stress-testing.js (test file)",
+    "game/tests/two-ages.js (test file)",
+    "game/tests/fire-drills.js (test file)",
+    "game/tests/fire-statuses.js (test file)",
+    "game/tests/retirement-engine.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Plans and what-ifs"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.odds",
+    "screen.takeout",
+    "screen.stress",
+    "screen.ages",
+    "screen.sims",
+    "screen.drills"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.odds",
+     "does": "See your retirement odds",
+     "field_ids": [
+      "odds.odds.stock",
+      "odds.tile.social_security",
+      "odds.tile.replaces"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.takeout",
+     "does": "Plan taking money out and compare the ways",
+     "field_ids": [
+      "takeout.tko.roth",
+      "takeout.tko.prem",
+      "takeout.tko.size",
+      "takeout.tko.conv",
+      "takeout.tko.other",
+      "ways.cmp.left",
+      "ways.cmp.leftAge",
+      "ways.odds.stock",
+      "ways.input.cmprate",
+      "ways.input.cmpratetyped",
+      "takeout.tile.reachable_today_after_tax",
+      "takeout.tile.rate_at_the_stop_age",
+      "takeout.tile.years_to_cover_before_59",
+      "takeout.tile.years_to_cover_before_59_2",
+      "takeout.tile.years_on_a_marketplace_plan"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.sims",
+     "does": "Run a simulator",
+     "field_ids": [
+      "sim.x.cant_tell_label_is_built_in_code_q_label"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.stress",
+     "does": "Run a stress test, your two ages, fire drills",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Retirement odds",
+     "status": "working",
+     "field_ids": [
+      "odds.odds.stock",
+      "odds.tile.social_security",
+      "odds.tile.replaces"
+     ]
+    },
+    {
+     "name": "Taking money out",
+     "status": "working",
+     "field_ids": [
+      "takeout.tko.roth",
+      "takeout.tko.prem",
+      "takeout.tko.size",
+      "takeout.tko.conv",
+      "takeout.tko.other",
+      "takeout.tile.reachable_today_after_tax",
+      "takeout.tile.rate_at_the_stop_age",
+      "takeout.tile.years_to_cover_before_59",
+      "takeout.tile.years_to_cover_before_59_2",
+      "takeout.tile.years_on_a_marketplace_plan"
+     ]
+    },
+    {
+     "name": "Compare the ways",
+     "status": "working",
+     "field_ids": [
+      "ways.cmp.left",
+      "ways.cmp.leftAge",
+      "ways.odds.stock",
+      "ways.input.cmprate",
+      "ways.input.cmpratetyped"
+     ]
+    },
+    {
+     "name": "Simulators",
+     "status": "working",
+     "field_ids": [
+      "sim.x.cant_tell_label_is_built_in_code_q_label"
+     ]
+    },
+    {
+     "name": "Stress test, two ages, fire drills",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Lean / Regular / Chubby / Fat FI switch",
+     "status": "unfinished",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "key_numbers",
+    "make_it_exact"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Plans and what-ifs > Retirement odds",
+    "Menu > Plans and what-ifs > Taking money out",
+    "Menu > Plans and what-ifs > Stress test",
+    "Menu > Plans and what-ifs > Your two ages",
+    "Menu > Plans and what-ifs > Simulators",
+    "Menu > Plans and what-ifs > Fire drills"
+   ],
+   "files": [
+    "game/features/ages.js",
+    "game/features/coast.js",
+    "game/features/drills.js",
+    "game/features/odds.js",
+    "game/features/sim.js",
+    "game/features/stress.js",
+    "game/features/takeout.js",
+    "game/features/ways.js"
+   ],
+   "field_count": 19
+  },
+  {
+   "id": "life_plans",
+   "name": "Life choices and events",
+   "purpose": "Two paths, two job offers, career and school, trips, countdowns and life event blocks.",
+   "sort_order": 360,
+   "status": "working",
+   "evidence": [
+    "game/tests/two-paths.js",
+    "game/tests/two-job-offers.js",
+    "game/tests/life-event-blocks.js",
+    "Not checked by hand in AUDIT.md",
+    "game/tests/two-paths.js (test file)",
+    "game/tests/two-job-offers.js (test file)",
+    "game/tests/career-and-education.js (test file)",
+    "game/tests/trips-and-the-journey.js (test file)",
+    "game/tests/countdowns.js (test file)",
+    "game/tests/life-event-blocks.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Plans and what-ifs"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.paths",
+    "screen.offers",
+    "screen.career",
+    "screen.trips",
+    "screen.cdn",
+    "screen.blocks"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.paths",
+     "does": "Compare two paths",
+     "field_ids": [
+      "paths.paths.ret",
+      "paths.paths.infl",
+      "paths.paths.swr",
+      "paths.paths.margin",
+      "paths.paths.smile",
+      "paths.paths.blend",
+      "paths.paths.split"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.offers",
+     "does": "Compare two job offers",
+     "field_ids": [
+      "offers.offers.cant_tell_label_is_built_in_code_q_1"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.career",
+     "does": "Plan career and education",
+     "field_ids": [
+      "career.career.key",
+      "career.tile.pays_back",
+      "career.tile.whole_price",
+      "career.tile.lifetime_value",
+      "career.tile.freedom_date"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.trips",
+     "does": "Plan a trip",
+     "field_ids": [
+      "trip.trip.key",
+      "trip.tile.the_trip",
+      "trip.tile.you_are_at",
+      "trip.tile.freedom_date",
+      "trip.tile.each_person"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.cdn",
+     "does": "Set a countdown",
+     "field_ids": [
+      "countdown.countdown.cant_tell_label_is_built_in_code_label",
+      "countdown.tile.if_these_assumptions_hold",
+      "countdown.tile.to_make_the_date"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "screen.blocks",
+     "does": "Drop in a life event block",
+     "field_ids": [
+      "blocks.blocks.car",
+      "blocks.blocks.years"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Two paths",
+     "status": "working",
+     "field_ids": [
+      "paths.paths.ret",
+      "paths.paths.infl",
+      "paths.paths.swr",
+      "paths.paths.margin",
+      "paths.paths.smile",
+      "paths.paths.blend",
+      "paths.paths.split"
+     ]
+    },
+    {
+     "name": "Two job offers",
+     "status": "working",
+     "field_ids": [
+      "offers.offers.cant_tell_label_is_built_in_code_q_1"
+     ]
+    },
+    {
+     "name": "Career and education",
+     "status": "working",
+     "field_ids": [
+      "career.career.key",
+      "career.tile.pays_back",
+      "career.tile.whole_price",
+      "career.tile.lifetime_value",
+      "career.tile.freedom_date"
+     ]
+    },
+    {
+     "name": "Trips",
+     "status": "working",
+     "field_ids": [
+      "trip.trip.key",
+      "trip.tile.the_trip",
+      "trip.tile.you_are_at",
+      "trip.tile.freedom_date",
+      "trip.tile.each_person"
+     ]
+    },
+    {
+     "name": "Countdowns",
+     "status": "working",
+     "field_ids": [
+      "countdown.countdown.cant_tell_label_is_built_in_code_label",
+      "countdown.tile.if_these_assumptions_hold",
+      "countdown.tile.to_make_the_date"
+     ]
+    },
+    {
+     "name": "Life event blocks",
+     "status": "working",
+     "field_ids": [
+      "blocks.blocks.car",
+      "blocks.blocks.years"
+     ]
+    }
+   ],
+   "depends_on": [
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "my_goals",
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Plans and what-ifs > Two paths",
+    "Menu > Plans and what-ifs > Two job offers",
+    "Menu > Plans and what-ifs > Career and education",
+    "Menu > Plans and what-ifs > Trips and the journey",
+    "Menu > Plans and what-ifs > Countdowns",
+    "Menu > Plans and what-ifs > Life event blocks"
+   ],
+   "files": [
+    "game/features/blocks.js",
+    "game/features/career.js",
+    "game/features/countdown.js",
+    "game/features/offers.js",
+    "game/features/paths.js",
+    "game/features/trip.js"
+   ],
+   "field_count": 23
+  },
+  {
+   "id": "hard_times",
+   "name": "Hard times",
+   "purpose": "Break in case of emergency, safety nets, and hard moments.",
+   "sort_order": 370,
+   "status": "unsure",
+   "evidence": [
+    "R-056 (cant_tell: more transitions than a layoff)",
+    "game/features/nets.js",
+    "game/features/hard.js",
+    "game/tests/life-transitions.js (test file)",
+    "game/tests/safety-nets.js (test file)",
+    "game/tests/hard-moments.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Plans and what-ifs"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.transit",
+    "screen.hard"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.transit",
+     "does": "Pick what happened and see your safety nets",
+     "field_ids": [
+      "nets.x.cant_tell_label_is_built_in_code_t_1",
+      "transit.tr.k",
+      "nets.tile.your_cash_lasts",
+      "nets.tile.lowest_point",
+      "nets.tile.plan_b",
+      "nets.tile.one_time_costs",
+      "transit.tile.your_cash_lasts"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.hard",
+     "does": "Work through a hard moment",
+     "field_ids": [
+      "hard.tile.you_end_up_with",
+      "hard.tile.they_end_up_with",
+      "hard.tile.still_to_decide",
+      "hard.tile.in_both_names",
+      "hard.tile.you_pay_to_the_end",
+      "hard.tile.a_month_now",
+      "hard.tile.deposit_back"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Break in case of emergency",
+     "status": "unsure",
+     "field_ids": [
+      "transit.tr.k",
+      "transit.tile.your_cash_lasts"
+     ]
+    },
+    {
+     "name": "Safety nets",
+     "status": "working",
+     "field_ids": [
+      "nets.x.cant_tell_label_is_built_in_code_t_1",
+      "nets.tile.your_cash_lasts",
+      "nets.tile.lowest_point",
+      "nets.tile.plan_b",
+      "nets.tile.one_time_costs"
+     ]
+    },
+    {
+     "name": "Hard moments",
+     "status": "working",
+     "field_ids": [
+      "hard.tile.you_end_up_with",
+      "hard.tile.they_end_up_with",
+      "hard.tile.still_to_decide",
+      "hard.tile.in_both_names",
+      "hard.tile.you_pay_to_the_end",
+      "hard.tile.a_month_now",
+      "hard.tile.deposit_back"
+     ]
+    }
+   ],
+   "depends_on": [
+    "money_lists"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Plans and what-ifs > Break in case of emergency",
+    "Menu > Tools and calculators > Hard moments"
+   ],
+   "files": [
+    "game/features/hard.js",
+    "game/features/nets.js",
+    "game/features/transit.js"
+   ],
+   "field_count": 14
+  },
+  {
+   "id": "investing_taxes",
+   "name": "Investing and taxes",
+   "purpose": "Invest or pay debt, Roth or traditional, investment mix and fees, which account next, extra money, your tax view.",
+   "sort_order": 380,
+   "status": "working",
+   "evidence": [
+    "game/tests/investing.js",
+    "game/tests/tax-view.js",
+    "game/tests/windfall.js",
+    "Not checked by hand in AUDIT.md",
+    "game/tests/investing.js (test file)",
+    "game/tests/investment-mix-and-fees.js (test file)",
+    "game/tests/which-account-next.js (test file)",
+    "game/tests/windfall.js (test file)",
+    "game/tests/tax-view.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.ivheat",
+    "screen.ivroth",
+    "screen.mix",
+    "screen.acwhy",
+    "screen.nxa",
+    "screen.windfall",
+    "screen.taxv"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.ivheat",
+     "does": "Invest or pay debt, and Roth or traditional",
+     "field_ids": [
+      "invest.ivr.income",
+      "invest.ivr.live",
+      "invest.tile.your_return",
+      "invest.tile.your_top_debt_rate",
+      "invest.tile.debts",
+      "invest.tile.your_rate_now",
+      "invest.tile.in_retirement_about",
+      "invest.tile.accounts_with_a_choice"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.mix",
+     "does": "Check your investment mix and fees",
+     "field_ids": [
+      "mix.mix.cant_tell_label_is_built_in_code_label",
+      "mix.mix.cant_tell_label_is_built_in_code_label_2",
+      "mix.mix.target",
+      "mix.mix.adv",
+      "mix.tile.stocks",
+      "mix.tile.fees_a_year",
+      "mix.tile.fees_over_30_years",
+      "mix.tile.in_the_three_kinds"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.nxa",
+     "does": "Which account first and next",
+     "field_ids": [
+      "nextacct.nextacct.extra",
+      "nextacct.tile.after_this_month_s_money_is_placed_your_next_ext"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.windfall",
+     "does": "Got extra money: where it goes",
+     "field_ids": [
+      "windfall.wind.amt",
+      "windfall.wind.taxed",
+      "windfall.wind.fun",
+      "windfall.tile.start_here"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.taxv",
+     "does": "See your tax view",
+     "field_ids": [
+      "taxview.taxv.filing",
+      "taxview.taxv.gross",
+      "taxview.taxv.pre",
+      "taxview.taxv.state",
+      "taxview.tile.top_federal_bracket",
+      "taxview.tile.average_rate",
+      "taxview.tile.room_left_in_this_bracket",
+      "taxview.tile.room_for_0_long_term_gains"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Invest or pay debt",
+     "status": "working",
+     "field_ids": [
+      "invest.ivr.income",
+      "invest.ivr.live",
+      "invest.tile.your_return",
+      "invest.tile.your_top_debt_rate",
+      "invest.tile.debts",
+      "invest.tile.your_rate_now",
+      "invest.tile.in_retirement_about",
+      "invest.tile.accounts_with_a_choice"
+     ]
+    },
+    {
+     "name": "Mix and fees",
+     "status": "working",
+     "field_ids": [
+      "mix.mix.cant_tell_label_is_built_in_code_label",
+      "mix.mix.cant_tell_label_is_built_in_code_label_2",
+      "mix.mix.target",
+      "mix.mix.adv",
+      "mix.tile.stocks",
+      "mix.tile.fees_a_year",
+      "mix.tile.fees_over_30_years",
+      "mix.tile.in_the_three_kinds"
+     ]
+    },
+    {
+     "name": "Which account next",
+     "status": "working",
+     "field_ids": [
+      "nextacct.nextacct.extra",
+      "nextacct.tile.after_this_month_s_money_is_placed_your_next_ext"
+     ]
+    },
+    {
+     "name": "Windfall",
+     "status": "working",
+     "field_ids": [
+      "windfall.wind.amt",
+      "windfall.wind.taxed",
+      "windfall.wind.fun",
+      "windfall.tile.start_here"
+     ]
+    },
+    {
+     "name": "Tax view",
+     "status": "working",
+     "field_ids": [
+      "taxview.taxv.filing",
+      "taxview.taxv.gross",
+      "taxview.taxv.pre",
+      "taxview.taxv.state",
+      "taxview.tile.top_federal_bracket",
+      "taxview.tile.average_rate",
+      "taxview.tile.room_left_in_this_bracket",
+      "taxview.tile.room_for_0_long_term_gains"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_taxes",
+    "money_lists"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Invest or pay debt",
+    "Menu > Tools and calculators > Roth or traditional, by account",
+    "Menu > Tools and calculators > Investment mix and fees",
+    "Menu > Tools and calculators > Which account first",
+    "Menu > Tools and calculators > Which account next",
+    "Menu > Plans and what-ifs > Got extra money?",
+    "Menu > Tools and calculators > Your tax view"
+   ],
+   "files": [
+    "game/features/eras.js",
+    "game/features/invest.js",
+    "game/features/mix.js",
+    "game/features/nextacct.js",
+    "game/features/taxview.js",
+    "game/features/windfall.js"
+   ],
+   "field_count": 30
+  },
+  {
+   "id": "gig_work",
+   "name": "Working for yourself",
+   "purpose": "Tools for gig and self-employed work: invoices, set-asides and taxes.",
+   "sort_order": 390,
+   "status": "working",
+   "evidence": [
+    "game/tests/working-for-yourself.js",
+    "22 fields found by scan, low confidence",
+    "game/tests/working-for-yourself.js (test file)",
+    "game/tests/taxes-and-self-employed.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.gig"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.gig",
+     "does": "Answer questions about your own work",
+     "field_ids": [
+      "gig.last_year_s_total_tax_form_1040_line_24",
+      "gig.a_job_s_tax_withheld_this_year",
+      "gig.which_of_these_arrive_with_no_taxes_taken_out",
+      "gig.how_much_to_set_aside_from_each_payment",
+      "gig.what_do_you_call_one_unit_of_your_work",
+      "gig.what_you_charge_for_one",
+      "gig.what_one_costs_you",
+      "gig.paid_hours_in_one",
+      "gig.unpaid_hours_around_it",
+      "gig.weeks_a_year_with_no_work",
+      "gig.what_an_app_or_a_gig_pays_an_hour_after_its_cut",
+      "gig.the_amount",
+      "gig.when_it_is_due",
+      "gig.input.gxinvn",
+      "gig.tile.safe_harbor",
+      "gig.tile.each_date",
+      "gig.tile.your_floor",
+      "gig.tile.the_gig",
+      "gig.tile.still_coming",
+      "gig.tile.past_its_date",
+      "gig.tile.paid",
+      "gig.tile.days_to_get_paid"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Self-employed tools",
+     "status": "working",
+     "field_ids": [
+      "gig.last_year_s_total_tax_form_1040_line_24",
+      "gig.a_job_s_tax_withheld_this_year",
+      "gig.which_of_these_arrive_with_no_taxes_taken_out",
+      "gig.how_much_to_set_aside_from_each_payment",
+      "gig.what_do_you_call_one_unit_of_your_work",
+      "gig.what_you_charge_for_one",
+      "gig.what_one_costs_you",
+      "gig.paid_hours_in_one",
+      "gig.unpaid_hours_around_it",
+      "gig.weeks_a_year_with_no_work",
+      "gig.what_an_app_or_a_gig_pays_an_hour_after_its_cut",
+      "gig.the_amount",
+      "gig.when_it_is_due",
+      "gig.input.gxinvn",
+      "gig.tile.safe_harbor",
+      "gig.tile.each_date",
+      "gig.tile.your_floor",
+      "gig.tile.the_gig",
+      "gig.tile.still_coming",
+      "gig.tile.past_its_date",
+      "gig.tile.paid",
+      "gig.tile.days_to_get_paid"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_income"
+   ],
+   "feeds_into": [
+    "key_numbers"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Working for yourself"
+   ],
+   "files": [
+    "game/features/gig.js"
+   ],
+   "field_count": 22
+  },
+  {
+   "id": "student_loans",
+   "name": "Student loan plans",
+   "purpose": "Compare student loan plans and payments.",
+   "sort_order": 400,
+   "status": "working",
+   "evidence": [
+    "game/tests/student-loan-plans.js",
+    "game/tests/student-loan-plans.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.study"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.study",
+     "does": "Answer loan questions and compare plans",
+     "field_ids": [
+      "study.tile.household",
+      "study.tile.lowest_a_month",
+      "study.tile.least_paid_in_all",
+      "study.tile.forgiven_tax_free",
+      "study.tile.plans_compared",
+      "study.tile.payments_counted",
+      "study.tile.payments_to_go",
+      "study.tile.years_left",
+      "study.tile.forgiven",
+      "study.tile.private_a_month",
+      "study.tile.private_in_all"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Loan plans",
+     "status": "working",
+     "field_ids": [
+      "study.tile.household",
+      "study.tile.lowest_a_month",
+      "study.tile.least_paid_in_all",
+      "study.tile.forgiven_tax_free",
+      "study.tile.plans_compared",
+      "study.tile.payments_counted",
+      "study.tile.payments_to_go",
+      "study.tile.years_left",
+      "study.tile.forgiven",
+      "study.tile.private_a_month",
+      "study.tile.private_in_all"
+     ]
+    }
+   ],
+   "depends_on": [
+    "setup_debts"
+   ],
+   "feeds_into": [
+    "debt_plan"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Student loan plans"
+   ],
+   "files": [
+    "game/features/study.js"
+   ],
+   "field_count": 11
+  },
+  {
+   "id": "family_estate",
+   "name": "Family money and estate",
+   "purpose": "Family money tools, and estate and marriage.",
+   "sort_order": 410,
+   "status": "working",
+   "evidence": [
+    "game/tests/family-money.js",
+    "game/tests/estate-and-marriage.js",
+    "game/tests/family-money.js (test file)",
+    "game/tests/estate-and-marriage.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.family",
+    "screen.estate"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.family",
+     "does": "Family money questions",
+     "field_ids": [
+      "family.fam.key",
+      "family.tile.a_month_both_ends",
+      "family.tile.left_for_your_goals",
+      "family.tile.freedom_date",
+      "family.tile.saved_a_month",
+      "family.tile.by_the_end_of_the_stay",
+      "family.tile.goal_reached_in",
+      "family.tile.all_the_years",
+      "family.tile.the_first_year",
+      "family.tile.put_away_a_month",
+      "family.tile.pay_as_it_comes",
+      "family.tile.ny_529_deduction"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.estate",
+     "does": "Estate and marriage questions",
+     "field_ids": [
+      "estate.tile.papers_done",
+      "estate.tile.your_people_receive",
+      "estate.tile.step_up_wipes_out",
+      "estate.tile.new_york_line",
+      "estate.tile.married_federal_tax",
+      "estate.tile.tax_on_partner_cover",
+      "estate.tile.spousal_top_up",
+      "estate.tile.survivor_keeps"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Family money",
+     "status": "working",
+     "field_ids": [
+      "family.fam.key",
+      "family.tile.a_month_both_ends",
+      "family.tile.left_for_your_goals",
+      "family.tile.freedom_date",
+      "family.tile.saved_a_month",
+      "family.tile.by_the_end_of_the_stay",
+      "family.tile.goal_reached_in",
+      "family.tile.all_the_years",
+      "family.tile.the_first_year",
+      "family.tile.put_away_a_month",
+      "family.tile.pay_as_it_comes",
+      "family.tile.ny_529_deduction"
+     ]
+    },
+    {
+     "name": "Estate and marriage",
+     "status": "working",
+     "field_ids": [
+      "estate.tile.papers_done",
+      "estate.tile.your_people_receive",
+      "estate.tile.step_up_wipes_out",
+      "estate.tile.new_york_line",
+      "estate.tile.married_federal_tax",
+      "estate.tile.tax_on_partner_cover",
+      "estate.tile.spousal_top_up",
+      "estate.tile.survivor_keeps"
+     ]
+    }
+   ],
+   "depends_on": [
+    "people_home"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Family money",
+    "Menu > Tools and calculators > Estate and marriage"
+   ],
+   "files": [
+    "game/features/estate.js",
+    "game/features/family.js"
+   ],
+   "field_count": 20
+  },
+  {
+   "id": "quick_math",
+   "name": "Quick math and before you buy",
+   "purpose": "Small calculators, Before you sign a loan, and Product X-ray.",
+   "sort_order": 420,
+   "status": "unsure",
+   "evidence": [
+    "42 Quick math fields found by scan, controls not read (low confidence)",
+    "game/tests/quick-math.js",
+    "game/tests/quick-math.js (test file)",
+    "game/tests/before-you-sign.js (test file)",
+    "game/tests/product-xray.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.quick",
+    "screen.sign",
+    "screen.xray"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.quick",
+     "does": "Pick a quick math card and answer it",
+     "field_ids": [
+      "quick.what_is_in_savings",
+      "quick.the_rate_it_earns_now",
+      "quick.the_other_account_s_rate",
+      "quick.the_amount",
+      "quick.spread_over",
+      "quick.what_the_waiting_money_earns",
+      "quick.the_price",
+      "quick.the_times_you_will_really_use_it",
+      "quick.what_it_sells_for_after",
+      "quick.what_it_saves_you",
+      "quick.the_hours_it_takes",
+      "quick.a_month_invested",
+      "quick.waiting",
+      "quick.what_you_cut_a_month",
+      "quick.for_how_long",
+      "quick.growth_a_year_after_inflation",
+      "quick.what_the_warranty_costs",
+      "quick.what_the_repair_would_cost",
+      "quick.your_guess_the_chance_it_breaks_while_covered",
+      "quick.the_price_of_the_car",
+      "quick.the_loan_s_yearly_rate",
+      "quick.the_mortgage_rate",
+      "quick.how_much",
+      "quick.how_often",
+      "quick.tile.more_in_a_year",
+      "quick.tile.more_in_5_years",
+      "quick.tile.a_month",
+      "quick.tile.all_at_once",
+      "quick.tile.spread_out",
+      "quick.tile.waiting_on_average",
+      "quick.tile.a_use",
+      "quick.tile.what_it_really_costs",
+      "quick.tile.this_task_an_hour",
+      "quick.tile.your_work_an_hour",
+      "quick.tile.what_the_wait_costs",
+      "quick.tile.starting_now",
+      "quick.tile.to_catch_up_later",
+      "quick.tile.cut_it_kept",
+      "quick.tile.invest_it_grows_to",
+      "quick.tile.days_closer_to_fi",
+      "quick.tile.the_repair_on_your_odds",
+      "quick.tile.where_they_meet"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.sign",
+     "does": "Check a loan before you sign",
+     "field_ids": [
+      "sign.try_a_different_rate",
+      "sign.try_a_different_length"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.xray",
+     "does": "X-ray a product",
+     "field_ids": [
+      "xray.xray.k"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Quick math cards",
+     "status": "unsure",
+     "field_ids": [
+      "quick.what_is_in_savings",
+      "quick.the_rate_it_earns_now",
+      "quick.the_other_account_s_rate",
+      "quick.the_amount",
+      "quick.spread_over",
+      "quick.what_the_waiting_money_earns",
+      "quick.the_price",
+      "quick.the_times_you_will_really_use_it",
+      "quick.what_it_sells_for_after",
+      "quick.what_it_saves_you",
+      "quick.the_hours_it_takes",
+      "quick.a_month_invested",
+      "quick.waiting",
+      "quick.what_you_cut_a_month",
+      "quick.for_how_long",
+      "quick.growth_a_year_after_inflation",
+      "quick.what_the_warranty_costs",
+      "quick.what_the_repair_would_cost",
+      "quick.your_guess_the_chance_it_breaks_while_covered",
+      "quick.the_price_of_the_car",
+      "quick.the_loan_s_yearly_rate",
+      "quick.the_mortgage_rate",
+      "quick.how_much",
+      "quick.how_often",
+      "quick.tile.more_in_a_year",
+      "quick.tile.more_in_5_years",
+      "quick.tile.a_month",
+      "quick.tile.all_at_once",
+      "quick.tile.spread_out",
+      "quick.tile.waiting_on_average",
+      "quick.tile.a_use",
+      "quick.tile.what_it_really_costs",
+      "quick.tile.this_task_an_hour",
+      "quick.tile.your_work_an_hour",
+      "quick.tile.what_the_wait_costs",
+      "quick.tile.starting_now",
+      "quick.tile.to_catch_up_later",
+      "quick.tile.cut_it_kept",
+      "quick.tile.invest_it_grows_to",
+      "quick.tile.days_closer_to_fi",
+      "quick.tile.the_repair_on_your_odds",
+      "quick.tile.where_they_meet"
+     ]
+    },
+    {
+     "name": "Before you sign a loan",
+     "status": "working",
+     "field_ids": [
+      "sign.try_a_different_rate",
+      "sign.try_a_different_length"
+     ]
+    },
+    {
+     "name": "Product X-ray",
+     "status": "working",
+     "field_ids": [
+      "xray.xray.k"
+     ]
+    }
+   ],
+   "depends_on": [],
+   "feeds_into": [],
+   "entry_points": [
+    "Menu > Tools and calculators > Quick math",
+    "Menu > Tools and calculators > Before you sign a loan",
+    "Menu > Tools and calculators > Product X-ray"
+   ],
+   "files": [
+    "game/features/quick.js",
+    "game/features/sign.js",
+    "game/features/xray.js"
+   ],
+   "field_count": 45
+  },
+  {
+   "id": "money_insights",
+   "name": "Money insights",
+   "purpose": "Start at the finish line, what's in the way, levers, multipliers, people like you, your money read.",
+   "sort_order": 430,
+   "status": "unsure",
+   "evidence": [
+    "game/features/feel.js",
+    "game/features/sins.js",
+    "Not checked by hand in AUDIT.md",
+    "game/tests/which-lever-matters-most.js (test file)",
+    "game/tests/multipliers-board.js (test file)",
+    "game/tests/people-like-you.js (test file)",
+    "game/tests/money-sins-read.js (test file)",
+    "game/tests/money-sins-results.js (test file)",
+    "game/tests/character-reveal-and-element.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Tools and calculators"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.fline",
+    "screen.bneck",
+    "screen.lever",
+    "screen.mult",
+    "screen.peers",
+    "screen.sins",
+    "screen.elem",
+    "screen.okay",
+    "screen.roots",
+    "screen.proofs"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.fline",
+     "does": "Start at the finish line and see what's in the way",
+     "field_ids": [
+      "feel.gfend.per",
+      "feel.gfend.need",
+      "feel.gfend.years",
+      "feel.tile.invested_at_the_end",
+      "feel.tile.by",
+      "feel.tile.you_are",
+      "feel.tile.left_over_now",
+      "feel.tile.the_bottleneck",
+      "feel.tile.left_over_a_month",
+      "feel.tile.checks_answered"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.lever",
+     "does": "See which lever matters most",
+     "field_ids": [
+      "lever.how_much",
+      "lever.the_skill_lifts_your_pay_by",
+      "lever.how_likely_is_it_to_work"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.mult",
+     "does": "Look at the multipliers board",
+     "field_ids": [
+      "mult.bonuses_a_year",
+      "mult.things_you_already_buy_a_month",
+      "mult.would_you_buy_these_anyway",
+      "mult.put_in_a_year"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.peers",
+     "does": "Compare with people like you",
+     "field_ids": [
+      "peers.pe.gross",
+      "peers.tile.net_worth",
+      "peers.tile.savings_rate",
+      "peers.tile.next_milestone"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.sins",
+     "does": "Get your money read",
+     "field_ids": [
+      "sins.tile.days_of_your_money",
+      "sins.tile.sources",
+      "sins.tile.check_ins_this_week"
+     ]
+    },
+    {
+     "step": 6,
+     "screen_id": "screen.okay",
+     "does": "Am I okay, strengths, roots, proofs",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Finish line",
+     "status": "unsure",
+     "field_ids": [
+      "feel.gfend.per",
+      "feel.gfend.need",
+      "feel.gfend.years",
+      "feel.tile.invested_at_the_end",
+      "feel.tile.by",
+      "feel.tile.you_are",
+      "feel.tile.left_over_now",
+      "feel.tile.the_bottleneck",
+      "feel.tile.left_over_a_month",
+      "feel.tile.checks_answered"
+     ]
+    },
+    {
+     "name": "Levers",
+     "status": "working",
+     "field_ids": [
+      "lever.how_much",
+      "lever.the_skill_lifts_your_pay_by",
+      "lever.how_likely_is_it_to_work"
+     ]
+    },
+    {
+     "name": "Multipliers",
+     "status": "working",
+     "field_ids": [
+      "mult.bonuses_a_year",
+      "mult.things_you_already_buy_a_month",
+      "mult.would_you_buy_these_anyway",
+      "mult.put_in_a_year"
+     ]
+    },
+    {
+     "name": "People like you",
+     "status": "working",
+     "field_ids": [
+      "peers.pe.gross",
+      "peers.tile.net_worth",
+      "peers.tile.savings_rate",
+      "peers.tile.next_milestone"
+     ]
+    },
+    {
+     "name": "Money read",
+     "status": "working",
+     "field_ids": [
+      "sins.tile.days_of_your_money",
+      "sins.tile.sources",
+      "sins.tile.check_ins_this_week"
+     ]
+    },
+    {
+     "name": "Am I okay, element, roots, proofs",
+     "status": "unsure",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "key_numbers"
+   ],
+   "feeds_into": [
+    "next_steps"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Start at the finish line",
+    "Menu > Tools and calculators > What's in the way",
+    "Menu > Tools and calculators > Which lever matters most",
+    "Menu > Tools and calculators > The multipliers board",
+    "Menu > My money > You and people like you",
+    "Menu > My money > Your money read",
+    "Menu > My money > Strengths and your element",
+    "Menu > My money > Am I okay?",
+    "Menu > My money > Roots and branches",
+    "Menu > My money > Proof you kept"
+   ],
+   "files": [
+    "game/features/element.js",
+    "game/features/feel.js",
+    "game/features/lever.js",
+    "game/features/life.js",
+    "game/features/mult.js",
+    "game/features/okay.js",
+    "game/features/peers.js",
+    "game/features/sins.js"
+   ],
+   "field_count": 24
+  },
+  {
+   "id": "spending_values",
+   "name": "Spending and values",
+   "purpose": "Joy and enough, lifestyle creep, is my money going where I want, the spending plan, fork check, giving.",
+   "sort_order": 440,
+   "status": "working",
+   "evidence": [
+    "game/tests/joy-and-enough.js",
+    "game/tests/giving.js",
+    "game/tests/money-and-values.js",
+    "game/tests/joy-and-enough.js (test file)",
+    "game/tests/lifestyle-creep-and-enough.js (test file)",
+    "game/tests/money-and-values.js (test file)",
+    "game/tests/giving.js (test file)",
+    "game/tests/spending-plan-and-audit-score.js (test file)",
+    "game/tests/fork-theory.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "My money"
+   },
+   "who": [
+    "player"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.joy",
+    "screen.enough",
+    "screen.values",
+    "screen.csp",
+    "screen.audit",
+    "screen.fork",
+    "screen.giving"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.values",
+     "does": "Pick and rank what matters to you",
+     "field_ids": [
+      "values.input.vlown"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.joy",
+     "does": "Joy and enough",
+     "field_ids": [
+      "joy.input.jyown",
+      "joy.tile.a_dollar_s_joy",
+      "joy.tile.enough_meter",
+      "joy.tile.rich_life_list",
+      "joy.tile.subscriptions"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.enough",
+     "does": "Lifestyle creep and enough",
+     "field_ids": [
+      "enough.tile.spending_growth",
+      "enough.tile.income_growth",
+      "enough.tile.enough",
+      "enough.tile.the_few_lines"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.giving",
+     "does": "Plan your giving",
+     "field_ids": [
+      "giving.tile.hours_of_work",
+      "giving.tile.free_date",
+      "giving.tile.could_have_grown_to",
+      "giving.tile.every_year",
+      "giving.tile.bunching_keeps",
+      "giving.tile.giving_rate",
+      "giving.tile.your_share",
+      "giving.tile.bunching_keeps_2",
+      "giving.tile.maaser_count"
+     ]
+    },
+    {
+     "step": 5,
+     "screen_id": "screen.csp",
+     "does": "Conscious spending plan, money audit score, fork check",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Values",
+     "status": "working",
+     "field_ids": [
+      "values.input.vlown"
+     ]
+    },
+    {
+     "name": "Joy and enough",
+     "status": "working",
+     "field_ids": [
+      "joy.input.jyown",
+      "joy.tile.a_dollar_s_joy",
+      "joy.tile.enough_meter",
+      "joy.tile.rich_life_list",
+      "joy.tile.subscriptions"
+     ]
+    },
+    {
+     "name": "Lifestyle creep",
+     "status": "working",
+     "field_ids": [
+      "enough.tile.spending_growth",
+      "enough.tile.income_growth",
+      "enough.tile.enough",
+      "enough.tile.the_few_lines"
+     ]
+    },
+    {
+     "name": "Giving",
+     "status": "working",
+     "field_ids": [
+      "giving.tile.hours_of_work",
+      "giving.tile.free_date",
+      "giving.tile.could_have_grown_to",
+      "giving.tile.every_year",
+      "giving.tile.bunching_keeps",
+      "giving.tile.giving_rate",
+      "giving.tile.your_share",
+      "giving.tile.bunching_keeps_2",
+      "giving.tile.maaser_count"
+     ]
+    },
+    {
+     "name": "Spending plan, audit score, fork check",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "money_lists"
+   ],
+   "feeds_into": [
+    "my_goals"
+   ],
+   "entry_points": [
+    "Menu > Tools and calculators > Joy and enough",
+    "Menu > Tools and calculators > Lifestyle creep and enough",
+    "Menu > My money > Is my money going where I want?",
+    "Menu > My money > Conscious Spending Plan",
+    "Menu > My money > Money audit score",
+    "Menu > My money > Fork check",
+    "Menu > My money > Giving"
+   ],
+   "files": [
+    "game/features/csp.js",
+    "game/features/enough.js",
+    "game/features/fork.js",
+    "game/features/giving.js",
+    "game/features/joy.js",
+    "game/features/values.js"
+   ],
+   "field_count": 19
+  },
+  {
+   "id": "admin_page",
+   "name": "Admin page",
+   "purpose": "The admin sees each account, opens their game, uses account tools, card library, audit log, health and backup.",
+   "sort_order": 450,
+   "status": "working",
+   "evidence": [
+    "R-021 (not tried against the live database)",
+    "R-007",
+    "R-008",
+    "game/admin.html:56",
+    "game/tests/roles-coach-admin.js (test file)",
+    "game/tests/card-library-admin.js (test file)"
+   ],
+   "placement": {
+    "tab": "Admin page",
+    "area": "Accounts"
+   },
+   "who": [
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "page.admin"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.admin",
+     "does": "Look at accounts: open their game, coach switch, add-ons, account tools",
+     "field_ids": [
+      "admin.open_their_game",
+      "admin.coach",
+      "admin.add_on_one_row_for_each_add_on_the_database_list",
+      "admin.email_them_a_link_to_set_a_new_password",
+      "admin.confirm_their_email_by_hand",
+      "admin.block_this_account_from_signing_in",
+      "admin.delete_this_account",
+      "admin.account_summary_in_out_cash_owes_set_up_not_star"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "page.admin",
+     "does": "Add a card to the card library",
+     "field_ids": [
+      "admin.card_library_add_a_card",
+      "cardadmin.input.id",
+      "cardadmin.input.id_2",
+      "cardadmin.input.ca_from"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "page.admin",
+     "does": "Read the audit log and health",
+     "field_ids": [
+      "admin.audit_log",
+      "admin.health"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "page.admin",
+     "does": "Download everything as a backup",
+     "field_ids": [
+      "admin.backup_download_everything"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Accounts and tools",
+     "status": "working",
+     "field_ids": [
+      "admin.open_their_game",
+      "admin.coach",
+      "admin.add_on_one_row_for_each_add_on_the_database_list",
+      "admin.email_them_a_link_to_set_a_new_password",
+      "admin.confirm_their_email_by_hand",
+      "admin.block_this_account_from_signing_in",
+      "admin.delete_this_account",
+      "admin.account_summary_in_out_cash_owes_set_up_not_star"
+     ]
+    },
+    {
+     "name": "Card library",
+     "status": "working",
+     "field_ids": [
+      "admin.card_library_add_a_card",
+      "cardadmin.input.id",
+      "cardadmin.input.id_2",
+      "cardadmin.input.ca_from"
+     ]
+    },
+    {
+     "name": "Audit log and health",
+     "status": "working",
+     "field_ids": [
+      "admin.audit_log",
+      "admin.health"
+     ]
+    },
+    {
+     "name": "Backup",
+     "status": "working",
+     "field_ids": [
+      "admin.backup_download_everything"
+     ]
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [
+    "addons",
+    "coach_page",
+    "card_plan"
+   ],
+   "entry_points": [
+    "Page: Admin page",
+    "Switch hat: Admin"
+   ],
+   "files": [
+    "game/account/adminmore.js",
+    "game/account/cardadmin.js",
+    "game/account/roles.js",
+    "game/admin.html"
+   ],
+   "field_count": 15
+  },
+  {
+   "id": "testing_feedback",
+   "name": "Testing and feedback",
+   "purpose": "Report a bug or idea, the reports inbox, test with a friend, tester drives, and What's built.",
+   "sort_order": 460,
+   "status": "working",
+   "evidence": [
+    "R-044",
+    "R-045",
+    "game/features/fbreport.js",
+    "game/tests/report-a-bug-or-idea.js (test file)",
+    "game/tests/think-aloud-tester-drives.js (test file)",
+    "game/tests/with-a-friend-three-tasks.js (test file)",
+    "game/tests/whats-built.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Admin"
+   },
+   "who": [
+    "player",
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.flag",
+    "screen.testkit",
+    "screen.thinkaloud",
+    "screen.built"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "screen.flag",
+     "does": "A player reports a bug or idea",
+     "field_ids": []
+    },
+    {
+     "step": 2,
+     "screen_id": "page.admin",
+     "does": "The admin reads the reports inbox",
+     "field_ids": [
+      "admin.reports_inbox"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.testkit",
+     "does": "Test with a friend",
+     "field_ids": [
+      "testkit.where_did_they_get_lost",
+      "testkit.what_happened_tap_any_that_fit"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "screen.thinkaloud",
+     "does": "Tester drives: say what you are thinking",
+     "field_ids": [
+      "thinkaloud.input.ta_note",
+      "thinkaloud.tile.tasks_done",
+      "thinkaloud.tile.taps_in_all",
+      "thinkaloud.tile.time",
+      "thinkaloud.tile.reports"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Report a bug or idea",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Reports inbox",
+     "status": "working",
+     "field_ids": [
+      "admin.reports_inbox"
+     ]
+    },
+    {
+     "name": "Test with a friend",
+     "status": "working",
+     "field_ids": [
+      "testkit.where_did_they_get_lost",
+      "testkit.what_happened_tap_any_that_fit"
+     ]
+    },
+    {
+     "name": "Tester drives",
+     "status": "working",
+     "field_ids": [
+      "thinkaloud.input.ta_note",
+      "thinkaloud.tile.tasks_done",
+      "thinkaloud.tile.taps_in_all",
+      "thinkaloud.tile.time",
+      "thinkaloud.tile.reports"
+     ]
+    },
+    {
+     "name": "What's built",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [
+    "admin_page"
+   ],
+   "entry_points": [
+    "Menu > Settings and account > Report a bug or idea",
+    "Menu > Admin > Test with a friend",
+    "Menu > Admin > Tester drives",
+    "Menu > Admin > What's built"
+   ],
+   "files": [
+    "game/account/adminmore.js",
+    "game/features/built.js",
+    "game/features/fbreport.js",
+    "game/features/testkit.js",
+    "game/features/thinkaloud.js",
+    "game/screens/planner.js"
+   ],
+   "field_count": 8
+  },
+  {
+   "id": "growth",
+   "name": "Founding testers, sharing and demo",
+   "purpose": "Founding Testers, Share SLAM, What's new, and the 60-second Find your era demo.",
+   "sort_order": 470,
+   "status": "unfinished",
+   "evidence": [
+    "R-043 (database file not applied)",
+    "R-046",
+    "game/features/founding.js",
+    "game/tests/founding-share-whats-new.js (test file)",
+    "game/tests/find-your-era-demo.js (test file)"
+   ],
+   "placement": {
+    "tab": "Menu",
+    "area": "Settings and account"
+   },
+   "who": [
+    "player",
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "screen.fdshare",
+    "screen.whatsnew",
+    "page.era"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.era",
+     "does": "A visitor plays the 60-second demo",
+     "field_ids": []
+    },
+    {
+     "step": 2,
+     "screen_id": "screen.fdshare",
+     "does": "A player shares SLAM with a link",
+     "field_ids": []
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.whatsnew",
+     "does": "A player reads what's new",
+     "field_ids": []
+    },
+    {
+     "step": 4,
+     "screen_id": "page.admin",
+     "does": "The admin sees Founding Testers: N of 50",
+     "field_ids": [
+      "admin.founding_testers_n_of_50"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Find your era demo",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Share SLAM",
+     "status": "unfinished",
+     "field_ids": []
+    },
+    {
+     "name": "What's new",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Founding Testers count",
+     "status": "unfinished",
+     "field_ids": [
+      "admin.founding_testers_n_of_50"
+     ]
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [
+    "opening_quiz"
+   ],
+   "entry_points": [
+    "Menu > Settings and account > Share SLAM",
+    "Menu > Learn > What's new",
+    "Page: Find your era (60-second demo)",
+    "Web address /game/era/"
+   ],
+   "files": [
+    "game/account/foundadmin.js",
+    "game/era/index.html",
+    "game/features/erain.js",
+    "game/features/founding.js",
+    "supabase/migrations/20261125190000_founding_and_referrals.sql"
+   ],
+   "field_count": 1
+  },
+  {
+   "id": "coach_page",
+   "name": "Coach page",
+   "purpose": "A coach sees a roster of clients who share, writes notes, invites clients, and runs a coaching session.",
+   "sort_order": 480,
+   "status": "partial",
+   "evidence": [
+    "R-020 (sharing starts off unless invited)",
+    "R-007",
+    "game/account/coachpage.js",
+    "game/tests/roles-coach-admin.js (test file)",
+    "game/tests/coaching-session.js (test file)",
+    "game/tests/coach-demo-and-results.js (test file)"
+   ],
+   "placement": {
+    "tab": "Coach page",
+    "area": "Roster"
+   },
+   "who": [
+    "coach",
+    "admin"
+   ],
+   "addon_gate": null,
+   "screen_ids": [
+    "page.coach",
+    "screen.session"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.coach",
+     "does": "Find, sort and move clients through the pipeline",
+     "field_ids": [
+      "coach.find_a_client_by_name",
+      "coach.order",
+      "coach.pipeline_stages_getting_set_up_active_needs_atte"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "page.coach",
+     "does": "Open a client card, add a note, invite by email, export",
+     "field_ids": [
+      "coach.client_card_last_active_era_four_top_numbers_fla",
+      "coach.a_note_from_this_session",
+      "coach.their_email_address",
+      "coach.export_to_a_sheet"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "screen.session",
+     "does": "Run a coaching session from the game menu",
+     "field_ids": []
+    }
+   ],
+   "features": [
+    {
+     "name": "Roster and client cards",
+     "status": "working",
+     "field_ids": [
+      "coach.client_card_last_active_era_four_top_numbers_fla",
+      "coach.a_note_from_this_session",
+      "coach.their_email_address",
+      "coach.export_to_a_sheet"
+     ]
+    },
+    {
+     "name": "Search, sort and pipeline",
+     "status": "working",
+     "field_ids": [
+      "coach.find_a_client_by_name",
+      "coach.order",
+      "coach.pipeline_stages_getting_set_up_active_needs_atte"
+     ]
+    },
+    {
+     "name": "Coaching session",
+     "status": "working",
+     "field_ids": []
+    },
+    {
+     "name": "Share with my coach on by default",
+     "status": "partial",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "account"
+   ],
+   "feeds_into": [
+    "live_session"
+   ],
+   "entry_points": [
+    "Page: Coach page",
+    "Menu > Coach > Coaching session",
+    "Switch hat: Coach"
+   ],
+   "files": [
+    "game/account/coachpage.js",
+    "game/account/coachplus.js",
+    "game/coach.html",
+    "game/features/session.js"
+   ],
+   "field_count": 7
+  },
+  {
+   "id": "live_session",
+   "name": "Live Session mode",
+   "purpose": "A coaching call that fills the client's profile live, then a review and an AI pass after the call.",
+   "sort_order": 490,
+   "status": "unfinished",
+   "evidence": [
+    "R-042 (LIVE_SESSION_READY is false; page says Coming soon; database file not applied)",
+    "game/account/liveflag.js:18",
+    "game/tests/live-screens.js (test file)",
+    "game/tests/live-session-invite.js (test file)",
+    "game/tests/live-review.js (test file)",
+    "game/tests/live-ai-pass.js (test file)",
+    "game/tests/live-session-rules.js (test file)"
+   ],
+   "placement": {
+    "tab": "Live Session",
+    "area": "Session page: invite and sign-up"
+   },
+   "who": [
+    "coach",
+    "player"
+   ],
+   "addon_gate": "LIVE_SESSION_READY switch (game/account/liveflag.js)",
+   "screen_ids": [
+    "page.session"
+   ],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.coach",
+     "does": "The coach starts a live session card",
+     "field_ids": [
+      "livecoach.input.lcn",
+      "livecoach.input.lcme"
+     ]
+    },
+    {
+     "step": 2,
+     "screen_id": "page.session",
+     "does": "The client opens the invite and signs up",
+     "field_ids": [
+      "liveroom.input.lre",
+      "liveroom.input.lrp",
+      "liveroom.input.lrn",
+      "liveroom.input.lre_2",
+      "liveroom.input.lrp_2"
+     ]
+    },
+    {
+     "step": 3,
+     "screen_id": "page.session",
+     "does": "Review the numbers heard on the call",
+     "field_ids": [
+      "livereview.input.rvin_id",
+      "livereview.input.rvf_id",
+      "livereview.input.rvin_id_2"
+     ]
+    },
+    {
+     "step": 4,
+     "screen_id": "page.session",
+     "does": "After the call: drop in the recording text",
+     "field_ids": [
+      "liveai.input.laifile",
+      "liveai.input.lai_k"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "Live Session card",
+     "status": "unfinished",
+     "field_ids": [
+      "livecoach.input.lcn",
+      "livecoach.input.lcme"
+     ]
+    },
+    {
+     "name": "Invite and sign-up",
+     "status": "unfinished",
+     "field_ids": [
+      "liveroom.input.lre",
+      "liveroom.input.lrp",
+      "liveroom.input.lrn",
+      "liveroom.input.lre_2",
+      "liveroom.input.lrp_2"
+     ]
+    },
+    {
+     "name": "Review",
+     "status": "unfinished",
+     "field_ids": [
+      "livereview.input.rvin_id",
+      "livereview.input.rvf_id",
+      "livereview.input.rvin_id_2"
+     ]
+    },
+    {
+     "name": "After the call AI pass",
+     "status": "unfinished",
+     "field_ids": [
+      "liveai.input.laifile",
+      "liveai.input.lai_k"
+     ]
+    }
+   ],
+   "depends_on": [
+    "coach_page",
+    "account"
+   ],
+   "feeds_into": [
+    "money_lists",
+    "key_numbers"
+   ],
+   "entry_points": [
+    "Page: Live Session page",
+    "game/session.html"
+   ],
+   "files": [
+    "game/account/liveai.js",
+    "game/account/livecoach.js",
+    "game/account/liveflag.js",
+    "game/account/livereview.js",
+    "game/account/liveroom.js",
+    "game/session.html",
+    "supabase/functions/live-ai-pass",
+    "supabase/migrations/20261125210000_live_sessions.sql"
+   ],
+   "field_count": 12
+  },
+  {
+   "id": "addons",
+   "name": "Add-ons",
+   "purpose": "Sealed add-on packs that the admin turns on for one person; Demo mode hides them.",
+   "sort_order": 500,
+   "status": "unsure",
+   "evidence": [
+    "R-008 (cannot be run here: the add-ons are sealed)",
+    "R-057",
+    "game/account/gate.js:18",
+    "game/tests/addon-sealed-files.js (test file)"
+   ],
+   "placement": {
+    "tab": "Home",
+    "area": "A row on Home"
+   },
+   "who": [
+    "player",
+    "admin"
+   ],
+   "addon_gate": "addon:x1, addon:x2 (admin switch per account)",
+   "screen_ids": [],
+   "flow": [
+    {
+     "step": 1,
+     "screen_id": "page.admin",
+     "does": "The admin turns an add-on on for one account",
+     "field_ids": []
+    },
+    {
+     "step": 2,
+     "screen_id": "tab.home",
+     "does": "The player sees a one-time row on Home and says yes",
+     "field_ids": [
+      "addon.one_time_yes"
+     ]
+    }
+   ],
+   "features": [
+    {
+     "name": "One-time yes row",
+     "status": "unsure",
+     "field_ids": [
+      "addon.one_time_yes"
+     ]
+    },
+    {
+     "name": "Demo mode hides add-ons",
+     "status": "working",
+     "field_ids": []
+    }
+   ],
+   "depends_on": [
+    "admin_page",
+    "account"
+   ],
+   "feeds_into": [],
+   "entry_points": [
+    "Admin page: add-on switch on an account"
+   ],
+   "files": [
+    "game/account/addon.js",
+    "game/account/gate.js",
+    "game/x1.json",
+    "game/x2.json"
+   ],
+   "field_count": 1
+  }
+ ],
+ "unassigned": []
+}

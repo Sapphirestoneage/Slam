@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: live session</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--a3:#8fb0ff;--good:#7fd6b0;--amber:#ffb648}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:24px;line-height:1.25;margin:0}h2{font-size:17px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}.tiny{font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;font-size:16px}
+input:focus{outline:none;border-color:var(--a3)}
+button,a.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
+button.big{min-height:64px;font-size:20px;flex:1 1 140px}
+button:active{transform:translateY(1px)}button[disabled]{opacity:.55;cursor:default;box-shadow:none}
+button:focus-visible,a:focus-visible{outline:3px solid var(--a3);outline-offset:2px}
+a{color:var(--a3);text-decoration:underline}a.btn{color:var(--text);align-self:flex-start}
+.note{border-left:4px solid var(--amber);padding:6px 10px;font-size:15px}.done{color:var(--good);font-weight:700}.msg{min-height:18px;font-size:15px}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted);white-space:nowrap}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+.pillbig{font-size:18px;font-weight:800;border:2px solid var(--line);border-radius:99px;padding:8px 16px;background:var(--panel);font-variant-numeric:tabular-nums}
+.pillbig.live{border-color:var(--good)}.pillbig.paused{border-color:var(--amber)}
+.lights{display:flex;gap:12px;flex-wrap:wrap}.light{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}.light b{color:var(--text)}
+.light i{width:14px;height:14px;border-radius:50%;border:2px solid var(--muted);display:inline-block;flex:none}
+.light.green i{background:var(--good);border-color:var(--good)}.light.amber i{background:var(--amber);border-color:var(--amber)}.light.off i{opacity:.5}
+.chips{display:flex;flex-wrap:wrap;gap:10px}.chip{min-width:88px}.chip.on{background:var(--a1);border-color:var(--a1);color:#fff}
+.ctl{display:flex;gap:12px;flex-wrap:wrap}
+ul.heard{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}ul.heard b{color:var(--muted);font-size:13px;margin-right:6px}
+.soft{color:var(--muted);opacity:.7;font-style:italic;min-height:20px;font-size:14px}
+/* the dashboard kit (screens/dash.js; the same rules as index.html, DESIGN.md "Reference: Tally") */
+:root{--sap:var(--a1);--warn:var(--amber);--hl:rgba(63,109,240,.18);--body:system-ui,-apple-system,"Segoe UI",sans-serif}
+main:has(.lscols){max-width:1120px}
+.dklabel{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dkcap{font-size:13.5px;color:var(--muted);margin:-2px 0 4px}
+.dkcard .dkhead{margin-bottom:2px}.between{justify-content:space-between}
+.dkstatsw{container-type:inline-size}.dkstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@container (min-width:560px){.dkstats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.dktile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:84px;font-weight:400;width:100%;min-width:0}
+.dknum{font-size:22px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.dknum .pill{font-size:11px;font-weight:600;vertical-align:middle}
+.dkprog{height:8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}.dkprog i{display:block;height:100%;background:var(--good);border-radius:99px}
+.pill.lv{color:var(--text)}.pill.lv.guess{border-style:dashed;color:var(--muted)}
+/* Live Session Mode, Parts 6 and 7 (account/livescreen.js, account/livereview.js) */
+.lscols{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:12px;align-items:start}
+.lscol{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (max-width:760px){.lscols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.lscol+.lscol{order:-1}} /* on a phone the next question comes first, the profile under it */
+.lscalm,.rvhead{display:flex;flex-direction:column;gap:4px}
+details.lsgroup{border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+details.lsgroup>summary{min-height:44px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;font-weight:700}
+details.lsgroup>summary>span+span{margin-left:auto;text-align:right}
+details.lsgroup>summary::after{content:"";color:var(--muted);transform:rotate(90deg)}details.lsgroup[open]>summary::after{transform:rotate(-90deg)}
+details.lsgroup>summary::-webkit-details-marker{display:none}details.lsgroup>summary{list-style:none}
+.lsrows{display:flex;flex-direction:column;gap:8px;padding:0 12px 12px}
+.lsrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 8px;border-radius:10px}
+.lsname{min-width:0}.lsval{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.lssay{font-size:18px;font-weight:700}.lsconfirm{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+ul.lsheard{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}ul.lsheard li{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+details.lsolder>summary,details.rvsub>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--a3)}
+.lswhat{font-size:14px;color:var(--muted)}
+.lsbig{font-size:20px}.lsplan>.pill{align-self:flex-start}.lsplan{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px solid var(--line)}
+ol.lsmoves{margin:4px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.lsrecalc{border-left:4px solid var(--good)}
+.lf-heard{font-size:12px;border:1px solid var(--a3);color:var(--a3);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.lf-heard.said{border-color:var(--good);color:var(--good)}
+@keyframes lfglow{0%{box-shadow:0 0 0 3px var(--good)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes lfpulse{0%{transform:scale(1)}30%{transform:scale(1.12)}60%{transform:scale(1)}}
+.lf-glow{animation:lfglow 4s ease-out 1}
+.lf-pulse{animation:lfpulse 1.2s ease-out 2;display:inline-block}
+@media (prefers-reduced-motion:reduce){.lf-glow{animation:none;outline:2px solid var(--good);outline-offset:1px}.lf-pulse{animation:none;font-weight:800}}
+.rvitem{border:1px solid var(--line);border-radius:12px;background:var(--panel);display:flex;flex-direction:column}
+.rvitem.rvdone{padding:10px 12px}.rvname{display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left}
+.rvv{font-variant-numeric:tabular-nums}.rvname>.pill{align-self:flex-start}.rvwhy{color:var(--amber)}
+button.rvtap{width:100%;justify-content:space-between;text-align:left;border:0;box-shadow:none;background:none;font-weight:400;align-items:flex-start;gap:10px}
+button.rvtap .caret{color:var(--muted);font-size:20px}
+.rvfix{display:flex;flex-direction:column;gap:10px;padding:0 12px 12px}
+.rvtype .row{flex-wrap:nowrap}.rvtype input{flex:1 1 auto;min-width:0}.rvtype button{flex:none}
+/* Live Session Mode, Parts 8 and 9 (account/liveai.js, account/liveforget.js) */
+textarea{width:100%;padding:10px 12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;font-size:16px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--a3)}
+label.btn{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 0 rgba(0,0,0,.3);margin:0;align-self:flex-start}
+.laidrop{display:flex;flex-direction:column;gap:6px;border:2px dashed var(--line);border-radius:12px;padding:12px}
+.laidrop.over{border-color:var(--a3);background:var(--hl)}
+.laifile{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.laifile:focus-visible+.hint,.laidrop:focus-within label.btn{outline:3px solid var(--a3);outline-offset:2px}
+select{width:100%;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font:inherit;min-height:44px;margin-bottom:8px}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl,details.lsgroup>summary::after{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
+<script src="core/soon.js?v=cafe08bf"></script>
+<script src="account/trust.js?v=3d07f04c"></script>
+<script src="account/supa.js?v=cfa58c3f"></script>
+<script src="core/engine.js?v=41fdc22f"></script>
+<script src="core/recalc.js?v=9ee7e7ea"></script>
+<script src="data/askwords.js?v=4215eaea"></script>
+<script src="features/alloc.js?v=c3dbe01f"></script>
+<script src="screens/dash.js?v=10b0fec1"></script>
+<script src="account/cloud.js?v=575526c7"></script>
+<script src="account/coachpage.js?v=498fcba8"></script>
+<script src="account/liveflag.js?v=d591421f"></script>
+<script src="account/live.js?v=3db94988"></script>
+<script src="account/liveio.js?v=7e40296e"></script>
+<script src="account/livefill.js?v=5043282d"></script>
+<script src="account/liveland.js?v=8cb44dc6"></script>
+<script src="account/livesim.js?v=1865f2e3"></script>
+<script src="account/livegame.js?v=0fd29e91"></script>
+<script src="account/livescreen.js?v=e18b2c6d"></script>
+<script src="account/livereview.js?v=76d82af7"></script>
+<script src="account/liveai.js?v=4ffca922"></script>
+<script src="account/liveforget.js?v=28ef73dc"></script>
+<script src="account/liveroom.js?v=251e0646"></script>
+<script>
+/* The session page of Live Session Mode. With the switch off (account/liveflag.js) it shows "Coming soon" and does nothing else. The database checks each step again. */
+document.addEventListener("submit",ev=>{ev.preventDefault();if(liveOn())lrSubmit(ev.target).catch(e=>{report(e,"session.html: submit");lrSay("That did not go through. Wait a minute, then try again.")})});
+document.addEventListener("click",ev=>{const t=ev.target.closest("[data-a]");if(!t||t.disabled||!liveOn())return;lrClick(t).catch(e=>{report(e,"session.html: click");lrDraw()})});
+document.addEventListener("toggle",ev=>{if(typeof lsToggle==="function"&&LR.R)lsToggle(ev.target,LR.R)},true); /* livescreen.js: a group stays open or closed through each redraw */
+document.addEventListener("change",ev=>{if(ev.target&&ev.target.id==="laifile"&&LR.R&&liveOn())laiFileTake(LR.R,ev.target.files&&ev.target.files[0]).then(lrDraw,e=>{report(e,"session.html: file");lrDraw()})}); /* liveai.js: the recorder's text file, read on this device */
+document.addEventListener("input",ev=>{if(ev.target&&ev.target.dataset&&ev.target.dataset.lai&&LR.R)laiInput(ev.target,LR.R)}); /* liveai.js: the draft notes keep each word through a redraw */
+document.addEventListener("dragover",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(z){ev.preventDefault();z.classList.add("over")}});
+document.addEventListener("dragleave",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(z)z.classList.remove("over")});
+document.addEventListener("drop",ev=>{const z=ev.target.closest&&ev.target.closest("#laidrop");if(!z||!LR.R||!liveOn())return;ev.preventDefault();laiFileTake(LR.R,ev.dataTransfer&&ev.dataTransfer.files&&ev.dataTransfer.files[0]).then(lrDraw,e=>{report(e,"session.html: drop");lrDraw()})});
+addEventListener("pagehide",()=>{if(LR.R&&LR.R.game&&LR.R.game.flush)LR.R.game.flush()}); /* livegame.js: a change that waits goes to the account */
+lrBoot().catch(e=>{report(e,"session.html: boot");document.getElementById("app").innerHTML=lrSoon()});
+</script>
+</body>
+</html>

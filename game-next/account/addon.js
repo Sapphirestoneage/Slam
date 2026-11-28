@@ -1,0 +1,633 @@
+/* ============================================================================
+   SLAM the Game: account/addon.js
+   PURPOSE     Add-ons, part 2 of 2. At sign-in the game asks the account which add-ons are on. An
+               add-on comes as a sealed file and a key. This file opens the sealed file in the browser,
+               shows the Add-ons card to the owner, and keeps shared text and share cards free of add-on
+               content.
+   INPUT       The game: G.chars, G.demo, G.plain. The profile: c.x.ao, c.x.aok. The open sheet
+               (W.kind): adask. The taps of the player (the actions in OUTPUT).
+   OUTPUT      31 functions. Parts of functions in other files: homeAddonAsk, adPlainText, adPlainSheet,
+               profSheetAddon, adLook, closeSheetAddon. Actions (ACT): aoset, aofar, aogrant, adplain,
+               adyes, adno.
+   DEPENDS ON  core/report.js, account/supa.js, core/engine.js, account/gate.js, screens/ui.js,
+               features/year.js, screens/profiles.js, screens/planner.js, account/cloud.js,
+               screens/nav.js.
+   USES LATER  Names from files that the browser loads later. Behind a typeof test, thus safe while the
+               page loads: features/ideas.js, features/dep.js, features/built.js. With no typeof test,
+               thus safe only after the page has loaded all files: features/ideas.js (IG).
+   RULES       A new account has no add-ons, and nothing more occurs for it. An add-on can ask the
+               person for a one-time yes before it shows. Demo mode has the standard look and no
+               add-ons, for each profile. Wrapped, the share cards and copied text always use the
+               standard look and contain nothing from an add-on.
+   STATE       On the website, two database tables hold the permissions and the keys
+               (docs/game-addons.sql). The retired copy inside Claude kept the same data in the stores
+               grants/<person>, kit/<person>/p/<add-on> and roster/<person>.
+   ========================================================================= */
+/* ---------- opening a sealed file: ChaCha20, the standard cipher, written out so it needs nothing from the browser ---------- */
+function adHex(h) {
+  const o = new Uint8Array(h.length / 2);
+  for (let i = 0; i < o.length; i++) o[i] = parseInt(h.substr(i * 2, 2), 16);
+  return o;
+}
+function adB64(s) {
+  const T = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+    o = [];
+  let b = 0,
+    n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const v = T.indexOf(s[i]);
+    if (v < 0) continue;
+    b = (b << 6) | v;
+    n += 6;
+    if (n >= 8) {
+      n -= 8;
+      o.push((b >> n) & 255);
+    }
+  }
+  return new Uint8Array(o);
+}
+function adCha(key, nonce, data) {
+  const K = new Uint32Array(8),
+    N = new Uint32Array(3),
+    le = (a, i) => (a[i] | (a[i + 1] << 8) | (a[i + 2] << 16) | (a[i + 3] << 24)) >>> 0,
+    rl = (v, c) => ((v << c) | (v >>> (32 - c))) >>> 0;
+  for (let i = 0; i < 8; i++) K[i] = le(key, i * 4);
+  for (let i = 0; i < 3; i++) N[i] = le(nonce, i * 4);
+  const out = new Uint8Array(data.length),
+    x = new Uint32Array(16),
+    s = new Uint32Array(16),
+    Q = (a, b, c, d) => {
+      x[a] = (x[a] + x[b]) >>> 0;
+      x[d] = rl(x[d] ^ x[a], 16);
+      x[c] = (x[c] + x[d]) >>> 0;
+      x[b] = rl(x[b] ^ x[c], 12);
+      x[a] = (x[a] + x[b]) >>> 0;
+      x[d] = rl(x[d] ^ x[a], 8);
+      x[c] = (x[c] + x[d]) >>> 0;
+      x[b] = rl(x[b] ^ x[c], 7);
+    };
+  for (let off = 0, ctr = 1; off < data.length; off += 64, ctr++) {
+    s[0] = 0x61707865;
+    s[1] = 0x3320646e;
+    s[2] = 0x79622d32;
+    s[3] = 0x6b206574;
+    for (let i = 0; i < 8; i++) s[4 + i] = K[i];
+    s[12] = ctr;
+    s[13] = N[0];
+    s[14] = N[1];
+    s[15] = N[2];
+    x.set(s);
+    for (let r = 0; r < 10; r++) {
+      Q(0, 4, 8, 12);
+      Q(1, 5, 9, 13);
+      Q(2, 6, 10, 14);
+      Q(3, 7, 11, 15);
+      Q(0, 5, 10, 15);
+      Q(1, 6, 11, 12);
+      Q(2, 7, 8, 13);
+      Q(3, 4, 9, 14);
+    }
+    for (let i = 0; i < 16; i++) {
+      const v = (x[i] + s[i]) >>> 0;
+      for (let b = 0; b < 4; b++) {
+        const p = off + i * 4 + b;
+        if (p < data.length) out[p] = data[p] ^ ((v >>> (8 * b)) & 255);
+      }
+    }
+  }
+  return out;
+}
+function adSum(u8) {
+  let h = 2166136261;
+  for (let i = 0; i < u8.length; i++) {
+    h ^= u8[i];
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+function adText(u8) {
+  if (typeof TextDecoder !== "undefined") return new TextDecoder("utf-8").decode(u8);
+  let s = "";
+  for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  return decodeURIComponent(escape(s));
+}
+function adOpen(b64, x) {
+  const u = adCha(adHex(x.k), adHex(x.n), adB64(b64));
+  return adSum(u) === x.h ? adText(u) : null;
+}
+/* ---------- an extra joins the game: run it, then label everything it added so it can be hidden per person ---------- */
+function adBegin(id, meta) {
+  ADX.has[id] = true;
+  ADX.meta[id] = meta || {};
+  const W_ = typeof WB !== "undefined" ? WB : [];
+  return {
+    gl: new Set(Object.keys(GLOSS)),
+    th: new Set(Object.keys(THEMES)),
+    cal: new Set(Object.keys(CALS)),
+    menu: new Set(MENU),
+    wb: new Set(W_),
+    ig: new Set(typeof IG_ORDER !== "undefined" ? IG_ORDER : []),
+    dep: typeof DEP_X !== "undefined" ? DEP_X : null,
+  };
+}
+function adEnd(id, b) {
+  Object.keys(GLOSS).forEach(k => {
+    if (!b.gl.has(k)) ADX.gl[k] = id;
+  });
+  Object.keys(THEMES).forEach(k => {
+    if (!b.th.has(k)) THEMES[k].pk = id;
+  });
+  Object.keys(CALS).forEach(k => {
+    if (!b.cal.has(k)) CALS[k].pk = id;
+  });
+  MENU.forEach(m => {
+    if (!b.menu.has(m)) m[4] = id;
+  });
+  if (typeof WB !== "undefined")
+    WB.forEach(r => {
+      if (!b.wb.has(r)) r.pk = id;
+    });
+  if (typeof IG_ORDER !== "undefined")
+    IG_ORDER.forEach(k => {
+      if (b.ig && !b.ig.has(k)) IG[k].pk = id;
+    });
+  if (typeof DEP_X !== "undefined" && DEP_X && DEP_X !== b.dep) DEP_X.pk = id;
+}
+function adRun(code) {
+  try {
+    if (typeof document !== "undefined" && document.createElement && document.head && document.head.appendChild) {
+      const k = "__x" + Math.random().toString(36).slice(2),
+        s = document.createElement("script");
+      s.textContent = code + "\n;window." + k + "=1;";
+      document.head.appendChild(s);
+      if (window[k]) {
+        try {
+          delete window[k];
+        } catch (e) {
+          report(e, "addon.js: adRun (1)");
+        }
+        return true;
+      }
+    }
+  } catch (e) {
+    report(e, "addon.js: adRun (2)");
+  }
+  try {
+    (0, eval)(code);
+    return true;
+  } catch (e) {
+    ADX.err = String((e && e.message) || e).slice(0, 80);
+    return false;
+  }
+}
+function adApply(id, meta, code) {
+  if (ADX.has[id]) return true;
+  const b = adBegin(id, meta);
+  if (!adRun(code)) {
+    delete ADX.has[id];
+    delete ADX.meta[id];
+    return false;
+  }
+  adEnd(id, b);
+  return true;
+}
+/* ---------- sign-in ---------- */
+const adMeta = x => ({ t: x.t || "Add-on", one: x.one || "", gate: x.gate || null });
+async function adFetch(x) {
+  const r = await fetch("./" + x.f);
+  const j = await r.json();
+  return adOpen(j.d, x);
+}
+const adWeb = () => typeof SUPA !== "undefined" && SUPA && SUPA.on && SUPA.sb;
+/* on the website: two tables. One says which extras a person has (only the admin account can add or remove a row; there is an admin page for that). The other holds each extra's file name and key, and the database only shows a row to someone who has that extra. */
+async function adStartWeb() {
+  const sb = SUPA.sb,
+    uid = SUPA.uid;
+  let n = 0;
+  try {
+    let own = false;
+    try {
+      const q = await sb.rpc("is_admin");
+      own = q.data === true;
+    } catch (e) {
+      report(e, "addon.js: adStartWeb (1)");
+    }
+    ADX.own = own;
+    const q = await sb.from("content_packs").select("pack,payload"),
+      list = (q.data || [])
+        .filter(r => r.payload && r.payload.f && r.payload.k)
+        .map(r => ({ id: r.pack, x: r.payload }));
+    if (own) {
+      ADX.src = {};
+      list.forEach(p => {
+        ADX.src[p.id] = p.x;
+      });
+    }
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      try {
+        const code = await adFetch(p.x);
+        if (code && adApply(p.id, adMeta(p.x), code)) n++;
+      } catch (e) {
+        report(e, "addon.js: adStartWeb (2)");
+      }
+    }
+  } catch (e) {
+    report(e, "addon.js: adStartWeb (3)");
+  }
+  ADX.st = "on";
+  if (n) {
+    try {
+      applyLook();
+      render();
+      if (SH) drawSheet();
+    } catch (e) {
+      report(e, "addon.js: adStartWeb (4)");
+    }
+  }
+  adAsk();
+}
+async function adStart() {
+  if (ADX.st !== "off" || !CLOUD.db || !CLOUD.uid) return;
+  ADX.st = "loading";
+  if (adWeb()) return adStartWeb();
+  const db = CLOUD.db,
+    uid = CLOUD.uid;
+  let n = 0;
+  try {
+    let own = false,
+      ask = true;
+    try {
+      const u = await window.claude.use("user");
+      if (u && typeof u.isOwner === "function") {
+        own = !!(await u.isOwner());
+        ask = own;
+      }
+    } catch (e) {
+      report(e, "addon.js: adStart (1)");
+    }
+    const list = [];
+    if (ask) {
+      const q = await db.collection("vault").get();
+      (q.docs || []).forEach(d => {
+        const x = d.data() || {};
+        if (x.f && x.k) list.push({ id: d.id, x });
+      });
+      if (list.length) own = true;
+      ADX.src = {};
+      list.forEach(p => {
+        ADX.src[p.id] = p.x;
+      });
+    }
+    ADX.own = own;
+    if (own) {
+    } else {
+      const g = await db.doc("grants/" + uid).get(),
+        ids = g.exists ? Object.keys((g.data() || {}).packs || {}) : [];
+      for (let i = 0; i < ids.length; i++) {
+        const d = await db.doc("kit/" + uid + "/p/" + ids[i]).get();
+        if (d.exists) list.push({ id: ids[i], x: d.data() || {} });
+      }
+      adHello(db, uid);
+    }
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      try {
+        const code = await adFetch(p.x);
+        if (code && adApply(p.id, adMeta(p.x), code)) n++;
+      } catch (e) {
+        report(e, "addon.js: adStart (2)");
+      }
+    }
+    ADX.st = "on";
+  } catch (e) {
+    ADX.st = "on";
+  }
+  if (n) {
+    try {
+      applyLook();
+      render();
+      if (SH) drawSheet();
+    } catch (e) {
+      report(e, "addon.js: adStart (3)");
+    }
+  }
+  adAsk();
+}
+function adHello(db, uid) {
+  try {
+    if (G.demo) return;
+    const c = G.chars[0],
+      n = String((c && c.name) || "").slice(0, 20);
+    if (!n || ADX.hi === n) return;
+    ADX.hi = n;
+    db.doc("roster/" + uid)
+      .set({ n, at: Date.now() })
+      .catch(e => report(e, "addon.js: adHello (1)"));
+  } catch (e) {
+    report(e, "addon.js: adHello (2)");
+  }
+}
+(() => {
+  if (
+    typeof window === "undefined" ||
+    typeof setInterval !== "function" ||
+    typeof CLOUD === "undefined" ||
+    !(typeof document !== "undefined" && document.getElementById && document.getElementById("app"))
+  )
+    return;
+  let t = 0;
+  const iv = setInterval(() => {
+    t++;
+    if (CLOUD.db && CLOUD.uid) {
+      clearInterval(iv);
+      adStart();
+    } else if (t > 80 || CLOUD.st === "off") clearInterval(iv);
+  }, 300);
+})();
+/* ---------- the one-time yes ---------- */
+function adPending(c) {
+  if (!c || G.demo || adQuiet()) return null;
+  const x = c.x || {};
+  return (
+    Object.keys(ADX.has).find(id => (ADX.meta[id] || {}).gate && adMine(id, c) && (x.aok || {})[id] === undefined) ||
+    null
+  );
+}
+function adAskSheet() {
+  const id = W.id,
+    g = (ADX.meta[id] || {}).gate || {};
+  return (
+    head("One quick check", esc(g.h || "Before this turns on")) +
+    `<div class="tile small">${esc(g.b || "")}</div><div class="tiny muted">You are asked once. Your answer is saved with your game.</div><button class="primary wide" data-a="adyes" data-v="${esc(id)}">${esc(g.yes || "Yes")}</button><button class="ghost wide" data-a="adno" data-v="${esc(id)}">${esc(g.no || "No, leave it off")}</button>`
+  );
+}
+function adAsk() {
+  try {
+    if (SH || ADX.test) return;
+    const c = C(),
+      id = adPending(c);
+    if (!id) return;
+    W = { kind: "adask", id };
+    sheet(adAskSheet);
+  } catch (e) {
+    report(e, "addon.js: adAsk");
+  }
+}
+/* ---------- the owner's switches ---------- */
+function adIds() {
+  return Object.keys(ADX.has);
+}
+function adSeg(a, k, v, on, off) {
+  return `<div class="seg"><button class="${on ? "on" : ""}" data-a="${a}" data-k="${k}" data-v="${v}:1" aria-pressed="${on ? "true" : "false"}">On</button><button class="${on ? "" : "on"}" data-a="${a}" data-k="${k}" data-v="${v}:0" aria-pressed="${on ? "false" : "true"}">Off</button></div>`;
+}
+function adState(c, id) {
+  const x = c.x || {},
+    g = (ADX.meta[id] || {}).gate;
+  if (!(x.ao || {})[id]) return "";
+  if (!g) return "Showing for them now";
+  const a = (x.aok || {})[id];
+  return a === undefined
+    ? "On. Waiting for their one-time yes"
+    : a
+      ? "On. They said yes on " + nice(a)
+      : "They said no, so it stays hidden";
+}
+function adCard() {
+  if (!ADX.own || G.demo) return "";
+  const ids = adIds(),
+    w = W || {};
+  const demo = `<div class="row between"><span class="small"><b>Demo mode</b><div class="tiny muted">The standard look and no add-ons, for every profile. For showing the game to someone.</div></span><div class="seg"><button class="${G.plain ? "on" : ""}" data-a="adplain" data-v="1">On</button><button class="${G.plain ? "" : "on"}" data-a="adplain" data-v="0">Off</button></div></div>`;
+  if (!ids.length) return `<div class="tile stack" style="gap:8px">${demo}</div>`;
+  const rows = G.chars
+    .map(
+      (c, i) =>
+        `<div class="tile stack" style="gap:6px"><b>${esc(c.name)}</b>${ids.map(id => `<div class="row between small"><span>${esc(ADX.meta[id].t)}<div class="tiny muted">${esc(adState(c, id) || ADX.meta[id].one || "Hidden from them")}</div></span>${adSeg("aoset", i, esc(id), !!((c.x || {}).ao || {})[id])}</div>`).join("")}</div>`
+    )
+    .join("");
+  const ro = ADX.ro,
+    far = !w.aoFar
+      ? `<button class="ghost wide slim" data-a="aofar">People with their own sign-in</button>`
+      : ro === null
+        ? `<div class="tiny muted">Looking…</div>`
+        : !ro.length
+          ? `<div class="tile small">Nobody is here yet. People with their own sign-in show up once they have opened the game and are sharing it with you.</div>`
+          : `<div class="small"><b>People with their own sign-in</b></div>` +
+            ro
+              .map(
+                p =>
+                  `<div class="tile stack" style="gap:6px"><b>${esc(p.n)}</b>${ids.map(id => `<div class="row between small"><span>${esc(ADX.meta[id].t)}<div class="tiny muted">${p.g[id] ? "On for their account" + ((ADX.meta[id] || {}).gate ? (p.g[id].ok ? ". They said yes" : adWeb() ? ". Waiting for their one-time yes" : "") : "") : "Hidden from them"}</div></span>${adSeg("aogrant", esc(p.id), esc(id), !!p.g[id])}</div>`).join("")}</div>`
+              )
+              .join("");
+  return `<details class="math" ${w.aoOpen ? "open" : ""} data-ao="1"><summary>Add-ons. Only you can see this</summary><div class="stack" style="gap:8px;padding:8px 10px"><div class="tiny muted">Each add-on is hidden from a person until you turn it on for them here. Off means no trace of it anywhere in their game.</div>${demo}${rows}${far}${ADX.msg ? `<div class="tiny muted">${esc(ADX.msg)}</div>` : ""}</div></details>`;
+}
+async function adRosterWeb() {
+  try {
+    const sb = SUPA.sb,
+      q = await sb
+        .from("games")
+        .select("owner")
+        .eq("name", "slam_meta")
+        .eq("share_with_coach", true)
+        .neq("owner", SUPA.uid),
+      e = await sb.from("player_entitlements").select("user_id,pack,confirmed_at"),
+      out = [];
+    for (const r of q.data || []) {
+      let nm = "";
+      try {
+        nm = await suPeek(r.owner);
+      } catch (x) {
+        report(x, "addon.js: adRosterWeb");
+      }
+      const g = {};
+      (e.data || [])
+        .filter(x => x.user_id === r.owner)
+        .forEach(x => {
+          g[x.pack] = { ok: x.confirmed_at || null };
+        });
+      out.push({ id: r.owner, n: String(nm || "Someone").slice(0, 40), g });
+    }
+    ADX.ro = out;
+  } catch (e) {
+    ADX.ro = [];
+  }
+  if (SH === profSheet) drawSheet();
+}
+async function adGrantWeb(uid, id, on) {
+  const sb = SUPA.sb,
+    p = (ADX.ro || []).find(x => x.id === uid);
+  if (!p) return;
+  try {
+    const r = on
+      ? await sb.from("player_entitlements").insert({ user_id: uid, pack: id })
+      : await sb.from("player_entitlements").delete().eq("user_id", uid).eq("pack", id);
+    if (r.error) throw r.error;
+    if (on) p.g[id] = { ok: null };
+    else delete p.g[id];
+    ADX.msg = "";
+  } catch (e) {
+    ADX.msg = "That did not save. Check your connection and try again.";
+  }
+  if (SH === profSheet) drawSheet();
+}
+async function adRoster() {
+  if (adWeb()) return adRosterWeb();
+  try {
+    const db = CLOUD.db,
+      q = await db.collection("roster").get(),
+      out = [];
+    for (const d of q.docs || []) {
+      if (d.id === CLOUD.uid) continue;
+      const x = d.data() || {},
+        g = await db.doc("grants/" + d.id).get();
+      out.push({ id: d.id, n: String(x.n || "Someone").slice(0, 20), g: g.exists ? (g.data() || {}).packs || {} : {} });
+    }
+    ADX.ro = out;
+  } catch (e) {
+    ADX.ro = [];
+  }
+  if (SH === profSheet) drawSheet();
+}
+async function adGrant(uid, id, on) {
+  if (adWeb()) return adGrantWeb(uid, id, on);
+  const db = CLOUD.db,
+    p = (ADX.ro || []).find(x => x.id === uid);
+  if (!db || !p) return;
+  try {
+    const packs = Object.assign({}, p.g);
+    if (on) {
+      await db.doc("kit/" + uid + "/p/" + id).set(Object.assign({}, ADX.src[id]));
+      packs[id] = { by: CLOUD.uid, at: new Date().toISOString() };
+    } else {
+      delete packs[id];
+      await db.doc("kit/" + uid + "/p/" + id).delete();
+    }
+    await db.doc("grants/" + uid).set({ packs });
+    p.g = packs;
+    ADX.msg = "";
+  } catch (e) {
+    ADX.msg = "That did not save. Check your connection and try again.";
+  }
+  if (SH === profSheet) drawSheet();
+}
+/* Part of home() in ui.js. Home has no change here. When an add-on waits for an answer, the question opens after Home is drawn. */
+function homeAddonAsk() {
+  try {
+    if (!SH && adPending(C()) && typeof setTimeout === "function") setTimeout(adAsk, 0);
+  } catch (e) {
+    report(e, "addon.js: homeAddonAsk");
+  }
+}
+/* Part of rvText() in reveal.js, tgText() in together.js and bkText() in back.js. Runs fn with the add-ons quiet. Thus a text for sharing has nothing from an add-on. */
+function adPlainText(fn) {
+  return adPlain(fn);
+}
+/* Part of wrappedSheet() and shareCard() in ui.js. A sheet for sharing always has the standard look, with nothing from an add-on. Marks the open sheet, and draws it again. */
+function adPlainSheet() {
+  ADX.plainSH = SH;
+  drawSheet();
+}
+
+/* Part of profSheet() in profiles.js. Adds the card for the add-ons. The card is not there while the sheet asks to remove a person. */
+function profSheetAddon(h) {
+  if (W && W.rm != null) return h;
+  const card = adCard(),
+    a = [
+      '<div class="row" style="gap:8px"><button class="primary" style="flex:1" data-a="addperson">',
+      '<button class="primary wide" data-a="addperson">',
+    ].find(x => h.indexOf(x) >= 0);
+  return card && a ? h.replace(a, () => card + a) : h + card;
+}
+
+/* Part of drawSheet() in ui.js. Sets the look again after each draw. A sheet for sharing uses the standard look. */
+function adLook() {
+  try {
+    applyLook();
+  } catch (e) {
+    report(e, "addon.js: adLook");
+  }
+}
+
+/* Part of closeSheet() in ui.js. Goes back to the look of the player after a sheet with the standard look. */
+function closeSheetAddon() {
+  ADX.plainSH = null;
+  try {
+    applyLook();
+  } catch (e) {
+    report(e, "addon.js: closeSheetAddon");
+  }
+}
+
+Object.assign(ACT, {
+  aoset: t => {
+    const c = G.chars[+t.dataset.k],
+      p = String(t.dataset.v).split(":"),
+      id = p[0],
+      on = p[1] === "1";
+    if (!c || !ADX.own) return;
+    c.x = c.x || {};
+    c.x.ao = c.x.ao || {};
+    c.x.ao[id] = on;
+    if (c.x.aok) delete c.x.aok[id];
+    if (W) W.aoOpen = true;
+    save();
+    render();
+    drawSheet();
+  },
+  aofar: () => {
+    if (!W) return;
+    W.aoFar = true;
+    W.aoOpen = true;
+    ADX.ro = null;
+    drawSheet();
+    adRoster();
+  },
+  aogrant: t => {
+    const p = String(t.dataset.v).split(":");
+    if (W) W.aoOpen = true;
+    adGrant(t.dataset.k, p[0], p[1] === "1");
+  },
+  adplain: t => {
+    G.plain = t.dataset.v === "1";
+    if (W) W.aoOpen = true;
+    save();
+    render();
+    drawSheet();
+  },
+  adyes: t => {
+    const c = C();
+    c.x = c.x || {};
+    c.x.aok = c.x.aok || {};
+    c.x.aok[t.dataset.v] = todayISO();
+    try {
+      if (adWeb() && !ADX.own)
+        SUPA.sb.rpc("confirm_pack", { p: t.dataset.v }).then(
+          () => {},
+          () => {}
+        );
+    } catch (e) {
+      report(e, "addon.js: adyes");
+    }
+    save();
+    closeSheet();
+    render();
+  },
+  adno: t => {
+    const c = C();
+    c.x = c.x || {};
+    c.x.aok = c.x.aok || {};
+    c.x.aok[t.dataset.v] = false;
+    save();
+    closeSheet();
+    render();
+  },
+});
+if (typeof NV_INFO !== "undefined") {
+  NV_INFO.adask = [
+    "One quick check",
+    "Something new is about to show in your game, and it asks for your OK first.",
+    "You are asked once. Either answer is fine.",
+  ];
+  GLOSS.scr_adask = [NV_INFO.adask[0], NV_INFO.adask[1] + " " + NV_INFO.adask[2]];
+}
+if (typeof document !== "undefined" && document.getElementById && document.getElementById("app")) render();

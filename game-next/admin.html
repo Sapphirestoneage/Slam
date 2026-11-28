@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SLAM the Game: admin</title>
+<style>
+:root{--bg:#071030;--panel:#13224a;--panel2:#0e1a3a;--line:#3a55a0;--text:#e8eeff;--muted:#9fb0dd;--a1:#3f6df0;--good:#7fd6b0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:560px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0}p{margin:0}.muted{color:var(--muted);font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--panel2);color:inherit;font-size:16px}
+button{font:inherit;font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+button.primary{background:var(--a1);border-color:var(--a1);color:#fff}button.wide{width:100%}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;flex:none}
+.seg button{border:0;border-radius:0;min-width:56px;background:var(--panel2);color:var(--muted)}.seg button.on{background:var(--a1);color:#fff}
+details{border:1px solid var(--line);border-radius:12px;padding:0 12px}summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}.tools{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+.who{border-top:1px solid var(--line);padding-top:8px}.nums{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 12px;font-size:14px;color:var(--muted);margin-top:4px}.nums b{color:var(--text)}
+ul{margin:4px 0 0;padding-left:20px}.who .row{flex-wrap:wrap;justify-content:flex-start;margin-top:6px}
+.hats{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.seg a.hat{padding:10px 16px;min-height:44px;display:inline-flex;align-items:center;font-weight:700;color:var(--muted);background:var(--panel2);text-decoration:none}.seg a.hat.on{background:var(--a1);color:#fff}a.btn{font-weight:700;min-height:44px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--text);text-decoration:none;display:inline-flex;align-items:center}
+.pill{font-size:12px;margin-left:4px;border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--muted)}.ok{color:var(--good)}
+/* The one chevron of the game (run 16, D19): an SVG arrowhead in the color of the text. .chevl points back. No typed arrow characters. */
+.chev,.chevl{--cv:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 14'%3E%3Cpath d='M1.5 1.5 6.5 7l-5 5.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");display:inline-block;width:.45em;height:.8em;vertical-align:-.06em;background:currentColor;-webkit-mask:var(--cv) center/contain no-repeat;mask:var(--cv) center/contain no-repeat}.chevl{transform:scaleX(-1)}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>window.claude={}</script><!-- keeps supa.js to its two public settings on this page -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="core/report.js?v=e950ffe0"></script>
+<script src="core/testbuild.js?v=d5687e2b"></script>
+<script src="core/reportcore.js?v=6a3377b4"></script>
+<script src="core/firstnum.js?v=798fa9b5"></script>
+<script src="core/cjcore.js?v=a4775b58"></script>
+<script src="account/supa.js?v=cfa58c3f"></script>
+<script src="data/cardtemplate.js?v=43e535a3"></script>
+<script src="data/cards2026.js?v=bd65802c"></script>
+<script src="account/roles.js?v=16f6dd76"></script>
+<script src="account/adminmore.js?v=26ecceb4"></script>
+<script src="account/foundadmin.js?v=510721cd"></script>
+<script src="account/cardadmin.js?v=ab16003f"></script>
+<script>
+/* The admin page. Everything here is checked again by the database: a signed-in person who is not the admin gets nothing back and can change nothing, whatever this page shows. */
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const S={session:null,data:null,games:{},msg:"",busy:false,ask:null};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const usd=n=>"$"+Math.round(+n||0).toLocaleString();
+const day=d=>d?new Date(d).toLocaleDateString():"never";
+const seg=(a,id,k,on)=>`<span class="seg"><button class="${on?"on":""}" data-a="${a}" data-id="${id}" data-k="${esc(k)}" data-v="1" aria-pressed="${on}">On</button><button class="${on?"":"on"}" data-a="${a}" data-id="${id}" data-k="${esc(k)}" data-v="0" aria-pressed="${!on}">Off</button></span>`;
+/* a saved game is stored in pieces; put one account's pieces back together */
+function gameOf(rows){const by={};rows.forEach(r=>{by[r.name]=r});const m=by.slam_meta;if(!m||!m.data)return null;let s="";for(let i=0;i<(m.data.n||0);i++){const p=by["slam_part_"+i];if(!p)return null;s+=(p.data&&p.data.s)||""}try{return {g:JSON.parse(s),at:m.updated_at,share:!!m.share_with_coach}}catch(e){return null}}
+const FORKS={bill:"A new bill",debt:"Debt or collections calls",job:"Job hunt",work:"Work stress",car:"Car problem",home:"Housing or roommate stuff",fam:"Family stuff",health:"A health thing",fight:"A money fight",due:"A deadline",tired:"Tired",hungry:"Hungry"};
+function auditLine(c){const a=c.x&&c.x.cp&&c.x.cp.au,h=a&&a.length?a[a.length-1]:null;return h&&typeof h.s==="number"?`<p class="muted">Money audit score: <b style="color:var(--text)">${h.s.toFixed(1)} of 10</b>, from ${h.n} real numbers. Seen ${day(h.d)}.</p>`:""}
+function forkLine(c){const x=c.x&&c.x.fk;if(!x||!x.at)return "";const cal=x.rate&&x.rateFor===x.big&&(x.f||[]).some(f=>f.k===x.big),l=(x.f||[]).reduce((t,f)=>t+(!cal?(f.s||1):f.k===x.big?x.rate:Math.min(f.s||1,x.rate)),0);return `<p class="muted">Forks: <b style="color:var(--text)">${l} of ${x.lim||10}</b>${x.big?", biggest is "+esc(FORKS[x.big]||"something else"):""}. Checked ${day(x.at)}.</p>`}
+const sum=(a,k)=>(a||[]).reduce((t,x)=>t+(+x[k]||0),0);
+function summary(u){const G=S.games[u.id];if(!G)return `<p class="muted">No saved game yet.</p>`;const cs=(G.g.chars||[]).filter(c=>c&&!c.demo);
+ return `<p class="muted">Last saved ${day(G.at)}. ${G.share?"Sharing with their coach.":"Not sharing with a coach."}</p>`+(cs.length?cs.map(c=>`<div class="who"><b>${esc(c.name||"Someone")}</b>${c.age?", "+esc(c.age):""}${c.roommateCount!=null?", "+esc(c.roommateCount>=4?"4+":c.roommateCount)+" roommates":""}${c.kidCount!=null?", "+esc(c.kidCount>=4?"4+":c.kidCount)+" kids":""} <span class="pill">${c.placed?"Set up":"Not started"}</span><div class="nums"><span>In <b>${usd(c.take)}</b></span><span>Out <b>${usd(c.spend)}</b></span><span>Cash <b>${usd(sum(c.cashes,"amt"))}</b></span><span>Owes <b>${usd(sum(c.debts,"amt"))}</b></span></div>${forkLine(c)}${auditLine(c)}</div>`).join("")+`<p class="muted">A month, from their own answers. Some of these are still guesses.</p>`:`<p class="muted">Only the sample people so far.</p>`)}
+function tools(u,mine){if(mine)return `<p class="muted">This is the account you are signed in with. Account tools are off for your own account.</p>`;const q=S.ask&&S.ask.id===u.id?S.ask.what:null;
+ if(q==="delete")return `<p><b>Delete ${esc(u.email)} and their saved game?</b> This can't be undone.</p><div class="row"><button data-a="askno">Keep it</button><button class="primary" data-a="acct" data-id="${u.id}" data-k="delete">Yes, delete</button></div>`;
+ return `<button class="wide" data-a="reset" data-id="${u.id}">Email them a link to set a new password</button>${u.confirmed?"":`<button class="wide" data-a="acct" data-id="${u.id}" data-k="confirm">Confirm their email by hand</button>`}<button class="wide" data-a="acct" data-id="${u.id}" data-k="${u.blocked?"unblock":"block"}">${u.blocked?"Let them sign in again":"Block this account from signing in"}</button><button class="wide" data-a="ask" data-id="${u.id}" data-k="delete">Delete this account</button>`}
+function draw(){const el=document.getElementById("app"),d=S.data,me=S.session&&S.session.user?S.session.user.email:"";
+ if(!S.session){el.innerHTML=`<h1>Admin sign-in</h1><p class="muted">For the person who runs SLAM the Game. Players use the game itself.</p><form class="card" id="f"><div><label for="e">Email</label><input id="e" type="email" autocomplete="email" required></div><div><label for="p">Password</label><input id="p" type="password" autocomplete="current-password" required></div><button class="primary wide" type="submit">Sign in</button>${S.msg?`<p class="muted">${esc(S.msg)}</p>`:""}</form><a href="./" style="color:var(--muted)">Back to the game</a>`;return}
+ if(!d){el.innerHTML=`<p class="muted">Checking…</p>`;return}
+ if(!d.admin){/* roles.js: the route guard. A signed-in account that is not the admin lands on Home. */location.replace((typeof roGuardTo==="function"&&roGuardTo("admin",d))||"./");return}
+ el.innerHTML=`<div class="row"><a class="btn" href="./"><i class=chevl aria-hidden=true></i> Back to the game</a><button data-a="out">Sign out</button></div>${roHatsHTML("admin",{admin:true,coach:true},true)}<h1>Admin</h1><p class="muted">Signed in as ${esc(me)}. ${d.users.length} ${d.users.length===1?"account":"accounts"}. Switches save the moment you tap.</p>${S.msg?`<p class="ok">${esc(S.msg)}</p>`:""}`+
+  d.users.map(u=>{const mine=u.id===d.me;return `<div class="card"><div class="row"><b style="word-break:break-all">${esc(u.email)}</b><span>${mine?`<span class="pill">You</span>`:""}${u.blocked?`<span class="pill">Blocked</span>`:""}${u.confirmed?"":`<span class="pill">Email not confirmed</span>`}</span></div><p class="muted">Joined ${day(u.joined)}. Last signed in ${day(u.seen)}.</p>
+   ${summary(u)}${mine?"":`<button class="primary wide" data-a="open" data-id="${u.id}" data-k="${esc(u.email)}">Open their game</button>`}
+   <div class="row"><span>Coach<br><span class="muted">Can see games people share with their coach</span></span>${seg("coach",u.id,"",u.coach)}</div>
+   ${d.packs.map(p=>{const g=u.packs&&u.packs[p.pack];return `<div class="row"><span>${esc(p.title||"Add-on")}<br><span class="muted">${g?(p.asks?(g.yes?"On. They said yes":"On. Waiting for their one-time yes"):"On for this account"):"Hidden from this account"}</span></span>${seg("pack",u.id,p.pack,!!g)}</div>`}).join("")}
+   <details${S.ask&&S.ask.id===u.id?" open":""}><summary>Account tools</summary><div class="tools">${tools(u,mine)}</div></details></div>`}).join("")+
+  (typeof caHTML==="function"?caHTML():"")+ /* cardadmin.js: the section "Card library" */
+  (typeof faHTML==="function"?faHTML():"")+ /* foundadmin.js: Founding Testers, and who joined through whom */
+  (typeof amHTML==="function"?amHTML():"")+ /* adminmore.js: Health, Audit log, Backup */
+  `<button class="wide" data-a="reload">Check for new accounts</button><a href="./" style="color:var(--muted)">Back to the game</a>`}
+async function load(){if(!S.data)draw();const r=await sb.rpc("admin_overview");S.data=r.error?{admin:false}:r.data;S.games={};
+ if(S.data.admin){if(typeof amLoad==="function")await amLoad(sb); /* adminmore.js */if(typeof faLoad==="function")await faLoad(sb); /* foundadmin.js */const q=await sb.from("games").select("owner,name,data,updated_at,share_with_coach");const by={};(q.data||[]).forEach(x=>{(by[x.owner]=by[x.owner]||[]).push(x)});Object.keys(by).forEach(o=>{const g=gameOf(by[o]);if(g)S.games[o]=g});if(typeof caLoad==="function")await caLoad() /* cardadmin.js: the cards the admin added */}draw()}
+document.addEventListener("submit",async ev=>{ev.preventDefault();const e=document.getElementById("e").value.trim(),p=document.getElementById("p").value;const r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error){S.msg="That email and password don't match.";draw();return}S.msg="";S.session=r.data.session;S.data=null;load()});
+document.addEventListener("input",ev=>{if(typeof caInput==="function")caInput(ev.target)}); /* cardadmin.js: typing in the card form */
+document.addEventListener("change",ev=>{if(typeof caChange==="function")caChange(ev.target)}); /* cardadmin.js: a rate was typed, show its limit */
+document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-a]");if(!t||S.busy)return;if(/^ca/.test(t.dataset.a)&&typeof caClick==="function"){S.busy=true;try{await caClick(t)}finally{S.busy=false}return} /* cardadmin.js */
+ if(/^am/.test(t.dataset.a)&&typeof amClick==="function"){S.busy=true;try{await amClick(t,sb)}finally{S.busy=false}draw();return} /* adminmore.js */
+ const a=t.dataset.a,id=t.dataset.id,u=S.data&&S.data.users?S.data.users.find(x=>x.id===id):null;
+ if(a==="out"){await sb.auth.signOut();S.session=null;S.data=null;S.msg="";draw();return}
+ if(a==="reload"){S.msg="";load();return}
+ if(a==="ask"){S.ask={id,what:t.dataset.k};draw();return}
+ if(a==="askno"){S.ask=null;draw();return}
+ if(a==="open"){try{sessionStorage.setItem("su_as",id);sessionStorage.setItem("su_as_n",t.dataset.k||"")}catch(e){}location.href="./?as="+encodeURIComponent(id);return}
+ S.busy=true;let r;
+ if(a==="reset"){if(typeof roAudit==="function")roAudit(sb,"reset_password",id,null);r=await sb.auth.resetPasswordForEmail(u.email,{redirectTo:location.origin+location.pathname.replace(/admin\.html$/,"")});S.msg=r.error?"That email did not send. Check the email settings in Supabase.":"Sent. They will get a link at "+u.email+"."}
+ else{const on=t.dataset.v==="1";r=a==="coach"?await sb.rpc("admin_set_coach",{target:id,make:on}):a==="pack"?await sb.rpc("admin_set_pack",{target:id,p:t.dataset.k,make:on}):await sb.rpc("admin_account",{target:id,what:t.dataset.k});S.msg=r.error?"That did not save. Try again.":a==="acct"?({delete:"Deleted.",block:"Blocked. They can't sign in.",unblock:"They can sign in again.",confirm:"Email confirmed."})[t.dataset.k]:"Saved."}
+ S.busy=false;S.ask=null;load()});
+sb.auth.getSession().then(({data})=>{S.session=data&&data.session;if(S.session)load();else draw()});
+</script>
+</body>
+</html>

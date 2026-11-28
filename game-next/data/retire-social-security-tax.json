@@ -1,0 +1,22 @@
+{
+  "source_url": "https://www.law.cornell.edu/uscode/text/26/86",
+  "last_updated": "2026-04-29",
+  "taxability_thresholds": {
+    "married_filing_jointly": {
+      "tier1": 32000,
+      "tier2": 44000
+    },
+    "single": {
+      "tier1": 25000,
+      "tier2": 34000
+    },
+    "married_filing_separately": {
+      "tier1": 0,
+      "tier2": 0
+    },
+    "head_of_household": {
+      "tier1": 25000,
+      "tier2": 34000
+    }
+  }
+}

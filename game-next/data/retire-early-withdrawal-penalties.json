@@ -1,0 +1,14 @@
+{
+  "source_url": "https://www.law.cornell.edu/uscode/text/26/72",
+  "last_updated": "2026-04-29",
+  "early_withdrawal": {
+    "penalty_rate": 0.1,
+    "age_threshold": 59
+  },
+  "rule_of_55_age": 55,
+  "hsa_nonmedical": {
+    "penalty_rate": 0.2,
+    "age_threshold": 65
+  },
+  "nq_529_penalty_rate": 0.1
+}
