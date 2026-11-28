@@ -94,7 +94,7 @@
   let h = ov();
   chk("the sheet opens with its title", text(h).includes("Your life timeline"));
   chk("no “0 of”, no undefined, no NaN", !/\b0 of\b|undefined|NaN/.test(text(h)));
-  chk("no em dash", !h.includes("—"));
+  chk("no em dash", !h.includes(String.fromCharCode(8212)));
   chk(
     "the level shows, and a guess is greyed",
     /class="pill kitst">(Guess|Close|Exact)</.test(h) && (P.st !== "Guess" || /class="small guess"/.test(h))

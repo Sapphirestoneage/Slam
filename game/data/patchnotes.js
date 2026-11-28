@@ -676,6 +676,16 @@ const PATCH_NOTES = [
       "Also new: Graduate, a page on when you need a CPA, an estate attorney or a fee-only planner. Bank and card bonus moves show early when you have no costly debt.",
     ],
   },
+  {
+    d: "2026-11-28",
+    t: "Your life timeline",
+    l: [
+      "New in the menu, under Plans and what-ifs: Your life timeline. Your debt-free date, your cushion, your goals, your FIRE statuses, Social Security and more on one line, by age and year.",
+      "Tap a milestone to see what it is, what it is for, and the math.",
+      "Move the age you chose by a year to try a what-if. The other dates recalculate. Your plan changes only when you tap Keep it, and Undo puts it back.",
+      "Add your own milestones by taps: a baby, a home, a career break, a big spend. One counts in a what-if after you give its simulator your own number.",
+    ],
+  },
 ];
 /* The web app reads this file as a module (js/ui/whatsnew-ui.js). A module keeps its names to itself, thus
    the list is also put on the global object. */
