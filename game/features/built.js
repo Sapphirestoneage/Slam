@@ -2092,7 +2092,7 @@ const WB = [
   ],
   [
     "see",
-    "Assumptions, inside Show the math: the rates and ages behind the numbers, three of them yours to change",
+    "Assumptions, inside Show the math: the rates and ages your numbers use, three of them yours to change",
     "b",
     () =>
       WB_FN("asRows") &&

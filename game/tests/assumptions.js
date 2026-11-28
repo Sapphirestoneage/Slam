@@ -59,7 +59,7 @@
   );
   chk(
     "the words are clean",
-    !/—|mistake|failed|\bbehind\b|off track|should\b/.test(JSON.stringify(AS_LIST.map(A => [A.n, GLOSS[A.term]])))
+    !/\u2014|mistake|failed|\bbehind\b|off track|should\b/.test(JSON.stringify(AS_LIST.map(A => [A.n, GLOSS[A.term]])))
   );
 
   /* ---- 2. Show the math: the line and the button; not inside the opening ---- */
@@ -126,7 +126,7 @@
       who + "the three answers of the player have chips to tap, and no box to type in",
       ["ret", "death", "ss"].every(id => /class="chip/.test(item(h, id))) && !/<input/.test(h)
     );
-    chk(who + "clean words", !/undefined|NaN|\bnull\b|—/.test(text(h)), text(h).match(/undefined|NaN|\bnull\b/));
+    chk(who + "clean words", !/undefined|NaN|\bnull\b|\u2014/.test(text(h)), text(h).match(/undefined|NaN|\bnull\b/));
     /* a change */
     const ret0 = c.ret,
       d0 = derive(c),

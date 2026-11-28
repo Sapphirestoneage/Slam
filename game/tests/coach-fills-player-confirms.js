@@ -161,7 +161,7 @@
     );
     chk(
       who + "no line says Exact, and the words are clean",
-      !/Exact/.test(text(h)) && !/undefined|NaN|\bnull\b|—|mistake|failed|\bbehind\b|off track/.test(text(h))
+      !/Exact/.test(text(h)) && !/undefined|NaN|\bnull\b|\u2014|mistake|failed|\bbehind\b|off track/.test(text(h))
     );
     chk(who + "opening the list changed no number", JSON.stringify([c.spends, c.incs]) === before);
     /* Confirm one line */

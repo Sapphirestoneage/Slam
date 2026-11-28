@@ -1,6 +1,6 @@
 /* ============================================================================
    SLAM the Game: features/assume.js
-   PURPOSE     Assumptions (run CC-1, item 14, Nov 27 2026). The rates and ages behind the numbers are not on
+   PURPOSE     Assumptions (run CC-1, item 14, Nov 27 2026). The rates and ages that the numbers use are not on
                the main screens. Each "Show the math" ends with one small line that names the two rates
                and one button, Assumptions. The button opens one sheet: each assumption with its value,
                an "i", and the mark Usual or Yours. An assumption the engines can take from the player is
@@ -139,7 +139,7 @@ function asSheet() {
     rows = asRows(c);
   return (
     `<div class="stack" style="gap:10px"><div><div class="tiny muted">Show the math</div><h2 style="margin:4px 0 0">Assumptions</h2></div>` +
-    `<div class="small muted">The rates and ages behind your numbers. The usual values fit most plans. A change here is yours, and the game recalculates.</div>` +
+    `<div class="small muted">The rates and ages your numbers use. The usual values fit most plans. A change here is yours, and the game recalculates.</div>` +
     (W && W.msg ? `<div class="tile small" role="status" data-fid="as:msg">${esc(W.msg)}</div>` : "") +
     rows
       .map(

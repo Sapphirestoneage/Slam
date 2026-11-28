@@ -64,6 +64,16 @@ const pulsing = page => page.evaluate(() => [...document.querySelectorAll('#app 
     chk(`day 1 ${T}: My number opens the flow`, /What it is/i.test(await page.locator('#ov').innerText()));
     await tap('#ov [data-a=gohome]');
     await tap('#app .topbar [data-a=menu]'); await page.waitForTimeout(1000);
+    // Run CC-1, item 13: the menu of a new player starts short. "Show everything" gives the whole menu of the first week.
+    const short = await page.locator('#ov details.mng:not(.mng2)').evaluateAll(a => a.map(d => d.dataset.g));
+    chk(`day 1 ${T}: the short menu: what comes back, the groups with a core row, Settings; no Everything else, no Tool library`, short[0] === 'later' && short[short.length - 1] === 'settings' && !short.includes('more') && !short.includes('lib') && !short.includes('coach') && !short.includes('admin'), short);
+    chk(`day 1 ${T}: the short menu has Report a bug or idea, What's new, Privacy and Take the tour, and no sideways scroll`, (await page.locator('#ov [data-a=menugo][data-v=flag]').count()) === 1 && (await page.locator('#ov [data-a=menugo][data-v=whatsnew]').count()) === 1 && (await page.locator('#ov [data-a=menugo][data-v=tuprivacy]').count()) === 1 && (await page.locator('#ov [data-a=menugo][data-v=tour]').count()) === 1 && !(await sideways(page)));
+    const all = page.locator('#ov [data-a=fwall][data-v="1"]');
+    chk(`day 1 ${T}: the button Show everything is there, 44 high or more`, (await all.count()) === 1 && (await all.boundingBox()).height >= 44 && /Show everything \(\d+ more\)/.test(await all.textContent()));
+    await shot(page, `2a-day1-short-menu-${w}`);
+    await all.scrollIntoViewIfNeeded();
+    await tap('#ov [data-a=fwall][data-v="1"]'); await page.waitForTimeout(800);
+    chk(`day 1 ${T}: after Show everything the button reads Show the short menu`, (await page.locator('#ov [data-a=fwall][data-v="0"]').count()) === 1);
     const tops = await page.locator('#ov details.mng:not(.mng2)').evaluateAll(a => a.map(d => d.dataset.g));
     chk(`day 1 ${T}: the menu has four groups: later, more, lib, settings`, tops.join(',') === 'later,more,lib,settings', tops);
     chk(`day 1 ${T}: every group starts closed, and the i is there`, !(await page.locator('#ov details[open]').count()) && (await page.locator('#ov [data-fid="fw:where"] [data-a=info]').isVisible()));

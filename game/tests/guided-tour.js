@@ -51,7 +51,7 @@
   chk("the ids of the stops are not used twice", new Set(TOUR.map(S => S.id)).size === TOUR.length);
   chk(
     "the words are clean: no em dash, no blame word, no Save by hand",
-    !/—|mistake|failed|\bbehind\b|off track|should|Save\b/.test(JSON.stringify(TOUR))
+    !/\u2014|mistake|failed|\bbehind\b|off track|should|Save\b/.test(JSON.stringify(TOUR))
   );
   const words = TOUR.reduce((n, S) => n + (S.t + " " + S.l).split(/\s+/).length, 0);
   chk("the words of all stops read in well under 90 seconds (under 220 words)", words < 220, words);

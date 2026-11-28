@@ -423,7 +423,7 @@ Tests: `game/tests/flow-one-pulse-forward-keep.js` (items 1, 3, 5), `game/tests/
 
 ## RUN 15: CC-1 "Five strategies" (Nov 27 2026)
 
-Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A and B are done. Parts C to E are open.
+Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A, B and C are done. Parts D and E are open.
 
 | Item | Status | What | Where |
 |---|---|---|---|
@@ -437,9 +437,14 @@ Item 7 is in the section "RUN 15: CC-1, item 7 only" above. Parts A and B are do
 | B9. Questions that can wait | Done | Shared money and the number of roommates are not asked in setup. Each is a quest of Next Steps with one question; the answer goes to the same key. A quest opens Sharing costs fairly for a player with roommates or a partner. Setup never asked about subscription splits. | `game/features/waitq.js`; `smQs` in `screens/smart.js` |
 | B10. Starter situations | Done; some values stay empty by rule | Ten starting points, one table. One row on What you want opens the list; no added tap for a player who passes it. Typical values (a Guess, greyed) from the reference data; a value with no fitting figure is asked. One screen to confirm, then the number. | `game/features/starter.js` (`SIT_LIST`, `sitApply`) |
 | B11. Pre-call intake | Built; not tried with a real account | `/game/intake/` asks the questions of Find your era by taps, then the game opens its sign-up screen. With the invite link (`?coach=1`) the lead shows in the coach view with the flag New lead, until Mark as seen. No database change. | `game/intake/`, `ERA_PAGE` in `era/era.js`, `erLead` in `features/erain.js`, `cpLead` in `account/coachpage.js` |
-| C. Easier (12 to 17) | Open | | |
+| C12. Results card | Done | On the reveal, under "Keep it, share it, or tell Eli": the card shows small, then "Share my card" and "Get this card as an image". On it: the era, the FI number with its age, the names of the top 3 moves. No other figure. The painter of the Yes, but card draws it. | `cbPlanCard`, `cbCardPeek` in `features/cbreveal.js`; `cbYbPaint` in `features/cbyesbut.js` |
+| C13. Progressive menu | Done | A new player sees a short menu: the core rows and Settings and account. A tool shows once it is opened, from any screen. The reveal and the end of the first week unlock more. "Show everything" and "Show the short menu". One rule for each row. Older games, the demo, a coach and the admin keep the whole menu. A player never sees a row of a coach or of the admin. | `fwRowRule`, `fwMenuState`, `fwUsed` in `features/firstweek.js` |
+| C14. Assumptions | Partly: three can be changed, three are shown | Each Show the math ends with the two rates and the button Assumptions. The sheet marks each one Usual or Yours. By a tap: the age work is optional, the age the money lasts to, the Social Security the plan counts, each with "Back to the usual value". Shown and fixed for now: growth 7%, take-out 4%, the last age of the chart (question 663 f). | `features/assume.js`; `mathBox` in `screens/ui.js` |
+| C15. Start here doors | Done | Four outlined buttons under Start: FIRE (Near FI), In debt (Card debt), Couple or household (Getting married), Self-employed. Start stays the one filled button, and all are in the first window at 390 by 640. | `DOOR_SITS`, `doorSitGo` in `account/door.js` |
+| C16. Done-for-you setup | Partly: CSV built, PDF waits for Eli | A coach opens a client's game and reads a CSV file there. The totals go to the client as a list. Home says "Your coach filled this in. Please confirm." Each line: Confirm or Change, and Undo. No number changes without the client's tap. No database change. Not tried with a real coach account. | `features/cofill.js`; `imPut` in `features/import.js`; `account/coachpage.js` |
+| C17. Guided tour | Done | Nine stops on Home, one line each: Next, Back, Skip the tour. The place of the stop pulses, and it is the only pulse while the tour runs. Home offers it one time; the menu has "Take the tour". | `features/tour.js`; `tools/e2e/tour_walk.cjs` |
 | D. Better (18 to 20) | Open | | |
 | E. Cheaper (21 to 23) | Open | | |
 | The finish (publish, the summary, What's new entry) | Open | | |
 
-Questions and the placeholders of part A: 661. Of part B: 662.
+Questions and the placeholders of part A: 661. Of part B: 662. Of part C: 663.

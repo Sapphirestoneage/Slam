@@ -183,7 +183,7 @@
       money.every(id => rows(menu()).includes(id))
     );
     chk(who + "after the first week a tool of another group still waits", !rows(menu()).includes("stress"));
-    chk(who + "clean copy", !/undefined|NaN|—/.test(menu().replace(/<svg[\s\S]*?<\/svg>/g, "")));
+    chk(who + "clean copy", !/undefined|NaN|\u2014/.test(menu().replace(/<svg[\s\S]*?<\/svg>/g, "")));
   });
 
   /* ---- 3. who keeps the whole menu ---- */

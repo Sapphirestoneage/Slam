@@ -91,6 +91,7 @@ function doorHtml(wait) {
  #door .door-sitg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
  #door .door-sit{min-height:44px;padding:8px 10px;border-radius:12px;border:2px solid var(--line,#3a55a0);background:transparent;color:inherit;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.25)}
  #door .door-sit:focus-visible{outline:3px solid var(--a3,#8fb0ff);outline-offset:2px}#door .door-sit:active{transform:translateY(1px)}
+ @media (max-height:700px){#door .door-in{padding-top:10px;gap:8px}#door h1{font-size:25px}#door .door-sits{gap:4px}}
  #door .door-go:focus-visible,#door .door-in2:focus-visible,#door summary:focus-visible,#door a:focus-visible{outline:3px solid var(--a3,#8fb0ff);outline-offset:2px}
  #door .door-go:active,#door .door-in2:active{transform:translateY(1px)}
  #door details{border:2px solid var(--line,#3a55a0);border-radius:12px;background:var(--panel,#13224a)}
