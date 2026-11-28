@@ -122,7 +122,7 @@ const FW_CORE = ["quest", "play", "safe", "moves", "people", "glossary", "whatsn
 const FW_CORE_GROUP = "settings";
 /* What unlocks rows. rev: the reveal was seen, so the rows it leads to show. week: the first week is over, so
    these groups show whole (the same day the other tabs come back to the bar). */
-const FW_UNLOCK = { rev: ["odds", "taxv", "takeout", "values"], week: ["money", "people"] };
+const FW_UNLOCK = { rev: ["odds", "taxv", "takeout", "values", "lifeline"], week: ["money", "people"] };
 /* THE RULE OF ONE ROW. id: the action of the row. group: the id of its group. S: { short, seen, rev, weekOver }.
    Returns why the row shows ("all", "core", "used", "unlocked"), or "" when it waits. */
 function fwRowRule(id, group, S) {

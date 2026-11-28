@@ -142,8 +142,10 @@ function cstCalc(c, d) {
         : null,
   };
 }
-/* The FIRE statuses of the player: one list for Home, the route card, the life map and the journey. */
-function stGame(c, d) {
+/* The FIRE statuses of the player: one list for Home, the route card, the life map and the journey.
+   opt (the life timeline, lifeline.js): a what-if of the plan run (goalSim: monthly, once). It moves the dates
+   that come from the plan run (Lean, FI). The Coast date is counted from today's saving, so it stays. */
+function stGame(c, d, opt) {
   d = d || derive(c);
   const inv = c.inv || 0,
     RW = knRows(c),
@@ -157,8 +159,8 @@ function stGame(c, d) {
   let fiM = null,
     leanM = null;
   try {
-    fiM = freeAt(c);
-    leanM = lean == null ? null : freeAt(c, { passive: wants });
+    fiM = freeAt(c, opt);
+    leanM = lean == null ? null : freeAt(c, Object.assign({}, opt, { passive: wants }));
   } catch (e) {
     report(e, "coast.js: stGame");
   }

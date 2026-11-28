@@ -628,6 +628,13 @@ body.touring .tourpulse{animation:pulse 1.6s ease-in-out infinite!important;outl
 .sheet:has(.cbfoot) .flash{animation-name:cbflash}
 .cbres{display:flex;flex-direction:column;gap:6px}.cbresn{font-size:30px;line-height:1.15}.cbfirst{display:flex;flex-direction:column;gap:4px}.cbfirst b{font-size:19px;line-height:1.25}.cbresgo{min-height:56px;font-size:18px}
 /* Krug self-test (run Results-first Home, item 5): on a phone the numbers come right after Your next win, so "how close am I to FI" needs no scroll past the chart */
+/* the life timeline (features/lifeline.js): one line down the page, a dot for each milestone, the card under its row */
+.llline,.llwait{position:relative;display:flex;flex-direction:column;min-width:0}.llline::before{content:"";position:absolute;left:91px;top:10px;bottom:10px;width:2px;background:var(--line)}
+.llitem{position:relative;min-width:0}button.llrow{display:grid;grid-template-columns:76px 18px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;min-height:48px;text-align:left;font-weight:400;background:transparent;border:1px solid transparent;border-radius:10px;padding:6px 6px 6px 0}button.llrow:hover,button.llrow[aria-expanded="true"]{border-color:var(--line);background:var(--panel2)}
+.lldate,.llname{display:flex;flex-direction:column;gap:2px;min-width:0}.lldate{text-align:right}.llname b,.llname span{overflow-wrap:anywhere}.lldot{display:flex;justify-content:center;position:relative;z-index:1}.lldot i{width:14px;height:14px;border-radius:50%;background:var(--panel);border:2px solid var(--sap)}
+.llitem.done .lldot i{background:var(--good);border-color:var(--good)}.llitem.today .lldot i{background:var(--sap);border-color:var(--text);width:16px;height:16px}.llitem.own .lldot i{border-radius:3px;transform:rotate(45deg)}.llitem.need .lldot i{border-style:dashed;border-color:var(--muted)}.llitem.moved .lldot i{box-shadow:0 0 0 3px var(--hl)}
+.llview{white-space:nowrap;color:var(--sap);font-weight:700}.llcard{margin:4px 0 8px 0}.llbtns{gap:8px}.sheet button[data-a^="ll"],.llcard button:not(.i){min-height:44px}.llbtns{row-gap:8px}.llband{border:2px dashed var(--sap)}.lltag{font-weight:600}
+@media (max-width:480px){button.llrow{grid-template-columns:64px 16px minmax(0,1fr) auto;gap:6px}.llline::before{left:77px}}
 /* the life map (features/lifemap.js): the ten eras from age 15, done bright, the one being unlocked pulsing, later fogged */
 .ltcard{display:flex;flex-direction:column;gap:8px;min-width:0}.ltruler{position:relative;height:8px;border-radius:99px;background:var(--line);margin-top:4px}.ltruler i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--good)}.ltruler b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--sap);border:2px solid var(--text)}
 .ltscroll{overflow-x:auto;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch;padding:4px 2px 8px;scroll-snap-type:x proximity}.ltrow{display:flex;gap:8px;width:max-content}
@@ -803,7 +810,7 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/cover.js?v=81ca5d9d"></script>
 <script src="features/mix.js?v=eb0c8a71"></script>
 <script src="features/slept.js?v=f8e65363"></script>
-<script src="features/coast.js?v=77186800"></script>
+<script src="features/coast.js?v=ce3fe656"></script>
 <script src="features/sim.js?v=fd2903ab"></script>
 <script src="features/sims/rentbuy.js?v=54ad93a0"></script>
 <script src="features/sims/mortgage.js?v=19fb0257"></script>
@@ -905,13 +912,14 @@ body:has(#ov .overlay) nav.tabs button.on{color:var(--muted);box-shadow:none}bod
 <script src="features/cbreveal.js?v=a4cfb970"></script>
 <script src="features/starter.js?v=3ae6cba8"></script>
 <script src="features/waitq.js?v=7c45fdad"></script>
-<script src="features/firstweek.js?v=c82071e8"></script>
+<script src="features/firstweek.js?v=9634ab7f"></script>
 <script src="features/receipt.js?v=3e9c736e"></script>
 <script src="features/fewer.js?v=616da806"></script>
-<script src="features/lifemap.js?v=dba7d468"></script>
+<script src="features/lifemap.js?v=affdf96f"></script>
+<script src="features/lifeline.js?v=f40b094e"></script>
 <script src="features/book.js?v=9bfc6fad"></script>
 <script src="features/questlog.js?v=1f871118"></script>
 <script src="features/fbreport.js?v=e6fc3454"></script>
-<script src="features/built.js?v=4d7164df"></script>
+<script src="features/built.js?v=327e4756"></script>
 </body>
 </html>
