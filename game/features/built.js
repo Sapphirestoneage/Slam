@@ -2090,6 +2090,22 @@ const WB = [
     "Run CC-1, item 13. A new player sees the core rows and Settings and account. A tool shows in the menu once it is opened, from any screen. The reveal and the end of the first week unlock more. Show everything gives the whole menu, and Find a tool reaches every tool. Expert on Me has the whole menu. One function decides each row.",
     "menu",
   ],
+  [
+    "see",
+    "Assumptions, inside Show the math: the rates and ages behind the numbers, three of them yours to change",
+    "b",
+    () =>
+      WB_FN("asRows") &&
+      WB_FN("asSet") &&
+      WB_FN("asMathRow") &&
+      WB_HAS("assume") &&
+      WB_HAS("asset") &&
+      WB_HAS("asusual") &&
+      asVal({}, "grow") === R &&
+      asVal({}, "take") === SWR,
+    "Run CC-1, item 14. Each Show the math ends with the two rates and the button Assumptions. The sheet lists each one with Usual or Yours. By a tap you change the age work is optional, the age your money lasts to, and how much Social Security your plan counts, each with Back to the usual value. The growth rate (7%), the take-out rate (4%) and the last age of the chart are shown and cannot be changed yet.",
+    "assume",
+  ],
 ];
 function btRows() {
   return WB.filter(r => adOk(r) && (r[6] !== "own" || ADX.own)).map(r => {

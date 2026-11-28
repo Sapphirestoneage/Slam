@@ -5327,11 +5327,12 @@ const EDU =
   LASTCHECK +
   ".";
 const cents = n => (n > 0 && n < 0.005 ? "under 1¢" : (n < 0 ? "-" : "") + "$" + Math.abs(n).toFixed(2));
+/* The last line of the box is a part of assume.js: the two rates of the engine, and the button Assumptions. */
 const mathBox = lines =>
   `<details class="math"><summary>Show the math</summary><div class="inner tiny stack" style="gap:4px">${lines
     .filter(Boolean)
     .map(l => `<div>${esc(l)}</div>`)
-    .join("")}</div></details>`;
+    .join("")}${typeof asMathRow === "function" ? asMathRow() : ""}</div></details>`;
 const onoff = (a, on) =>
   `<div class="seg"><button class="${on ? "" : "on"}" data-a="${a}" data-v="0">Off</button><button class="${on ? "on" : ""}" data-a="${a}" data-v="1">On</button></div>`;
 Object.assign(GLOSS, {
